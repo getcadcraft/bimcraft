@@ -1,0 +1,19 @@
+[package]
+name = "bimcraft"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BimCraft desktop app (Rust edition)"
+
+[[bin]]
+name = "bimcraft"
+path = "src/main.rs"
+
+[dependencies]
+bimcraft-ui-egui = { workspace = true }
+bimcraft-engine = { workspace = true }
+eframe = { workspace = true }
+egui = { workspace = true }
+
+[lints]
+workspace = true

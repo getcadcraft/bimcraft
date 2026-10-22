@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BimCraft — Browser Edition</title>
+    <link data-trunk rel="rust" data-bin="bimcraft-web" data-wasm-opt="z" data-weak-refs />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1e222a;
+        overflow: hidden;
+      }
+      #bimcraft_canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+      }
+      #loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #99a2b2;
+        font: 14px system-ui, sans-serif;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bimcraft_canvas"></canvas>
+    <div id="loading">Loading BimCraft — compiling WebAssembly, first visit can take a moment…</div>
+    <script>
+      window.addEventListener("bimcraft-ready", function () {
+        var l = document.getElementById("loading");
+        if (l) l.remove();
+      });
+    </script>
+  </body>
+</html>

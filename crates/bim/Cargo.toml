@@ -1,0 +1,11 @@
+[package]
+name = "bimcraft-bim"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+bimcraft-geom = { workspace = true }
+
+[lints]
+workspace = true

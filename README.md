@@ -36,3 +36,11 @@ npm test                    # the app's tests; libraries are fetched by exact ve
 ## License
 
 Apache License 2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE)). Libraries and their licenses: [THIRD_PARTY.md](THIRD_PARTY.md). Where the code comes from: [PROVENANCE.md](PROVENANCE.md). The names are trademarks; a fork must rename: [TRADEMARKS.md](TRADEMARKS.md).
+
+## Rust edition (in development)
+
+A Rust/egui edition of BimCraft is being built alongside the JS edition, following the same workspace shape as the open-source storytold Craft apps (MIT OR Apache-2.0): the UI adopts the VectorCraft look (charcoal chrome, 48 px tool rail, right dock), the engine follows the CADCraft session/display-list seams, and the domain is BIM: levels, grids, parametric walls, doors, windows, floor slabs and ceilings, in both a 2D plan view and an orbiting 3D view with a Blender-style XYZ grid.
+
+- Crate parity map and phase gates: [docs/PARITY_ROADMAP.md](docs/PARITY_ROADMAP.md)
+- Desktop: `cargo run -p bimcraft` · Browser: `trunk build` in `apps/bimcraft-web` (see [BUILDING.md](BUILDING.md))
+- CI: `rust.yml` (fmt/clippy/test + wasm check), `wasm.yml` (GitHub Pages preview on every push to main), `release.yml` (desktop + browser bundles on `bimcraft-rs-v*` tags)

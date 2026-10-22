@@ -1,0 +1,25 @@
+[package]
+name = "bimcraft-web"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "BimCraft browser edition (eframe on wasm32)"
+
+[[bin]]
+name = "bimcraft-web"
+path = "src/main.rs"
+
+[dependencies]
+bimcraft-ui-egui = { workspace = true }
+eframe = { workspace = true }
+egui = { workspace = true }
+log = "0.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement"] }
+console_error_panic_hook = "0.1"
+
+[lints]
+workspace = true

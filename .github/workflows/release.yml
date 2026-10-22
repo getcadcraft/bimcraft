@@ -1,0 +1,110 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "bimcraft-rs-v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  desktop:
+    name: Desktop build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: bimcraft-linux-x64.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: bimcraft-windows-x64.zip
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: bimcraft-macos-arm64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build (linux needs X11 dev libs for eframe)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcb1-dev libxcursor-dev libxi-dev libgl1-mesa-dev
+          cargo build --release --locked --target ${{ matrix.target }} -p bimcraft
+
+      - name: Build (windows/macos)
+        if: runner.os != 'Linux'
+        run: cargo build --release --locked --target ${{ matrix.target }} -p bimcraft
+
+      - name: Package (unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd target/${{ matrix.target }}/release
+          tar czf ../../../${{ matrix.artifact }} bimcraft
+
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path target/${{ matrix.target }}/release/bimcraft.exe -DestinationPath ${{ matrix.artifact }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  web:
+    name: Browser bundle (wasm32)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install trunk
+        run: cargo install trunk --locked
+
+      - name: Build browser edition
+        working-directory: apps/bimcraft-web
+        run: trunk build --release
+
+      - name: Package
+        working-directory: dist/web
+        run: zip -r ../../bimcraft-browser-edition.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bimcraft-browser-edition
+          path: bimcraft-browser-edition.zip
+
+  publish:
+    name: Attach artifacts to release
+    needs: [desktop, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: artifacts
+
+      - name: Attach to the tag's release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

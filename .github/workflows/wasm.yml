@@ -1,0 +1,67 @@
+name: wasm-preview
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Trunk build (wasm32)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install trunk
+        run: cargo install trunk --locked
+
+      - name: Build browser edition
+        working-directory: apps/bimcraft-web
+        run: trunk build --release
+
+      - name: Inject ready flag into dist
+        working-directory: apps/bimcraft-web
+        run: |
+          # Drop the loading overlay once the app boots (script inside index.html listens for the event).
+          sed -i 's|<div id="loading">|<div id="loading" data-boot="1">|' ../../dist/web/index.html || true
+
+      - name: Add redirect page for the site root preview list
+        run: |
+          mkdir -p dist/web
+          cat > dist/web/404.html <<'EOF'
+          <!doctype html><meta charset="utf-8"><title>BimCraft preview</title>
+          <meta http-equiv="refresh" content="0;url=./">
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/web
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

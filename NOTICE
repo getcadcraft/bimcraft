@@ -6,3 +6,8 @@ It uses third-party software under their own permissive licenses: see THIRD_PART
 
 CadCraft and the names of the apps in the CadCraft family are trademarks of The Data Design Group, Inc.
 The Apache License does not grant permission to use them (section 6); a fork must use another name.
+
+Rust edition: the UI look and workspace conventions are modelled on the
+storytold Craft apps (https://github.com/storytold), dual-licensed under
+MIT OR Apache-2.0. BimCraft's Rust crates are clean-room implementations
+of the same seams; adopted upstream code will be listed in THIRD_PARTY.md.

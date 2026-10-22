@@ -1,0 +1,8 @@
+[build]
+target = "index.html"
+dist = "../../dist/web"
+public_url = "./"
+filehash = true
+
+[serve]
+port = 8766
