@@ -1,0 +1,7 @@
+- Tick the packs that apply to a drawing, by country and place, and see only the rules the app can check.
+- See each finding in Problems with the pack, its edition and the clause it comes from.
+- Choose what happens when packs disagree: each one, the strictest, or in a chain.
+- Filter packs and rules by place, trade or clause words, and tick single rules on or off for one drawing.
+- Print a code summary sheet (a PDF) of what was checked and what was not.
+- Add your own pack from a file; it is validated and always marked as not reviewed.
+- Keep a drawing on the pack versions it was checked against; a newer installed version is offered, never applied silently.

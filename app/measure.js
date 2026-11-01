@@ -105,6 +105,18 @@ export function axisSnap(a, b, cursor, project, tolerancePx = 12) {
   }
   return best;
 }
+/**
+ * GH.3-C: the end point of a measured segment held orthogonal: only the longest component of the move from a to b is kept
+ * (viewer axes, Y up). planOnly (looking straight down: a plan) allows the two horizontal axes only. → { point, axis: 0|1|2 }
+ */
+export function orthoPoint(a, b, planOnly = false) {
+  const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+  const axes = planOnly ? [0, 2] : [0, 1, 2];
+  let axis = axes[0];
+  for (const k of axes) if (Math.abs(d[k]) > Math.abs(d[axis])) axis = k;
+  const point = [...a]; point[axis] = b[axis];
+  return { point, axis };
+}
 export const ifcDelta = (a, b) => [b[0] - a[0], -(b[2] - a[2]), b[1] - a[1]];
 const trim = (v, d) => v.toFixed(d).replace(/\.?0+$/, '') || '0';
 export const fmtLength = (m) => fmtLen(m * 1000, getDisplayUnits(), { unit: true });

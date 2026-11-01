@@ -184,3 +184,62 @@ export function cleanPeer(p) {
     pointer: Array.isArray(x.p) && x.p.length === 3 && x.p.every((v) => fin(v) && Math.abs(v) < 1e10) ? x.p.map((v) => v / 1000) : null,
   };
 }
+
+// ---- AR on site (0.8 EG.21, apps-mount_PART_5; spike docs/spikes/EG.21_PART_2.md and _PART_4.md). Maths and decisions only: startAR in xr-session.js drives them. ----
+// arSupport(env) → { ok, route, reason, init }  what this browser can do for AR (Android Chrome over https: 'webxr-ar'; iPhone/iPad: a 3D viewer link; an Android WebView:
+//   open the page in Chrome; else the reason). alignPoints(model[2], world[2]) → { yaw, tx, tz, scaleOff, residual, apply } a rigid fit (a turn about the vertical axis and a
+//   move, scale stays 1) from two reference points pointed at on site (world, metres, Y up) to the same two points in the model (Y up). saveAlignment/loadAlignment: the
+//   small record kept in the file. recheck(saved, modelPoint, worldPoint) → the second visit's one-point check: keep (< 5 cm), move (< 50 cm), again.
+export function alignPoints(model, world) {
+  const [m1, m2] = model, [w1, w2] = world;
+  const dm = [m2[0] - m1[0], m2[2] - m1[2]], dw = [w2[0] - w1[0], w2[2] - w1[2]];
+  const lm = Math.hypot(dm[0], dm[1]), lw = Math.hypot(dw[0], dw[1]);
+  if (lm < 0.5 || lw < 0.5) throw Object.assign(new Error('The two points are too close to give a direction (under 0.5 m).'), { code: 'close' });
+  const yaw = Math.atan2(dw[1], dw[0]) - Math.atan2(dm[1], dm[0]);
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  const rot = (p) => [p[0] * c - p[2] * s, p[0] * s + p[2] * c];
+  // translation so the midpoints agree (spreads the pointing error over both points)
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[2] + b[2]) / 2];
+  const rm = rot([mid(m1, m2)[0], 0, mid(m1, m2)[1]]), wm = mid(w1, w2);
+  const tx = wm[0] - rm[0], tz = wm[1] - rm[1];
+  const to = (p) => { const r = rot(p); return [r[0] + tx, r[1] + tz]; };
+  const e1 = Math.hypot(to(m1)[0] - w1[0], to(m1)[1] - w1[2]), e2 = Math.hypot(to(m2)[0] - w2[0], to(m2)[1] - w2[2]);
+  return { yaw, tx, tz, scaleOff: lw / lm - 1, residual: Math.max(e1, e2), apply: (p) => { const r = to(p); return [r[0], p[1], r[1]]; } };
+}
+
+export function arSupport({ ua = '', secure = true, xr = null, standalone = false } = {}) {
+  const init = { requiredFeatures: ['hit-test'], optionalFeatures: ['anchors', 'dom-overlay', 'depth-sensing', 'light-estimation'], domOverlay: true };
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && standalone === 'touch');
+  if (ios) return { ok: false, route: 'viewer-link', reason: 'ios', init: null };
+  if (!secure) return { ok: false, route: 'none', reason: 'insecure', init: null };
+  const android = /Android/.test(ua);
+  const webview = android && (/; wv\)/.test(ua) || /Version\/\d+\.\d+ Chrome/.test(ua));
+  if (webview) return { ok: false, route: 'chrome-handover', reason: 'webview', init: null };
+  if (!android) return { ok: false, route: 'none', reason: 'not-a-phone', init: null };
+  if (!xr || typeof xr.isSessionSupported !== 'function') return { ok: false, route: 'none', reason: 'no-webxr', init: null };
+  return { ok: true, route: 'webxr-ar', reason: 'android-chrome', init };
+}
+
+export function saveAlignment(a, day = new Date().toISOString().slice(0, 10)) {
+  for (const k of ['yaw', 'tx', 'tz', 'residual']) if (!Number.isFinite(a?.[k])) throw Object.assign(new Error('The alignment is not numbers.'), { code: 'bad' });
+  return { format: 'cadcraft-ar-alignment', yaw: a.yaw, tx: a.tx, tz: a.tz, ty: Number.isFinite(a.ty) ? a.ty : 0, residual: a.residual, day };
+}
+export function loadAlignment(o) {
+  if (!o || o.format !== 'cadcraft-ar-alignment' || !['yaw', 'tx', 'tz'].every((k) => Number.isFinite(o[k]))) return null;
+  const c = Math.cos(o.yaw), s = Math.sin(o.yaw);
+  return { ...o, ty: Number.isFinite(o.ty) ? o.ty : 0, apply: (p) => [p[0] * c - p[2] * s + o.tx, p[1], p[0] * s + p[2] * c + o.tz] };
+}
+export function recheck(saved, modelPoint, worldPoint) {
+  const a = loadAlignment(saved);
+  if (!a) return { ok: false, offset: null, adjust: null, advice: 'no-saved' };
+  const p = a.apply(modelPoint), dx = worldPoint[0] - p[0], dz = worldPoint[2] - p[2], offset = Math.hypot(dx, dz);
+  if (offset < 0.05) return { ok: true, offset, adjust: [0, 0], advice: 'keep' };
+  if (offset < 0.5) return { ok: true, offset, adjust: [dx, dz], advice: 'move' };
+  return { ok: false, offset, adjust: null, advice: 'again' };
+}
+
+/** What this browser can do for AR, from facts the page can read: { ok, route, reason, init } (xr-core arSupport). */
+export function arSupportNow() {
+  const xr = globalThis.navigator && navigator.xr;
+  return arSupport({ ua: globalThis.navigator ? navigator.userAgent : '', secure: globalThis.isSecureContext !== false, xr, standalone: globalThis.navigator && navigator.maxTouchPoints > 1 ? 'touch' : false });
+}

@@ -15,7 +15,7 @@
  * The model side: family-model.js / family-ops.js. Test hook: window.bimcraftFamilies = { state, api }.
  */
 import { readFamilies, readFamilyElements, unhostedFamilies, newSize, renameSize, removeSizes, duplicateFamily, newFamily, importFamilies, removeFamily,
-  placeFamily, setFamilySize, moveFamilyElement, removeFamilyElements, familyFile, familyWriter, saveFamily, importSizes, sizesCsv, setFamilyDetail, setFamilyInstance, resizeFamilyElements } from './family-ops.js';
+  placeFamily, setFamilySize, familyLibrary, readFamilyLibrary, moveFamilyElement, removeFamilyElements, familyFile, familyWriter, saveFamily, importSizes, sizesCsv, setFamilyDetail, setFamilyInstance, resizeFamilyElements } from './family-ops.js';
 import { familyFor, evaluateFamily, inputParams, sizeParams, instanceParams, fullValues, DETAIL_CHOICES, isWordKind, sizeValues, planBounds, newFamilyKey, familyDetail, detailForScale, evalCtx } from './family-model.js';
 import { dragHotspot } from './family-edit.js';
 import { valueControl, readControl } from './family-values-ui.js';
@@ -239,7 +239,7 @@ export function mountFamilies(modelUi) {
     fillBase();
   }
   function openFile() {
-    const input = el('input', { type: 'file', accept: '.ccfamily.json,.json,.ifc', hidden: true, 'data-fam-fileinput': '' });
+    const input = el('input', { type: 'file', accept: '.ccfamily.json,.ccfamilies.json,.json,.ifc', hidden: true, 'data-fam-fileinput': '' });
     input.addEventListener('change', async () => {
       const file = input.files?.[0];
       input.remove();
@@ -248,7 +248,15 @@ export function mountFamilies(modelUi) {
         const bytes = new Uint8Array(await file.arrayBuffer());
         let list;
         if (/\.ifc$/i.test(file.name)) list = await (await scratch()).familiesIn(bytes);
-        else { try { list = [JSON.parse(new TextDecoder().decode(bytes))]; } catch (e) { A.host.status(t('fam.err.notfamily'), true); return; } }
+        else {
+          let parsed;
+          try { parsed = JSON.parse(new TextDecoder().decode(bytes)); } catch (e) { A.host.status(t('fam.err.notfamily'), true); return; }
+          if (parsed && parsed.format === 'cadcraft-family-library') {   // 0.8 BIM-FAM-MORE step 8: a library file brings every family it holds
+            const lib = readFamilyLibrary(parsed);
+            if (!lib.ok) { A.host.status(t(lib.key), true); return; }
+            list = lib.list;
+          } else list = [parsed];
+        }
         if (!list.length) { A.host.status(t('fam.err.nonein'), true); return; }
         const keys = list.map(() => newFamilyKey());
         const why = run(importFamilies(list, { keys }), { label: list.length === 1 ? String(list[0]?.name || file.name) : file.name, verb: t('model.verb.made') });
@@ -287,11 +295,58 @@ export function mountFamilies(modelUi) {
     if (!file) return;
     A.host.download(baseName(key) + '.ccfamily.json', new TextEncoder().encode(JSON.stringify(file, null, 2) + '\n'), 'application/json');
   }
+  /** Every family of this project as one library file (.ccfamilies.json): another project opens it with Open a family file… (0.8 BIM-FAM-MORE step 8). */
+  function saveLibrary() {
+    const lib = familyLibrary(W(), String(A.host.fileName?.() || '').replace(/\.ifc$/i, ''));
+    if (!lib.families.length) { A.host.status(t('fam.err.nolibrary'), true); return; }
+    A.host.download((lib.name || t('fam.savelib.name')).replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.ccfamilies.json', new TextEncoder().encode(JSON.stringify(lib, null, 2) + '\n'), 'application/json');
+    A.host.status(t('fam.savelib.done', { n: lib.families.length }));
+  }
   async function saveIfc(key) {
     const file = familyFile(W(), key);
     if (!file) return;
     const bytes = await (await scratch()).library(file);
     A.host.download(baseName(key) + ' ' + t('fam.ifc.suffix') + '.ifc', bytes, 'application/x-step');
+  }
+
+  // ---- 0.8 BIM-FAM-MORE: the family library as a Library item kind (kind family): the public list, then one item.json whose `family` is read as untrusted data ----
+  const LIB_FAMILIES = '/api/v1/library/items?kind=family&per=50';
+  async function libraryItems() {
+    const r = await fetch(LIB_FAMILIES, { headers: { Accept: 'application/json' } });
+    const list = (await r.json()).data?.items;
+    if (!r.ok || !Array.isArray(list)) throw new Error('list');
+    return list.map((x) => ({ uuid: String(x.uuid), name: String(x.name || ''), description: String(x.description || '') }));
+  }
+  /** One Library family → the recipe (a record of kind family whose block is the recipe), or null. */
+  async function libraryFamily(uuid) {
+    const r = await fetch('/api/v1/library/items/' + encodeURIComponent(uuid), { headers: { Accept: 'application/json' } });
+    const d = (await r.json()).data?.item;
+    if (!r.ok || !d?.version) return null;
+    const f = await fetch('/api/v1/library/items/' + encodeURIComponent(uuid) + '/' + d.version + '/item.json');
+    const json = await f.json();
+    return f.ok && json?.kind === 'family' && json.family && typeof json.family === 'object' ? json.family : null;
+  }
+  async function openLibrary() {
+    if (!A.ed()) { A.host.status(t('model.needs.ifc')); return; }
+    let rows = null, failed = false;
+    try { rows = await libraryItems(); } catch (e) { failed = true; }
+    const add = async (x, b) => {
+      b.disabled = true;
+      try {
+        const rec = await libraryFamily(x.uuid);
+        if (!rec) { A.host.status(t('fam.lib.bad'), true); b.disabled = false; return; }
+        const key = newFamilyKey();
+        const why = run(importFamilies([rec], { keys: [key] }), { label: x.name || String(rec.name || ''), verb: t('model.verb.made') });
+        if (why) { A.host.status(why, true); b.disabled = false; return; }
+        A.host.status(t('fam.lib.added', { name: x.name || String(rec.name || '') }));
+        dlg.close();
+        setTimeout(() => openFamily(key), 0);
+      } catch (e) { A.host.status(t('fam.lib.offline'), true); b.disabled = false; }
+    };
+    const body = failed ? [el('p', { className: 'bc-muted', 'data-famlib-offline': '' }, t('fam.lib.offline'))]
+      : !rows.length ? [el('p', { className: 'bc-muted', 'data-famlib-none': '' }, t('fam.lib.none'))]
+        : [el('table', { 'data-famlib': '' }, el('tbody', {}, ...rows.map((x) => { const b = small({ 'data-famlib-add': x.uuid }, t('fam.lib.add'), () => add(x, b)); return el('tr', { 'data-famlib-row': x.uuid }, el('td', {}, x.name, x.description ? el('span', { className: 'bc-muted' }, ' - ' + x.description) : null), el('td', {}, b)); })))];
+    const dlg = dialog({ 'data-famlib-dialog': '' }, t('fam.lib.title'), [...body, el('p', { className: 'bc-muted' }, t('fam.lib.note'))], [btn('close', t('model.sh.close'))], () => null);
   }
 
   /** Every family in one dialog (the toolbar's Families…): the same list as the project browser's group. */
@@ -320,6 +375,8 @@ export function mountFamilies(modelUi) {
         el('p', { className: 'bc-fam-acts' },
           small({ 'data-famlist-new': '' }, t('fam.new'), () => { R.dlg?.el?.close(); setTimeout(openNew, 0); }, 'bi-plus-lg'),
           small({ 'data-famlist-file': '' }, t('fam.openfile'), () => { R.dlg?.el?.close(); openFile(); }, 'bi-folder2-open'),
+          small({ 'data-famlist-lib': '' }, t('fam.lib.open'), () => { R.dlg?.el?.close(); setTimeout(openLibrary, 0); }, 'bi-cloud-arrow-down'),   // 0.8 BIM-FAM-MORE: families in the Library
+          mine.some((f) => f.key && f.source !== 'starter') ? small({ 'data-famlist-savelib': '' }, t('fam.savelib'), saveLibrary, 'bi-box-arrow-down') : null,
           small({ 'data-famlist-place': '' }, t('fam.place'), () => startPlace(R.place.key), 'bi-box')),
       ];
     };
@@ -438,6 +495,51 @@ export function mountFamilies(modelUi) {
     const a = e.rot * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), T = (pt) => [e.x + pt[0] * c - pt[1] * s, e.y + pt[0] * s + pt[1] * c];
     return (ev.hotspots || []).filter((x) => x.axis !== 'z').map((x) => ({ id: x.id, name: x.name, axis: x.axis, kind: x.kind, p: T(x.p), q: x.q ? T(x.q) : null }));
   }
+  // ---- 0.8 BIM-FAM-MORE: the same hotspots as grips in the 3D view (every axis, z too); dragging one resizes the family element like the plan grip does ----
+  /** The hotspots of the picked element in model mm (the element's turn and level height applied): [{ id, axis, kind, at: [x, y, z] (grip), dir: [dx, dy, dz] (the axis), from: family value }]. */
+  function hotspots3d(h, values) {
+    const { e, fam } = h;
+    let ev;
+    try { ev = evaluateFamily(fam, values, evalCtx(W())); } catch (x) { return []; }
+    if (!ev.ok) return [];
+    const lv = (A.S.data?.levels || []).find((l) => l.id === e.storey), z0 = lv?.elevation || 0;
+    const a = e.rot * Math.PI / 180, c = Math.cos(a), s = Math.sin(a), T = (pt) => [e.x + pt[0] * c - pt[1] * s, e.y + pt[0] * s + pt[1] * c, z0 + pt[2]];
+    return (ev.hotspots || []).map((x) => {
+      const m = x.q ? [(x.p[0] + x.q[0]) / 2, (x.p[1] + x.q[1]) / 2, (x.p[2] + x.q[2]) / 2] : x.p;
+      return { id: x.id, name: x.name, axis: x.axis, kind: x.kind, at: T(m), dir: x.axis === 'x' ? [c, s, 0] : x.axis === 'y' ? [-s, c, 0] : [0, 0, 1], local: m };
+    });
+  }
+  let g3 = null;   // { h, list, drag }
+  function sync3d() {
+    if (typeof A?.host?.grips3d !== 'function') return;
+    const h = hotspotElement();
+    if (!h || R.hot) { if (g3 && !R.hot) { g3 = null; A.host.grips3d(null); } return; }
+    const list = hotspots3d(h, { ...h.e.values, ...h.e.instance });
+    if (!list.length) { if (g3) { g3 = null; A.host.grips3d(null); } return; }
+    g3 = { h, list, drag: null };
+    const ok = A.host.grips3d(list.map((x) => ({ p: x.at, kind: x.kind === 'edge' ? 'edge' : 'corner' })), {
+      start(i) { g3.drag = { i, values: null }; },
+      move(i, ray) {
+        const x = g3?.list[i];
+        if (!x || !g3.drag) return;
+        const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+        const w = [x.at[0] - ray.o[0], x.at[1] - ray.o[1], x.at[2] - ray.o[2]], b = dot(x.dir, ray.d), cc = dot(ray.d, ray.d), d = dot(x.dir, w), ee = dot(ray.d, w), den = cc - b * b;
+        if (!(Math.abs(den) > 1e-9)) return;   // looking along the axis: no place to read
+        const tt = (b * ee - cc * d) / den;
+        const to = [x.local[0], x.local[1], x.local[2]];
+        to['xyz'.indexOf(x.axis)] += tt;
+        let r = { ok: false };
+        try { r = dragHotspot(g3.h.fam, { ...g3.h.e.values, ...g3.h.e.instance }, x.id, to, evalCtx(W())); } catch (err) { /* rebuilding */ }
+        if (r.ok) { g3.drag.values = r.values; g3.drag.moved = x.axis; }
+      },
+      end() {
+        const dr = g3?.drag, hh = g3?.h;
+        if (!dr?.values || !hh) return;
+        A.commit(resizeFamilyElements([hh.e.guid], dr.values), { label: hh.fam.name, verb: t('model.verb.changed') });
+      },
+    });
+    if (!ok) g3 = null;
+  }
   const nearSeg = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy, k = L2 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)) : 0; return Math.hypot(p[0] - (a[0] + k * dx), p[1] - (a[1] + k * dy)); };
 
   // ---------------------------------------------------------------------------------------------- picked family elements
@@ -508,7 +610,7 @@ export function mountFamilies(modelUi) {
       if (!h || !moved || cancel || !h.values) { A.buildScene(); return; }
       A.commit(resizeFamilyElements([h.guid], h.values), { label: h.fam.name, verb: t('model.verb.changed') });
     },
-    refresh() { read(); if (A.S.tool === 'family') fillPlace(); R.dlg?.redraw(); },
+    refresh() { read(); if (A.S.tool === 'family') fillPlace(); R.dlg?.redraw(); g3 = null; sync3d(); },
     // 0.7 BIM-FAM-MORE (2): a family with a 2D symbol is drawn from it in the plan (the cut of its solids is skipped for it)
     ownKeys(set, k) { for (const e of R.elements) if (symbolFamily(e)) set.add(k + e.id); },
     scene(scene) {
@@ -527,7 +629,7 @@ export function mountFamilies(modelUi) {
     openFamily,
   });
   for (const b of A.root.querySelectorAll('[data-fam-list]')) b.addEventListener('click', () => { b.closest('details')?.removeAttribute('open'); if (!A.ed()) { A.host.status(t('model.needs.ifc')); return; } openList(); });
-  const api = { openFamily, editFamily, openNew, openList, openFile, startPlace, saveFile, saveIfc, read };
+  const api = { openLibrary, sync3d, grips3d: () => g3 && { n: g3.list.length, ids: g3.list.map((x) => x.id) }, openFamily, editFamily, openNew, openList, openFile, startPlace, saveFile, saveIfc, read };
   if (typeof window !== 'undefined') window.bimcraftFamilies = { state: R, api };   // for tests
   return api;
 }

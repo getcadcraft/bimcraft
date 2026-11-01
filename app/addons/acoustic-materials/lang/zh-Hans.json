@@ -1,0 +1,7 @@
+{
+  "@locale": "zh-Hans",
+  "@name": "简体中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "数据与来源",
+  "data.bras": "BRAS（Benchmark for Room Acoustical Simulation，柏林工业大学与亚琛工业大学），表面描述，CC BY-SA 4.0"
+}

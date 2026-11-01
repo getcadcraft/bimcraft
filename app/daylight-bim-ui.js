@@ -10,6 +10,8 @@
  *            shown(), storeyName(id) → text }
  */
 import { el } from './ui-util.js';
+import { getDisplayUnits, localizeQuantities, fmtM2 } from './model-units.js';   // GH.3-A: results in the picked unit
+const Q = (s) => localizeQuantities(s, getDisplayUnits());
 import { t } from './i18n.js';
 import { DEFAULTS, gatherRooms, daylight, daylightCsv } from './daylight-bim.js';
 import { profile, frontTris, obstructionAngle, vsc } from './daylight-bim-sky.js';
@@ -97,9 +99,9 @@ export function mountDaylight(host) {
         if (open) {
           out.push(el('section', { className: 'as-detail', 'data-day-detail': open.guid },
             el('h3', { className: 'bc-h fa-h3' }, [open.name, open.longName].filter(Boolean).join(' ')),
-            el('p', {}, t('day.detail.surfaces', { A: open.A.toFixed(1), floor: open.areas.floor.toFixed(1), wall: open.areas.wall.toFixed(1), ceiling: open.areas.ceiling.toFixed(1), glass: open.areas.glass.toFixed(1), R: open.R.toFixed(3) })),
+            el('p', {}, t('day.detail.surfaces.u', { A: fmtM2(open.A, getDisplayUnits()), floor: fmtM2(open.areas.floor, getDisplayUnits(), false), wall: fmtM2(open.areas.wall, getDisplayUnits(), false), ceiling: fmtM2(open.areas.ceiling, getDisplayUnits(), false), glass: fmtM2(open.areas.glass, getDisplayUnits(), false), R: open.R.toFixed(3) })),
             open.windows.length ? el('ul', { className: 'as-log' }, ...open.windows.map((w) => el('li', { 'data-day-window': w.guid },
-              el('strong', {}, w.name || w.tag || '#' + w.id), ' ', t('day.detail.window', { area: w.area.toFixed(2), glazed: w.glazed.toFixed(2), theta: w.theta.toFixed(1) }), ' ', windowLine(w))))
+              el('strong', {}, w.name || w.tag || '#' + w.id), ' ', Q(t('day.detail.window', { area: w.area.toFixed(2), glazed: w.glazed.toFixed(2), theta: w.theta.toFixed(1) })), ' ', windowLine(w))))
               : el('p', { className: 'bc-muted' }, t('day.detail.nowindow')),
             el('p', { className: 'bc-muted' }, t('day.detail.formula')),
             ...roomExtras(open, host, sky)));
@@ -113,5 +115,6 @@ export function mountDaylight(host) {
     }
     host.pane.replaceChildren(...out);
   }
+  window.addEventListener('bimcraft-units', () => { try { render(); } catch (e) { /* GH.3-A: the tab has nothing to show yet */ } });   // results follow the display unit
   return { render, state: S, sky: SKY, changed() { if (S.gathered) S.stale = true; render(); } };
 }

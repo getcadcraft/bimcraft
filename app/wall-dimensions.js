@@ -87,27 +87,34 @@ export function syncWallDimensions(w) {
   }
 }
 const operation = fn => ed => new ModelWriter(ed.W,ed.api,ed.mid).run(w=>{ const result=fn(w);syncWallDimensions(w);return result; });
-export function saveWallDimension(input) {
+function saveInto(w, input) {
   const spec=structuredClone(input); let guid=spec.guid || null;
+  checkRecordVersion(spec,'dimension');
+  const d={version:1,refs:spec.refs,axis:spec.axis || 'aligned',offset:spec.offset ?? 300,view:spec.view}; validateSpec(d);
+  const st=w.byGuid(spec.level); if(!st) throw new Error(tr('wall.err.dimension_level_is_missing'));
+  const r=resolveDimension({...d,storey:st},readWalls(w));
+  if(['unsupported','corrupt'].includes(r.status)) throw recordError('assembly',r.status);
+  if(r.status!=='ok') throw new Error(tr('wall.err.the_references_are_missing_or_coincide_in_the_se'));
+  const existing=readWallDimensions(w).filter(d=>d.guid===guid);
+  if(spec.guid && (existing.length!==1 || existing[0].storey!==st)) throw new Error(tr('wall.err.dimension_is_no_longer_available'));
+  if(existing.some(d=>d.issue)) throw recordError('dimension',existing[0].issue==='unsupported'?'unsupported':'corrupt');
+  let id=existing[0]?.id || null;
+  if(!id) {
+    guid ||= val(w.guid()); const sl=w.api.GetLine(w.mid,st,false);
+    // i18n-ignore: the annotation's name as written into the IFC
+    id=w.make('IFCANNOTATION',guid,w.ownerHistory(),w.L('Wall reference dimension'),null,w.L('CadCraft_WallDimension'),w.H(w.placeAt(sl.ObjectPlacement.value,0,0,0,0)),null,...(/^IFC4X3/i.test(w.schema||'')?['USERDEFINED']:[]));
+    w.noteGuid(guid,id);w.contain(id,st);
+  }
+  w.upsertPset(id,DIMENSION_PSET,[['Spec','IFCTEXT',JSON.stringify(d)]]);
+  return {id,ids:[id],guid,made:new Map([[guid,id]])};
+}
+export function saveWallDimension(input) { return operation(w=>saveInto(w,input)); }
+/** 0.8 EG.20: many dimensions in ONE undo step (the auto-dimension command). Any refused one refuses all. */
+export function saveWallDimensions(inputs) {
   return operation(w=>{
-    checkRecordVersion(spec,'dimension');
-    const d={version:1,refs:spec.refs,axis:spec.axis || 'aligned',offset:spec.offset ?? 300,view:spec.view}; validateSpec(d);
-    const st=w.byGuid(spec.level); if(!st) throw new Error(tr('wall.err.dimension_level_is_missing'));
-    const r=resolveDimension({...d,storey:st},readWalls(w));
-    if(['unsupported','corrupt'].includes(r.status)) throw recordError('assembly',r.status);
-    if(r.status!=='ok') throw new Error(tr('wall.err.the_references_are_missing_or_coincide_in_the_se'));
-    const existing=readWallDimensions(w).filter(d=>d.guid===guid);
-    if(spec.guid && (existing.length!==1 || existing[0].storey!==st)) throw new Error(tr('wall.err.dimension_is_no_longer_available'));
-    if(existing.some(d=>d.issue)) throw recordError('dimension',existing[0].issue==='unsupported'?'unsupported':'corrupt');
-    let id=existing[0]?.id || null;
-    if(!id) {
-      guid ||= val(w.guid()); const sl=w.api.GetLine(w.mid,st,false);
-      // i18n-ignore: the annotation's name as written into the IFC
-      id=w.make('IFCANNOTATION',guid,w.ownerHistory(),w.L('Wall reference dimension'),null,w.L('CadCraft_WallDimension'),w.H(w.placeAt(sl.ObjectPlacement.value,0,0,0,0)),null,...(/^IFC4X3/i.test(w.schema||'')?['USERDEFINED']:[]));
-      w.noteGuid(guid,id);w.contain(id,st);
-    }
-    w.upsertPset(id,DIMENSION_PSET,[['Spec','IFCTEXT',JSON.stringify(d)]]);
-    return {id,ids:[id],guid,made:new Map([[guid,id]])};
+    const made=new Map(), ids=[];
+    for(const input of inputs){ const r=saveInto(w,input); ids.push(r.id); for(const [g,i] of r.made) made.set(g,i); }
+    return {id:ids[ids.length-1] ?? null,ids,made};
   });
 }
 export const removeWallDimensions = guids => operation(w=>{

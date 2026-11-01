@@ -42,12 +42,18 @@ async function mountLanBox(box) {
   const [{ mountLan }, crypto, pool] = await Promise.all([import('./compute/lan-ui.js'), import('./live-crypto.js'), pagePool()]);
   lan = mountLan({ el, t, bridge, crypto, pool, storage: globalThis.localStorage,
     // what this computer runs for others: its own kernels only, by id
+    // small JSON jobs it runs for others (0.8 CH.31): the process model's variants of an optimisation, solved here by its own engine
+    tasks: (await import('./process/optimise.js')).variantTasks(),
     kernels: {
       preview: { url: new URL('./compute/preview-kernel.js', import.meta.url).href },
       // the path tracer (render's JS reference as tiles); the scene arrives as render/pt-ref-job.js shareable(packed)
       'pt-ref': { url: new URL('./render/pt-ref-job.js', import.meta.url).href },
     } }, box);
 }
+
+/** The connected computers that run this job id (0.8 CH.31: 'process-variant'); the Plant add-on's Optimise section sends variants to them. [] outside Studio. */
+export function lanTaskNodes(task) { return lan && typeof lan.taskNodes === 'function' ? lan.taskNodes(task) : []; }
+globalThis.bimcraftLan = { taskNodes: lanTaskNodes };
 
 export function lanDevices(size) { return lan ? lan.devices(size) : Promise.resolve([]); }
 

@@ -1,0 +1,22 @@
+{
+  "id": "sprinkler",
+  "name": "Fire sprinklers",
+  "version": "0.8.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.3",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "commands",
+    "panel",
+    "files",
+    "storage"
+  ],
+  "description": "Sprinkler heads on a grid in a room by hazard class, the branch lines and cross main that feed them, and a density/area hydraulic calculation (Hazen-Williams, K-factor heads, hose allowance, a water-supply test). The design criteria are your table; the defaults are labelled for professional review. A design aid, not an approval.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "off"
+}

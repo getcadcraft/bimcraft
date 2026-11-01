@@ -16,11 +16,12 @@ Check a clearance, a wall length or the size of a face straight from the model, 
 2. Click {{ui:Measure}} in the toolbar, or press {{key:M}}. A bar opens at the bottom of the view.
 3. **A distance:** with {{ui:Distance}} chosen, click the first point, then the second. Near a corner the pointer snaps to it, near an edge onto the edge; the small label at the pointer says which. Each pair of clicks makes one measurement.
 4. **A face's area:** choose {{ui:Face area}} and click a face. The whole flat face lights up and its area shows.
-5. Click {{ui:Clear}} to remove the measurements, or {{ui:Done}} (or {{key:Esc}}) to stop measuring.
+5. **Straight lines:** hold {{key:Shift}} while you pick the second point, or press {{ui:Straight}} in the bar to keep it on. The line then runs along the one axis the pointer is nearest to (in a top view, along X or Y of the plan; in other views along X, Y or Z), and the pointer label says "straight along an axis". {{key:M}} still starts and stops Measure.
+6. Click {{ui:Clear}} to remove the measurements, or {{ui:Done}} (or {{key:Esc}}) to stop measuring.
 
 ## What you should see
 
-- A line between the two points with its length on it, and in the bar the length with how far it goes along X, Y and Z (in the model's axes, Z up), in metres.
+- A line between the two points with its length on it, and in the bar the length with how far it goes along X, Y and Z (in the model's axes, Z up), all in the {{ui:Units}} chosen on the toolbar.
 - A face's area in square metres, on the face and in the bar.
 - Labels stay on their measurements while you orbit, pan and zoom.
 - While you measure, clicks do not pick elements. A section plane or box still cuts the model, and you can measure what it shows, cut faces included.
@@ -30,7 +31,7 @@ Check a clearance, a wall length or the size of a face straight from the model, 
 Click {{ui:Location}} in the measure bar, then click a point on the model (it snaps to corners and edges as distances do). The bar shows:
 
 - the **latitude and longitude**, in decimal degrees and in degrees, minutes and seconds, in WGS 84 to start;
-- the **map coordinates** (eastings and northings in metres) in the model's own map system, for example `EPSG:28356`;
+- the **map coordinates** (eastings and northings, written in the {{ui:Units}} chosen on the toolbar) in the model's own map system, for example `EPSG:28356`;
 - the **height** and the vertical datum the file names, and the file's **own datum** (for example GDA94).
 
 {{ui:Copy}} puts it all on the clipboard in one line. Change the system the latitude and longitude are in under {{ui:Settings}} › {{ui:BimCraft}} › {{ui:Location}}: WGS 84 (as GPS and web maps), the file's own datum, or another common one such as ETRS89 or NAD83.

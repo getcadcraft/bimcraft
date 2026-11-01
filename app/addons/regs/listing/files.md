@@ -1,0 +1,1 @@
+**Packs** are JSON files in the `cadcraft-regulation-pack` format; you can upload your own. **Drawings** keep your ticks: in BimCraft inside the IFC as the `CadCraft_Regulations` property set on the project; in CivilCraft and DetailCraft inside the project file; in CadCraft for the session only. **Reports** are a PDF code summary sheet that ends with the not-legal-advice line.

@@ -99,7 +99,8 @@ export function readSheets(w) {
     const s = json(v);
     if (!s || !/^sheet-\d+$/.test(id)) continue;
     out.push({ id, number: String(s.number || '').slice(0, 20), title: String(s.title || '').slice(0, 120), paper: String(s.paper || ''),
-      views: (Array.isArray(s.views) ? s.views : []).filter((x) => SHEET_KINDS.includes(x.kind) && typeof x.ref === 'string').map((x) => ({ kind: x.kind, ref: x.ref.slice(0, 64), x: fin(x.x, 0), y: fin(x.y, 0), ratio: Math.max(0, Math.round(fin(x.ratio, 0))) })) });
+      views: (Array.isArray(s.views) ? s.views : []).filter((x) => SHEET_KINDS.includes(x.kind) && typeof x.ref === 'string').map((x) => ({ kind: x.kind, ref: x.ref.slice(0, 64), x: fin(x.x, 0), y: fin(x.y, 0), ratio: Math.max(0, Math.round(fin(x.ratio, 0))) })),
+      legend: (Array.isArray(s.legend) ? s.legend : []).slice(0, 60).map((e, i) => ({ n: i + 1, kind: e.kind === 'classification' ? 'classification' : 'layer', key: String(e.key || '').slice(0, 80), text: String(e.text || e.key || '').slice(0, 160), count: Math.max(0, Math.round(fin(e.count, 0))) })).filter((e) => e.key) });
   }
   return out.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }) || a.id.localeCompare(b.id));
 }
@@ -188,7 +189,7 @@ export function saveSheet(sheet) {
     const pj = project(w);
     if (!fixed) { const have = readSheets(w); let n = 1; while (have.some((x) => x.id === 'sheet-' + n)) n++; fixed = 'sheet-' + n; }
     const views = (S.views || []).filter((x) => SHEET_KINDS.includes(x.kind)).map((x) => ({ kind: x.kind, ref: String(x.ref), x: round(fin(x.x, 0), 2), y: round(fin(x.y, 0), 2), ratio: Math.max(0, Math.round(fin(x.ratio, 0))) }));
-    w.upsertPset(pj, SHEETS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ number: String(S.number || '').slice(0, 20), title: String(S.title || '').slice(0, 120), paper: String(S.paper || ''), views })]]);
+    w.upsertPset(pj, SHEETS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ number: String(S.number || '').slice(0, 20), title: String(S.title || '').slice(0, 120), paper: String(S.paper || ''), views, ...(S.legend?.length ? { legend: S.legend.slice(0, 60).map((e) => ({ kind: e.kind, key: String(e.key).slice(0, 80), text: String(e.text || '').slice(0, 160), count: Math.round(fin(e.count, 0)) })) } : {}) })]]);
     return { id: pj, ids: [], sheet: fixed };
   });
 }

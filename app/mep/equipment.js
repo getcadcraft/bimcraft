@@ -277,7 +277,7 @@ export function equipmentItem(kind, values, { name = '' } = {}) {
     }),
   };
 }
-const IFC4_NAME = { IFCUNITARYEQUIPMENT: 'IfcUnitaryEquipment', IFCFAN: 'IfcFan', IFCPUMP: 'IfcPump', IFCBOILER: 'IfcBoiler', IFCAIRTERMINALBOX: 'IfcAirTerminalBox', IFCAIRTERMINAL: 'IfcAirTerminal', IFCTANK: 'IfcTank' };
+const IFC4_NAME = { IFCUNITARYEQUIPMENT: 'IfcUnitaryEquipment', IFCFAN: 'IfcFan', IFCPUMP: 'IfcPump', IFCBOILER: 'IfcBoiler', IFCAIRTERMINALBOX: 'IfcAirTerminalBox', IFCAIRTERMINAL: 'IfcAirTerminal', IFCTANK: 'IfcTank', IFCPIPEFITTING: 'IfcPipeFitting' };   // + 0.8 SU.888 (sx-mep): refnet joints
 
 /** Where each port of a placed piece sits, in its storey's plan mm, and the way it faces. */
 export function portsAt(eq) {
@@ -289,7 +289,7 @@ export function portsAt(eq) {
 
 // ---- reading ----
 const readJson = (s, d) => { try { const v = JSON.parse(String(s || '')); return v ?? d; } catch (e) { return d; } };
-const EQ_CLASSES = ['IFCUNITARYEQUIPMENT', 'IFCFAN', 'IFCPUMP', 'IFCBOILER', 'IFCAIRTERMINALBOX', 'IFCAIRTERMINAL', 'IFCTANK', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWMOVINGDEVICE', 'IFCFLOWCONTROLLER', 'IFCFLOWTERMINAL', 'IFCFLOWSTORAGEDEVICE'];
+const EQ_CLASSES = ['IFCUNITARYEQUIPMENT', 'IFCFAN', 'IFCPUMP', 'IFCBOILER', 'IFCAIRTERMINALBOX', 'IFCAIRTERMINAL', 'IFCTANK', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWMOVINGDEVICE', 'IFCFLOWCONTROLLER', 'IFCFLOWTERMINAL', 'IFCFLOWSTORAGEDEVICE', 'IFCPIPEFITTING', 'IFCFLOWFITTING'];   // + 0.8 SU.888 (sx-mep): refnet joints (mep/hvac.js); run fittings carry no CadCraft_MepEquipment and are skipped
 export function readEquipment(w) {
   const so = w.storeyOf(), out = [], seen = new Set();
   for (const cls of EQ_CLASSES) {

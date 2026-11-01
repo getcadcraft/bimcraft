@@ -79,10 +79,10 @@ export function renderTools(C, prepare, { toolResult = null } = {}) {
     name: 'render_still', group: 'export', title: 'Render a picture',
     description: 'A rendered picture of the 3D view (or, in ModelCraft, of a saved scene), as the Render dialog\'s Render button makes it, with the person\'s Render settings unless given here: mode "fast" (the quick renderer) or "hq" (the path tracer: WebGPU on the graphics card, else WebGL); quality draft / good / best = 16 / 64 / 256 samples; width and height in pixels (default the dialog\'s size); seconds = a time limit for "hq". Format png (default), or exr / ccrender (the linear picture with its render elements: "hq" only). With a path (Studio) the file is written there; without one a PNG up to ' + INLINE_MAX + ' px comes back to you as a picture, anything else downloads. Nothing in the model changes.',
     inputSchema: obj({
-      mode: { type: 'string', enum: ['fast', 'hq'] }, quality: { type: 'string', enum: Object.keys(QUALITY) }, width: SIDE, height: SIDE,
-      seconds: { type: 'integer', minimum: 1, maximum: 3600 }, engine: { type: 'string', enum: ['auto', 'webgl'], default: 'auto', description: '"hq" only: webgl keeps the path tracer off WebGPU.' },
-      sky: { type: 'string', enum: Object.keys(SKIES) }, denoise: { type: 'boolean' }, scene: SCENE,
-      format: { type: 'string', enum: Object.keys(RENDER_FORMATS), default: 'png' }, path: PATH, overwrite: { type: 'boolean', default: false },
+      mode: { type: 'string', enum: ['fast', 'hq'], description: '"fast" = the quick renderer, "hq" = the path tracer. Default: the Render dialog\'s setting.' }, quality: { type: 'string', enum: Object.keys(QUALITY), description: 'draft / good / best = 16 / 64 / 256 samples.' }, width: { ...SIDE, description: 'Picture width in pixels. Default: the dialog\'s size.' }, height: { ...SIDE, description: 'Picture height in pixels. Default: the dialog\'s size.' },
+      seconds: { type: 'integer', minimum: 1, maximum: 3600, description: 'Time limit in seconds for "hq".' }, engine: { type: 'string', enum: ['auto', 'webgl'], default: 'auto', description: '"hq" only: webgl keeps the path tracer off WebGPU.' },
+      sky: { type: 'string', enum: Object.keys(SKIES), description: 'The sky to light the picture with. Default: the dialog\'s setting.' }, denoise: { type: 'boolean', description: 'Smooth the noise of an "hq" picture. Default: the dialog\'s setting.' }, scene: SCENE,
+      format: { type: 'string', enum: Object.keys(RENDER_FORMATS), default: 'png', description: 'png, or exr / ccrender (the linear picture with its render elements; "hq" only).' }, path: PATH, overwrite: { type: 'boolean', default: false, description: 'Replace the file at path when it exists. Otherwise an existing file is an error.' },
       download: { type: 'boolean', default: false, description: 'Download the file even when it could come back as a picture.' },
     }),
     run: (a) => once(async () => {
@@ -133,9 +133,9 @@ export function renderTools(C, prepare, { toolResult = null } = {}) {
     name: 'render_queue', group: 'export', title: 'Render queue',
     description: 'The Render dialog\'s queue (high-quality pictures that render one after another, kept in this browser until removed): add pictures (each one packed now, as the dialog\'s "Add to the queue" does: the view as it is, or in ModelCraft a saved scene; the person\'s Render settings with the quality and size given), then run every job that waits, in order, and wait for them. Finished pictures go into a folder (Studio) as "<name>.png", else download when download is true, else stay in Render › Queue for the person. Without add it lists the queue (and runs it when run is true). Needs WebGPU (the path tracer on the graphics card).',
     inputSchema: obj({
-      add: { type: 'array', items: JOB, minItems: 1, maxItems: 50 }, run: { type: 'boolean', default: true },
+      add: { type: 'array', items: JOB, minItems: 1, maxItems: 50, description: 'Pictures to add to the queue, one object per picture.' }, run: { type: 'boolean', default: true, description: 'Run every waiting job, in order, and wait for them. false only adds or lists.' },
       folder: { ...PATH, description: 'Studio: a folder inside the allowed ones for the finished pictures of this call.' },
-      download: { type: 'boolean', default: false }, overwrite: { type: 'boolean', default: false },
+      download: { type: 'boolean', default: false, description: 'Download the finished pictures when no folder is given.' }, overwrite: { type: 'boolean', default: false, description: 'Replace files that exist in the folder. Otherwise an existing file is an error.' },
     }),
     run: (a) => once(async () => {
       const o = await prepare();

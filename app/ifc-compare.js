@@ -91,3 +91,18 @@ export function compareCsv(res, { name = (s, k) => String(k), guid = () => '', l
   for (const k of res.removed) rows.push([w.removed, guid('a', k), name('a', k), '', '', '']);
   return rows.map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';
 }
+
+/** The comparison as plain sentences, one per change, for a person or an assistant to read. say = { added, removed, moved, reshaped, prop } each (vars) → text from the page's language file. */
+export function compareWords(res, { name = (s, k) => String(k), label = (f) => f, say, max = 500 } = {}) {
+  const out = [];
+  const val = (v) => (v === undefined || v === null || v === '' ? '—' : String(v));
+  for (const k of res.added) out.push(say.added({ name: name('b', k) }));
+  for (const k of res.removed) out.push(say.removed({ name: name('a', k) }));
+  for (const c of res.changed) {
+    const n = name('b', c.b);
+    if (c.moved) out.push(say.moved({ name: n, d: Number(c.moved.toFixed(3)) }));
+    if (c.reshaped) out.push(say.reshaped({ name: n }));
+    for (const pr of c.props) out.push(say.prop({ name: n, field: label(pr.field), before: val(pr.before), after: val(pr.after) }));
+  }
+  return { lines: out.slice(0, max), total: out.length };
+}

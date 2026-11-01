@@ -36,15 +36,15 @@ const CSS = `
 .reg-side{overflow:auto;padding:.75rem;border-right:1px solid var(--line,#999);display:flex;flex-direction:column;gap:.75rem}
 .reg-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .reg-head h2{font-size:1.1rem;margin:0}
-.reg-side h3{font-size:.85rem;margin:0 0 .25rem;font-weight:700}
-.reg-side section{border-top:1px solid var(--line,#999);padding-top:.5rem}
+.reg-side h3{font-size:.85rem;margin:0;font-weight:700}
+.reg-side section{border-top:1px solid var(--line,#999);padding-top:.5rem;display:flex;flex-direction:column;gap:.5rem}
 .reg-row{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
 .reg-row label{display:flex;gap:.25rem;align-items:center;font-size:.8rem}
 .reg-scans{list-style:none;margin:.25rem 0;padding:0;display:flex;flex-direction:column;gap:.2rem}
 .reg-scans li{display:flex;gap:.35rem;align-items:center;font-size:.8rem}
 .reg-sw{width:.8rem;height:.8rem;flex:none;display:inline-block}
 .reg-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
-.reg-sub{font-size:.75rem;color:var(--ink-2,#555)}
+.reg-sub{font-size:.75rem;line-height:1.45;color:var(--ink-2,#555)}
 .reg-tbl{border-collapse:collapse;width:100%;font-size:.75rem;font-variant-numeric:tabular-nums}
 .reg-tbl th,.reg-tbl td{border-bottom:1px solid var(--line,#ccc);padding:.1rem .2rem;text-align:left}
 .reg-tbl input{width:3.9rem;font:inherit;font-size:.72rem;padding:.05rem .15rem}

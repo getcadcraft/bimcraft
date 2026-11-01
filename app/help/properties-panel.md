@@ -27,7 +27,7 @@ Below come the **property sets**, sorted by name:
 - Quantity sets (lengths, areas, volumes, counts, weights) are read-only.
 - Lists and enumerated values are shown, read-only.
 - Yes/No values show as **Yes** or **No**.
-- Numbers are rounded to four decimals for display, in the file's own units, without a unit symbol.
+- Numbers are rounded to four decimals for display. Lengths (a length property or a quantity's length) show in the {{ui:Units}} chosen on the toolbar, with the unit beside them, and you can type a new one in that unit or with another unit mark (2.4 m, 8'-0"): BimCraft writes the file's own number back. Other numbers show as the file has them.
 - An empty value shows as *empty*. An edited value is bold with a blue bar beside it.
 
 ## Copy a value

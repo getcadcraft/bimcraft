@@ -54,7 +54,7 @@ section('Pipe specs');
 
 section('Process equipment');
 {
-  ok(EQ.TYPES.length === 7, 'seven equipment types', EQ.TYPES.join());
+  ok(EQ.TYPES.length === 8, 'eight equipment types (the vessel from the body calculator joined in 0.8)', EQ.TYPES.join());
   ok(EQ.TYPES.every((k) => { const e = EQ.makeEquipment(k); return EQ.isClosed(e.mesh) && EQ.meshVolume(e.mesh) > 0 && e.nozzles.length >= 2 && e.ifc.cls; }), 'each is closed solids of positive volume with nozzles and an IFC class');
   // the tank is a 24-sided prism with a cone roof: area = ½ · 24 · r² · sin(15°); V = area · h + area · roof / 3
   const tank = EQ.makeEquipment('tank', { d: 3000, h: 3000, roof: 300 });
@@ -193,6 +193,29 @@ section('Equipment as an IFC file, read back by an independent reader');
     api.CloseModel(mid);
   }
   ok(IO.writeIfc({ items: [] }).counts.equipment === 0 && !/IFCPUMP/.test(IO.writeIfc({ items: [{ equip: null }] }).text), 'no equipment: an empty project, nothing invented');
+}
+
+// ---- 0.8 (mep-08): API 1.1 wiring — nozzles as addPorts shapes, layout from placements, spool balloons
+{
+  const PL = await mine('lib/place.js');
+  const pump = EQ.makeEquipment('pump-cf');
+  const ports = pump.nozzles.map(PL.portOf);
+  const suc = ports.find((p) => p.name === 'suction'), dis = ports.find((p) => p.name === 'discharge');
+  ok(ports.length === pump.nozzles.length && ports.every((p) => p.kind === 'pipe' && p.shape === 'round' && p.size > 0 && Array.isArray(p.axis) && [p.x, p.y, p.z].every(Number.isFinite)), 'every nozzle becomes an addPorts port: pipe, round, sized, with a place and an axis');
+  ok(suc.direction === 'in' && dis.direction === 'out', 'suction is an inlet, discharge an outlet');
+  const nz = pump.nozzles.find((n) => n.name === 'suction');
+  ok(suc.nominal === nz.size && Math.abs(suc.size - T.pipeSize('steel', '40', nz.size).od * 25.4) < 0.11 && suc.x === nz.p[0] && suc.axis[0] === nz.out[0], 'size = the steel pipe\'s outside diameter for the nozzle\'s NPS (' + suc.size + ' mm for ' + nz.size + '"), nominal kept, place and facing as the nozzle\'s');
+  // placements() → layout items: lengths in model units (feet here) converted to mm
+  const pl = { id: 77, name: 'Lathe', itemNumber: '4', x: 1000, y: 2000, rot: 90, equipment: { Name: 'Lathe', Width: 4, Depth: 2, Height: 3, WeightKg: 900 } };
+  const it = LY.itemFromPlacement(pl, 304.8);
+  ok(it && it.w === 1219.2 && it.d === 609.6 && Math.abs(it.h - 914.4) < 1e-6 && it.weight === 900 && it.tag === '4' && it.x === 1000 && it.rot === 90, 'a placed piece: Width/Depth/Height in feet converted to mm, weight, tag from its item number, place and turn', JSON.stringify(it));
+  ok(LY.itemFromPlacement({ id: 1, name: 'x', equipment: {} }, 1) === null, 'a placement with no width and depth is not a layout item');
+  const two = [LY.itemFromPlacement({ ...pl, id: 'a' }, 304.8), LY.itemFromPlacement({ ...pl, id: 'b', x: 1200, y: 2100 }, 304.8)];
+  ok(LY.checkLayout({ items: two, minAisle: 900, floorLoad: 1000 }).some((f) => f.code === 'overlap'), 'two placed pieces on top of each other: the layout check finds the overlap');
+  // spools from the model number the isometric's balloons
+  const run = { id: 'g1', size: '3', mat: 'steel', cls: '40', od: 88.9, points: [[0, 0, 0], [2400, 0, 0], [2400, 1500, 0]], valves: [], spools: [{ id: 'CHW-12-S01', s0: 0, s1: 2400 }, { id: 'CHW-12-S02', s0: 2400, s1: 3900 }] };
+  const svg = IS.toSvg(IS.iso({ runs: [run], units: 'mm', title: { project: 'p', drawing: 'd', drawn: 'x', date: '2026-10-27' } }));
+  ok(svg.includes('CHW-12-S01') && svg.includes('CHW-12-S02'), 'the isometric balloons the spool ids BimCraft numbered');
 }
 
 for (const f of fs.readdirSync(HERE).filter((x) => /^t-.*\.mjs$/.test(x)).sort()) await import(pathToFileURL(path.join(HERE, f)).href);

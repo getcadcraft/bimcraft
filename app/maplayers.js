@@ -427,16 +427,26 @@ export function createMapLayers(host) {
         const pick = el('select', { className: 'select-cc ml-select', id: id + '-pick', 'data-map-crs-pick': '' });
         const fill = () => { let hits = []; try { hits = q.value.trim() ? search(q.value, { limit: 40 }).filter((e) => !e.geographic) : []; } catch { hits = []; } pick.replaceChildren(el('option', { value: '' }, hits.length ? t('ml.sys.choose') : t('ml.sys.type')), ...hits.map((e) => el('option', { value: String(e.code) }, 'EPSG:' + e.code + ' — ' + e.name))); };
         q.addEventListener('input', fill); fill();
+        // 0.8 D8.9 (crs-share_PART_3): the shared picker (UTM zone, EPSG number, words, .prj, My projections); the drawing keeps the EPSG number
+        const more = host.pickCrs ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-map-crs-more': '', title: t('ml.sys.more.help') }, t('ml.sys.more')) : null;
+        more?.addEventListener('click', async () => {
+          const got = await host.pickCrs();
+          if (!got || got.code == null) return;
+          if (![...pick.options].some((o) => o.value === String(got.code))) pick.append(el('option', { value: String(got.code) }, 'EPSG:' + got.code + ' \u2014 ' + got.name));   // i18n-ignore: dash
+          pick.value = String(got.code);
+          status.textContent = t('ml.sys.more.chosen', { name: got.name });
+        });
         const l = c?.local || null;
         const num = (k, v) => el('input', { type: 'text', inputmode: 'decimal', className: 'ml-input ml-num', id: id + '-' + k, value: v == null ? '' : String(v), 'data-map-place': k });
         kids.push(el('div', { className: 'ml-props' }, ...field(t('ml.sys.search'), q), ...field(t('ml.sys.pick'), pick)),
+          more ? el('div', { className: 'ml-links' }, more) : null, more ? el('p', { className: 'ml-note', 'data-map-crs-more-help': '' }, t('ml.sys.more.help')) : null,
           el('p', { className: 'ml-note' }, t('ml.sys.place.help')),
           el('div', { className: 'ml-props ml-place' }, ...field(t('ml.sys.dx'), num('x', l?.from?.[0] ?? 0)), ...field(t('ml.sys.dy'), num('y', l?.from?.[1] ?? 0)),
             ...field(t('ml.sys.e'), num('e', l?.to?.[0] ?? 0)), ...field(t('ml.sys.n'), num('n', l?.to?.[1] ?? 0)), ...field(t('ml.sys.rot'), num('rot', l?.rotation ?? 0))),
           el('div', { className: 'ml-links' }, el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-map-crs-apply': '' }, t('ml.sys.apply')),
             c ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-map-crs-clear': '' }, t('ml.sys.clear')) : null));
       }
-      sys.replaceChildren(...kids);
+      sys.replaceChildren(...kids.filter(Boolean));
     }
     function applyCrs() {
       const code = Number(sys.querySelector('[data-map-crs-pick]').value) || host.crs()?.code;

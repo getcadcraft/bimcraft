@@ -44,7 +44,7 @@ export function parseDay(s) {
 export const dayText = (day) => new Date(day * 86400000).toISOString().slice(0, 10);
 
 /** CSV rows (quotes, doubled quotes, CR LF), with the delimiter the header uses. */
-function csvRows(text) {
+export function csvRows(text) {
   const src = String(text).replace(/^﻿/, '');
   const firstLine = src.split(/\r?\n/, 1)[0] || '';
   const delim = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : ',';

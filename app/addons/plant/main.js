@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /**
  * main.js — the Plant add-on for BimCraft (0.7 LC.5 step 2, session plant-design): pipe specs, isometrics, process equipment
- * with nozzles and a factory layout check, on BimCraft's add-on API 1.0 (docs/ADDONS-SPEC.md §5.7).
+ * with nozzles and a factory layout check, on BimCraft's add-on API 1.0, and 1.1 where the app has it (docs/ADDONS-SPEC.md §5.7).
  *
  *   Properties    a "Pipe spec" section for a selected pipe run: the spec its material and class name, whether its size and
  *                 valves are allowed, its bends and branches (lib/spec.js)
@@ -9,8 +9,10 @@
  *   Panel tab     Plant: the equipment table (type, tag, place), the specs, the isometric, the layout check
  *   Commands      plant:spec-check · plant:iso-svg · plant:iso-dxf · plant:equipment-ifc · plant:layout-check
  *
- * What needs BimCraft to WRITE into the open model — placing equipment in it, routing a run between nozzles — needs add-on
- * API 1.1 (`api.model.write`, session mep-07). Until the app has it those two say so; nothing here edits the model.
+ * What needs BimCraft to WRITE into the open model — placing equipment in it (`api.model.write`, nozzles as `CadCraft_Port` through
+ * `api.mep.addPorts`), drawing a found route (`api.mep.placeRun`) — needs add-on API 1.1 (session mep-07). Until the app has it those
+ * say so; nothing here edits the model. 0.8 (mep-08): the isometric numbers its spools from `api.mep.spools()` and the layout check
+ * also reads equipment placed from LibraryCraft (`api.model.read`).
  * A drafting aid, not an engineering approval.
  */
 
@@ -20,13 +22,22 @@ import { readRun, fromMep } from './lib/runs.js';
 import { iso, toSvg, toDxf, bom } from './lib/iso.js';
 import { TYPES, TYPE, makeEquipment } from './lib/equip.js';
 import { writeIfc } from './lib/ifc-out.js';
-import { checkLayout, itemFromEquipment, DEFAULTS as LAYOUT_DEFAULTS } from './lib/layout.js';
+import { checkLayout, itemFromEquipment, itemFromPlacement, DEFAULTS as LAYOUT_DEFAULTS } from './lib/layout.js';
 import { placeEquipment } from './lib/place.js';
 import { route } from './lib/route.js';
 import { pipeSize } from '../../mep/tables.js';
 import { placeEquipment as placeEquip } from './lib/equip.js';
+import * as PM from '../../process/model.js';
+import * as PLINK from './lib/process-link.js';
+import * as LIVE from '../../process/live.js';
+import * as CALC from '../../process/calc.js';
+import { planRuns, batchCsv, liveMarkers } from './lib/layoutrun.js';   // 0.8 chem-draw_PART_4: the layout placed with pipes (CH.29), the batch schedule in 4D (CH.6), live values in 3D (XE.9)
+import { mountOptimise } from './lib/optimise-ui.js';   // 0.8 CH.31: optimise overnight, variants solved on other computers
+import { mountEngineering, zoneEquip } from './lib/engineering.js';   // 0.8 CH.9/11/12/16/17: the vessel, pipe stress, relief, consequence and area calculators (not engineer-reviewed)
 
 const FIELD = 40;
+/** BimCraft has no "process" system: a drawn route goes into one of its pipe systems (the person picks). */
+const ROUTE_SYSTEMS = ['chw', 'hhw', 'cw', 'hw', 'gas', 'fire'];
 const fin = (v) => typeof v === 'number' && Number.isFinite(v);
 
 export function activate(api) {
@@ -106,11 +117,16 @@ export function activate(api) {
   });
 
   // ---------------------------------------------------------------------------------------------- files
+  /** The spools BimCraft numbered on a run (`mep.spools()`, steel runs cut into spools): [{ id, s0, s1 }] — the isometric balloons them, nothing is numbered twice. */
+  function spoolsOf(guid) {
+    if (!api.mep || typeof api.mep.spools !== 'function') return [];
+    try { return api.mep.spools().filter((x) => x.run === guid).map((x) => ({ id: String(x.id), s0: x.s0, s1: x.s1 })); } catch { return []; }
+  }
   async function isoOf() {
     const runs = await selectedRuns();
     if (!runs.length) throw new Error(t('err.noruns'));
     const name = api.model.current()?.name || '';
-    return iso({ runs: runs.map((r) => ({ id: r.guid, tag: r.tag, size: r.size, mat: r.mat, cls: r.cls, spec: specFor(specs(), r.mat, r.cls)?.id, od: r.od, points: r.points, valves: r.valves })), units: stored('units', 'mm'), title: { project: name.replace(/\.[^.]+$/, ''), drawing: runs.length === 1 && runs[0].tag ? runs[0].tag : t('iso.drawing'), drawn: 'CadCraft', date: new Date().toISOString().slice(0, 10) } });
+    return iso({ runs: runs.map((r) => ({ id: r.guid, tag: r.tag, size: r.size, mat: r.mat, cls: r.cls, spec: specFor(specs(), r.mat, r.cls)?.id, od: r.od, points: r.points, valves: r.valves, spools: spoolsOf(r.guid) })), units: stored('units', 'mm'), title: { project: name.replace(/\.[^.]+$/, ''), drawing: runs.length === 1 && runs[0].tag ? runs[0].tag : t('iso.drawing'), drawn: 'CadCraft', date: new Date().toISOString().slice(0, 10) } });
   }
   api.files.exporter({ id: 'iso-svg', label: t('export.iso.svg'), extension: 'svg', mime: 'image/svg+xml', write: async () => toSvg(await isoOf()) });
   api.files.exporter({ id: 'iso-dxf', label: t('export.iso.dxf'), extension: 'dxf', mime: 'application/dxf', write: async () => toDxf(await isoOf()) });
@@ -142,14 +158,22 @@ export function activate(api) {
     const list = equipment();
     const todo = list.map((it, i) => ({ it, i })).filter(({ it, i }) => (only === null ? !it.guid : i === only));
     if (!todo.length) { say(t('done.place.none')); return 0; }
-    const r = await api.model.write(t('cmd.place-equipment'), (w) => todo.map(({ it }) => placeEquipment(w, { equip: makeEquipment(it.type, it.params), tag: it.tag, desc: it.desc, x: it.x, y: it.y, z: it.z, rot: it.rot }).guid));
+    const r = await api.model.write(t('cmd.place-equipment'), (w) => todo.map(({ it }) => placeEquipment(w, { equip: makeEquipment(it.type, it.params), tag: it.tag, desc: it.desc, x: it.x, y: it.y, z: it.z, rot: it.rot }, null, { addPorts: api.mep?.addPorts }).guid));
     const guids = Array.isArray(r.value) ? r.value : [];
     saveEquipment(list.map((it, i) => { const k = todo.findIndex((x) => x.i === i); return k >= 0 && guids[k] ? { ...it, guid: guids[k] } : it; }));
     say(t('done.place', { n: todo.length }));
     return todo.length;
   }
   api.commands.add('place-equipment', () => placeRows(), { label: t('cmd.place-equipment') });
+  /** Safety zones (consequence and area calculators, metres) as closed solids in the open model: one undo step. → how many, or null when this BimCraft cannot write. */
+  function writeZones(volumes) {
+    if (typeof api.model.write !== 'function' || !api.model.current()) return null;
+    let n = 0;
+    api.model.write('Zones (not engineer-reviewed)', (w) => volumes.map((v) => { n++; return placeEquipment(w, { equip: zoneEquip(v), tag: String(v.label || 'Zone').slice(0, 40), desc: 'Safety zone, not engineer-reviewed', x: 0, y: 0, z: 0, rot: 0 }, null, {}).guid; }));
+    return n;
+  }
   api.commands.add('route', () => say(hasMep() ? t('route.hint') : t('need.write')), { label: t('cmd.route') });
+  api.commands.add('route-draw', () => drawRoute(ROUTE_SYSTEMS[0]), { label: t('cmd.route.draw') });
 
   const hasMep = () => !!api.mep && typeof api.mep.ports === 'function';
   const portLabel = (p) => (p.ownerClass ? p.ownerClass.replace(/^IFC/, '').toLowerCase() + ' ' : '') + (p.name || '') + ' (' + (p.size ? Math.round(Number(p.size)) || p.size : '?') + ', ' + p.flow + ')';
@@ -163,9 +187,126 @@ export function activate(api) {
     return r.ok ? { ...r, spec, size, od: ps.od * 25.4 } : r;
   }
 
+  /** Equipment placed in the model from LibraryCraft (`model.read` → placements()): layout items, lengths in mm. Nothing when the app lacks the call. */
+  function placedItems() {
+    if (typeof api.model.read !== 'function' || !api.model.current()) return [];
+    try {
+      const pls = api.model.read((w) => ({ unitMm: w.unitMm, list: w.placements().map((p) => ({ id: p.id, name: p.name, itemNumber: p.itemNumber, x: p.x, y: p.y, rot: p.rot, equipment: p.equipment })) }));
+      return (pls?.list || []).map((p) => itemFromPlacement({ ...p, id: 'm' + p.id }, pls.unitMm)).filter(Boolean);
+    } catch { return []; }
+  }
+  /** Draw the route last found as a pipe run in the model (`mep.placeRun`: one undo step; an end on a free port is connected to it). */
+  async function drawRoute(system) {
+    if (!api.mep || typeof api.mep.placeRun !== 'function') { say(t('need.write')); return null; }
+    const r = lastRoute;
+    if (!r) { say(t('route.err.none')); return null; }
+    if (!r.a.storey || r.a.storey !== r.b.storey) { say(t('route.err.storey')); return null; }
+    try {
+      const res = await api.mep.placeRun({ storey: r.a.storey, kind: 'pipe', system, mat: r.spec.material, cls: r.spec.cls, size: r.size, points: r.points, label: t('cmd.route') });
+      say(t('route.drawn', { len: Math.round(r.length), spec: r.spec.id, size: r.size }));
+      return res;
+    } catch (e) { say(e.message); return null; }
+  }
+
   function layoutFindings() {
-    const items = equipment().map((it, i) => itemFromEquipment(makeEquipment(it.type, it.params), { id: 'e' + i, tag: it.tag, name: t('type.' + it.type), x: it.x, y: it.y, rot: it.rot, weight: it.weight })).filter(Boolean);
+    const items = [...placedItems(), ...equipment().map((it, i) => itemFromEquipment(makeEquipment(it.type, it.params), { id: 'e' + i, tag: it.tag, name: t('type.' + it.type), x: it.x, y: it.y, rot: it.rot, weight: it.weight })).filter(Boolean)];
     return checkLayout({ items, ...limits() });
+  }
+
+
+  // ---------------------------------------------------------------------------------------------- the process model (0.8 CH.4)
+  // The model (a `cadcraft-process` block: flowsheet and links) is kept in this add-on's storage and travels as process.json; a P&ID in CadCraft or
+  // SuperCad Studio reads the same block. Here: tie the runs and equipment to its lines and units, work out each line's hydraulics from the run as
+  // drawn, and say what the P&ID has to change when a pipe's size changed in 3D.
+  const processModel = () => { const raw = api.storage.get('process'); return typeof raw === 'string' ? PM.fromJSON(raw) : null; };
+  const saveProcess = (m) => api.storage.set('process', PM.toJSON(m));
+  async function plantDesc() {
+    let all = []; try { all = typeof api.mep?.runs === 'function' ? api.mep.runs() : []; } catch { all = []; }
+    return PLINK.describe({ runs: all.filter((r) => r.kind === 'pipe'), equipment: equipment() });
+  }
+  async function processCheck() {
+    const m = processModel(); if (!m) throw new Error(t('proc.err.none'));
+    const r = PLINK.check(m, await plantDesc());
+    saveProcess(m);
+    return r;
+  }
+  const processSource = (() => { try { return api.problems?.available?.() ? api.problems.source({ id: 'process', kind: 'engine', label: t('proc.legend') }) : null; } catch { return null; } })();
+  // The wire to the P&ID (CH.4): a size made in 3D reruns the hydraulics here and goes to every window that holds the model (a CadCraft tab opens it
+  // in its P&ID add-on); a model that arrives is kept, checked against the runs as drawn, and the Problems say what now disagrees. Nothing is written
+  // into the 3D model by a message: "Apply the P&ID sizes to the pipe runs" in the panel does that, one undo step.
+  let lastDesc = null, wireTimer = 0, wireNote = '';
+  const wire = LIVE.open((n) => new BroadcastChannel(n), { from: 'bimcraft', onModel: async (m, change) => {
+    try {
+      saveProcess(m);
+      const desc = await plantDesc(); lastDesc = desc;
+      const r = PLINK.check(m, desc); saveProcess(m); processSource?.set(r.problems);
+      const todo = PLINK.sizeWrites(m, desc);
+      wireNote = change && (change.ln || change.stream) ? t('wire.in', { what: change.ln || change.stream, size: change.size || '', n: todo.length }) : t('wire.in.model', { what: m.name || '', n: todo.length });
+      say(wireNote);
+    } catch (e) { api.log('process wire failed', e); }
+  } });
+  api.onDeactivate?.(() => wire.close());
+  async function threeDChanged() {
+    const desc = await plantDesc(), before = lastDesc; lastDesc = desc;   // the baseline moves on every change, with a model or without
+    const m = processModel(); if (!m || !before) return null;
+    const ch = PLINK.whatChanged(before, desc); if (!ch.length) return null;
+    const r = PLINK.fromThreeD(m, ch, desc); if (!r.done.length) return null;
+    saveProcess(m);
+    const chk = PLINK.check(m, desc); saveProcess(m); processSource?.set(chk.problems);
+    const first = r.done[0];
+    wire.publish(m, { stream: first.stream, ln: first.ln, run: first.run, size: first.size, by: '3d' });
+    say(t('wire.out', { ln: first.ln || first.stream, size: first.size }));
+    return r;
+  }
+  api.model?.onChange?.(() => { clearTimeout(wireTimer); wireTimer = setTimeout(() => { threeDChanged().catch((e) => api.log('process 3D change failed', e)); }, 400); });
+  plantDesc().then((d) => { if (!lastDesc) lastDesc = d; }).catch(() => {});
+  async function applyPidSizes() {
+    const m = processModel(); if (!m) throw new Error(t('proc.err.none'));
+    if (typeof api.mep?.setRunSizes !== 'function') throw new Error(t('need.write'));
+    const todo = PLINK.sizeWrites(m, await plantDesc());
+    if (!todo.length) return 0;
+    await api.mep.setRunSizes(todo);
+    lastDesc = await plantDesc();
+    const chk = PLINK.check(m, lastDesc); processSource?.set(chk.problems);
+    return todo.length;
+  }
+  api.commands.add('process-check', async () => {
+    try {
+      const r = await processCheck(); processSource?.set(r.problems);
+      const errs = r.problems.filter((p) => p.severity === 'error').length;
+      say(t('done.proc', { lines: r.edits.length, linked: r.linked.length, errors: errs, warnings: r.problems.filter((p) => p.severity === 'warning').length, first: r.problems[0] ? r.problems[0].text : '' }));
+    } catch (e) { say(e.message); }
+  }, { label: t('cmd.process-check') });
+  api.commands.add('process-apply-sizes', async () => { try { say(t('wire.applied', { n: await applyPidSizes() })); } catch (e) { say(e.message); } }, { label: t('cmd.process-apply-sizes') });
+  api.files.exporter({ id: 'process-json', label: t('export.process'), extension: 'json', mime: 'application/json', write: async () => { const m = processModel(); if (!m) throw new Error(t('proc.err.none')); return PM.toJSON(m); } });
+
+
+  // ---------------------------------------------------------------------------------------------- the process layout in the model (0.8 CH.29)
+  /** The equipment of the model's layout into the table, placed in the open model, then each layout run routed between the two equipment's nozzles and drawn (one undo step each). → { equipment, runs, skipped: [{ tag, why }] } */
+  async function placeProcessLayout(system) {
+    const m = processModel(); if (!m || !m.layout) throw new Error(m ? t('proc.nolayout') : t('proc.err.none'));
+    const have = new Set(equipment().map((x) => x.tag)), add = m.layout.equipment.map(cleanItem).filter((x) => x && !have.has(x.tag));
+    if (add.length) saveEquipment([...equipment(), ...add]);
+    const placed = await placeRows();
+    const out = { equipment: placed, runs: 0, skipped: [] };
+    if (!hasMep() || typeof api.mep.placeRun !== 'function') { out.skipped.push({ tag: '*', why: 'nowrite' }); return out; }
+    const plan = planRuns(m.layout, equipment(), api.mep.ports());
+    for (const s of plan.skipped) out.skipped.push({ tag: s.run.tag || (s.run.from?.equip + '-' + s.run.to?.equip), why: s.why });
+    for (const j of plan.jobs) {
+      const spec = specs().find((x) => x.id === (j.run.spec)) || specs()[0], r = findRoute(j.a, j.b, spec.id, String(j.run.size || '2'));
+      if (!r.ok) { out.skipped.push({ tag: j.run.tag, why: 'route-' + r.error }); continue; }
+      lastRoute = { ...r, a: j.a, b: j.b };
+      if (await drawRoute(system)) out.runs++; else out.skipped.push({ tag: j.run.tag, why: 'draw' });
+    }
+    return out;
+  }
+  /** Live values (XE.9): readings as CSV → one marker per tag the equipment table has, and a tint on those elements in the 3D view when the app can. */
+  async function showLive(csvText) {
+    const tags = equipment().map((e) => e.tag).filter(Boolean);
+    if (!tags.length) throw new Error(t('live3d.notags'));
+    const r = await liveMarkers(csvText, tags);
+    const tint = globalThis.bimcraftTint && typeof globalThis.bimcraftTint.tint === 'function' ? globalThis.bimcraftTint.tint(r.markers) : null;
+    return { ...r, tint };
   }
 
   // ---------------------------------------------------------------------------------------------- the panel tab
@@ -183,6 +324,7 @@ export function activate(api) {
     const download = (name, data, mime) => { const a = el('a', { download: name, href: URL.createObjectURL(new Blob([data], { type: mime })) }); d.body.append(a); a.click(); a.remove(); };
     const list = (items) => el('ul', { class: 'plant-list' }, ...items.map((s) => el('li', {}, s)));
     const again = () => { pane.replaceChildren(); render(pane); };
+    const again2 = () => { /* keep the result text on screen: the table refreshes the next time the tab opens */ };
 
     // equipment table
     const eq = equipment();
@@ -263,13 +405,97 @@ export function activate(api) {
           const r = findRoute(a, b, specSel.value, size.value.trim());
           if (!r.ok) { out.replaceChildren(el('p', {}, t('route.err.' + r.error))); return; }
           lastRoute = { ...r, a, b };
+          const canDraw = typeof api.mep?.placeRun === 'function';
+          const sys = el('select', { name: 'system', class: 'select-cc', 'aria-label': t('route.system') }, ...ROUTE_SYSTEMS.map((k) => el('option', { value: k }, t('route.sys.' + k))));
           out.replaceChildren(el('p', {}, t('route.found', { len: Math.round(r.length), bends: r.bends, climbs: r.climbs })), list(r.points.map((p) => p.map((v) => Math.round(v)).join(', '))),
-            el('p', { class: 'plant-note' }, t('route.nowrite')));
+            canDraw ? el('p', {}, el('label', {}, t('route.system'), ' ', sys), ' ', el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-draw': '', on: { click: async () => { await drawRoute(sys.value); } } }, t('btn.route.draw'))) : null,
+            el('p', { class: 'plant-note' }, t(canDraw ? 'route.draw.note' : 'route.nowrite')));
         } } }, t('btn.route')),
       ]);
     }
+
+    // process model
+    const procOut = el('div', { class: 'plant-proc-out', 'aria-live': 'polite' });
+    const fileIn = el('input', { type: 'file', accept: '.json,application/json', 'aria-label': t('proc.file'), 'data-plant-process-file': '' });
+    fileIn.addEventListener('change', async () => {
+      const f = fileIn.files && fileIn.files[0]; if (!f) return;
+      const m = PM.fromJSON(await f.text());
+      if (!m) { procOut.replaceChildren(el('p', {}, t('proc.err.file'))); return; }
+      saveProcess(m); procOut.replaceChildren(el('p', {}, t('proc.loaded', { name: m.name || f.name, units: m.flowsheet.units.length })));
+    });
+    const procSec = section(t('sec.process'), [
+      el('p', {}, t('proc.intro')), el('label', {}, t('proc.file'), ' ', fileIn), ' ',
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-layout': '', on: { click: () => {
+        const m = processModel(); if (!m || !m.layout) { procOut.replaceChildren(el('p', {}, m ? t('proc.nolayout') : t('proc.err.none'))); return; }
+        const have = new Set(equipment().map((x) => x.tag)), add = m.layout.equipment.map(cleanItem).filter((x) => x && !have.has(x.tag));
+        saveEquipment([...equipment(), ...add]); procOut.replaceChildren(el('p', {}, t('proc.layout.added', { n: add.length }))); again();
+      } } }, t('btn.layout.process')), ' ',
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-process': '', on: { click: async () => {
+        try { const r = await processCheck(); processSource?.set(r.problems); procOut.replaceChildren(el('p', {}, t('done.proc', { lines: r.edits.length, linked: r.linked.length, errors: r.problems.filter((p) => p.severity === 'error').length, warnings: r.problems.filter((p) => p.severity === 'warning').length, first: '' })), list([...r.edits.map((x) => t('proc.edit', { ln: x.ln || x.stream, size: x.size, v: x.v.toPrecision(3), dp: (x.dp / 1e5).toPrecision(3) })), ...r.problems.slice(0, 20).map((p) => t('level.' + p.severity) + ': ' + p.text)])); }
+        catch (e) { procOut.replaceChildren(el('p', {}, e.message)); }
+      } } }, t('btn.process')), ' ',
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-apply-sizes': '', on: { click: async () => {
+        try { const n = await applyPidSizes(); procOut.replaceChildren(el('p', {}, t('wire.applied', { n }))); } catch (e) { procOut.replaceChildren(el('p', {}, e.message)); }
+      } } }, t('btn.apply.sizes')), procOut,
+    ]);
+
+    // the plant placed with its pipes, the batch schedule in 4D and live values (0.8 CH.29 / CH.6 / XE.9)
+    const p4out = el('div', { class: 'plant-p4-out', 'aria-live': 'polite', 'data-plant-p4-out': '' });
+    const sysSel = el('select', { name: 'p4system', class: 'select-cc', 'aria-label': t('route.system') }, ...ROUTE_SYSTEMS.map((k) => el('option', { value: k }, t('route.sys.' + k))));
+    const recipe = el('textarea', { class: 'form-control', rows: '6', spellcheck: 'false', 'data-plant-recipe': '', 'aria-label': t('p4.recipe'), style: 'font-family:monospace;font-size:0.75rem;width:100%' });
+    recipe.value = JSON.stringify(CALC.get('batch').input.recipe, null, 1);
+    const nb = el('input', { type: 'number', min: '1', max: '50', value: '3', 'aria-label': t('p4.batches'), style: 'width:4rem' });
+    const csvIn = el('textarea', { class: 'form-control', rows: '4', spellcheck: 'false', 'data-plant-live-csv': '', 'aria-label': t('p4.live.csv'), style: 'font-family:monospace;font-size:0.75rem;width:100%' });
+    csvIn.value = 'tag,time,value,quality\n';
+    const p4Sec = section(t('sec.p4'), [
+      el('p', {}, t('p4.place.intro')),
+      el('label', {}, t('route.system'), ' ', sysSel), ' ',
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-place-layout': '', on: { click: async () => {
+        try { const r = await placeProcessLayout(sysSel.value); p4out.replaceChildren(el('p', {}, t('p4.place.done', { equipment: r.equipment, runs: r.runs, skipped: r.skipped.length })), ...(r.skipped.length ? [list(r.skipped.map((x) => x.tag + ': ' + t('p4.why.' + x.why.replace(/^route-.*/, 'route'))))] : [])); again2(); }
+        catch (e) { p4out.replaceChildren(el('p', {}, e.message)); }
+      } } }, t('p4.place.btn')),
+      el('p', {}, t('p4.batch.intro')), recipe,
+      el('label', {}, t('p4.batches'), ' ', nb), ' ',
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-batch': '', on: { click: async () => {
+        try {
+          const r = batchCsv(JSON.parse(recipe.value), { batches: Math.max(1, Math.min(50, Number(nb.value) || 1)) });
+          const four = globalThis.bimcraftFourD;
+          if (!four || typeof four.open !== 'function') { p4out.replaceChildren(el('p', {}, t('p4.batch.no4d'))); return; }
+          await four.open('batch-schedule.csv', r.csv);
+          p4out.replaceChildren(el('p', {}, t('p4.batch.done', { tasks: r.tasks.length, hours: Math.round(r.sched.makespan * 10) / 10 })), ...(r.sched.problems && r.sched.problems.length ? [list(r.sched.problems.map((p) => p.text || String(p)))] : []));
+        } catch (e) { p4out.replaceChildren(el('p', {}, e.message)); }
+      } } }, t('p4.batch.btn')),
+      el('p', {}, t('p4.live.intro')), csvIn,
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-live': '', on: { click: async () => {
+        try {
+          const r = await showLive(csvIn.value);
+          p4out.replaceChildren(el('p', {}, t('p4.live.done', { n: r.markers.length, matched: r.tint ? r.tint.matched : 0 })), ...(r.markers.length ? [list(r.markers.map((m2) => m2.tag + ': ' + m2.text + ' (' + m2.state + ')'))] : []));
+        } catch (e) { p4out.replaceChildren(el('p', {}, e.message)); }
+      } } }, t('p4.live.btn')),
+      el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-plant-live-clear': '', on: { click: () => { if (globalThis.bimcraftTint && globalThis.bimcraftTint.clear) globalThis.bimcraftTint.clear(); p4out.replaceChildren(el('p', {}, t('p4.live.cleared'))); } } }, t('p4.live.clear')),
+      el('p', { class: 'plant-note' }, t('p4.live.note')), p4out,
+    ]);
     const writeNote = el('p', { class: 'plant-note' }, typeof api.model.write === 'function' ? t('note.write.yes') : t('need.write'));
-    pane.append(el('p', {}, t('plant.intro')), eqSec, ...(routeSec ? [routeSec] : []), specSec, isoSec, layoutSec, out, writeNote);
+    // engineering checks (0.8 CH.9/11/12/16/17): the calculators with what only BimCraft can do with their results
+    const engSec = el('details', { class: 'plant-sec', 'data-plant-eng': '' }, el('summary', {}, t('eng.title') === 'eng.title' ? 'Engineering checks' : t('eng.title')));
+    mountEngineering(engSec, { t, runs: () => { try { return typeof api.mep?.runs === 'function' ? api.mep.runs() : []; } catch { return []; } },
+      addEquipment: (it) => { saveEquipment([...equipment(), cleanItem(it)].filter(Boolean)); again(); }, writeZones });
+    // Connect to a device + the tag map (XE.9, chem-mount_PART_5): the same panel as the P&ID add-on; readings tint the elements of the equipment table by Tag
+    const liveSource = (() => { try { return api.problems?.available?.() ? api.problems.source({ id: 'live', kind: 'engine', label: 'Live data' }) : null; } catch { return null; } })();
+    const connLabel = t('ui.connect'), connSec = el('details', { class: 'plant-sec', 'data-plant-connect': '' }, el('summary', {}, connLabel === 'ui.connect' ? 'Connect to a device' : connLabel)), connBody = el('div');
+    connSec.append(connBody);
+    import('../../live/connect-ui.js').then(({ mountConnect }) => {
+      mountConnect(connBody, { t, load: () => api.storage.get('livemap'), save: (v) => api.storage.set('livemap', v),
+        publish: (list) => { try { liveSource?.set(list); } catch { /* no problems host */ } },
+        onReadings: (store) => {
+          const markers = store.markers().filter((m2) => m2.state !== 'waiting').map((m2) => ({ tag: m2.target.id, text: m2.text, state: m2.state, level: m2.level }));
+          if (globalThis.bimcraftTint && typeof globalThis.bimcraftTint.tint === 'function') globalThis.bimcraftTint.tint(markers);
+        } });
+    }).catch((e) => { connBody.textContent = String(e && e.message || e); });
+    // Optimise overnight (CH.31, chem-mount_PART_5)
+    const optLabel = t('ui.optimise'), optSec = el('details', { class: 'plant-sec', 'data-plant-optimise': '' }, el('summary', {}, optLabel === 'ui.optimise' ? 'Optimise overnight' : optLabel)), optBody = el('div');
+    optSec.append(optBody); mountOptimise(optBody, { t, model: processModel });
+    pane.append(el('p', {}, t('plant.intro')), eqSec, ...(routeSec ? [routeSec] : []), specSec, isoSec, procSec, p4Sec, layoutSec, connSec, optSec, engSec, out, writeNote);
   }
 
   api.log('Plant ready');   // i18n-ignore (developer log)

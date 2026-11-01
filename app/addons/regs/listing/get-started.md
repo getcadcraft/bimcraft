@@ -1,0 +1,4 @@
+- Add Building regulations, then in Settings, Global, Building regulations install the regions you work in.
+- Open a drawing and tick the packs that apply in the Regulations panel.
+- Open Problems to see what is flagged and why, with the clause; fix it or note why it stays.
+- Print the code summary sheet when you are done.

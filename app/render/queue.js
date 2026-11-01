@@ -6,7 +6,8 @@
  *
  *   openQueue({ app, store? }) → queue      store = idbStore(name) by default (IndexedDB), memoryStore() for tests
  *   queue.list() → Promise<job[]>          queue.get(id)          queue.remove(id)          queue.clearDone()
- *   queue.addStill({ name, scene, settings, w, h }) → job       the scene packed now (pt-pack.js): what was queued is what renders
+ *   queue.addStill({ name, scene, settings, w, h, engine?, pkg? }) → job   the scene packed now (pt-pack.js): what was queued is what renders;
+ *     an outside engine's id + its hand-off package (handoff.js) instead; queue.run({ engines }) = the registry (engines.js) that runs them
  *   queue.addFrames({ name, scene, settings, w, h, length, fps, from, to, format, motionBlur }) → job
  *     camera-only animations: one packed scene + a camera per frame (resumable after closing); when objects move the frames
  *     need the scene itself (job.live: resumable while the same model is open: `scene` handed to run())
@@ -16,11 +17,13 @@
  *               video(blobs[], {w, h, fps, format}) → Promise<{blob, ext}> } (render-pt.js queueRenderer)
  *   queue.output(id) → Promise<{blob, name} | null>    the job's picture or video
  *
- * Job: { id, kind 'still' | 'frames', name, created, w, h, settings, status 'waiting' | 'running' | 'paused' | 'done' | 'failed',
+ * Job: { id, kind 'still' | 'frames', engine ('' = the path tracer; else an outside engine's id, 0.8 RE.1), madeBy ({engine, version}, D5), name, created, w, h, settings, status 'waiting' | 'running' | 'paused' | 'done' | 'failed',
  *        done, total, error, live, fps, format, ext }  — frames' pictures are kept until the video is made, then dropped.
  */
 import { packScene } from './pt-pack.js';
 
+/** Engines the queue runs itself (the path tracer); every other id goes to the registry passed to run() (0.8 RE.1). */
+const BUILT_IN = new Set(['', 'pt']);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 /** A store in memory (tests). */
@@ -67,14 +70,25 @@ export function openQueue({ app = 'cadcraft', store = null } = {}) {
     async get(id) { return (await S.jobs()).find((j) => j.id === id) || null; },
     async remove(id) { if (running && running.id === id) { stopAsked = true; await running.p; } await S.delJob(id); },
     async clearDone() { for (const j of await q.list()) if (j.status === 'done') await S.delJob(j.id); },
-    async addStill({ name, scene, settings, w, h }) {
-      const pk = packScene(scene, settings, { w, h, images: scene.imagePixels || null, hdri: scene.hdri || null, volumeData: scene.volumeData || null });
-      const j = { id: uid(), kind: 'still', name: String(name || '').slice(0, 120), created: Date.now(), w, h, settings, status: 'waiting', done: 0, total: 1, error: '', live: false };
-      await S.put(j.id, 'pack', pk);
+    async addStill({ name, scene, settings, w, h, engine = '', pkg = null }) {
+      // an outside engine (0.8 RE.1) takes the hand-off package (handoff.js, RE.2) instead of the packed scene
+      const outside = !!engine && !BUILT_IN.has(engine);
+      if (outside && !pkg) throw Object.assign(new Error('no package'), { code: 'no_package' });   // i18n-ignore: caught by the caller
+      const j = { id: uid(), kind: 'still', name: String(name || '').slice(0, 120), created: Date.now(), w, h, settings, engine: outside ? engine : '', status: 'waiting', done: 0, total: 1, error: '', live: false };
+      if (outside) await S.put(j.id, 'pkg', pkg);
+      else await S.put(j.id, 'pack', packScene(scene, settings, { w, h, images: scene.imagePixels || null, hdri: scene.hdri || null, volumeData: scene.volumeData || null }));
       await save(j);
       return j;
     },
-    async addFrames({ name, scene, settings, w, h, length, fps, from = 0, to = length, format = 'webm', motionBlur = false, liveKey = '' }) {
+    async addFrames({ name, scene, settings, w, h, length, fps, from = 0, to = length, format = 'webm', motionBlur = false, liveKey = '', engine = '', pkg = null, count = 0 }) {
+      if (engine && !BUILT_IN.has(engine)) {
+        // an outside engine draws every frame in one run: the package carries the camera per frame (manifest.frames.cameras)
+        if (!pkg || !(count >= 1)) throw Object.assign(new Error('no package'), { code: 'no_package' });   // i18n-ignore: caught by the caller
+        const j = { id: uid(), kind: 'frames', name: String(name || '').slice(0, 120), created: Date.now(), w, h, settings, engine, status: 'waiting', done: 0, total: count, error: '', live: false, liveKey: '', fps, format, motionBlur: false };
+        await S.put(j.id, 'pkg', pkg);
+        await save(j);
+        return j;
+      }
       const n = Math.max(1, Math.round((to - from) * fps) + 1), frames = [];
       let moves = false;
       for (let i = 0; i < n; i++) {
@@ -90,7 +104,7 @@ export function openQueue({ app = 'cadcraft', store = null } = {}) {
       return j;
     },
     /** Run what waits. `live` = { key, scene(t) → scene } for frames whose objects move (this page's model). */
-    run({ render, live = null, onEvent = null, signal = null } = {}) {
+    run({ render, engines = null, live = null, onEvent = null, signal = null } = {}) {
       if (running) return running.p;
       stopAsked = false;
       const p = (async () => {
@@ -101,7 +115,22 @@ export function openQueue({ app = 'cadcraft', store = null } = {}) {
           running = { id: j.id, p };
           j.status = 'running'; j.error = ''; await save(j); onEvent?.({ type: 'job', job: j });
           try {
-            if (j.kind === 'still') {
+            if (j.engine) {
+              // an outside engine: one job, one call; the engine reports progress 0…1 and hands the picture back
+              const eng = engines && engines.get(j.engine);
+              if (!eng || typeof eng.render !== 'function') throw Object.assign(new Error('engine missing'), { code: 'engine_missing' });   // i18n-ignore: caught by the caller
+              const job = { id: j.id, kind: j.kind, w: j.w, h: j.h, settings: j.settings, engine: j.engine, pkg: await S.get(j.id, 'pkg'), frames: j.kind === 'frames' ? { from: 0, to: j.total - 1, fps: j.fps } : null };
+              const r = await eng.render(job, { signal, onProgress: (f) => onEvent?.({ type: 'progress', job: j, f }) });
+              if (j.kind === 'frames') {
+                // every frame came from one run of the engine; the video is made here, as for our own frames
+                if (!r || !Array.isArray(r.blobs) || r.blobs.length !== j.total) throw Object.assign(new Error('frames missing'), { code: 'no_picture' });   // i18n-ignore: caught by the caller
+                const v = await render.video(r.blobs, { w: j.w, h: j.h, fps: j.fps, format: j.format });
+                await S.put(j.id, 'out', v.blob); j.ext = v.ext; j.done = j.total; j.madeBy = r.madeBy || { engine: j.engine };
+              } else {
+              if (!r || !r.blob) throw Object.assign(new Error('no picture'), { code: 'no_picture' });   // i18n-ignore: caught by the caller
+              await S.put(j.id, 'out', r.blob); j.ext = r.ext || 'png'; j.done = 1; j.madeBy = r.madeBy || { engine: j.engine };
+              }
+            } else if (j.kind === 'still') {
               const pk = await S.get(j.id, 'pack');
               const r = await render.packed(pk, j.settings, { signal, onProgress: (f) => onEvent?.({ type: 'progress', job: j, f }) });
               await S.put(j.id, 'out', r.blob); j.ext = 'png'; j.done = 1;
@@ -143,7 +172,7 @@ export function openQueue({ app = 'cadcraft', store = null } = {}) {
       const j = await q.get(id);
       if (!j || j.status !== 'done') return null;
       const blob = await S.get(id, 'out');
-      return blob ? { blob, name: (j.name || 'render') + (j.kind === 'still' ? ' render.png' : ' animation.' + (j.ext || 'webm')) } : null;
+      return blob ? { blob, name: (j.name || 'render') + (j.kind === 'still' ? ' render.' + (j.ext || 'png') : ' animation.' + (j.ext || 'webm')) } : null;
     },
   };
   return q;

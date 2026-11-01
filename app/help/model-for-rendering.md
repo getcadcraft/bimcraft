@@ -6,7 +6,7 @@ order: 34
 keywords: glb, gltf, gl transmission format, export, rendering, render, visualization, real time, archviz, materials, textures, lamps, lights, asset, custom asset
 ---
 
-{{ui:For rendering}} on the toolbar saves what the 3D view shows as one **.glb** file (glTF 2.0, the open format from the Khronos Group). Rendering programs that read glTF open it with the model's materials and lamps; Twinmotion, for example, opens .glb files and keeps their lights. Nothing is uploaded: the file is made on this computer.
+{{ui:For rendering}} on the toolbar saves what the 3D view shows as one **.glb** file (glTF 2.0, the open format from the Khronos Group). Rendering programs that read glTF open it with the model's materials and lamps; Twinmotion lists glTF and GLB among the geometry files it imports and keeps their lights (Epic's documentation, "Importing geometry in Twinmotion"): use {{ui:For rendering}} and import the .glb there. Nothing is uploaded: the file is made on this computer.
 
 ## Save it
 
@@ -32,8 +32,8 @@ keywords: glb, gltf, gl transmission format, export, rendering, render, visualiz
 Enscape runs inside another design program and has no file to open a whole project. Two ways:
 
 - Open the model's **IFC** (File › Save) in the program Enscape runs in; most of them read IFC. Colors come along; the library materials come as their colors.
-- Bring a **small part** (furniture, a fixture) in as a custom asset from a .glb: isolate it first, then save. Enscape advises small assets (a few tens of thousands of triangles).
+- Bring a **small part** (furniture, a fixture) in as a custom asset: isolate it first, then click {{ui:For Enscape (.gltf)}}. Enscape's custom asset library lists .gltf, .obj and .fbx files, not .glb, so this button saves the same scene as one self-contained **.gltf** (the binary data and the pictures are inside the file; there is nothing else to copy with it). Enscape advises small assets (under about 20,000 triangles).
 
 :::note
-Plug-ins and a live link to these programs need their makers' own kits and are not built. The FBX and Datasmith formats have no published specification, so BimCraft does not write them; glTF is the open route.
+In CadCraft Studio the same glTF file (and a USD file) can also be saved from {{ui:Render}} › Engine › **glTF file** / **USD file**, or opened straight in a program on this computer: see [Open the scene in another program](topic:render-open-in). A plug-in or live link for Enscape or Twinmotion is not built. The FBX and Datasmith formats have no published specification, so BimCraft does not write them; glTF is the open route.
 :::

@@ -9,6 +9,7 @@
  * floor load) are the person's to set and are said as limits, never as a code requirement.
  *
  *   itemFromLibrary(libItem, place?) → layout item | null          itemFromPset(rows, place?) → layout item | null
+ *   itemFromPlacement(placement, unitMm) → layout item | null      (0.8: a piece placed in the model from LibraryCraft)
  *   itemFromEquipment(eq, place?) → layout item | null          (eq from equip.js makeEquipment: its box is the footprint)
  *   layoutItem(raw) → clean layout item | null          item = { id, name, tag, w, d, h, x, y, rot, weight, clear: { front, back, left, right } }
  *   corners(item) → [[x, y]×4] (counterclockwise)       accessZones(item) → [{ side, corners }]
@@ -57,6 +58,15 @@ export function itemFromPset(rows, place = {}) {
   const get = (n) => Number(rows.find((r) => r.name === n)?.value);
   const name = String(rows.find((r) => r.name === 'Name')?.value ?? '');
   return layoutItem({ id: place.id ?? '', name, tag: place.tag, w: get('Width'), d: get('Depth'), h: get('Height'), weight: get('WeightKg'), x: place.x, y: place.y, rot: place.rot, clear: place.clear });
+}
+
+/**
+ * A piece placed from LibraryCraft, as ifc-place.js `placements()` gives it ({ id, name, itemNumber, x, y, rot, equipment: the
+ * CadCraft_Equipment set }), lengths in the model's units (unitMm converts). → layout item | null when it has no width and depth.
+ */
+export function itemFromPlacement(pl, unitMm = 1) {
+  const eq = pl?.equipment || {}, get = (n) => Number(eq[n]) * unitMm;
+  return layoutItem({ id: pl.id, name: String(eq.Name || pl.name || ''), tag: pl.itemNumber, w: get('Width'), d: get('Depth'), h: get('Height'), weight: Number(eq.WeightKg), x: pl.x, y: pl.y, rot: pl.rot });
 }
 
 export function corners(it) {

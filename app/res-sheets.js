@@ -1,3 +1,4 @@
+import { legendItems } from './keynotes.js';
 import { documentItems } from './assembly-schedule-layout.js';
 /* SPDX-License-Identifier: Apache-2.0 */
 import { layerPrimitives, colorRgb } from './wall-plan-graphics.js';
@@ -34,6 +35,7 @@ import { ModelWriter, round } from './model-write.js';
 import { ids, val } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 import { isMetric } from './model-units.js';
+import * as PDFI from './picture-pdf.js';   // 0.8 D8.8 round 5: pictures in section / elevation views
 import { noteItems } from './comforts-views.js';   // 0.6 round 2 (bim-comforts_PART_2): dimensions, level marks and tags on views
 
 export const SECTION_PSET = 'CadCraft_SectionLine';
@@ -121,6 +123,16 @@ function bubble(c, tag, r = 3.5) {
 }
 export function viewItems(view, P, k = 0) {
   const out = [];
+  // 0.8 D8.8 round 5: pictures standing on a plane square to this view (res-ui.js attaches them as view.images), under all the lines
+  if (view.images?.length) {
+    const o = P([0, 0]), ex = P([1, 0]), kk = ex[0] - o[0], b = view.bounds;
+    if (b) { const p0 = P([b.x0, b.y0]), p1 = P([b.x1, b.y1]); out.push({ t: 'clip', rect: [Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]), Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1])] }); }
+    for (const im of view.images) {
+      const m = im.m;
+      out.push({ t: 'image', image: im.image, w: im.w, h: im.h, opacity: im.opacity ?? 1, href: im.href || null, name: im.name || '', m: [m[0] * kk, m[1] * kk, m[2] * kk, m[3] * kk, o[0] + m[4] * kk, o[1] + m[5] * kk] });
+    }
+    if (b) out.push({ t: 'unclip' });
+  }
   for (const l of view.lines || []) out.push({ t: 'line', pts: [P([l[0], l[1]]), P([l[2], l[3]])], w: 0.18, g: 0 });
   for (const c of view.cuts || []) out.push(...cutFaceItems(c,P,k>0?1/k:c.scale));
   // grid lines seen end on (0.6 DF.16): from under the ground line to above the top, the bubble on top
@@ -277,6 +289,9 @@ const pad = (b, p) => ({ x0: b.x0 - p, y0: b.y0 - p, x1: b.x1 + p, y1: b.y1 + p 
  *  scale (1:ratio; 0 = the plan's own scale (DC.117), else the largest standard scale that fits a third of the sheet), drawn from `input` as buildSet's (plans,
  *  elevations, sections, schedules carry `ref`). → { number, title, items, views: [{ i, kind, ref, box [x0, y0, x1, y1],
  *  ratio, label }], missing: [index of views whose drawing is gone] }. */
+/** 0.8 EG.56: where the keynote legend sits on a sheet: a column down the right margin, 66 mm wide (arrangeSheet keeps the views out of it). */
+export const LEGEND_W = 70;
+export const legendBlock = (paper) => { const [PW, PH] = PAPERS[paper] || PAPERS.tabloid; return { x: PW - 16 - LEGEND_W + 4, y: PH - 22 }; };
 export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', project = '', date = '' } = {}) {
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
   const s = sheet(spec.number || '', spec.title || '', [], { paper, project, date });
@@ -313,7 +328,34 @@ export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', p
     if (ratio) s.items.push({ t: 'text', s: label(ratio), x: x0, y: y0 - 10, size: 7, align: 'left', g: 0.25 });
     s.views.push({ i, kind: v.kind, ref: v.ref, box: [x0, y0, x0 + w, y0 + h], ratio, label: ratio ? label(ratio) : '' });
   });
+  if (spec.legend?.length) { const at = legendBlock(paper); s.items.push(...legendItems(spec.legend, { ...at, title: spec.legendTitle || 'Keynotes' })); }   // i18n-ignore: the default heading; the editor passes the translated one
   return s;
+}
+/** 0.8 EG.56: "Arrange for me". Picks ONE standard scale for the sheet's drawn views (the largest from the list, but never larger than 1:48 / 1:50, at which every
+ *  view fits the free area) and shelf-packs them: tallest first, left to right, each row's views sharing a baseline, a label strip under every view.
+ *  Schedules keep their size. → { views (the spec's views with new x, y, ratio), ratio, label, fits, rows }. Nothing is dropped: if even the smallest scale
+ *  does not fit, `fits` is false and the views run past the top (the person changes the paper). */
+export function arrangeSheet(spec, input, { paper = 'tabloid', units = 'ftin', gap = 8 } = {}) {
+  const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
+  const left = 16, right = PW - 16 - (spec.legend?.length ? LEGEND_W : 0), bottom = 10 + 18 + 6, top = PH - 14, strip = 14;
+  const list = SCALES[isMetric(units) ? 'mm' : 'ftin'].map(([r, l]) => ({ ratio: r, label: l })).filter((x) => x.ratio >= (isMetric(units) ? 50 : 48)).sort((a, b) => a.ratio - b.ratio);
+  const attempt = (ratio) => {
+    const v2 = (spec.views || []).map((v) => ({ ...v, ratio: v.kind === 'schedule' ? 0 : ratio }));
+    const c = composeSheet({ ...spec, views: v2 }, input, { paper, units });
+    const items = c.views.map((x) => ({ i: x.i, w: x.box[2] - x.box[0], h: x.box[3] - x.box[1] })).sort((a, b) => b.h - a.h || a.i - b.i);
+    let x = left, y = bottom, rowH = 0, rows = 1;
+    for (const it of items) {
+      if (x > left && x + it.w > right) { x = left; y += rowH + strip + gap; rowH = 0; rows++; }
+      it.x0 = x; it.y0 = y + strip; x += it.w + gap; rowH = Math.max(rowH, it.h);
+    }
+    const used = y + strip + rowH;
+    for (const it of items) { const v = v2[it.i]; v.x = Math.round((it.x0 + it.w / 2) * 10) / 10; v.y = Math.round((it.y0 + it.h / 2) * 10) / 10; }
+    return { views: v2, fits: used <= top && items.every((it) => it.w <= right - left), rows };
+  };
+  let pick = null;
+  for (const sc of list) { const r = attempt(sc.ratio); if (r.fits) { pick = { ...r, ratio: sc.ratio, label: sc.label }; break; } }
+  if (!pick) { const sc = list[list.length - 1] || { ratio: 100, label: '1:100' }; pick = { ...attempt(sc.ratio), ratio: sc.ratio, label: sc.label }; }
+  return pick;
 }
 /** A sheet with its frame and title block and nothing in it (the caller adds items). */
 export const blankSheet = (number, title, opts = {}) => sheet(number, title, [], { paper: 'tabloid', ...opts });
@@ -344,9 +386,10 @@ function lit(s) {
 }
 const num = (v) => { const s = (Math.abs(v) < 5e-5 ? 0 : v).toFixed(3); return s.replace(/\.?0+$/, '') || '0'; };
 const coord = v => String(Number(v.toFixed(6)));
-function pageOps(items) {
+function pageOps(items, names = new Map()) {
   const ops = ['1 J 1 j'];
   for (const it of items) {
+    if (it.t === 'image') { const nm = names.get(it); if (nm) ops.push(PDFI.drawOps({ im: nm.im, gs: nm.gs, cm: PDFI.unitMatrix(it.m, it.w, it.h).map((v) => v * PT) })); continue; }
     if (it.t === 'fill') { ops.push(it.color ? colorRgb(it.color).map(coord).join(' ') + ' rg' : num(it.g) + ' g'); for (const p of it.polys) { p.forEach((q, i) => ops.push(coord(q[0] * PT) + ' ' + coord(q[1] * PT) + (i ? ' l' : ' m'))); ops.push('h'); } ops.push('f*'); }
     else if (it.t === 'line') { ops.push(num(it.w * PT) + ' w ' + (it.color ? colorRgb(it.color).map(coord).join(' ') + ' RG ' : num(it.g || 0) + ' G ') + (it.dash ? '[' + it.dash.map((d) => num(d * PT)).join(' ') + '] 0 d' : '[] 0 d')); it.pts.forEach((q, i) => ops.push(coord(q[0] * PT) + ' ' + coord(q[1] * PT) + (i ? ' l' : ' m'))); ops.push('S'); }
     else if (it.t === 'clip') { const [x0, y0, x1, y1] = it.rect; ops.push('q ' + [x0, y0, x1 - x0, y1 - y0].map((v) => num(v * PT)).join(' ') + ' re W n'); }   // i18n-ignore: PDF operators
@@ -362,8 +405,23 @@ export function setPdf(sheets, { paper = 'tabloid', title = '', attach = null } 
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
   const enc = (s) => Uint8Array.from(String(s), (c) => c.charCodeAt(0) & 0xff);
   const n = sheets.length, objs = [];
-  // 1 catalog, 2 pages, 3 F1, 4 F2, 5 info, then a page + its contents for each sheet, then an attachment's file spec + stream
+  // 1 catalog, 2 pages, 3 F1, 4 F2, 5 info, then a page + its contents for each sheet, then an attachment's file spec + stream,
+  // then (0.8 D8.8 round 5) each picture's image objects and opacity states
   const fsNo = 6 + 2 * n;
+  let next = fsNo + (attach ? 2 : 0);
+  const names = new Map(), pageRes = [], imgObjs = [];
+  sheets.forEach((s, i) => {
+    const xo = [], gs = [];
+    for (const it of s.items) {
+      if (it.t !== 'image' || !it.image) continue;
+      const k = imgObjs.length, made = PDFI.imageObjects(it.image, next);
+      const nm = { im: 'Im' + k, gs: null };
+      xo.push('/' + nm.im + ' ' + next + ' 0 R'); imgObjs.push(...made.objs); next += made.objs.length;
+      if ((it.opacity ?? 1) < 1) { nm.gs = 'GS' + k; gs.push('/' + nm.gs + ' ' + next + ' 0 R'); imgObjs.push({ dict: PDFI.gsDict(it.opacity), data: null }); next += 1; }
+      names.set(it, nm);
+    }
+    pageRes[i] = (xo.length ? ' /XObject << ' + xo.join(' ') + ' >>' : '') + (gs.length ? ' /ExtGState << ' + gs.join(' ') + ' >>' : '');
+  });
   objs.push('<< /Type /Catalog /Pages 2 0 R' + (attach ? ` /Names << /EmbeddedFiles << /Names [${lit(attach.name)} ${fsNo} 0 R] >> >>` : '') + ' >>');
   objs.push('<< /Type /Pages /Kids [' + sheets.map((_, i) => (6 + 2 * i) + ' 0 R').join(' ') + '] /Count ' + n + ' >>');
   objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
@@ -371,14 +429,18 @@ export function setPdf(sheets, { paper = 'tabloid', title = '', attach = null } 
   objs.push('<< /Title ' + lit(title) + ' /Producer (BimCraft) >>');   // i18n-ignore: PDF metadata (the program's name)
   const streams = [], streamHead = [];
   sheets.forEach((s, i) => {
-    objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(PW * PT)} ${num(PH * PT)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${7 + 2 * i} 0 R >>`);
-    const body = enc(pageOps(s.items));
+    objs.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(PW * PT)} ${num(PH * PT)}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>${pageRes[i]} >> /Contents ${7 + 2 * i} 0 R >>`);
+    const body = enc(pageOps(s.items, names));
     objs.push(null); streams[objs.length - 1] = body;
   });
   if (attach) {
     objs.push(`<< /Type /Filespec /F ${lit(attach.name)} /UF ${lit(attach.name)} /Desc ${lit(attach.desc || '')} /EF << /F ${fsNo + 1} 0 R >> >>`);
     objs.push(null); streams[objs.length - 1] = attach.bytes;
     streamHead[objs.length - 1] = `/Type /EmbeddedFile /Subtype /${String(attach.mime || 'application/octet-stream').replace(/\//g, '#2F')} /Params << /Size ${attach.bytes.length} >> `;
+  }
+  for (const o of imgObjs) {
+    if (o.data) { objs.push(null); streams[objs.length - 1] = o.data; streamHead[objs.length - 1] = o.dict + ' '; }
+    else objs.push(o.dict);
   }
   const parts = [], offs = [];
   let size = 0;
@@ -406,6 +468,7 @@ export function sheetSvg(s, { paper = 'tabloid' } = {}) {
   for (const it of s.items) {
     if (it.t === 'clip') { const [x0, y0, x1, y1] = it.rect, id = 'cc-crop-' + (clips++); out.push(`<clipPath id="${id}"><rect x="${X(x0)}" y="${Y(y1)}" width="${(x1 - x0).toFixed(2)}" height="${(y1 - y0).toFixed(2)}"/></clipPath><g clip-path="url(#${id})">`); continue; }
     if (it.t === 'unclip') { out.push('</g>'); continue; }
+    if (it.t === 'image') { const m = it.m, f = [m[0], -m[1], m[2], -m[3], m[4], PH - m[5]].map(coord).join(' '); out.push(it.href ? `<image href="${it.href}" width="${it.w}" height="${it.h}" opacity="${it.opacity ?? 1}" transform="matrix(${f})"/>` : `<rect width="${it.w}" height="${it.h}" fill="none" stroke="#888" stroke-width="${coord(1 / Math.max(1e-6, Math.abs(m[0])))}" transform="matrix(${f})"/>`); continue; }
     if (it.t === 'fill') out.push(`<path fill-rule="evenodd" fill="${it.color || grey(it.g)}" d="${it.polys.map((p) => 'M' + p.map((q) => X(q[0]) + ',' + Y(q[1])).join('L') + 'Z').join('')}"/>`);
     else if (it.t === 'line') out.push(`<polyline fill="none" stroke="${it.color || grey(it.g)}" stroke-width="${it.w}" stroke-linecap="round" stroke-linejoin="round"${it.dash ? ' stroke-dasharray="' + it.dash.join(' ') + '"' : ''} points="${it.pts.map((q) => X(q[0]) + ',' + Y(q[1])).join(' ')}"/>`);
     else if (it.t === 'text') {

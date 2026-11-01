@@ -60,6 +60,12 @@ Choose **Every task** to see the whole schedule again.
 - **Not started**: see-through.
 - Elements in no task stay as they are. The list shows how many elements each task found. Rows that could not be read, or found nothing, are listed with their line numbers.
 
+## Links, the Gantt chart and MS Project
+
+- Open a Microsoft Project XML file (`.xml`) or a CSV that has a `Predecessors` column. Links can be finish to start, start to start, finish to finish or start to finish, each with a lead or lag in days.
+- Under the task list, the Gantt chart draws every task as a bar with arrows for the links. Tasks on the critical path are red. A link loop or a predecessor that does not exist is listed in the panel.
+- {{ui:Save as MS Project XML}} and {{ui:Save CSV with links}} write the schedule back with its links.
+
 ## Next
 
 - [Find elements by class, name or property](topic:find)

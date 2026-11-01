@@ -12,6 +12,8 @@
  * Lowest tier (rule 19): grids ≤ 400 points (daylight-bim-sky.js roomGrid), charts off on a phone until asked.
  */
 import { el } from './ui-util.js';
+import { getDisplayUnits, localizeQuantities } from './model-units.js';   // GH.3-A: results in the picked unit
+const Q = (s) => localizeQuantities(s, getDisplayUnits());
 import { t } from './i18n.js';
 import { siteOf, solarDay, gridDaylight, CLIMATES } from './daylight-bim-sky.js';
 
@@ -116,7 +118,7 @@ export function roomExtras(room, host, ctx) {
   }
   const gr = SKY.grid?.rooms.find((r) => r.id === room.id);
   if (gr && gr.grid.points.length) {
-    out.push(el('p', { 'data-day-room-grid': '' }, t('day.grid.room', { mean: gr.grid.mean.toFixed(2), min: gr.grid.min.toFixed(2), max: gr.grid.max.toFixed(2), u: gr.grid.uniformity.toFixed(2), n: gr.grid.points.length, s: gr.grid.spacing.toFixed(2), irc: gr.irc.toFixed(2) })));
+    out.push(el('p', { 'data-day-room-grid': '' }, Q(t('day.grid.room', { mean: gr.grid.mean.toFixed(2), min: gr.grid.min.toFixed(2), max: gr.grid.max.toFixed(2), u: gr.grid.uniformity.toFixed(2), n: gr.grid.points.length, s: gr.grid.spacing.toFixed(2), irc: gr.irc.toFixed(2) }))));
     out.push(gridPlan(gr));
   }
   return out;

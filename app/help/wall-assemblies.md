@@ -34,6 +34,12 @@ In **Properties**, set a wall's **Location line** to a core face or the core cen
 
 {{ui:Annotate}} › {{ui:Reference dimension}}: choose horizontal, vertical or aligned, and a reference: the exterior or interior finish face, the exterior or interior core face, the wall centerline or the core centerline. Pick the first wall, change the reference if you want, pick the second, then click where the dimension line goes. Two references on one wall measure its total or its core thickness. {{ui:Reference dimensions…}} lists the view's dimensions, including any that lost a wall, with Properties, Rebind references and Delete.
 
+### Dimension the whole plan by rules
+
+{{ui:Annotate}} › {{ui:Dimension the plan…}} dimensions the outside of the floor plan you are looking at: the overall size each way, a row of dimensions along each outside edge (wall ends, walls that meet the edge, and the doors and windows in it), with the rows placed clear of the building. Tick what you want, read the count, then {{ui:Add the dimensions}}. They are ordinary reference dimensions, so they follow the walls when the walls move and you can pick, move or delete any of them; the whole set is one undo step, and running it again does not make any twice.
+
+It dimensions the outside only: rooms inside the building, curved walls and walls that are not square to the plan are left for the hand tools, and grid lines are not walls, so dimensions between grids are not made here. Your connected assistant can do the same with `plan_dimension`.
+
 The dimension is attached to the walls, not to a spot on the screen: when a wall moves or its type changes, the value follows. If a wall is deleted the dimension says it is unresolved and shows no number, until you rebind it or undo. The length box also takes plan coordinates such as `10',12'` for a dimension line at an exact place.
 
 Dimensions are for walls BimCraft drew, in plan views. Not built yet: dimensions in sections and elevations, to doors, windows and other components, and assembly layers drawn in the plan and section; see [What is not built yet](topic:not-built-yet).

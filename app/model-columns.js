@@ -90,6 +90,11 @@ function writeColumn(w, c) {
   return id;
 }
 
+/** A copy of a column moved by (dx, dy), inside a writer (D8.3 Copy). */
+export function copyColumn(w, c, dx, dy, guid) {
+  return writeColumn(w, { ...c, id: null, guid, at: [c.at[0] + dx, c.at[1] + dy] });
+}
+
 export function placeColumns(spec) {
   const s = { ...COLUMN_DEFAULTS, ...spec, points: (spec.points || []).map((p) => [p[0], p[1]]) };
   const guids = [];

@@ -21,6 +21,7 @@ import { el } from './ui-util.js';
 import * as L from './libitem.js';
 import { BUILTIN_SYMBOLS } from './library-symbols.js';
 import { t, locale } from "./i18n.js";
+import { getDisplayUnits, localizeQuantities } from './model-units.js';   // GH.3-A: a note's lengths in the display unit
 
 const API = '/api/v1/library';
 const TOKEN_KEY = 'bimcraft.library.token';
@@ -144,6 +145,21 @@ export class LibraryPanel {
         key: 'symbol:' + i, name: item.name, maker: '', model: '', category: item.category, local: true, item,
         load: async () => ({ item, meta: { library: 'file', source: t('lib.src.symbols'), sourceFile: 'BimCraft built-in symbols (Apache-2.0)', sha256: await L.itemHash(item), notes: [t('lib.src.symbols.license')] } }),
       }));
+    } else if (this.source === 'plants') {
+      // 0.8 LD.1: the plant list written by CadCraft (CC0, plants/plants-seed.json) as library items; one list for CivilCraft, BimCraft and ModelCraft
+      try {
+        const P = await import('./plants/plants.js');
+        const bundled = P.readPlants(await (await fetch(new URL('./plants/plants-seed.json', import.meta.url))).json()).library.species;
+        // 0.8 LD.1 (landscape_PART_4): live Library plants, the bundled list on any failure
+        let sp = bundled;
+        try { const { loadPlants } = await import('./plants/plants-live.js'); sp = (await loadPlants({ seed: bundled })).species; } catch (e) { sp = bundled; }
+        if (token !== this.loadToken) return;
+        this.entries = sp.map((s) => {
+          const item = P.libraryItem(s, { lang: locale() });
+          return { key: 'plant:' + s.key, name: item.name, maker: '', model: '', category: item.category, local: true, item,
+            load: async () => ({ item, meta: { library: 'file', source: t('lib.src.plants'), sourceFile: 'plants-seed.json (CC0)', sha256: await L.itemHash(item), notes: [] } }) };
+        });
+      } catch (e) { this.entries = []; this.error = (e && e.message) || t('lib.err.unreachable'); }
     } else if (this.source === 'this') {
       const d = this.host.dwg();
       this.entries = d ? this.dwgEntries(d.db, d.fileName) : [];
@@ -177,7 +193,7 @@ export class LibraryPanel {
       load: async () => {
         const { item, info, version } = await this.fetchItem(x.uuid, x.version, base);
         // i18n-ignore: product name (LibraryCraft)
-        return { item, meta: { library, source: base === API ? 'LibraryCraft' : t('lib.source.feed'), sha256: item.provenance?.sha256 || await L.itemHash(item), info, version, withdrawn: version?.status === 'withdrawn' } };
+        return { item, meta: { library, source: base === API ? 'Library' : t('lib.source.feed'), sha256: item.provenance?.sha256 || await L.itemHash(item), info, version, withdrawn: version?.status === 'withdrawn' } };
       },
     };
   }
@@ -266,7 +282,8 @@ export class LibraryPanel {
     const kids = [
       el('div', { className: 'bc-lib-srcs', role: 'group', 'aria-label': t('lib.sources') },
         src('symbols', t('lib.src.symbols'), t('lib.src.symbols.title')),
-        src('librarycraft', 'LibraryCraft', t('lib.src.librarycraft.title')),   // i18n-ignore: product name
+        src('plants', t('lib.src.plants'), t('lib.src.plants.title')),
+        src('librarycraft', 'Library', t('lib.src.librarycraft.title')),   // i18n-ignore: product name
         src('this', t('lib.src.this'), t('lib.src.this.title')),
         src('files', t('lib.src.files'), t('lib.src.files.title')),
         src('feed', t('lib.src.feed'), t('lib.src.feed.title'))),
@@ -292,7 +309,7 @@ export class LibraryPanel {
       }
       if ((this.source === 'files' || this.source === 'this') && this.fileNotes.length) {
         kids.push(el('details', { className: 'bc-lib-notes' }, el('summary', {}, t('lib.notes.file', { n: this.fileNotes.length })),
-          el('ul', {}, this.fileNotes.slice(0, 200).map((n) => el('li', {}, n)))));
+          el('ul', {}, this.fileNotes.slice(0, 200).map((n) => el('li', {}, localizeQuantities(n, getDisplayUnits()))))));
       }
     }
     this.box.replaceChildren(...kids.filter(Boolean));
@@ -328,7 +345,7 @@ export class LibraryPanel {
   variantEntry(item, v, got) {
     return {
       item: L.itemAsVariant(item, v.id, { named: true }),
-      meta: { library: 'librarycraft', source: 'LibraryCraft', sha256: got?.item?.provenance?.sha256 || item.provenance?.sha256 || '', info: got?.info, version: got?.version,   // i18n-ignore: product name
+      meta: { library: 'librarycraft', source: 'Library', sha256: got?.item?.provenance?.sha256 || item.provenance?.sha256 || '', info: got?.info, version: got?.version,   // i18n-ignore: product name
         withdrawn: got?.version?.status === 'withdrawn', variant: { id: v.id, name: v.name, values: v.values } },
     };
   }
@@ -495,7 +512,7 @@ export class LibraryPanel {
         el('p', { className: 'bc-h' }, t('lib.license.heading')),
         lic ? el('p', {}, el('span', { className: 'bc-pill' }, licenseLabel(lic.id)), ' ', lic.attribution || lic.holder || '') : el('p', { className: 'bc-muted' }, t('lib.license.fromfile')),
         lic && lic.url && /^https?:/.test(lic.url) ? el('p', {}, el('a', { href: lic.url, rel: 'noopener noreferrer', target: '_blank' }, t('lib.license.link'))) : null),   // i18n-ignore: rel attribute value
-      m.notes && m.notes.length ? el('details', { className: 'bc-lib-notes' }, el('summary', {}, t('lib.notes', { n: m.notes.length })), el('ul', {}, m.notes.map((n) => el('li', {}, n)))) : null,
+      m.notes && m.notes.length ? el('details', { className: 'bc-lib-notes' }, el('summary', {}, t('lib.notes', { n: m.notes.length })), el('ul', {}, m.notes.map((n) => el('li', {}, localizeQuantities(n, getDisplayUnits()))))) : null,
       el('p', { className: 'bc-lib-actions' },
         mode === 'ifc' && !withdrawn ? el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-lib-place': '', onClick: () => this.host.place({ item: put, meta: m }) },
           el('i', { className: 'bi bi-plus-square', 'aria-hidden': 'true' }), ' ' + t('lib.place')) : null,

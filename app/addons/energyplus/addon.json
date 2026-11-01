@@ -1,0 +1,14 @@
+{
+  "id": "energyplus",
+  "name": "EnergyPlus check",
+  "version": "0.8.0",
+  "apps": ["bimcraft"],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": ["storage"],
+  "description": "Opens the Energy tab's Energy simulation step: writes the model as an EnergyPlus file and, with an EnergyPlus engine you point to (your own WebAssembly build, fetched only when you press Simulate), lists its heating and cooling loads beside the quick design aid's. The engine is not part of BimCraft. EnergyPlus is used under its BSD-3-Clause licence with a naming clause; see the licence notice in the step. A second opinion, not a compliance report.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

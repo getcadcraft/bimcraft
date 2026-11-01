@@ -20,6 +20,10 @@
  *     settings?                      the Render dialog's settings (looks), for the materials
  *   }) → Promise<{session, end(), state()}>  (state() is for tests: rig, mode, measures, issues, section, peers drawn)
  *
+ * AR on site (0.8 EG.21): arSupportNow() says whether this browser can do it; startAR({...}) shows the model at full size over the phone's camera
+ * (WebXR immersive-ar, Android Chrome), lined up on the building by two points pointed at on site, with an x-ray lens, a one-point re-check on the
+ * second visit, and the alignment kept in the file. See startAR below. Look, don't set out: the page says so.
+ *
  * Controls (either hand): point and pull the trigger. The menu is on the left hand (in front of you when there is one hand
  * only): Move (teleport), Measure, Section, Issue, Table top / Full size, Clear, Leave VR. The thumbstick: sideways turns
  * 30°, forward aims a teleport (let go to jump). Teleport only lands on floors (surfaces facing up).
@@ -29,7 +33,7 @@ import { t } from '../i18n.js';
 import { lookFor } from '../render/looks.js';
 import { libMaterial, imageTextureReady, imageMaterial } from '../render/three-mats.js';
 import { MODES, upMatrix, rigMatrix, startRig, teleportRig, turnRig, tableRig, snapToVertex, measure, sectionPlane, planCut, bcfCamera,
-  packPresence, cleanPeer, invert, apply, applyDir } from './xr-core.js';
+  packPresence, cleanPeer, invert, apply, applyDir, arSupport, arSupportNow, alignPoints, saveAlignment, loadAlignment, recheck } from './xr-core.js';
 
 export async function xrSupport() {
   const xr = globalThis.navigator && navigator.xr;
@@ -620,5 +624,221 @@ export async function startXR(o) {
       menu.updateMatrixWorld(true);
       return new THREE.Vector3(((x + w / 2) / 768 - 0.5) * 0.24, (0.5 - (y + h / 2) / 512) * 0.16, 0).applyMatrix4(menu.matrixWorld).toArray();
     },
+  };
+}
+
+
+// ======================================================================================================================================
+// AR on site (0.8 EG.21, apps-mount_PART_5). Plan and limits: docs/spikes/EG.21_PART_2.md, EG.21_PART_4.md. Android phones with Chrome; look, don't set out.
+// ======================================================================================================================================
+
+/**
+ * startAR({
+ *   scene() · version() · format(metres)      as startXR (the app's render scene, its version, a length in the app's units)
+ *   alignment?                                the record kept in the file (saveAlignment's), so the second visit starts lined up
+ *   saveAlignment(record) → void              called when the person lines the model up (or moves it after a re-check): keep it in the file
+ *   refs?: [[x,y,z],[x,y,z]]                  the two model points to stand at, in the app's space (default: two ground corners of the model's box)
+ *   overlay?: HTMLElement                     the page's own dom-overlay root (else one is made)
+ *   onExit()                                  when the session ends
+ * }) → Promise<{ session, end(), state() }>   state() is for tests: step, alignment, xray, reticle, advice
+ * Steps: align1 → align2 (stand at each reference point, point the phone's centre mark at the ground there, Place point) → aligned. A saved alignment starts at aligned;
+ * Re-check (stand at the first point, Place) says keep / move / again. The x-ray lens shows the whole model inside a box in front of the phone and a faint ghost of it
+ * everywhere else. Nothing is uploaded; the camera picture stays in the browser (WebXR gives the page no picture of it).
+ */
+export { arSupportNow };
+export async function startAR(o) {
+  const sup = arSupportNow();
+  if (!sup.ok) throw Object.assign(new Error(t('xr.ar.why.' + sup.reason)), { code: sup.reason, route: sup.route });
+  const overlay = o.overlay || document.createElement('div');
+  if (!o.overlay) { overlay.setAttribute('data-ar-overlay', ''); overlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;font:16px system-ui,sans-serif;color:#fff;'; document.body.append(overlay); }
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.xr.enabled = true;
+  renderer.xr.setReferenceSpaceType('local');
+  renderer.localClippingEnabled = true;
+  renderer.setClearColor(0x000000, 0);
+  const scene = new THREE.Scene();
+  const hemi = new THREE.HemisphereLight('#ffffff', '#8a8680', 1.4), sun = new THREE.DirectionalLight('#fff4e0', 1.6);
+  sun.position.set(0.4, 1, 0.3);
+  scene.add(hemi, sun);
+  const worldG = new THREE.Group(), solidG = new THREE.Group(), ghostG = new THREE.Group();
+  worldG.matrixAutoUpdate = false;
+  worldG.add(solidG, ghostG);
+  scene.add(worldG);
+  const reticle = new THREE.Mesh(new THREE.RingGeometry(0.05, 0.07, 32).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#2ecc71' }));
+  reticle.visible = false;
+  scene.add(reticle);
+  const marks = new THREE.Group();
+  scene.add(marks);
+
+  let session;
+  try {
+    const init = { ...sup.init, domOverlay: { root: overlay } };
+    session = await navigator.xr.requestSession('immersive-ar', init);
+  } catch (e) { renderer.dispose(); if (!o.overlay) overlay.remove(); throw e; }
+  await renderer.xr.setSession(session);
+  const viewer = await session.requestReferenceSpace('viewer');
+  let hitSource = null;
+  try { hitSource = await session.requestHitTestSource({ space: viewer }); } catch { hitSource = null; }
+
+  // ---- the model, built from the app's render scene (solid copy and a ghost copy sharing geometry) ----
+  const next = o.scene(), upM = upMatrix(next.up || [0, 0, 1]);
+  const solidMats = [], ghostMats = [];
+  const looks = new Map();
+  for (const it of next.items) {
+    const key = it.look || 'default';
+    let pair = looks.get(key);
+    if (!pair && !it.lines) {
+      const L = lookFor(key, o.settings || { looks: {} }, next.defaultColor, next.looks && next.looks[key]);
+      pair = [new THREE.MeshStandardMaterial({ color: new THREE.Color(L.color), roughness: L.rough, metalness: L.metal, side: THREE.DoubleSide }),
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(L.color), transparent: true, opacity: 0.18, depthWrite: false, side: THREE.DoubleSide })];
+      solidMats.push(pair[0]); ghostMats.push(pair[1]); looks.set(key, pair);
+    }
+    const mk = (mat) => {
+      const obj = it.lines ? new THREE.LineSegments(it.geometry, new THREE.LineBasicMaterial({ color: '#2a2f36', transparent: true, opacity: 0.5 })) : new THREE.Mesh(it.geometry, mat);
+      obj.matrixAutoUpdate = false;
+      if (it.matrix) obj.matrix.fromArray(it.matrix);
+      return obj;
+    };
+    solidG.add(mk(pair && pair[0]));
+    if (!it.lines) ghostG.add(mk(pair[1]));
+  }
+  ghostG.visible = false;
+  const bb = next.bounds || { min: [-5, -5, 0], max: [5, 5, 3] };
+  const corners = [];
+  for (const x of [bb.min[0], bb.max[0]]) for (const y of [bb.min[1], bb.max[1]]) for (const z of [bb.min[2], bb.max[2]]) corners.push(apply(upM, [x, y, z]));
+  const nb = { min: [0, 1, 2].map((i) => Math.min(...corners.map((c) => c[i]))), max: [0, 1, 2].map((i) => Math.max(...corners.map((c) => c[i]))) };
+  const gAt = next.groundAt ?? nb.min[1];
+  // the two model points to stand at (Y-up model space): given by the app, else two ground corners along the longer side
+  let refs = Array.isArray(o.refs) && o.refs.length === 2 ? o.refs.map((p) => apply(upM, p)) : null;
+  if (!refs) {
+    const wx = nb.max[0] - nb.min[0], wz = nb.max[2] - nb.min[2];
+    refs = wx >= wz ? [[nb.min[0], gAt, nb.min[2]], [nb.max[0], gAt, nb.min[2]]] : [[nb.min[0], gAt, nb.min[2]], [nb.min[0], gAt, nb.max[2]]];
+  }
+
+  // ---- state ----
+  let align = null, step = 'align1', xray = false, advice = '', world1 = null, hit = null, ended = false;
+  const saved = loadAlignment(o.alignment);
+  const setWorld = (a) => {
+    const c = Math.cos(-a.yaw), s = Math.sin(-a.yaw);
+    // model (Y up) → world: rotate about Y by -yaw, then move; xr space is Y up
+    const m = new THREE.Matrix4().set(c, 0, s, a.tx, 0, 1, 0, a.ty || 0, -s, 0, c, a.tz, 0, 0, 0, 1);
+    worldG.matrix.copy(m).multiply(new THREE.Matrix4().fromArray(upM));
+    worldG.matrixWorldNeedsUpdate = true;
+  };
+  if (saved) { align = saved; step = 'aligned'; setWorld(saved); } else worldG.visible = false;
+  const fmt = (p) => p.slice(0, 3).map((v) => o.format(v)).join(', ');
+  const text = (k, v) => t('xr.ar.' + k, v);
+
+  // ---- the overlay: words, five buttons ----
+  const root = document.createElement('div');
+  root.style.cssText = 'position:absolute;left:0;right:0;bottom:0;padding:12px;background:rgba(18,22,28,0.78);pointer-events:auto;';
+  const msg = document.createElement('p'); msg.setAttribute('data-ar-msg', ''); msg.style.cssText = 'margin:0 0 8px;';
+  const bar = document.createElement('div'); bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+  const mkBtn = (id, label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.setAttribute('data-ar-' + id, ''); b.textContent = label; b.style.cssText = 'padding:10px 14px;font:inherit;border:0;border-radius:6px;background:#1e48c8;color:#fff;'; b.addEventListener('click', fn); bar.append(b); return b; };
+  const bPlace = mkBtn('place', text('place'), () => place());
+  const bXray = mkBtn('xray', text('xray'), () => setXray(!xray));
+  const bAgain = mkBtn('again', text('again'), () => { step = 'align1'; world1 = null; say(); });
+  const bRecheck = mkBtn('recheck', text('recheck'), () => { step = 'recheck'; say(); });
+  const bLeave = mkBtn('leave', text('leave'), () => end());
+  root.append(msg, bar);
+  overlay.append(root);
+  function say(extra = '') {
+    const m = step === 'align1' ? text('step1', { where: fmt(refs[0]) }) : step === 'align2' ? text('step2', { where: fmt(refs[1]) })
+      : step === 'recheck' ? text('step.recheck', { where: fmt(refs[0]) }) : text('aligned', { m: align ? o.format(align.residual || 0) : '' });
+    msg.textContent = (extra ? extra + ' ' : '') + m + ' ' + text('note');
+    bPlace.hidden = step === 'aligned';
+    bAgain.hidden = step === 'align1';
+    bRecheck.hidden = step !== 'aligned';
+  }
+  say(sup.reason === 'android-chrome' && !hitSource ? text('nohit') : '');
+  function setXray(on) {
+    xray = !!on;
+    ghostG.visible = xray;
+    for (const m of solidMats) { m.clippingPlanes = xray ? lensPlanes : null; m.needsUpdate = true; }
+    bXray.setAttribute('aria-pressed', String(xray));
+  }
+  // the lens: a box 1.4 m wide, 1.6 m tall, 3 m deep, starting 0.4 m in front of the phone and turning with it about the vertical axis
+  const lensPlanes = Array.from({ length: 6 }, () => new THREE.Plane());
+  const lens = { yaw: 0, pos: new THREE.Vector3() };
+  function updateLens(cam) {
+    const q = new THREE.Quaternion(); cam.getWorldQuaternion(q);
+    const f = new THREE.Vector3(0, 0, -1).applyQuaternion(q); f.y = 0; if (f.lengthSq() < 1e-6) return; f.normalize();
+    const p = new THREE.Vector3(); cam.getWorldPosition(p);
+    const r = new THREE.Vector3(-f.z, 0, f.x);   // right
+    const c = p.clone().addScaledVector(f, 0.4 + 1.5);
+    lens.pos.copy(c); lens.yaw = Math.atan2(f.x, f.z);
+    // inward-facing planes: keep what is inside the box
+    lensPlanes[0].setFromNormalAndCoplanarPoint(r.clone().negate(), c.clone().addScaledVector(r, 0.7));
+    lensPlanes[1].setFromNormalAndCoplanarPoint(r, c.clone().addScaledVector(r, -0.7));
+    lensPlanes[2].setFromNormalAndCoplanarPoint(f.clone().negate(), c.clone().addScaledVector(f, 1.5));
+    lensPlanes[3].setFromNormalAndCoplanarPoint(f, c.clone().addScaledVector(f, -1.5));
+    lensPlanes[4].setFromNormalAndCoplanarPoint(new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, p.y + 0.5, 0));
+    lensPlanes[5].setFromNormalAndCoplanarPoint(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, p.y - 1.1, 0));
+  }
+
+  // ---- placing a point (the reticle's hit) ----
+  const dot = (p) => { const d = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), new THREE.MeshBasicMaterial({ color: '#ffd400' })); d.position.set(...p); marks.add(d); };
+  function place() {
+    if (!hit) { say(text('nohit')); return; }
+    const w = hit.slice();
+    if (step === 'align1') { world1 = w; dot(w); step = 'align2'; say(); return; }
+    if (step === 'align2') {
+      try {
+        const a = alignPoints([refs[0], refs[1]], [world1, w]);
+        a.ty = (world1[1] + w[1]) / 2 - (refs[0][1] + refs[1][1]) / 2;
+        align = a; setWorld(a); worldG.visible = true; step = 'aligned'; dot(w);
+        o.saveAlignment?.(saveAlignment(a));
+        say(text('lined', { m: o.format(a.residual) }));
+      } catch (e) { world1 = null; step = 'align1'; marks.clear(); say(e && e.code === 'close' ? text('close') : String(e?.message || e)); }
+      return;
+    }
+    if (step === 'recheck') {
+      const r = recheck(saveAlignment({ ...align, ty: align.ty || 0 }), refs[0], w);
+      advice = r.advice;
+      if (r.advice === 'move') { align = { ...align, tx: align.tx + r.adjust[0], tz: align.tz + r.adjust[1] }; setWorld(align); o.saveAlignment?.(saveAlignment(align)); }
+      if (r.advice === 'again') { step = 'align1'; world1 = null; marks.clear(); worldG.visible = false; say(text('re.again', { m: o.format(r.offset) })); return; }
+      step = 'aligned';
+      say(text('re.' + r.advice, { m: o.format(r.offset) }));
+    }
+  }
+
+  // ---- the frame loop ----
+  const refSpace = renderer.xr.getReferenceSpace?.() || null;
+  const tmp = new THREE.Vector3();
+  renderer.setAnimationLoop((time, frame) => {
+    if (!frame || ended) return;
+    const rs = renderer.xr.getReferenceSpace();
+    if (hitSource && rs) {
+      const res = frame.getHitTestResults(hitSource);
+      const pose = res && res[0] && res[0].getPose(rs);
+      if (pose) {
+        const pp = pose.transform.position;
+        hit = [pp.x, pp.y, pp.z];
+        reticle.position.set(pp.x, pp.y, pp.z); reticle.visible = step !== 'aligned';
+      } else { hit = null; reticle.visible = false; }
+    }
+    if (xray) updateLens(renderer.xr.getCamera());
+    renderer.render(scene, renderer.xr.getCamera());
+  });
+  void refSpace; void tmp;
+  const finish = () => {
+    if (ended) return;
+    ended = true;
+    renderer.setAnimationLoop(null);
+    try { hitSource?.cancel?.(); } catch { /* gone */ }
+    overlay.removeChild(root);
+    if (!o.overlay) overlay.remove();
+    renderer.dispose();
+    for (const m of [...solidMats, ...ghostMats]) m.dispose();
+    o.onExit?.();
+  };
+  session.addEventListener('end', finish);
+  async function end() { try { await session.end(); } catch { finish(); } }
+  return {
+    session, end,
+    place, setXray,
+    appToWorld: (p) => { const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(worldG.matrix); return [v.x, v.y, v.z]; },
+    refsApp: () => refs.map((p) => apply(invert(upM), p)),
+    state: () => ({ step, align: align ? { yaw: align.yaw, tx: align.tx, tz: align.tz, ty: align.ty || 0, residual: align.residual } : null, xray, reticle: !!hit, advice, refs, route: sup.route, lens: { yaw: lens.yaw, pos: lens.pos.toArray() } }),
   };
 }

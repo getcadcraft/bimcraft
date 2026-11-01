@@ -1,0 +1,4 @@
+- Architects and designers who want an early read on residential code limits while they draw.
+- Drafters preparing a drawing set who need to follow a sheet, scale and title-block practice.
+- Site and zoning planners who check setbacks, height, floor-area ratio and coverage of a lot.
+- Detailers who check bolt edge distance and spacing against a published table.

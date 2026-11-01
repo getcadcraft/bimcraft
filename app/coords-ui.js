@@ -17,7 +17,8 @@
  * Test hook: window.bimcraftCoords = this API + last (the last readout's lines).
  */
 import { readMarkers, levelFor, mapText, readout, planToFile, fileToPlan, fileToViewer } from './coords.js';
-import { fmtLen } from './model-units.js';
+import { lenMark } from './model-units.js';
+const OWN_UNIT = { m: 'terrain.unit.m', ft: 'terrain.unit.ft', 'us-ft': 'terrain.unit.ftus' };
 import { dms, viewerToFile, fileToMap } from './ifc-geo.js';
 
 const CSS = `
@@ -67,7 +68,7 @@ export function mountCoords(o) {
   let on = true;
   try { on = localStorage.getItem('bimcraft.coords') !== 'off'; } catch (e) { /* private window: on */ }
   let marks = null, levels = [];   // readMarkers and the levels of the current model
-  const fmt = (mm) => fmtLen(mm, o.units());
+  const fmt = (mm) => lenMark(mm, o.units());   // GH.3-A: the unit beside every number (feet-inches marks itself)
   const entry = () => { try { return o.entry(); } catch (e) { return null; } };   // a model closing while another opens: none
   const uM = () => (marks?.unitMm || 1) / 1000;   // metres per file unit
   const button = () => {
@@ -101,7 +102,9 @@ export function mountCoords(o) {
     const g = marks?.georef;
     if (!g || g.kind !== 'map') return null;
     const u = marks.unitMm, [e, n] = fileToMap(g, [fileMm[0] / u, fileMm[1] / u, (fileMm[2] || 0) / u]);
-    return mapText(g, e, n);
+    const m = mapText(g, e, n, o.units());
+    if (m.note) m.unit += ' (' + t(OWN_UNIT[m.note]) + ')';   // GH.3-A: the CRS's own unit beside the pick, e.g. (US survey feet)
+    return m;
   };
 
   // 3D pointer: what lies under it (the element's face, else the floor of the level shown lowest), at most once a frame;

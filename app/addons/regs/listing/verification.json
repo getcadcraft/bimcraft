@@ -1,0 +1,7 @@
+{
+  "manual": null,
+  "cases": [
+    {"id": "regs-apps", "name": "Building regulations in CadCraft, CivilCraft and DetailCraft", "result": "44 checks passed, 0 failed (node bin/test-regs-apps.mjs) and 28 passed, 0 failed in a real browser in all three apps: off, on, packs filtered to the app, a tick, a Problem with pack and clause, the tick kept in the file, switched off again. Recorded 2026-10-28 in docs/0.8-sessions/regs_PART_3.md."},
+    {"id": "regs-bim", "name": "Building regulations in BimCraft", "result": "144 checks passed, 0 failed (node bin/test-bimcraft.mjs --regs) and 61 passed, 0 failed in a real browser. Recorded 2026-10-28 in docs/0.8-sessions/regs_PART_3.md."}
+  ]
+}

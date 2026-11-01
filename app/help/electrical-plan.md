@@ -19,6 +19,8 @@ Draw the house's electrical plan in the model: outlets, switches and panels on t
 
 Devices are tagged as you place them: **R** for outlets, **S** for switches, **L** for lights, **M** for motion sensors, **J** for junction boxes, **P** for panels. Devices on a wall move with it when you move the wall.
 
+Prefer to browse by picture? Open the **Symbol palette** from {{ui:Build}} to find a device by name, star the ones you use and place it with one click: see [The symbol palette](topic:symbol-palette).
+
 ## Link switches to lights
 
 1. Pick a switch (or a motion sensor) and click **Link lights** in **Properties**.

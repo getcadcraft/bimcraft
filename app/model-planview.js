@@ -12,7 +12,11 @@ import { dimensionFootprint } from './dimension-geometry.js';
  *   scene.grids = [{ tag, a, b, bubbles: 'both' | 'start' | 'end' | 'none', sel }]   grid lines with their bubbles (0.6 DF.16)
  *   scene.cloud = { xy, n }   a point cloud's slice as dots (0.6 DF.22); snap kind 'cloud' = a diamond
  *   scene.through = [{ key, guid, from, poly, pieces }]  walls of other levels that run up through this level's cut (0.7 BIM-MLWALL): lighter, never picked
+ *   scene.pictures = [{ img (ImageBitmap), m (picture.js matrix), opacity, w, h, corners, selected, locked }]  pictures as backgrounds, the first thing drawn (0.8 D8.8, picture-ui.js)
  *   scene.underlay = { segs }  another level drawn light under everything, never picked (0.6 DC.117)
+ *   scene.walls[].phase: 'existing' | 'demolish' | 'new' (0.8 EG.59, phases-ui.js): drawn in PHASE_PLAN's pen
+ *   scene.walls[].pen / scene.symbols[].lw: a view's pen override (0.8 SU.1055, pens.js): { w, dash: solid|dash|dot, color: token }
+ *   scene.trace = { segs }  a Trace Reference: another level, dashed in the action colour, never picked or printed (0.8 SU.1055)
  *   scene.crop = [x0, y0, x1, y1]  the view's crop region: outside it the plan is veiled (still editable), a dashed frame round it
  *   scene.drafting = [{ key, kind 'lines' | 'hatch', lines: [[[x, y]…]], closed, rings, solid, segs }]  drafting drawn in this view
  *                  (0.6 DC.117 (d), drafting.js draftingItem): over the building, picked first
@@ -28,6 +32,8 @@ import { dimensionFootprint } from './dimension-geometry.js';
  * Pointer: wheel zooms about the pointer; middle or right drag, or Space + drag, pans; two fingers pinch and pan; a left
  * click (≤ 4 px of movement) goes to the handlers with the plan point; a left drag with no tool pans.
  */
+import { PHASE_PLAN } from './phase-pens.js';   // 0.8 EG.59: the plan's phase pens
+import { PadDetector } from './wheel-pad.js';   // 0.8 D7.56 (CadCraft's copy, byte-identical): a trackpad's two-finger swipe pans
 import { panButton, wheelFactor } from './input-mouse.js';   // 0.5 IP.1: buttons and wheel from the input profile
 const TOKENS = ['--ink', '--ink-2', '--line', '--grid', '--grid-minor', '--sheet', '--sheet-2', '--action', '--poche', '--layer-blue', '--layer-red', '--layer-ochre',
   '--layer-green', '--layer-orange', '--layer-magenta', '--layer-violet', '--layer-cyan'];   // 0.6 DF.29: pipe and duct systems' colours
@@ -51,6 +57,14 @@ export class PlanView {
     this.ro.observe(canvas.parentElement);
     this.bind();
     this.resize();
+    // 0.8 Track ID: hand the view to the input-device layer (assets/js/app-devices-ui.js) — 2D: pan as a drag does (cx/cy by
+    // px / scale), zoom = zoomAt (note: point first, factor last), fit = fit()
+    (window.ccViews ||= []).push({
+      el: canvas, kind: '2d',
+      pan: (dx, dy) => { this.userMoved = true; this.cx -= dx / this.scale; this.cy += dy / this.scale; this.render(); },
+      zoom: (f, x = this.w / 2, y = this.h2 / 2) => { if (f > 0) this.zoomAt(x, y, f); },
+      fit: () => this.fit(),
+    });
   }
 
   resize() {
@@ -119,8 +133,10 @@ export class PlanView {
   // ---- pointer ----
   bind() {
     const c = this.canvas;
+    const pad = new PadDetector();
     c.addEventListener('wheel', (e) => {
       e.preventDefault();
+      if (pad.isSwipe(e)) { this.userMoved = true; this.cx += e.deltaX / this.scale; this.cy -= e.deltaY / this.scale; this.render(); return; }   // D7.56: two fingers pan, a pinch and a mouse wheel zoom
       const r = c.getBoundingClientRect();
       this.zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015) * (e.ctrlKey ? 1 : wheelFactor())));
     }, { passive: false });
@@ -240,8 +256,24 @@ export class PlanView {
     const flat = (l) => { g.beginPath(); for (let i = 0; i < l.length; i += 2) { const s = S([l[i], l[i + 1]]); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); } g.closePath(); };
     const segs = (a) => { g.beginPath(); for (let i = 0; i < a.length; i += 4) { const p = S([a[i], a[i + 1]]), q = S([a[i + 2], a[i + 3]]); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); } g.stroke(); };
     const sel = (k) => this.selection.has(k), hov = (k) => this.hover === k;
+    // 0.8 D8.8: pictures placed as backgrounds (picture.js matrix: picture pixels -> plan mm), under everything else; the one being worked on gets an outline
+    for (const pic of this.scene.pictures || []) {
+      const m = pic.m, sc = this.scale;
+      g.save();
+      g.globalAlpha = pic.opacity;
+      g.transform(sc * m[0], -sc * m[1], sc * m[2], -sc * m[3], sc * (m[4] - this.cx) + this.w / 2, this.h2 / 2 - sc * (m[5] - this.cy));
+      g.drawImage(pic.img, 0, 0, pic.w, pic.h);
+      g.restore();
+      if (pic.corners && pic.selected) {
+        g.save(); g.strokeStyle = action; g.lineWidth = 1.5; g.setLineDash(pic.locked ? [2, 3] : []); g.beginPath();
+        pic.corners.forEach((c, i) => { const s = S(c); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); });
+        g.closePath(); g.stroke(); g.restore();
+      }
+    }
     // 0.6 DC.117: an underlay (another level), very light, under everything
     if (this.scene.underlay?.segs?.length) { g.lineWidth = 1; g.strokeStyle = ink2; g.globalAlpha = 0.3; segs(this.scene.underlay.segs); g.globalAlpha = 1; }
+    // 0.8 SU.1055: a Trace Reference (another level, moved and turned): ghosted in the action colour, reference only
+    if (this.scene.trace?.segs?.length) { g.lineWidth = 1; g.strokeStyle = action; g.globalAlpha = 0.35; g.setLineDash([6, 4]); segs(this.scene.trace.segs); g.setLineDash([]); g.globalAlpha = 1; }
     // what lies below the cut: thin
     g.lineWidth = 1; g.strokeStyle = ink2; g.globalAlpha = 0.7;
     for (const b of this.scene.below) { g.strokeStyle = sel(b.key) ? action : ink2; segs(b.segs); }
@@ -290,6 +322,24 @@ export class PlanView {
       g.strokeStyle = ink; g.lineWidth = 1.75;
       for (const p of this.scene.wallEdges) { path(p); g.stroke(); }
       for (const w of this.scene.walls) if (sel(w.key) || hov(w.key)) for (const p of w.pieces || [w.poly]) { path(p); g.strokeStyle = action; g.lineWidth = sel(w.key) ? 2.5 : 1.75; g.stroke(); }
+    }
+    // 0.8 EG.59: a wall's renovation phase on the plan: existing light grey, to demolish red dashed over a sheet-coloured gap, new heavy ink (phases.js PHASE_STYLE)
+    for (const w of this.scene.walls) {
+      const ph = w.phase && PHASE_PLAN[w.phase];
+      if (!ph) continue;
+      for (const p of w.pieces || [w.poly]) {
+        path(p);
+        if (ph.gap) { g.strokeStyle = C['--sheet'] || '#fff'; g.lineWidth = 3.5; g.setLineDash([]); g.stroke(); }
+        g.strokeStyle = C[ph.token] || ink; g.lineWidth = ph.w; g.setLineDash(ph.dash || []); g.stroke();
+      }
+      g.setLineDash([]);
+    }
+    // 0.8 SU.1055: a view's pen override on a wall (weight, dash, colour token): its outline again in that pen, over the common one
+    for (const w of this.scene.walls) {
+      if (!w.pen) continue;
+      g.strokeStyle = (w.pen.color && C[w.pen.color]) || ink; g.lineWidth = w.pen.w || 1.75; g.setLineDash(w.pen.dash === 'dash' ? [8, 4] : w.pen.dash === 'dot' ? [2, 3] : []);
+      for (const p of w.pieces || [w.poly]) { path(p); g.stroke(); }
+      g.setLineDash([]);
     }
     // doors and windows
     for (const s of this.scene.symbols) this.drawSymbol(g, s, sel(s.key) || hov(s.key) ? action : (s.color && C[s.color]) || ink, S);   // s.color: a token name (0.6 DF.29)

@@ -10,6 +10,7 @@
  */
 import { openQueue } from './queue.js';
 import { sizeFor, cleanSettings } from './looks.js';
+import { BUILTIN, sharedRegistry, engineFor } from './engines.js';
 
 const appKey = () => { try { return (globalThis.location?.pathname || '').split('/').filter(Boolean)[1] || 'app'; } catch { return 'app'; } };
 let shared = null;   // one queue (and runner) per page, whichever dialog shows it
@@ -34,7 +35,7 @@ export function mountQueue({ el, t, box, o, getSettings }) {
       const f = progress.get(j.id);
       return el('li', { dataset: { renderQueueJob: j.id, status: j.status } },
         el('span', { className: 'cc-render-queue-name' }, j.name || t('render.queue.unnamed')),
-        el('span', { className: 'cc-render-note' }, t(j.kind === 'still' ? 'render.queue.kind.still' : 'render.queue.kind.frames', { w: j.w, h: j.h }) + ' · ' + label(j) + (j.status === 'running' && f != null ? ' · ' + Math.round(f * 100) + ' %' : '')),
+        el('span', { className: 'cc-render-note' }, (j.engine ? j.engine + ' · ' : '') + t(j.kind === 'still' ? 'render.queue.kind.still' : 'render.queue.kind.frames', { w: j.w, h: j.h }) + ' · ' + label(j) + (j.status === 'running' && f != null ? ' · ' + Math.round(f * 100) + ' %' : '')),
         dl, rm);
     }));
     if (!jobs.length) list.append(el('li', { className: 'cc-render-note' }, t('render.queue.empty')));
@@ -60,7 +61,7 @@ export function mountQueue({ el, t, box, o, getSettings }) {
     } } : null;
     tell();
     try {
-      await q.run({ render: S.renderer, live, signal: S.abort.signal, onEvent: (e) => { if (e.type === 'progress') progress.set(e.job.id, e.f); tell(); } });
+      await q.run({ render: S.renderer, engines: o.engines || sharedRegistry(o.where || (globalThis.cadcraftDesktop ? 'studio' : 'web')), live, signal: S.abort.signal, onEvent: (e) => { if (e.type === 'progress') progress.set(e.job.id, e.f); tell(); } });
     } finally {
       liveScene?.dispose?.();
       S.abort = null;
@@ -77,6 +78,15 @@ export function mountQueue({ el, t, box, o, getSettings }) {
     /** The dialog's picture as it is set now, packed into the queue. */
     async addStill() {
       const s = cleanSettings({ ...getSettings(), mode: 'hq' }), v = o.viewSize(), { w, h } = sizeFor(s, v.w, v.h);
+      const engine = engineFor(s);
+      if (!BUILTIN.includes(engine)) {
+        // an outside engine (0.8 RE.1): the job keeps the hand-off package, not the packed scene
+        if (!o.handoff) throw Object.assign(new Error('no handoff'), { code: 'no_package' });   // i18n-ignore: caught by the caller
+        const name = (o.fileBase ? o.fileBase() : '') + ' — ' + new Date().toLocaleTimeString();
+        await q.addStill({ name, settings: s, w, h, engine, pkg: await o.handoff(s, { w, h }) });
+        tell();
+        return;
+      }
       const scene = o.scene(s);
       try {
         const [{ imagePixels }, { hdriFor, volumeFor }] = await Promise.all([import('./render-pt.js'), import('./session.js')]);
@@ -89,6 +99,20 @@ export function mountQueue({ el, t, box, o, getSettings }) {
     /** The animation (the video dialog's length, size, rate and format), path traced frame by frame. */
     async addFrames({ w, h, fps, format, motionBlur }) {
       const s = cleanSettings({ ...getSettings(), mode: 'hq' }), scene = o.scene(s);
+      const engine = engineFor(s);
+      if (!BUILTIN.includes(engine)) {
+        // an outside engine (0.8 RE.4): one package whose manifest carries the camera of every frame; the engine draws them in one run
+        try {
+          if (!o.handoff) throw Object.assign(new Error('no handoff'), { code: 'no_package' });   // i18n-ignore: caught by the caller
+          const length = o.length(), n = Math.max(1, Math.round(length * fps) + 1), cameras = [];
+          for (let i = 0; i < n; i++) { const f = scene.frameAt ? scene.frameAt(Math.min(length, i / fps)) : { camera: scene.camera }; cameras.push({ world: Array.from(f.camera(w / h).world) }); }
+          const pkg = await o.handoff(s, { w, h, frames: { from: 0, to: length, fps, count: n, cameras } });
+          const name = (o.fileBase ? o.fileBase() : '') + ' — ' + new Date().toLocaleTimeString();
+          await q.addFrames({ name, settings: s, w, h, fps, format, engine, pkg, count: n });
+        } finally { scene.dispose?.(); }
+        tell();
+        return;
+      }
       try {
         const [{ imagePixels }, { hdriFor, volumeFor }] = await Promise.all([import('./render-pt.js'), import('./session.js')]);
         scene.imagePixels = await imagePixels(scene); scene.hdri = hdriFor(s); scene.volumeData = volumeFor(s);

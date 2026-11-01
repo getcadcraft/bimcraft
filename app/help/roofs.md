@@ -3,7 +3,7 @@ title: Roofs: a pitch for each wall, gables, sheds and roof planes
 summary: Set each wall under a roof to pitched, gable end or none, use the hip, gable and shed presets, lift the roof with the plate height, add fascia and soffit, and draw single roof planes where the automatic roof doesn't fit.
 section: tasks
 order: 20
-keywords: roof, pitch, per wall, gable, gable end, shed, lean-to, hip, valley, ridge, plate height, heel, fascia, soffit, eave, rake, overhang, roof plane, porch roof, dormer, gable dormer, shed dormer
+keywords: change a roof, edit a roof, selected roof, roof properties, undo roof, roof, pitch, per wall, gable, gable end, shed, lean-to, hip, valley, ridge, plate height, heel, fascia, soffit, eave, rake, overhang, roof plane, porch roof, dormer, gable dormer, shed dormer
 ---
 
 ## What you'll do
@@ -29,6 +29,12 @@ Pick the roof (on the level above the walls, click inside its outline) and look 
 - **None (stops flush)**: the roof stops at that wall with no overhang and no gable wall, for a roof against a taller wall.
 
 The **Ends** list at the top sets every wall at once; **Set per wall** shows when the walls no longer match a preset.
+
+## Change a roof you already put on
+
+Pick the roof and **Properties** shows the same settings the Roof tool has: **Pitch**, **Overhang**, **Gable overhang**, **Plate height**, **Fascia height**, **Boxed eaves** and **Thickness**. Each change shows at once in the plan and in 3D, with the same checks as the tool (a pitch of 80 degrees or more is refused, and so is a setting that cannot make a roof). Type a value and press {{key:Enter}}, or leave the box.
+
+Each change is one undo step. Several changes to the same box one after another (type `6/12`, then `7/12`, then `8/12`) join into one step, so one {{key:Ctrl}}+{{key:Z}} puts back what the roof had before the series; changing a different box starts a new step.
 
 ## Plate height, fascia and soffit
 

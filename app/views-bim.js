@@ -3,6 +3,7 @@
  * views-bim.js — saved camera views and walkthroughs kept in the IFC (0.5 RC.7, session `render`). DOM-free: the Node test
  * runs it on cc-ifc. Stored as the property set `CadCraft_Views` on the IfcProject (plain IFC, ignored by other programs):
  *   'View: <name>'  IfcText "x y z dx dy dz fov"                 the eye and the looking direction, IFC axes (Z up), metres
+ *   'Narr: <name>'  IfcText  0.8 EG.50: the walk's narration, JSON {lang, cues: [[seconds, text]]} (narration.js)
  *   'Walk: <name>'  IfcText "t x y z dx dy dz; t x y z dx dy dz; …"  a walkthrough: seconds from its start, eye, direction
  * Order in the set = the order the views play in. Coordinates are the first model's (bcf.js toIfcPoint / fromIfcPoint).
  *
@@ -15,6 +16,7 @@
  */
 import { ModelWriter } from './model-write.js';
 import { ids, val, deleteLine } from './ifc-util.js';
+import { encode as encodeNarr, decode as decodeNarr } from './narration.js';   // 0.8 EG.50
 
 export const PSET = 'CadCraft_Views';
 export const MAX_VIEWS = 200;
@@ -55,7 +57,7 @@ export function decodeWalk(s) {
 function projectId(api, mid) { return ids(api, mid, 'IFCPROJECT')[0] ?? null; }
 
 export function readViews(api, mid) {
-  const views = [], walks = [];
+  const views = [], walks = [], narr = new Map();
   const pid = projectId(api, mid);
   if (pid === null) return { views, walks };
   for (const rid of ids(api, mid, 'IFCRELDEFINESBYPROPERTIES')) {
@@ -66,10 +68,12 @@ export function readViews(api, mid) {
     for (const h of d.HasProperties || []) {
       const p = api.GetLine(mid, h.value, false), n = String(val(p?.Name) || ''), v = val(p?.NominalValue);
       if (n.startsWith('View: ') && views.length < MAX_VIEWS) { const c = decodeView(v), name = cleanName(n.slice(6)); if (c && name) views.push({ name, ...c }); }
+      else if (n.startsWith('Narr: ')) { const nn = decodeNarr(v), name = cleanName(n.slice(6)); if (nn && name) narr.set(name, nn); }   // 0.8 EG.50: a walk's narration
       else if (n.startsWith('Walk: ') && walks.length < MAX_VIEWS) { const pts = decodeWalk(v), name = cleanName(n.slice(6)); if (pts && name) walks.push({ name, pts }); }
     }
     break;
   }
+  for (const w of walks) if (narr.has(w.name)) w.narration = narr.get(w.name);
   return { views, walks };
 }
 
@@ -77,6 +81,7 @@ export function writeViewsOp({ views = [], walks = [] }) {
   const rows = [
     ...views.slice(0, MAX_VIEWS).map((v) => ['View: ' + cleanName(v.name), 'IFCTEXT', encodeView(v)]),
     ...walks.slice(0, MAX_VIEWS).map((w) => ['Walk: ' + cleanName(w.name), 'IFCTEXT', encodeWalk(w.pts)]),
+    ...walks.slice(0, MAX_VIEWS).filter((w) => w.narration && encodeNarr(w.narration)).map((w) => ['Narr: ' + cleanName(w.name), 'IFCTEXT', encodeNarr(w.narration)]),   // 0.8 EG.50
   ];
   return (ed) => {
     const w = new ModelWriter(ed.W, ed.api, ed.mid);

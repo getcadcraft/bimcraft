@@ -34,10 +34,12 @@ import { mountDrafting } from './drafting-ui.js';   // 0.6 DC.117 (d): drafting 
 import { CEILING_PATTERNS } from './model-slabs.js';
 import { loopAt, labelPoint } from './model-rooms.js';
 import { readViews } from './views-bim.js';
-import { composeSheet, setPdf, sheetSvg, PAPERS, scalesFor, readSectionLines } from './res-sheets.js';
+import { buildLegend, legendToText, legendFromText, parseKeynoteFile } from './keynotes.js';
+import { composeSheet, arrangeSheet, setPdf, sheetSvg, PAPERS, scalesFor, readSectionLines } from './res-sheets.js';
 import { ModelWriter } from './model-write.js';
 import { mul4, inv4 } from './ifc-util.js';
-import { fmtLen, parseLen } from './model-units.js';
+import { fmtLen, parseLen, isMetric } from './model-units.js';
+import { labelPapers } from './paper-labels.js';
 import { el } from './ui-util.js';
 
 /** Categories a plan can leave out (IFC classes; a wall's StandardCase follows its class). */
@@ -150,7 +152,7 @@ export function mountViewsBim(modelUi, o = {}) {
     const lv = p ? levelByGuid(p.ref) : levelOf(A.S.level);
     if (lv) A.showKind(lv.id, p?.kind === 'rcp' ? 'rcp' : 'plan');
   }
-  const bubbleR = () => 5 * (rangeOf(A.S.level, A.S.kind, A.S.callout)?.scale || (A.units() === 'mm' ? 50 : 48));   // 5 mm on paper
+  const bubbleR = () => 5 * (rangeOf(A.S.level, A.S.kind, A.S.callout)?.scale || (isMetric(A.units()) ? 50 : 48));   // 5 mm on paper
   const tagOf = (c, r) => [c.crop[2] + r * 1.6, c.crop[3] + r * 1.6];
   /** The callouts drawn on this view: their rectangles, a leader and a tag bubble (name, and where it is placed). */
   function addCallouts(scene) {
@@ -188,7 +190,7 @@ export function mountViewsBim(modelUi, o = {}) {
       el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-co-back': '', title: t('model.co.back', { name: viewName(c.parent) }), onClick: () => backToParent() }, icon('bi-arrow-90deg-up'), ' ' + t('model.co.up')),
       el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-co-edit': c.id, title: t('model.co.edit', { name: c.name }), 'aria-label': t('model.co.edit', { name: c.name }), onClick: () => editCallout(c.id) }, icon('bi-sliders')));
   }
-  const defaultScale = () => (A.units() === 'mm' ? 20 : 24);
+  const defaultScale = () => (isMetric(A.units()) ? 20 : 24);
   function nextName() { let n = R.callouts.length + 1; while (R.callouts.some((c) => c.name === t('model.co.default', { n }))) n++; return t('model.co.default', { n }); }
   /** The Callout tool: two corners on the view shown (a plan, a ceiling plan, a callout); `edit` = draw an existing one's again. */
   function startCallout(edit = null) {
@@ -499,10 +501,42 @@ export function mountViewsBim(modelUi, o = {}) {
     const num = el('input', { type: 'text', className: 'bc-input', 'data-sh-number': '', value: D.number, maxLength: 20 });
     const title = el('input', { type: 'text', className: 'bc-input', 'data-sh-title': '', value: D.title, maxLength: 120 });
     const paper = el('select', { className: 'select-cc', 'data-sh-paper': '' }, ...PAPER_KEYS.map((k) => el('option', { value: k }, /^a\d$/.test(k) ? k.toUpperCase() : t('res.sh.paper.' + k))));
+    labelPapers(paper, A.units());   // GH.3-A: names kept, sizes in the display unit
     paper.value = D.paper;
     num.addEventListener('input', () => { D.number = num.value; draw(); });
     title.addEventListener('input', () => { D.title = title.value; draw(); });
     paper.addEventListener('change', () => { D.paper = paper.value; draw(); });
+    const arrange = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-arrange': '', title: t('model.sh.arrange.title') }, icon('bi-grid-1x2'), ' ' + t('model.sh.arrange'));
+    arrange.addEventListener('click', () => {   // 0.8 EG.56: one scale that fits, shelf-packed; everything stays editable (drag, scale, remove)
+      if (!D.views.length) { A.host.status(t('model.sh.empty'), true); return; }
+      const r = arrangeSheet(D, input, { paper: D.paper, units });
+      D.views = r.views; sel = -1; draw();
+      A.host.status(r.fits ? t('model.sh.arranged', { n: D.views.length, scale: r.label }) : t('model.sh.arranged.nofit', { scale: r.label }), !r.fits);
+    });
+    // 0.8 EG.56 (decided 2026-10-29): a numbered legend from the model's classifications and layers; a keynote file (the person's own) gives the words; every line stays editable text
+    let notes = null;
+    const legendBox = el('textarea', { className: 'bc-input', 'data-sh-legend': '', rows: 6, hidden: true, 'aria-label': t('model.sh.legend.edit') });
+    const legendOn = () => (D.legend || []).length > 0;
+    const showLegend = () => { legendBox.hidden = !legendOn(); legendBox.value = legendToText(D.legend || []); };
+    const makeLegend = () => {
+      const src = window.bimcraftLegendSource?.() || A.ask('legendSource') || [];   // the window hook is for tests (a model with classifications is hard to build by clicks)
+      const lg = buildLegend(src, { notes });
+      if (!lg.length) { A.host.status(t('model.sh.legend.none'), true); return; }
+      D.legend = lg; D.legendTitle = t('model.sh.legend.title'); showLegend(); draw();
+      A.host.status(t('model.sh.legend.made', { n: lg.length }));
+    };
+    legendBox.addEventListener('input', () => { D.legend = legendFromText(legendBox.value, D.legend || []).map((e, i) => ({ ...e })); draw(); });
+    const keynotesBtn = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-keynotes': '', title: t('model.sh.legend.title.tip') }, icon('bi-list-ol'), ' ' + t('model.sh.legend'));
+    keynotesBtn.addEventListener('click', () => { if (legendOn()) { D.legend = []; showLegend(); draw(); } else makeLegend(); });
+    const keyFile = el('input', { type: 'file', accept: '.txt,.csv,.tsv,.tab,text/plain,text/csv', hidden: true, 'data-sh-keyfile': '' });
+    keyFile.addEventListener('change', async () => {
+      const f = keyFile.files[0]; if (!f) return;
+      const r = parseKeynoteFile(await f.text());
+      if (!r.rows) { A.host.status(t('model.sh.legend.badfile'), true); return; }
+      notes = r.notes; makeLegend(); A.host.status(t('model.sh.legend.file', { n: r.rows, bad: r.bad }));
+    });
+    const keyFileBtn = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-keyfilebtn': '', title: t('model.sh.legend.file.tip') }, icon('bi-file-earmark-text'), ' ' + t('model.sh.legend.fileb'));
+    keyFileBtn.addEventListener('click', () => keyFile.click());
     const stage = el('div', { className: 'bc-sh-stage', 'data-sh-stage': '' });
     const selBar = el('div', { className: 'bc-sh-sel', 'data-sh-selbar': '' });
     const srcList = (kind, list, label) => list.length ? [el('h3', {}, label), el('ul', {}, ...list.map((x) => el('li', {}, el('span', { title: x.title }, x.title),
@@ -567,8 +601,8 @@ export function mountViewsBim(modelUi, o = {}) {
     if (have) buttons.push(btn('delete', t('model.sh.delete'), { 'data-sh-delete': '' }));
     buttons.push(btn('cancel', t('model.sh.close')));
     const dlg = dialog({ 'data-sh-dialog': '' }, have ? t('model.sh.edit') : t('model.sh.new'),
-      [el('div', { className: 'bc-sh-head' }, field(t('model.sh.number'), num), field(t('model.sh.titlef'), title), field(t('res.sh.paper'), paper)),
-        el('div', { className: 'bc-sh-body' }, src, el('div', {}, stage, selBar)), el('p', { className: 'bc-muted' }, t('model.sh.note'))],
+      [el('div', { className: 'bc-sh-head' }, field(t('model.sh.number'), num), field(t('model.sh.titlef'), title), field(t('res.sh.paper'), paper), arrange, keynotesBtn, keyFileBtn, keyFile),
+        el('div', { className: 'bc-sh-body' }, src, el('div', {}, stage, selBar, legendBox)), el('p', { className: 'bc-muted' }, t('model.sh.note'))],
       buttons,
       (what, e) => {
         if (what === 'cancel' || !what) return null;
@@ -583,6 +617,7 @@ export function mountViewsBim(modelUi, o = {}) {
         return run(saveSheet(D), { label: t('model.sh.what', { n: D.number || D.title }), verb: have ? t('model.verb.changed') : t('model.verb.made') });
       });
     dlg.classList.add('bc-sh-dlg');
+    showLegend();
     draw();
   }
   const round1 = (v) => Math.round(v * 10) / 10;

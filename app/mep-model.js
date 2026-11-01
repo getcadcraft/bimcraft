@@ -54,7 +54,7 @@ import { op } from './model-ops.js';
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
 import { t as tr } from './i18n.js';
-import { pipeSize, bendRadius, drainSlope, DEFAULT_CLASS, sizesFor, SYSTEM_MATERIALS, standardOf } from './mep/pipes.js';
+import { pipeSize, bendRadius, drainSlope, DEFAULT_CLASS, sizesFor, SYSTEM_MATERIALS, standardOf, projectStandard } from './mep/pipes.js';
 import { sizeSection, sectionLoss } from './mep/sizing.js';
 import { readEquipment, portsAt, portsOfElement, PORT_PSET } from './mep/equipment.js';   // 0.7 LC.9 (mep-07): runs fixed to equipment ports
 import { readPorts } from './mep/ports.js';
@@ -77,13 +77,22 @@ export const PIPE_SYSTEMS = {
   hhw: { ifc: 'HEATING', token: '--layer-magenta', rgb: [0.76, 0.15, 0.36], mat: 'steel' },
   gas: { ifc: 'GAS', token: '--layer-ochre', rgb: [0.98, 0.69, 0.02], mat: 'steel' },
   fire: { ifc: 'FIREPROTECTION', token: '--layer-red', rgb: [0.85, 0.28, 0.06], mat: 'steel' },
+  // 0.8 SU.888 (sx-mep): split / VRF refrigerant lines (ACR tube by OD, mep/tables-acr.js) and condensate drains
+  refl: { ifc: 'REFRIGERATION', token: '--layer-green', rgb: [0.18, 0.62, 0.35], mat: 'acr' },
+  refg: { ifc: 'REFRIGERATION', token: '--layer-cyan', rgb: [0.42, 0.75, 0.88], mat: 'acr' },
+  cond: { ifc: 'DRAINAGE', token: '--ink-2', rgb: [0.45, 0.48, 0.52], mat: 'pvc', drain: true },
 };
 export const DUCT_SYSTEMS = {
   supply: { ifc: 'AIRCONDITIONING', token: '--layer-blue', rgb: [0.11, 0.49, 0.84] },
   return: { ifc: 'VENTILATION', token: '--layer-green', rgb: [0.22, 0.70, 0.29] },
   exhaust: { ifc: 'EXHAUST', token: '--layer-orange', rgb: [0.96, 0.62, 0.0] },
   outside: { ifc: 'VENTILATION', token: '--layer-cyan', rgb: [0.08, 0.67, 0.75] },
+  // 0.8 EG.2 (mep_PART_2): cable trays and conduits are drawn as runs of these two systems (IfcCableCarrierSegment / fitting, carrier ports)
+  tray: { ifc: 'ELECTRICAL', token: '--layer-orange', rgb: [0.93, 0.55, 0.12], carrier: 'tray' },
+  conduit: { ifc: 'ELECTRICAL', token: '--layer-ochre', rgb: [0.80, 0.62, 0.10], carrier: 'conduit' },
 };
+/** 'tray' | 'conduit' for a run of a cable-carrier system, else null. */
+export const carrierOf = (r) => (r && r.kind === 'duct' ? DUCT_SYSTEMS[r.system]?.carrier || null : null);
 export const VALVE_KINDS = { gate: 'ISOLATING', ball: 'ISOLATING', globe: 'REGULATING', check: 'CHECK' };
 export const DUCT_SHAPES = ['round', 'rect', 'oval'];
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
@@ -108,7 +117,8 @@ export function sectionOf(r) {
     return { kind: 'pipe', round: true, shape: 'round', od: p.od * IN, wall: p.wall * IN, id: p.id * IN, nps: p.nps, w: p.od * IN, h: p.od * IN, R: bendRadius(p) * IN, label: p.label || p.size + '"', p };
   }
   const w = Number(r.w), h = r.shape === 'round' ? w : Number(r.h);
-  if (!(w >= 50) || !(h >= 50) || !DUCT_SHAPES.includes(r.shape)) return null;
+  const minDim = carrierOf(r) ? 10 : 50;   // a conduit is narrower than a duct
+  if (!(w >= minDim) || !(h >= minDim) || !DUCT_SHAPES.includes(r.shape)) return null;
   if (r.shape === 'oval' && !(w > h)) return null;
   return { kind: 'duct', round: r.shape === 'round', shape: r.shape, od: r.shape === 'round' ? w : null, w, h, label: r.shape === 'round' ? 'Ø' + Math.round(w) : Math.round(w) + '×' + Math.round(h) };   // i18n-ignore: size marks
 }
@@ -501,15 +511,18 @@ const PART_CLASS = {
   pipe: { segment: ['IFCPIPESEGMENT', 'RIGIDSEGMENT', 'IFCPIPESEGMENTTYPE'], bend: ['IFCPIPEFITTING', 'BEND', 'IFCPIPEFITTINGTYPE'], tee: ['IFCPIPEFITTING', 'JUNCTION', 'IFCPIPEFITTINGTYPE'], reducer: ['IFCPIPEFITTING', 'TRANSITION', 'IFCPIPEFITTINGTYPE'], valve: ['IFCVALVE', null, 'IFCVALVETYPE'] },
   duct: { segment: ['IFCDUCTSEGMENT', 'RIGIDSEGMENT', 'IFCDUCTSEGMENTTYPE'], bend: ['IFCDUCTFITTING', 'BEND', 'IFCDUCTFITTINGTYPE'], tee: ['IFCDUCTFITTING', 'JUNCTION', 'IFCDUCTFITTINGTYPE'], reducer: ['IFCDUCTFITTING', 'TRANSITION', 'IFCDUCTFITTINGTYPE'] },
 };
+const CARRIER_CLASS = (pre) => ({ segment: ['IFCCABLECARRIERSEGMENT', pre, 'IFCCABLECARRIERSEGMENTTYPE'], bend: ['IFCCABLECARRIERFITTING', 'BEND', 'IFCCABLECARRIERFITTINGTYPE'], tee: ['IFCCABLECARRIERFITTING', 'JUNCTION', 'IFCCABLECARRIERFITTINGTYPE'], reducer: ['IFCCABLECARRIERFITTING', 'TRANSITION', 'IFCCABLECARRIERFITTINGTYPE'] });
+PART_CLASS.tray = CARRIER_CLASS('CABLETRAYSEGMENT');
+PART_CLASS.conduit = CARRIER_CLASS('CONDUITSEGMENT');
 const X3_CLASS = { segment: 'IFCFLOWSEGMENT', bend: 'IFCFLOWFITTING', tee: 'IFCFLOWFITTING', reducer: 'IFCFLOWFITTING', valve: 'IFCFLOWCONTROLLER' };
 
 /** One part: the element, its shape, type, material, colour, sets and ports (returned for connecting). */
 function writePart(w, r, sec, part, lp) {
-  const [cls4, pre, tcls] = PART_CLASS[r.kind][part.kind];
+  const [cls4, pre, tcls] = PART_CLASS[carrierOf(r) || r.kind][part.kind];
   const predefined = part.kind === 'valve' ? VALVE_KINDS[part.valve.kind] : pre;
   const sysName = systemLabel(r.kind, r.system);
   const sizeText = part.kind === 'tee' && !sameSec(sec, part.branchSec) ? sec.label + ' × ' + part.branchSec.label : part.kind === 'reducer' ? part.from.label + ' × ' + part.to.label : sec.label;
-  const what = part.kind === 'segment' ? tr(r.kind === 'pipe' ? 'mep.part.pipe' : 'mep.part.duct') : part.kind === 'valve' ? tr('mep.valve.' + part.valve.kind) : tr('mep.fit.' + part.kind + (r.kind === 'duct' && part.kind === 'reducer' ? '.duct' : ''));
+  const what = part.kind === 'segment' ? tr(r.kind === 'pipe' ? 'mep.part.pipe' : carrierOf(r) ? 'mep.part.' + carrierOf(r) : 'mep.part.duct') : part.kind === 'valve' ? tr('mep.valve.' + part.valve.kind) : tr('mep.fit.' + part.kind + (r.kind === 'duct' && part.kind === 'reducer' ? '.duct' : ''));
   const name = w.L(what + ' ' + sizeText + ' ' + sysName);
   const place = w.H(w.placeAt(lp, 0, 0, 0, 0));
   const objType = part.kind === 'valve' ? w.L(tr('mep.valve.' + part.valve.kind)) : null;
@@ -521,7 +534,7 @@ function writePart(w, r, sec, part, lp) {
   const S = sysOf(r), style = w.surfaceStyle('CadCraft MEP ' + r.kind + ' ' + r.system, S.rgb);
   for (const it of body.items) w.styleItem(it, style);
   // type: segments by material and class (or duct shape), fittings and valves by kind
-  const tname = part.kind === 'segment' ? (r.kind === 'pipe' ? tr('mep.type.pipe', { cls: tr('mep.cls.' + (MAT_NAMES[r.mat] ? r.mat : 'steel'), { c: r.cls }) }) : tr('mep.type.duct.' + sec.shape)) : what;
+  const tname = part.kind === 'segment' ? (r.kind === 'pipe' ? tr('mep.type.pipe', { cls: tr('mep.cls.' + (MAT_NAMES[r.mat] ? r.mat : 'steel'), { c: r.cls }) }) : (carrierOf(r) ? tr('mep.part.' + carrierOf(r)) : tr('mep.type.duct.' + sec.shape))) : what;
   w.relateType(id, typeOf(w, tcls, tname, predefined));
   w.associateMaterial(id, w.material(r.kind === 'pipe' ? tr(MAT_NAMES[r.mat] || 'mep.mat.steel') : tr('mep.mat.galv')));
   const run = w.guidOf(r.id), Lm = (k, v) => [k, 'IFCLENGTHMEASURE', round(w.u(v))];
@@ -546,7 +559,7 @@ function writePart(w, r, sec, part, lp) {
   const S2 = sysOf(r), myLp = w.api.GetLine(w.mid, id, false).ObjectPlacement.value, made = [];
   for (const pt of part.ports) {
     const plp = w.make('IFCLOCALPLACEMENT', w.H(myLp), w.H(w.axisFrame(pt.p, pt.out, perp(pt.out))));
-    const pid = w.v4 ? w.make('IFCDISTRIBUTIONPORT', w.guid(), w.ownerHistory(), w.L(tr('mep.port')), null, null, w.H(plp), null, pt.flow, r.kind === 'pipe' ? 'PIPE' : 'DUCT', S2.ifc)
+    const pid = w.v4 ? w.make('IFCDISTRIBUTIONPORT', w.guid(), w.ownerHistory(), w.L(tr('mep.port')), null, null, w.H(plp), null, pt.flow, r.kind === 'pipe' ? 'PIPE' : carrierOf(r) ? 'CABLECARRIER' : 'DUCT', S2.ifc)
       : w.make('IFCDISTRIBUTIONPORT', w.guid(), w.ownerHistory(), w.L(tr('mep.port')), null, null, w.H(plp), null, pt.flow);
     if (!w.v4) w.make('IFCRELCONNECTSPORTTOELEMENT', w.guid(), w.ownerHistory(), null, null, w.H(pid), w.H(id));
     made.push({ id: pid, p: pt.p, part: id });
@@ -745,7 +758,7 @@ function portOwner(w, id) {
 }
 
 /** A run's defaults: material and class from the system under a standard ('us' or 'br'), the drain slope from its code. */
-export function runDefaults(kind, system, size, std = 'us') {
+export function runDefaults(kind, system, size, std = projectStandard() || 'us') {   // 0.8 SU.955: the project's plumbing standard
   if (kind === 'duct') return { kind, system: DUCT_SYSTEMS[system] ? system : 'supply', shape: 'rect', w: 300, h: 200, slope: 0 };
   const key = PIPE_SYSTEMS[system] ? system : 'cw', S = PIPE_SYSTEMS[key];
   const mat = (SYSTEM_MATERIALS[std] || SYSTEM_MATERIALS.us)[key] || S.mat, cls = DEFAULT_CLASS[mat];
@@ -845,7 +858,7 @@ export const runLength = (r) => { const V = runVertices(r); let L = 0; for (let 
 
 // ---- sanitary drains by fixture units ----
 /** A point of a storey's plan (mm) in the building's world mm. */
-function worldOf(w, storey, cache) {
+export function worldOf(w, storey, cache) {
   if (!cache.has(storey)) cache.set(storey, w.storeyWorld(storey));
   const M = cache.get(storey);
   return (p) => [M[0] * p[0] + M[4] * p[1] + M[8] * p[2] + M[12], M[1] * p[0] + M[5] * p[1] + M[9] * p[2] + M[13], M[2] * p[0] + M[6] * p[1] + M[10] * p[2] + M[14]];
@@ -914,6 +927,44 @@ export function ductLoss(r, u = 'in') {
   if (r.kind !== 'duct' || !(r.flow > 0)) return null;
   const k = u === 'in' ? IN : 1;
   return sectionLoss({ q: r.flow, shape: r.shape, w: r.w / k, h: (r.shape === 'round' ? r.w : r.h) / k, u });
+}
+
+/** 0.8 EG.1/EG.2 (mep_PART_2): sizes for several runs in ONE undo step — `changes` [{ guid, size?, w?, h? }] (a pipe's size name, a duct's or carrier's width / height in mm). */
+export function setRunSizes(changes) {
+  return op((w) => {
+    const runs = new Map(readRuns(w).map((r) => [r.guid, r])), storeys = new Set();
+    for (const c of changes || []) {
+      const r = runs.get(c.guid);
+      if (!r) continue;
+      const next = { ...r };
+      if (c.size !== undefined && r.kind === 'pipe') next.size = String(c.size);
+      if (c.size !== undefined && r.kind === 'duct') next.size = String(c.size);   // a conduit's trade size rides on `size`
+      if (Number.isFinite(c.w) && r.kind === 'duct') next.w = c.w;
+      if (Number.isFinite(c.h) && r.kind === 'duct') next.h = c.h;
+      if (!sectionOf(next)) refuse('mep.err.size');
+      writeDef(w, r.id, next); relabel(w, r.id, next); storeys.add(r.storey);
+    }
+    for (const st of storeys) regenMep(w, st);
+    return { id: null, ids: [] };
+  });
+}
+/** A property set `CadCraft_MepCalc` on an element (a diffuser's airflow, a fixture's units, a luminaire's photometric file): `rows` [[name, ifcType, value]]. One undo step. */
+const CALC_CLASSES = ['IFCAIRTERMINAL', 'IFCFLOWTERMINAL', 'IFCLIGHTFIXTURE', 'IFCSANITARYTERMINAL', 'IFCUNITARYEQUIPMENT', 'IFCPUMP', 'IFCBOILER', 'IFCTANK', 'IFCFAN', 'IFCAIRTERMINALBOX', 'IFCHEATEXCHANGER',
+  'IFCELECTRICAPPLIANCE', 'IFCFIRESUPPRESSIONTERMINAL', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWCONTROLLER', 'IFCDISTRIBUTIONELEMENT', 'IFCBUILDINGELEMENTPROXY', 'IFCFURNISHINGELEMENT', 'IFCFURNITURE'];
+/** An element by GlobalId, wider than ModelWriter.byGuid: also the equipment, terminals and fixtures a calculation puts a value on. */
+export function elementByGuid(w, guid) {
+  const hit = w.byGuid(guid);
+  if (hit) return hit;
+  for (const c of CALC_CLASSES) { let list = []; try { list = ids(w.api, w.mid, c); } catch (e) { continue; } for (const id of list) if (w.guidOf(id) === guid) return id; }
+  return null;
+}
+export function setCalcProps(guid, rows) {
+  return op((w) => {
+    const id = elementByGuid(w, guid);
+    if (!id) refuse('mep.err.none');
+    w.upsertPset(id, 'CadCraft_MepCalc', rows);
+    return { id, ids: [id] };
+  });
 }
 
 /** Schedules from the parts as written: pipe and duct by size with their lengths, fittings and valves by kind and size. */

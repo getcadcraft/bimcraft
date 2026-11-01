@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { createMapLayers } from './maplayers.js';
 import { byCode, crsFromEntry, loadCatalog, catalogLoaded } from './crs.js';
 import { readGeoref } from './ifc-geo.js';
+import { modelSystem } from './crs-pick.js';   // 0.8 D8.9: the system chosen for the model
 import { M4 } from './pointcloud-three.js';
 import { t } from './i18n.js';
 
@@ -24,7 +25,7 @@ export async function installBimMaps({ root, attrib, viewer, models, say, busy, 
   if (!catalogLoaded()) await loadCatalog();
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch { saved = {}; }
-  const geoCache = new WeakMap();
+  let geoCache = new WeakMap();
   const first = () => models()[0] || null;
   function geo() {
     const ent = first();
@@ -36,10 +37,10 @@ export async function installBimMaps({ root, attrib, viewer, models, say, busy, 
   let crsKey = '', crsVal = null;
   function crs() {
     const x = geo();
-    const key = x ? x.ent.name + '|' + x.g.crs.code : '';
+    const key = x ? x.ent.name + '|' + x.g.crs.code + '|' + (x.g.crs.record?.Proj4 || '') : '';
     if (key === crsKey) return crsVal;
     crsKey = key; crsVal = null;
-    try { const e = x?.g.crs.code ? byCode(x.g.crs.code) : null; if (e && !e.geographic) crsVal = { ...crsFromEntry(e), local: null }; } catch { crsVal = null; }
+    try { const ms = x ? modelSystem(x.g.crs) : null; if (ms && ms.crs.unit !== 'deg') crsVal = { ...ms.crs, local: null }; } catch { crsVal = null; }
     return crsVal;
   }
   /** Map units (Z up, the map's own) → the viewer, and back. */
@@ -109,7 +110,7 @@ export async function installBimMaps({ root, attrib, viewer, models, say, busy, 
 
   return {
     open: () => ml.openDialog(),
-    modelChanged: () => { crsKey = '~'; ml.crsChanged(); schedule(); },
+    modelChanged: () => { geoCache = new WeakMap(); crsKey = '~'; ml.crsChanged(); schedule(); },
     ml, state: () => ({ crs: crs(), ground: !!ground, box: ground ? (ground.geometry.computeBoundingBox(), ground.geometry.boundingBox.min.toArray().concat(ground.geometry.boundingBox.max.toArray())) : null, ...ml.state() }),
     mapToViewer,
   };

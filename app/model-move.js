@@ -39,7 +39,11 @@ export function placedItems(w, storey = null) {
 /** Move and / or turn placed items: one change. */
 export function moveItems(list) {
   const moves = list.map((m) => ({ ...m }));
-  return (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run((w) => {
+  return (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run((w) => moveItemsIn(w, moves));
+}
+/** The same inside a writer that is already running (model-modify.js). */
+export function moveItemsIn(w, moves) {
+  {
     const all = placedItems(w), ids = [];
     for (const m of moves) {
       const it = all.find((x) => x.guid === m.guid);
@@ -58,5 +62,5 @@ export function moveItems(list) {
       ids.push(it.id);
     }
     return { id: ids[0] ?? null, ids };
-  });
+  }
 }

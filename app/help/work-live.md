@@ -1,14 +1,14 @@
 ---
-title: Work on one model together, live
-summary: What changes in BimCraft while you are in a CadCraft Studio live session: everyone's edits to the same IFC model, your own undo, and joining from a browser on the same network.
+title: Work on one model together with Live TeamWork
+summary: What changes in BimCraft while you are in a Live TeamWork session from CadCraft Studio: everyone's edits to the same IFC model, your own undo, and joining from a browser on the same network.
 section: tasks
 order: 199
-keywords: live, studio live, together, collaborate, session, share live, join, ifc, properties, rename, undo, host
+keywords: live, live teamwork, studio live, together, collaborate, session, share live, join, ifc, properties, rename, undo, host
 ---
 
 ## What you will learn
 
-What happens to an IFC model while several people edit it at the same time. CadCraft Studio starts and joins the session (Share live, Join); this page is about the model itself.
+What happens to an IFC model while several people edit it at the same time. CadCraft Studio starts and joins the Live TeamWork session (Share, Join); this page is about the model itself.
 
 ## Everyone edits at once
 

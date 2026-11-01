@@ -11,7 +11,9 @@
  *   bcCorner  the corner indicator in the 3D views: view cube / axis icon / none   default view cube
  *   bcBoxMargin  room left round the pick by "Section box round the pick", in mm (0.5 WL.2)   default 300
  *   bcGeoCrs  the system Measure › Location gives latitude and longitude in (0.5 WL.4): WGS 84, the file's own datum, or
- *             one of a few common geographic systems (EPSG codes)                         default WGS 84
+ *             one of a few common geographic systems (EPSG codes); 0.8 D8.9: "Choose another system…" adds any EPSG system,
+ *             UTM zone or one of the person's own as one more option                         default WGS 84
+ *   bcIdsEmbed  Check against IDS: also keep the IDS text inside the IFC (0.7.1 71.25; off: only a reference, the text stays in this browser)
  *   bcAuthor  your name on BCF issues (localStorage bimcraft.author; 0.5 SI.9): signed in, [data-bc-author-account] says
  *             "From your account (<name>)" with "Use another name"; a typed name wins until cleared; not reset
  *   bcAssist, bcAssistRead, bcAssistEdit   AI assistants and scripts (0.4 X.7, AGENTS-SPEC §7): on/off, then which groups
@@ -31,6 +33,11 @@
     <label><input type="radio" name="bcEdges" value="off"> <i class="bi bi-square" aria-hidden="true"></i> <?= Lang::e('set.edges.off') ?></label>
   </div>
   <p class="shell-hint-text"><?= Lang::e('set.edges.hint') ?></p>
+</fieldset>
+<fieldset class="shell-set" data-bc-ids-settings>
+  <legend><?= Lang::e('ids.set.legend') ?></legend>
+  <label class="shell-check"><input type="checkbox" name="bcIdsEmbed"> <?= Lang::e('ids.set.embed') ?></label>
+  <p class="shell-hint-text"><?= Lang::e('ids.set.embed.hint') ?></p>
 </fieldset>
 <fieldset class="shell-set">
   <legend><?= Lang::e('set.dwgstart') ?></legend>
@@ -95,6 +102,7 @@
       <option value="4490">CGCS2000 (EPSG:4490)</option>
       <?php /* i18n-ignore-end */ ?>
     </select>
+    <button type="button" class="btn-line btn-sm-cc" data-bc-geo-more><?= Lang::e('set.geo.more') ?></button>
   </div>
   <p class="shell-hint-text"><?= Lang::e('set.geo.hint') ?></p>
 </fieldset>

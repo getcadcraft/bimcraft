@@ -392,6 +392,31 @@ export function blankRecipe({ key, name = '', kind = 'generic', host = 'none', b
     solids: [{ id: 's1', name: tr('fam.part.block'), op: 'box', x0: '(-Width / 2)', y0: '0', z0: '0', x1: '(Width / 2)', y1: 'Depth', z1: 'Height', style: 'solid' }], booleans: [] };
   /* i18n-ignore-end */
 }
+// ======================================================================================================== family libraries (0.8 BIM-FAM-MORE step 8)
+export const FAMILY_LIBRARY_FORMAT = 'cadcraft-family-library';
+export const FAMILY_LIBRARY_MAX = 200;
+/** Every family of the project (not the unedited starters, not guessed types) as one library file: `{ format, version, name, families: [family files] }`. */
+export function familyLibrary(w, name = '') {
+  const idx = familyIndex(w), families = [];
+  for (const [k, g] of idx.groups) { if (!g.fam || g.fam.starter) continue; const f = familyFile(w, k); if (f) families.push(f); }
+  return { format: FAMILY_LIBRARY_FORMAT, version: 1, name: String(name || '').slice(0, 120), families };
+}
+/**
+ * The family files in a library file (untrusted), ready for importFamilies: the format and the count are checked, every entry must be an
+ * object, and an entry another entry already brings in its `uses` is left out (it would come twice). Each family is still checked by
+ * readFamily when it is imported, so a bad one refuses the whole file. → { ok, list, name } | { ok: false, key }
+ */
+export function readFamilyLibrary(obj) {
+  if (!obj || typeof obj !== 'object' || obj.format !== FAMILY_LIBRARY_FORMAT) return { ok: false, key: 'fam.err.notlibrary' };
+  const fams = obj.families;
+  if (!Array.isArray(fams) || !fams.length) return { ok: false, key: 'fam.err.emptylibrary' };
+  if (fams.length > FAMILY_LIBRARY_MAX) return { ok: false, key: 'fam.err.biglibrary' };
+  if (fams.some((f) => !f || typeof f !== 'object' || Array.isArray(f))) return { ok: false, key: 'fam.err.notfamily' };
+  const brought = new Set();
+  for (const f of fams) if (Array.isArray(f.uses)) for (const u of f.uses) if (u && typeof u.key === 'string') brought.add(u.key);
+  const list = fams.filter((f) => !(typeof f.key === 'string' && brought.has(f.key)));
+  return { ok: true, list, name: typeof obj.name === 'string' ? obj.name.slice(0, 120) : '' };
+}
 /** A family from a file (untrusted): a clash with a family of this file under the same key takes a new key. */
 export function importFamily(recipe, { key = null } = {}) {
   const fixed = { key };
@@ -477,9 +502,21 @@ function freeKey(w) {
 
 // ======================================================================================================== elements
 /** Place an unhosted family's size on a level (plan mm in the level's axes, degrees). */
-export function placeFamily({ storey, family, values = {}, instance = {}, typeGuid = null, x = 0, y = 0, rot = 0, guid = null } = {}) {
-  const s0 = { guid };
+export function placeFamily(spec = {}) {
+  const s0 = { guid: spec.guid ?? null };
+  return op((w) => placeOne(w, spec, s0));
+}
+/** Several placements as ONE undo step (0.8 EG.60 furnish.js: a whole room). → { id, ids, made } of all of them. */
+export function placeFamilies(list) {
+  const keep = (list || []).map((spec) => ({ spec, s0: { guid: spec.guid ?? null } }));
   return op((w) => {
+    const ids = [], made = new Map();
+    for (const { spec, s0 } of keep) { const r = placeOne(w, spec, s0); ids.push(...r.ids); for (const [g, id] of r.made) made.set(g, id); }
+    return { id: ids[0], ids, made };
+  });
+}
+function placeOne(w, { storey, family, values = {}, instance = {}, typeGuid = null, x = 0, y = 0, rot = 0 } = {}, s0) {
+  {
     patchWriter(w);
     const st = w.byGuid(storey);
     if (!st) throw fail('model.err.nolevel');
@@ -508,7 +545,7 @@ export function placeFamily({ storey, family, values = {}, instance = {}, typeGu
     writePorts(w, id, fam, size?.values || values);
     forgetFamilyIndex(w);
     return { id, ids: [id], made: new Map([[g, id]]) };
-  });
+  }
 }
 /** Change elements to another size of their family (doors / windows: through model-openings.js, so the wall and what follows it
  *  are made again; others: retyped and reshaped). One undo step. */

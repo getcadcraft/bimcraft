@@ -18,6 +18,6 @@ It is off until you switch it on: {{ui:Settings}} › {{ui:General}} › {{ui:Ad
 
 Putting equipment into the open model (the {{ui:Place}} button in the equipment table) and the router's list of ports need BimCraft's add-on API 1.1, which this build has; in a build without it the Plant tab says so, and the equipment goes out as its own IFC file, which BimCraft opens like any other.
 
-Not built yet: the router finds a route between two ports and shows its corners, but putting the run into the model waits for a run writer in the same API; spool numbers wait for BimCraft's own (the isometric draws balloons when the runs carry them); the layout check reads the equipment table, not equipment placed from the library.
+The router can draw the route it found as a pipe run ({{ui:Draw this run}}). The isometric balloons the spool numbers BimCraft gave a steel run when it was cut into spools. The layout check reads the equipment table and also equipment placed in the model from the library.
 
 The add-on changes the model only when you press {{ui:Place}} (one undo step); everything else reads it.

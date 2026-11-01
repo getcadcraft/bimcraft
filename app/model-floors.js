@@ -105,9 +105,10 @@ function writeOpening(w, f, points, guid) {
   return oid;
 }
 
-export function placeDrawnFloor(spec) {
+/** The writer-level body of placeDrawnFloor (D8.3 Copy uses it inside its own op). */
+export function writeDrawnFloor(w, spec) {
   const s = { kind: 'concrete', use: 'floor', offset: 0, ...spec, points: spec.points.map((q) => [q[0], q[1]]) };
-  return op((w) => {
+  {
     const pr = polyProblem(s.points);
     if (pr) refuse(pr);
     const storey = w.byGuid(s.storey);
@@ -125,7 +126,19 @@ export function placeDrawnFloor(spec) {
     w.upsertPset(id, 'Pset_SlabCommon', [['IsExternal', 'IFCBOOLEAN', false], ['LoadBearing', 'IFCBOOLEAN', true]]);
     writeFloorShape(w, { id, points: s.points, kind: k.key, use: s.use, thickness: T, offset: s.offset, openings: [] });
     return { id, ids: [id], made: new Map([[g, id]]) };
-  });
+  }
+}
+export function placeDrawnFloor(spec) {
+  const s = { ...spec };
+  return op((w) => writeDrawnFloor(w, s));
+}
+
+/** Move a drawn floor and its openings by (dx, dy) mm (D8.3 Move): inside an op, with a writer. */
+export function shiftDrawnFloor(w, f, dx, dy) {
+  const mv = (pts) => pts.map((q) => [q[0] + dx, q[1] + dy]);
+  const nf = { ...f, points: mv(f.points), openings: f.openings.map((h) => ({ ...h, points: mv(h.points) })) };
+  writeFloorShape(w, nf);
+  for (const h of nf.openings) w.upsertPset(h.id, OPENING_PSET, [['Points', 'IFCTEXT', ptsText(ccw(h.points).map((q) => [w.u(q[0]), w.u(q[1])]))]]);
 }
 
 export function changeDrawnFloor(guid, ch) {

@@ -19,6 +19,7 @@
         "partcraft": "PartCraft"
     },
     "vendor": {
+        "coolprop": "6.6.0",
         "delaunator": "5.1.0",
         "geotiff": "3.0.5",
         "laz-perf": "0.0.7",
@@ -29,6 +30,7 @@
         "oidn-weights": "2.3.0",
         "pdfjs": "6.3.289",
         "proj4": "2.22.0",
+        "rdkit": "2026.9.1",
         "robust-predicates": "3.0.3",
         "three": "0.186.1",
         "three-gpu-pathtracer": "0.0.26",
@@ -38,7 +40,7 @@
     },
     "origin": "https://getcadcraft.com",
     "packed": {
-        "at": "2026-10-25T02:46:30Z",
+        "at": "2026-11-01T17:05:19Z",
         "build": "dev"
     }
 }

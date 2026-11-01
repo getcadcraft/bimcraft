@@ -13,7 +13,7 @@ See a model as someone standing in it: walk down a corridor, into a room, up a s
 ## Steps
 
 1. Open an IFC model and click {{ui:Walk}} in the toolbar.
-2. Click the floor where you want to stand. You stand there with your eyes at {{ui:Eye height}} (1.6 m to start), looking the way the view looked.
+2. Click the floor where you want to stand. You stand there with your eyes at {{ui:Eye height}} (1.6 m to start, shown and typed in the {{ui:Units}} you chose: 5'-3" in feet and inches, 1600 in millimeters; a bare number is in that unit, or write a unit such as 1.8 m), looking the way the view looked.
 3. Move with {{key:W}} {{key:A}} {{key:S}} {{key:D}} or the arrow keys. Hold {{key:Shift}} to go faster. Drag in the view to look round.
 4. Press {{key:Esc}} or click {{ui:Done}} to stop. The view stays where you were, ready to orbit.
 

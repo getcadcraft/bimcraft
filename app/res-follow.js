@@ -8,6 +8,7 @@ import { syncFoundations } from './res-foundation.js';
 import { syncCountertops } from './res-counter.js';
 import { syncStairs } from './res-stair.js';
 import { syncElectrical } from './res-elec.js';
+import { syncPlanSymbols } from './plan-symbols.js';   // 0.8 GH.3-G (gh3g2): plan symbols that snapped to a wall face follow it
 import { syncFraming } from './res-framing.js';
 import { syncTerrain } from './res-terrain.js';
 import { syncColumns } from './model-columns.js';   // 0.6 DF.16 (bim-draw): columns to the level above follow its height
@@ -21,6 +22,7 @@ export function syncResidential(w, storey, ctx = {}) {
   n += syncCountertops(w, storey);
   n += syncStairs(w, storey, ctx);
   n += syncElectrical(w, storey);   // outlets, switches and panels stay on their walls
+  n += syncPlanSymbols(w, storey);   // so do plumbing plan symbols fixed to a wall face
   n += syncFraming(w, storey);   // last: walls, floors, roofs and their openings are final by now
   n += syncColumns(w, storey);
   n += syncRamps(w, storey);

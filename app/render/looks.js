@@ -18,6 +18,7 @@
  */
 import { cleanMix, MAX_PRESETS } from './pt-mix.js';
 import { cleanPost, POST_DEFAULTS } from './pt-post.js';
+import { cleanEngineId } from './engines.js';
 
 export const MAX_SIDE = 4096;
 
@@ -87,6 +88,8 @@ export const MINUTES = [0, 1, 5, 15, 60];   // 0 = no limit
 
 export const DEFAULTS = Object.freeze({
   mode: 'fast', minutes: 5,
+  engine: '',         // 0.8 RE.1 (engines.js): the engine's id; '' = the built-in the mode names (fast | pt)
+  engineOpts: {},     // engine id → that engine's own settings (typed fields, cleaned by the engine's list when it is drawn)
   size: 'view2', quality: 'good', sky: 'clear', exposure: 0, edges: false, ground: true,
   sun: null,          // null = the model's own sun (its place, date and time); else {month, day, hour} for this render
   looks: {},          // '#rrggbb' | 'default' → a LOOK_KEYS name
@@ -161,12 +164,31 @@ function cleanAdaptive(v) {
   return { on: o.on === true, noise: Math.round(num(o.noise, 0.002, 0.2, d.noise) * 1000) / 1000, min: Math.round(num(o.min, 8, 256, d.min) / 4) * 4 };
 }
 
+/** Engine id → {key: scalar}: at most 8 engines × 24 keys; scalars only (strings ≤ 200 characters). Each engine's own list narrows it further. */
+function cleanEngineOptsMap(v) {
+  const out = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const id of Object.keys(v).slice(0, 8)) {
+    const e = v[id];
+    if (!cleanEngineId(id) || !e || typeof e !== 'object' || Array.isArray(e)) continue;
+    const o = {};
+    for (const k of Object.keys(e).slice(0, 24)) {
+      const x = e[k];
+      if (/^[a-zA-Z][a-zA-Z0-9_]{0,31}$/.test(k) && (typeof x === 'boolean' || (typeof x === 'number' && Number.isFinite(x)) || typeof x === 'string')) o[k] = typeof x === 'string' ? x.replace(/[\u0000-\u001f]/g, '').slice(0, 200) : x;
+    }
+    out[id] = o;
+  }
+  return out;
+}
+
 /** Settings from anything (a file, localStorage): a fresh object with only known keys and sane values. */
 export function cleanSettings(obj) {
   const o = obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
   const s = {
     mode: MODES.includes(o.mode) ? o.mode : DEFAULTS.mode,
     minutes: MINUTES.includes(o.minutes) ? o.minutes : DEFAULTS.minutes,
+    engine: cleanEngineId(o.engine),
+    engineOpts: cleanEngineOptsMap(o.engineOpts),
     size: pick(o.size, SIZES, DEFAULTS.size),
     quality: pick(o.quality, QUALITY, DEFAULTS.quality),
     sky: pick(o.sky, SKIES, DEFAULTS.sky),

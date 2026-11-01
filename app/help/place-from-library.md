@@ -1,6 +1,6 @@
 ---
 title: Place equipment and furniture from the library
-summary: Find an item in LibraryCraft, a file or the open drawing, place it on a storey of an IFC model with a ghost preview, turn it, snap it to a wall, and save.
+summary: Find an item in the Library, a file or the open drawing, place it on a storey of an IFC model with a ghost preview, turn it, snap it to a wall, and save.
 section: tasks
 order: 150
 keywords: move, rotate, turn, drag, library, librarycraft, place, insert, equipment, furniture, block, family, item, catalog, content, kcl, csv, gltf, obj, rfa, dwg, ifc type
@@ -16,7 +16,7 @@ Put a library item into an IFC model: a sink, a work table, a chair. BimCraft wr
 2. Click the {{ui:Library}} tab beside {{ui:Properties}} on the right, or {{ui:Library}} in the toolbar above the model.
 3. Pick a source:
    - **Built-in symbols**: generic plumbing plan symbols included with BimCraft under Apache-2.0, available offline. Check their dimensions before construction. For electrical plan symbols and IFC electrical devices, use **Build › Electrical**.
-   - **LibraryCraft**: the CadCraft library on this site. Public items need no sign-in.
+   - **Library**: the CadCraft library on this site. Public items need no sign-in.
    - **This file**: the blocks of an open DWG or DXF drawing. A dynamic block with visibility states is offered once per state, named "Sink: Double bowl", each drawn with only that state's objects.
    - **Files…**: a DWG, DXF, IFC, glTF/GLB, OBJ, RFA or CSV file on your computer. It is read in this tab; nothing is uploaded.
    - **Other feeds**: another library that speaks the same feed format. Add its address once; it is kept in this browser.
@@ -41,7 +41,7 @@ In {{ui:Draw}}, pick the item in the plan. A square grip shows at its insertion 
 - Press {{key:R}} to turn it 90°.
 - In **Properties** (also in the 3D view), type **X**, **Y** and **Rotation (°)**, or click **Turn 90°**.
 
-Each move is one undo step and travels in Studio Live. The item keeps its item number, its library data and its height above the level. Not built yet: dragging it in the 3D view.
+Each move is one undo step and travels in Live TeamWork. The item keeps its item number, its library data and its height above the level. Not built yet: dragging it in the 3D view.
 
 ## What you should see
 

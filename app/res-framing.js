@@ -31,9 +31,10 @@ import { edgeKinds, roofGeometry, heightAt } from './res-roof.js';
 import { faceZ } from './res-skeleton.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
+import { activeTji, activeTjiKey, pickTji, tjiStatement } from './tji-table.js';   // 0.8 GH.3-E: the joist maker's table the person loaded
 
 const IN = 25.4, FT = 304.8;
-export const FRAME_PSET = 'CadCraft_Framing', LUMBER_PSET = 'CadCraft_Lumber';
+export const FRAME_PSET = 'CadCraft_Framing', LUMBER_PSET = 'CadCraft_Lumber', TJI_PSET = 'CadCraft_FramingTJI';
 /** Dressed sizes (mm): thickness × depth; nominal inches for board feet. Metric names for the same pieces. */
 export const LUMBER = {
   '2x4': { t: 1.5 * IN, d: 3.5 * IN, nom: [2, 4], metric: '38 × 89' },
@@ -47,18 +48,8 @@ const SIZES = ['2x4', '2x6', '2x8', '2x10', '2x12'];
 export const HEADER_TABLE = [[3 * FT, '2x6'], [4 * FT, '2x8'], [6 * FT, '2x10'], [8 * FT, '2x12']];
 /** Floor joists, max span (mm) at 16" and 24" on centre — labelled defaults (40 psf live, No. 2 spruce-pine-fir). */
 export const JOIST_TABLE = { 406.4: [['2x6', 9.75 * FT], ['2x8', 12.8 * FT], ['2x10', 16.4 * FT], ['2x12', 19.9 * FT]], 609.6: [['2x6', 8.5 * FT], ['2x8', 11.25 * FT], ['2x10', 14.3 * FT], ['2x12', 17.4 * FT]] };
-// TJ-4000 (July 2025), p. 7: L/480, 40 psf live + 10 psf dead, glue-nailed subfloor. Clear spans, 16/24 in. o.c.
-const TJI_SPANS = [
-  ['9½', 241.3, '110', [15, 6], [13, 7]], ['9½', 241.3, '210', [16, 3], [14, 3]], ['9½', 241.3, '230', [16, 8], [14, 8]],
-  ['11⅞', 301.625, '110', [18, 5], [15, 9]], ['11⅞', 301.625, '210', [19, 3], [16, 11]], ['11⅞', 301.625, '230', [19, 10], [17, 5]], ['11⅞', 301.625, '360', [20, 11], [18, 4]], ['11⅞', 301.625, '560', [23, 8], [20, 9]],
-  ['14', 355.6, '110', [20, 11], [17, 2]], ['14', 355.6, '210', [21, 10], [18, 10]], ['14', 355.6, '230', [22, 6], [19, 9]], ['14', 355.6, '360', [23, 8], [20, 9]], ['14', 355.6, '560', [26, 10], [23, 6]],
-  ['16', 406.4, '110', [22, 6], [18, 1]], ['16', 406.4, '210', [24, 3], [19, 11]], ['16', 406.4, '230', [24, 10], [21, 1]], ['16', 406.4, '360', [26, 3], [21, 5]], ['16', 406.4, '560', [29, 8], [25, 2]],
-];
-export function tjiFor(span, spacing) {
-  const col = Math.abs(spacing - 609.6) < 50 ? 4 : 3;
-  const row = TJI_SPANS.find((r) => span <= (r[col][0] * 12 + r[col][1]) * IN + 1e-6);
-  return row ? { size: `TJI ${row[2]} ${row[0]}`, depth: row[1], series: row[2] } : null;   // i18n-ignore: product size designations, written as the IFC 'Size' label (data, not words)
-}
+// TJI joists carry NO built-in span data: a joist maker's tables are the maker's. Series and depth come only from a table the person
+// loads (tji-table.js, format cadcraft-tji-table); with none loaded a TJI layout is refused ('tji.err.none') and joists already placed stay as they are.
 /** Rafters, max horizontal span — labelled defaults (30 psf snow). */
 export const RAFTER_TABLE = { 406.4: [['2x6', 13.5 * FT], ['2x8', 17 * FT], ['2x10', 21 * FT], ['2x12', 25 * FT]], 609.6: [['2x6', 11 * FT], ['2x8', 14 * FT], ['2x10', 17 * FT], ['2x12', 20.5 * FT]] };
 /** Ceiling joists, max span — labelled defaults (attic without storage). */
@@ -280,10 +271,18 @@ export function frameFloor(poly, ctx) {
   const segsAt = (c) => clipLine([across[0] * c, across[1] * c], ax, inner);
   for (const c of lines) for (const [t0, t1] of segsAt(c)) span = Math.max(span, t1 - t0);
   const engineered = ctx.floorMode === 'tji';
-  const pick = engineered ? tjiFor(span, sp) : sizeFor(tableFor(JOIST_TABLE, sp), span);
+  // GH.3-E: with a table loaded by the person, series and depth come from it (and it refuses outside it); with none, the older labelled default
+  const loaded = engineered ? (ctx.tji === undefined ? activeTji() : ctx.tji) : null;
+  let pick, tjiPick = null;
+  if (loaded) {
+    tjiPick = pickTji(loaded.table, { span, spacing: sp, caseId: loaded.caseId });
+    if (!tjiPick.ok) return { pieces: [], error: tjiPick.key, fill: tjiPick.fill, span, notes };
+    pick = { size: tjiPick.size, depth: tjiPick.depth, series: tjiPick.series };
+  } else if (engineered) return { pieces: [], error: 'tji.err.none', span, notes };
+  else pick = sizeFor(tableFor(JOIST_TABLE, sp), span);
   if (!pick) return { pieces: [], error: 'res.err.tji.span' };
   if (pick.over) notes.push('joist');
-  if (engineered) notes.push('tji');
+  if (engineered) notes.push('tjitable');
   const L = LUMBER[pick.size], D = engineered ? pick.depth : L.d, width = engineered ? 1.75 * IN : L.t, top = (ctx.top ?? 0) - 0.75 * IN;
   const P = (c, s) => [across[0] * c + ax[0] * s, across[1] * c + ax[1] * s];
   const joist = (role, c, s0, s1, sz = pick.size) => { if (s1 - s0 > 1) pieces.push({ role, size: sz, line: [[...P(c, s0), top - D / 2], [...P(c, s1), top - D / 2]], depth: D, width, length: s1 - s0, flat: true, tji: engineered }); };
@@ -310,7 +309,7 @@ export function frameFloor(poly, ctx) {
     const a = rim[i], b = rim[(i + 1) % rim.length];
     pieces.push({ role: 'rim', size: engineered ? `Rim ${pick.size}` : pick.size, line: [[...a, top - D / 2], [...b, top - D / 2]], depth: D, width, length: Math.hypot(b[0] - a[0], b[1] - a[1]), flat: true });   // i18n-ignore: product size designations, written as the IFC 'Size' label (data, not words)
   }
-  return { pieces, size: pick.size, span, notes, dir: ax };
+  return { pieces, size: pick.size, span, notes, dir: ax, ...(tjiPick ? { tji: { table: loaded.table, caseId: loaded.caseId, series: tjiPick.series, depth: tjiPick.depth, max: tjiPick.max } } : {}) };
 }
 
 // ------------------------------------------------------------------------------------------------------------ roofs
@@ -485,7 +484,7 @@ function piecesFor(w, fr, h, cache) {
     if (!loop) return { pieces: [], error: 'model.err.noroom' };
     const openings = floorOpenings(w, h.host.id);
     const r = frameFloor(loop.poly, { ...opts, top: h.host.offset, openings });
-    return { ...r, key: shapeKey('floor', loop.poly, h.host.offset, openings, opts), frame: 'plan' };
+    return { ...r, key: shapeKey('floor', loop.poly, h.host.offset, openings, opts, ...(fr.floorMode === 'tji' && activeTjiKey() ? [activeTjiKey()] : [])), frame: 'plan' };
   }
   const levels = cache.levels || (cache.levels = readLevels(w));
   const L = storeyLoops(w, h.storey);
@@ -521,7 +520,7 @@ function writeFraming(w, fr, cache) {
   const h = hostOf(w, fr.host, cache);
   if (!h || h.storey === null) return { removed: true };
   const r = piecesFor(w, fr, h, cache);
-  if (r.error) return { error: r.error };
+  if (r.error) return { error: r.error, fill: r.fill };
   if (fr.key === r.key && fr.parts.length) return { same: true };
   // generated pieces go; pieces kept by hand stay, flagged
   const kept = [], gone = [];
@@ -561,11 +560,16 @@ function writeFraming(w, fr, cache) {
   if (rel) { if (parts.length) { const x = w.touch(rel); x.RelatedObjects = parts.map((p) => w.H(p)); w.write(x); } }
   else if (parts.length) w.make('IFCRELAGGREGATES', w.guid(), w.ownerHistory(), null, null, w.H(fr.id), parts.map((p) => w.H(p)));
   w.upsertPset(fr.id, FRAME_PSET, [['ShapeKey', 'IFCIDENTIFIER', r.key], ['Notes', 'IFCLABEL', (r.notes || []).join(',') || 'ok']]);
+  if (r.tji) {
+    const a = tjiStatement(r.tji.table, r.tji.caseId, tr);
+    w.upsertPset(fr.id, TJI_PSET, [['Table', 'IFCLABEL', r.tji.table.id], ['Edition', 'IFCLABEL', r.tji.table.edition], ['Source', 'IFCLABEL', r.tji.table.source], ['Example', 'IFCBOOLEAN', !!r.tji.table.example], ['LoadCase', 'IFCLABEL', r.tji.caseId],
+      ['Series', 'IFCLABEL', r.tji.series], ['Assumptions', 'IFCTEXT', a.join('\n')]]);
+  }
   w.upsertPset(fr.id, 'CadCraft_FramingQuantities', [['Pieces', 'IFCINTEGER', r.pieces.length], ['BoardFeet', 'IFCREAL', round(bf, 2)], ['Size', 'IFCLABEL', r.size || '']]);
   return { written: true, pieces: r.pieces.length, notes: r.notes || [] };
 }
 const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run(fn);
-const fail = (key) => { throw Object.assign(new Error(key), { key }); };
+const fail = (key, fill) => { throw Object.assign(new Error(key), { key, ...(fill ? { fill } : {}) }); };
 
 /** Frame these hosts (walls, floors, roofs by GlobalId): one assembly each (an existing one is made again). */
 export function frameHosts(spec) {
@@ -591,7 +595,7 @@ export function frameHosts(spec) {
       }
       w.upsertPset(id, FRAME_PSET, [['Host', 'IFCIDENTIFIER', g], ['Kind', 'IFCLABEL', h.kind], ['Spacing', 'IFCPOSITIVELENGTHMEASURE', round(w.u(s.spacing))], ['Corners', 'IFCLABEL', s.corners], ['Blocking', 'IFCBOOLEAN', !!s.blocking], ['RoofMode', 'IFCLABEL', s.roofMode], ['FloorMode', 'IFCLABEL', s.floorMode], ['FloorDir', 'IFCLABEL', s.floorDir], ['ShapeKey', 'IFCIDENTIFIER', '']]);
       const r = writeFraming(w, fr || { id, guid: s.guids[g], storey: h.storey, host: g, kind: h.kind, spacing: s.spacing, corners: s.corners, blocking: s.blocking, roofMode: s.roofMode, floorMode: s.floorMode, floorDir: s.floorDir, key: '', parts: [] }, cache);
-      if (r.error && s.hosts.length === 1) fail(r.error);
+      if (r.error && s.hosts.length === 1) fail(r.error, r.fill);
       if (r.written) n++;
       idsOut.push(id);
     }
@@ -612,7 +616,7 @@ export function changeFraming(guid, ch) {
     if (['auto', 'x', 'y'].includes(ch.floorDir)) nx.floorDir = ch.floorDir;
     w.upsertPset(fr.id, FRAME_PSET, [['Spacing', 'IFCPOSITIVELENGTHMEASURE', round(w.u(nx.spacing))], ['Corners', 'IFCLABEL', nx.corners], ['Blocking', 'IFCBOOLEAN', !!nx.blocking], ['RoofMode', 'IFCLABEL', nx.roofMode], ['FloorMode', 'IFCLABEL', nx.floorMode], ['FloorDir', 'IFCLABEL', nx.floorDir]]);
     const r = writeFraming(w, nx, {});
-    if (r.error) fail(r.error);
+    if (r.error) fail(r.error, r.fill);
     return { id: fr.id, ids: [fr.id] };
   });
 }

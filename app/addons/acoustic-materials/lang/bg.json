@@ -1,0 +1,7 @@
+{
+  "@locale": "bg",
+  "@name": "Български",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Данни и източници",
+  "data.bras": "BRAS, Еталон за симулация на акустиката в помещения (TU Berlin и RWTH Aachen), описания на повърхности, CC BY-SA 4.0"
+}

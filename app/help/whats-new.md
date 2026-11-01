@@ -68,7 +68,7 @@ Both are design aids by published methods, not compliance calculations, and ever
 ### Assistants and add-ons
 
 - **More for AI assistants.** An assistant can now rename elements and set property values, move and delete elements, change walls, doors and windows, export USD, and render a picture or run the render queue; each change is one undo step. See [Let an AI assistant work with your model](topic:assistants).
-- **Add-ons can build in the model.** The add-on API 1.1 lets an add-on make a change in the model as one undo step (it travels in Studio Live), read the model, and read pipe and duct runs, ports, equipment and spools.
+- **Add-ons can build in the model.** The add-on API 1.1 lets an add-on make a change in the model as one undo step (it travels in Live TeamWork), read the model, and read pipe and duct runs, ports, equipment and spools.
 - **The Plant add-on** (switched off until you turn it on in {{ui:Settings}} › {{ui:General}} › {{ui:Add-ons}}): pipe specs checked against the runs, isometric drawings of a run as SVG and DXF with a bill of materials, generic process equipment with nozzles placed in the model, a router between two ports, and a factory layout check. A drafting aid, not an engineering approval; its words are English only.
 
 ## Changed
@@ -80,7 +80,7 @@ Both are design aids by published methods, not compliance calculations, and ever
 ## Fixed
 
 - Redo after a step that made a new family size failed ("no size"). Every step now makes the same IFC GlobalIds again on a redo, so redo works for families and every other change.
-- When two people saved the same family (in a Live session or two windows), the second save silently replaced the first one's change. It now refuses and says how to see their change and make yours again.
+- When two people saved the same family (in a Live TeamWork session or two windows), the second save silently replaced the first one's change. It now refuses and says how to see their change and make yours again.
 - A model in US survey feet was read as 0.3048 m to the foot instead of 0.3048006096 m, which moved every georeferenced IFC in US feet on the map.
 - The family editor: closing it no longer drops the keyboard focus to the page, its Save stays in sight on a phone, and its fields no longer make a phone zoom in.
 

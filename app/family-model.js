@@ -18,7 +18,7 @@
  *     params: [{ key, label?, kind: length | angle | number | yesno, value, formula? }],
  *     solids: [{ id, name?, op: box | extrude | revolve | sweep, style, visible?, …fields }], booleans: [{ id, op: difference |
  *     union, a, b }], connectors?: [{ id, name?, domain: pipe | duct, system, x, y, z, dir, size, flow: in | out }],
- *     fixture?: wc | lav | sink | shower | laundry (mep/fixtures.js: which plumbing fixture it is, for its fixture units),
+ *     fixture?: wc | lav | sink | shower | laundry | bath (mep/fixtures.js: which plumbing fixture it is, for its fixture units),
  *     sizes?: [{ name, values }] (files only), notes?, license? }
  *   Connectors (unhosted families only) are where a pipe or duct joins the element: a point (x, y, z), the way out of it (dir:
  *   +x, -x, +y, -y, +z or -z in the family's axes), the nominal size (mm: a pipe's DN, a round duct's diameter), the system key

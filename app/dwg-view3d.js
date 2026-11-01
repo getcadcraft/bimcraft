@@ -61,6 +61,15 @@ export class DrawingView3D {
     this.resizeObserver.observe(canvas.parentElement);
     this.resize();
     this.bind();
+    // 0.8 Track ID: hand the view to the input-device layer (assets/js/app-devices-ui.js) — the same camera calls a drag and the
+    // wheel make (cam.orbit / cam.pan in px, cam.zoomAt toward what is under the point; k < 1 = closer), fit = extents()
+    (window.ccViews ||= []).push({
+      el: canvas, kind: '3d',
+      orbit: (dx, dy) => { this.onUserMove?.(); this.cam.orbit(dx, dy); this.render(); },
+      pan: (dx, dy) => { this.onUserMove?.(); this.cam.pan(dx, dy); this.render(); },
+      zoom: (f, x = canvas.clientWidth / 2, y = canvas.clientHeight / 2) => { if (!(f > 0)) return; this.onUserMove?.(); this.cam.zoomAt(1 / f, x, y, this.hit(x, y)); this.render(); },
+      fit: () => this.extents(),
+    });
   }
 
   applyTheme() {

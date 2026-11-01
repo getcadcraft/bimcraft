@@ -1,0 +1,14 @@
+{
+  "id": "acoustic.materials",
+  "name": "Acoustic materials",
+  "version": "0.1.1",
+  "apps": ["bimcraft"],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "description": "Adds the BRAS benchmark's absorption and scattering sets to BimCraft's acoustic material lists, each labelled measured or estimated with its source. Data: BRAS, TU Berlin / RWTH Aachen, CC BY-SA 4.0. A design aid: have a licensed acoustician review your results.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

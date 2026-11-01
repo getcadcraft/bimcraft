@@ -1,0 +1,7 @@
+{
+  "@locale": "ja",
+  "@name": "日本語",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "データと出典",
+  "data.bras": "BRAS（室内音響シミュレーションのベンチマーク、TU Berlin、RWTH Aachen）、サーフェス記述、CC BY-SA 4.0"
+}

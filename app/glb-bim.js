@@ -202,3 +202,33 @@ export function readGlbJson(bytes) {
   const len = dv.getUint32(12, true);
   return JSON.parse(new TextDecoder().decode(bytes.subarray(20, 20 + len)));
 }
+
+/**
+ * A GLB as one self-contained .gltf (0.8 DC.22, session ifc_PART_3): the same glTF 2.0 JSON with the binary chunk carried inside it as a
+ * base64 data URI (Khronos glTF 2.0 § 3.6.1.2), and images that live in the binary chunk moved to data URIs, so the one file stands alone.
+ * Enscape's custom asset library lists .gltf, .obj and .fbx (not .glb), so this is the file for it. → Uint8Array (UTF-8 JSON) | null (not a GLB).
+ */
+export function glbToGltf(bytes) {
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  if (bytes.length < 20 || dv.getUint32(0, true) !== 0x46546c67) return null;
+  let off = 12, json = null, bin = null;
+  while (off + 8 <= bytes.length) {
+    const n = dv.getUint32(off, true), type = dv.getUint32(off + 4, true);
+    const body = bytes.subarray(off + 8, off + 8 + n);
+    if (body.length !== n) return null;
+    if (type === 0x4e4f534a) json = JSON.parse(new TextDecoder().decode(body));
+    else if (type === 0x004e4942 && !bin) bin = body;
+    off = (off + 8 + n + 3) & ~3;   // chunks are 4-byte aligned
+  }
+  if (!json) return null;
+  const b64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+  if (bin && json.buffers && json.buffers[0]) {
+    for (const im of json.images || []) {
+      const v = im.bufferView !== undefined ? json.bufferViews[im.bufferView] : null;
+      if (v) { im.uri = 'data:' + (im.mimeType || 'image/png') + ';base64,' + b64(bin.subarray(v.byteOffset || 0, (v.byteOffset || 0) + v.byteLength)); delete im.bufferView; delete im.mimeType; }
+    }
+    json.buffers[0].uri = 'data:application/octet-stream;base64,' + b64(bin);
+    json.buffers[0].byteLength = bin.length;
+  }
+  return new TextEncoder().encode(JSON.stringify(json));
+}

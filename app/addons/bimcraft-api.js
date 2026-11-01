@@ -2,7 +2,7 @@
 /* i18n-ignore-file — every word a person reads comes from the add-on (api.t) or the app's language file. */
 /**
  * bimcraft-api.js — BimCraft's add-on API 1.1 and its own add-on loader (0.5 AO.7; docs/ADDONS-SPEC.md §5.7; 1.1: 0.7 LC.9,
- * session `mep-07`).
+ * session `mep-07`; 1.2: 0.8 REG.1, `rules`).
  * Once BimCraft's manifest says "addons": "own", the shell's boot (app-addons.js) steps aside and bimcraft.js calls
  * startAddons({ … }) with the open model and the hooks listed below.
  *
@@ -27,7 +27,13 @@
  * line from its first point); mep.addPorts(w, elementId, ports) — inside model.write's fn only — writes ports on an element the add-on made, the way
  * BimCraft's own equipment has them (IfcDistributionPort nested, CadCraft_Port set; ports in the LibraryCraft item shape:
  * { name, system, direction, shape, size, h?, nominal?, x, y, z, axis }, mm in the element's own axes) → [{ id, name }].
- * Add-ons written for 1.0 keep working (the loader takes 1.0 and 1.1 manifests).
+ * 1.2 (0.8 REG.1): rules.provide(provider) / rules.changed() — one add-on at a time may say which building regulations are in force: where a
+ * new stair starts from, what Properties says about a stair, and one more entry in Schedules (rules-hook.js has the provider's shape). A
+ * second add-on's provide() replaces the first's; switching the add-on off removes it. Core BimCraft knows no regulations itself.
+ * 1.3 (0.8 P.4b): api.problems.source(def) / available() from the shared addons.js: an add-on's checks go into the shell's Problems.
+ * 1.4 (0.8 DC.117, session `cabinetcraft_hosts`): model.levels() · model.roomPlans() · drafting.put(tag, items, { label }) — see ADDONS-SPEC § 5.7. Plain data in, plain data out;
+ * the add-on writes its own elements with model.write.
+ * Add-ons written for 1.0, 1.1, 1.2 and 1.3 keep working (the loader takes 1.0 to 1.4 manifests).
  *
  * The model is BimCraft's IFC model (ifc-model.js: properties(id) → { id, cls, name, guid, tag, sets: [{ name, rows: [{ name,
  * value, edit }] }] }); ids are the open model's express ids. Importers return { ifc: Uint8Array, name } (opened like an .ifc
@@ -40,17 +46,24 @@
  */
 
 import { AddonLoader, sharedApi } from '../addons.js';
+import { recordUse } from '../addons-file.js';   // 0.8 AL.6: the file says which add-on wrote into it
 import { EDITABLE_ATTRS } from '../ifc-edit.js';
 import { installTrust, bundledOnly, NO_PACKAGES } from './trust.js';
 import { ModelWriter } from '../model-write.js';
+import { roomsOf } from '../mep-calc.js';   // 0.8 (bim_PART_2, mep_PART_2's line 4): model.rooms()
 import { op } from '../model-ops.js';
-import { readRuns, placeRun, PIPE_SYSTEMS, DUCT_SYSTEMS } from '../mep-model.js';
+import { levelRooms, roomOpenings } from '../furnish-model.js';   // 1.4 (0.8 DC.117): model.roomPlans
+import { readLevels } from '../model-levels.js';
+import { readWalls } from '../model-walls.js';
+import { putDrafting } from '../drafting.js';
+import { readRuns, placeRun, setRunSizes, PIPE_SYSTEMS, DUCT_SYSTEMS } from '../mep-model.js';
 import { readPorts } from '../mep/ports.js';
 import { writePorts, readEquipment } from '../mep/equipment.js';
 import { readSpools } from '../mep/spools.js';
 import { val } from '../ifc-util.js';
+import { rules as currentRules, setRules, rulesChanged } from '../rules-hook.js';
 
-export const BIMCRAFT_API_VERSION = '1.1';
+export const BIMCRAFT_API_VERSION = '1.4';
 const SAFE_ID = /^[a-z0-9][a-z0-9-]{0,40}$/;
 const clone = (v) => (v === undefined || v === null ? v ?? null : JSON.parse(JSON.stringify(v)));
 
@@ -63,6 +76,8 @@ const clone = (v) => (v === undefined || v === null ? v ?? null : JSON.parse(JSO
 export function makeBimcraftApi(base, addon, ctx) {
   const shared = sharedApi(base, addon, ctx.registry);
   const id = addon.id;
+  // the loader hands over {id, manifest, ...}; the display name lives in the manifest (0.8 R4.7: labels read "undefined: ...")
+  const addonName = String(addon.manifest?.name || addon.name || addon.id);
   const track = (fn) => base.onDeactivate(fn);
   const listen = new Set();
   ctx.changeListeners.add((why) => { for (const fn of listen) { try { fn(why); } catch (e) { base.log('onChange threw', e); } } });
@@ -83,6 +98,8 @@ export function makeBimcraftApi(base, addon, ctx) {
       const v = fn(new ModelWriter(ed.W, ed.api, ed.mid));
       return v === undefined ? null : clone(v);
     },
+    /** 0.8 (mep_PART_2's line 4): the rooms the walls enclose, on every level: [{ storey (expressID), name, poly: [[x, y]…] (world mm), z }] — a copy; read-only. */
+    rooms() { const ed = needEditor(); return clone(roomsOf(new ModelWriter(ed.W, ed.api, ed.mid))); },
     /** 1.1: write into the open model, one undo step labelled "<add-on>: <label>" (see the header). */
     async write(label, fn) {
       if (typeof fn !== 'function') throw new Error('model.write: (label, fn)');
@@ -90,6 +107,7 @@ export function makeBimcraftApi(base, addon, ctx) {
       let value;
       const run = op((w) => {
         value = fn(w);
+        try { recordUse(w, id, (ctx.versionOf && ctx.versionOf(id)) || addon.manifest?.version); } catch (e) { base.log('could not record the add-on in the file', e); }
         const made = new Map();
         // elements, ports, spaces and types made (not the relations and property sets that hang off them)
         for (const lid of w.journal.created) {
@@ -99,7 +117,7 @@ export function makeBimcraftApi(base, addon, ctx) {
         const created = [...made.values()];
         return { id: created[0] ?? null, ids: created, made };
       });
-      const meta = { label: addon.name + ': ' + String(label || '').slice(0, 120) };
+      const meta = { label: addonName + ': ' + String(label || '').slice(0, 120) };
       const r = ctx.write ? await ctx.write(run, meta) : (() => { const x = ed.modelChange(run, { label: meta.label, verb: '' }); ctx.afterEdit(meta.label); return x; })();
       const made = r?.made instanceof Map ? r.made : new Map();
       return { created: [...made.values()], guids: [...made.keys()], value: value === undefined ? null : clone(value) };
@@ -129,11 +147,22 @@ export function makeBimcraftApi(base, addon, ctx) {
       const run = { storey: String(s.storey || ''), kind, system: s.system, points: s.points.map((q) => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]),
         ...(kind === 'pipe' ? { mat: String(s.mat || ''), cls: String(s.cls || ''), size: String(s.size || ''), slope: Number(s.slope) || 0 } : { shape: String(s.shape || 'rect'), w: Number(s.w), h: Number(s.h ?? s.w), flow: Number(s.flow) || 0 }),
         ends: Array.isArray(s.ends) ? s.ends.slice(0, 2) : [null, null] };
-      const meta = { label: addon.name + ': ' + String(s.label || kind).slice(0, 120) };
+      const meta = { label: addonName + ': ' + String(s.label || kind).slice(0, 120) };
       const op = placeRun(run);
       const r = ctx.write ? await ctx.write(op, meta) : (() => { const x = ctx.editor().modelChange(op, { label: meta.label, verb: '' }); ctx.afterEdit(meta.label); return x; })();
       const made = r?.made instanceof Map ? r.made : new Map();
       return { guid: [...made.keys()][0] ?? null, created: [...(r?.ids || [])] };
+    },
+    /** 1.2 (0.8 CH.4): sizes for runs, ONE undo step. changes [{ guid, size }] (a pipe's size name); an unknown guid is skipped. → Promise<{ n }>. */
+    async setRunSizes(changes) {
+      if (!Array.isArray(changes) || !changes.length || changes.length > 500) throw new Error('mep.setRunSizes: 1 to 500 changes [{ guid, size }]');
+      const list = changes.map((c) => ({ guid: String(c && c.guid || ''), size: String(c && c.size || '') })).filter((c) => c.guid && c.size);
+      if (!list.length) throw new Error('mep.setRunSizes: every change needs a guid and a size');
+      needEditor();
+      const meta = { label: addonName + ': ' + list.length + ' run size' + (list.length > 1 ? 's' : '') };
+      const op = setRunSizes(list);
+      if (ctx.write) await ctx.write(op, meta); else { ctx.editor().modelChange(op, { label: meta.label, verb: '' }); ctx.afterEdit(meta.label); }
+      return { n: list.length };
     },
     spools() {
       const w = writer();
@@ -151,12 +180,46 @@ export function makeBimcraftApi(base, addon, ctx) {
     },
   };
 
+  // 1.4: the levels, the rooms the walls enclose (with the doors and windows near them), and drafting lines / hatches put in a level's plan view for an owner.
+  model.levels = () => { const w = writer(); return readLevels(w).map((l) => clone({ guid: l.guid, name: l.name, elevation: l.elevation, height: l.height })); };
+  /** [{ storey (GlobalId), storeyName, index, name, poly [[x, y]…] (the level's plan mm), holes, area (mm2), z (the level's elevation, mm), doors [{ x, y, w }], windows [{ x, y, w, sill }], walls [GlobalId…] (the walls on the room's edge) }]. */
+  model.roomPlans = () => {
+    const ed = needEditor(), w = writer(), out = [];
+    for (const lv of readLevels(w)) {
+      const rooms = levelRooms(ed, lv.guid);
+      if (!rooms.length) continue;
+      const { doors, windows } = roomOpenings(ed, lv.guid);
+      const walls = readWalls(w, lv.id);
+      const segD = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L)); return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t); };
+      for (const r of rooms) {
+        const edge = (p, tol) => r.poly.some((q, i) => segD(p, q, r.poly[(i + 1) % r.poly.length]) <= tol);
+        out.push(clone({ storey: lv.guid, storeyName: lv.name, index: r.index, name: lv.name + ': ' + String(r.index + 1), poly: r.poly, holes: r.holes, area: r.area, z: lv.elevation,
+          doors: doors.filter((d) => edge([d.x, d.y], 700)), windows: windows.filter((d) => edge([d.x, d.y], 700)),
+          walls: walls.filter((x) => edge([(x.a[0] + x.b[0]) / 2, (x.a[1] + x.b[1]) / 2], (x.t || 0) / 2 + 60)).map((x) => x.guid) }));
+      }
+    }
+    return out;
+  };
+  /** The model's walls (GlobalId, level, ends, thickness, mm) — to match a selection with a room. */
+  model.walls = () => { const w = writer(); return readWalls(w).map((x) => clone({ guid: x.guid, id: x.id, storey: x.storey ? w.guidOf(x.storey) : null, a: x.a, b: x.b, t: x.t, height: x.height })); };
+  const drafting = {
+    /** Drafting lines and hatches put in plan views for an owner `tag`, replacing what the same tag put before: ONE undo step. → Promise<{ n, removed }>. */
+    async put(tag, items, { label = 'drawing' } = {}) {
+      if (!Array.isArray(items)) throw new Error('drafting.put: (tag, items)');
+      needEditor();
+      const meta = { label: addonName + ': ' + String(label).slice(0, 120) };
+      const run = putDrafting(tag, items);
+      const r = ctx.write ? await ctx.write(run, meta) : (() => { const x = ctx.editor().modelChange(run, { label: meta.label, verb: '' }); ctx.afterEdit(meta.label); return x; })();
+      return { n: items.length, removed: r?.removed ?? 0 };
+    },
+  };
+
   const edit = {
     /** Name, Description, ObjectType or Tag of an element: one undo step. */
     setAttribute(eid, attr, value) {
       if (!EDITABLE_ATTRS.includes(attr)) throw new Error('edit.setAttribute: one of ' + EDITABLE_ATTRS.join(', '));
       const r = needEditor().setAttribute(Number(eid), attr, String(value ?? ''));
-      ctx.afterEdit(addon.name);
+      ctx.afterEdit(addonName);
       return r;
     },
     /** One property value (by property set and property name), as Properties edits it: one undo step. → false when it has none. */
@@ -166,7 +229,7 @@ export function makeBimcraftApi(base, addon, ctx) {
       const row = p?.sets?.find((s) => s.name === setName)?.rows?.find((r) => r.name === propName && r.edit);
       if (!row) return false;
       ed.setProperty(Number(eid), row.edit, value);
-      ctx.afterEdit(addon.name);
+      ctx.afterEdit(addonName);
       return true;
     },
   };
@@ -190,15 +253,26 @@ export function makeBimcraftApi(base, addon, ctx) {
     section({ key = id, label, fields } = {}) {
       if (key !== id && !String(key).startsWith(id + '.')) throw new Error('props.section: the key must be "' + id + '" or start with "' + id + '."');
       if (typeof fields !== 'function') throw new Error('props.section: fields(selection, model)');
-      ctx.props.set(key, { key, addon: id, label: String(label || addon.name), fields });
+      ctx.props.set(key, { key, addon: id, label: String(label || addonName), fields });
       const off = () => ctx.props.delete(key);
       track(off);
       return off;
     },
   };
 
+  /** 1.2: the building regulations in force (rules-hook.js). */
+  const rulesApi = {
+    provide(provider) {
+      if (!provider || typeof provider !== 'object') throw new Error('rules.provide: (provider)');
+      setRules(provider);
+      const off = () => { if (currentRules() === provider) setRules(null); };
+      track(off);
+      return off;
+    },
+    changed() { rulesChanged(); },
+  };
   const ui = { ...shared.ui, panelTab: panelTabMaker(ctx, id, base, track, '.bc-rtabs[role="tablist"]', 'bc-rtab', 'bc-rpane-') };
-  const api = { ...shared, ui, model, edit, mep, commands, props, status: (text) => ctx.status(String(text)) };
+  const api = { ...shared, ui, model, edit, mep, drafting, commands, props, rules: rulesApi, status: (text) => ctx.status(String(text)) };
   return api;
 }
 

@@ -1,0 +1,7 @@
+{
+  "@locale": "hi",
+  "@name": "हिन्दी",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "डेटा और स्रोत",
+  "data.bras": "BRAS, कमरे की ध्वनिक सिमुलेशन के लिए बेंचमार्क (TU Berlin और RWTH Aachen), सतह विवरण, CC BY-SA 4.0"
+}

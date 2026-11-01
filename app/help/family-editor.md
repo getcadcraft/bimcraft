@@ -65,6 +65,8 @@ The {{ui:Families inside}} tab puts another family inside this one: a leg in a t
 
 A hotspot is a point or an edge you drag to change a parameter. On the {{ui:Hotspots}} tab add one, choose the axis it drags along and the number parameter it changes, and write its position in the same expressions as the solids. In the preview, choose **Hotspots** under the handles to drag them. On a placed element in the plan (pick it with {{ui:Select}}) the x and y hotspots show as grips: drag one and the element takes the size that puts the hotspot there, through any formulas between them; one Undo puts it back. A hotspot cannot change a driven parameter, a Yes / No or a word.
 
+In the 3D view the same hotspots show as grips on the picked element, and the up-and-down ones (axis z) show there too, which the plan cannot draw. Pick the element, drag a grip along its axis and let go: the element takes the size that puts the hotspot there, as one undo step. The grips are hidden while the section box is on, since it uses the same grips.
+
 ## Connectors
 
 Families placed on a floor (furniture, fixtures and others) have a {{ui:Connectors}} tab: the points where a pipe or a duct joins the element, as on a basin's tap and drain. Click {{ui:Add a connector}} and set:
@@ -94,7 +96,7 @@ The preview is the family written as IFC, by the same code that saves it into th
 
 {{ui:Save the family}} checks the family, then draws every size of it again and makes every element of it again, as one step you can undo. If a size cannot be drawn with the change (for example a solid would have no width at that size), nothing is saved and the editor says which size.
 
-If someone else saved the same family while your editor was open (in a Live session, or in another window), {{ui:Save the family}} refuses and says so instead of replacing their change with yours. Close the editor, open the family again to see their change, and make yours again.
+If someone else saved the same family while your editor was open (in a Live TeamWork session, or in another window), {{ui:Save the family}} refuses and says so instead of replacing their change with yours. Close the editor, open the family again to see their change, and make yours again.
 
 :::note
 The geometry is saved as IFC's own solids: extrusions, revolves, swept disks, and Boolean results. Nothing is turned into a list of triangles, so files stay small and other programs can read the shapes as shapes. Profiles with arcs are saved with arcs in IFC4; IFC2X3 has no arc segments in a profile, so there the arcs are saved as short straight pieces.

@@ -12,7 +12,7 @@ import { t } from './i18n.js';
 import { el } from './ui-util.js';
 import { ModelWriter } from './model-write.js';
 import { placedItems, moveItems } from './model-move.js';
-import { fmtLen, parseLen, parsePitch, fmtPitch } from './model-units.js';
+import { fmtLen, parseLen, parsePitch, fmtPitch, isMetric } from './model-units.js';
 import { interiorView, viewNotes, openingFacts, interiorSheet, ROOM_SIDES } from './comforts-views.js';
 import { modelTriangles } from './res-views.js';
 import { setPdf, sheetSvg } from './res-sheets.js';   // read only: the drawing set's own PDF and preview writers
@@ -147,7 +147,7 @@ export function mountComforts(modelUi) {
     const fmt = (mm) => fmtLen(mm, A.units());
     const name = [room.number, room.name].filter(Boolean).join(' ');
     const views = ROOM_SIDES.map((side) => { const view = interiorView(els, { poly: loop.poly, name }, side, { height }); return { side, view, notes: viewNotes(view, { kind: 'interior', openings: facts, items: its, fmt }) }; });
-    const paper = A.units() === 'mm' ? 'a3' : 'tabloid';
+    const paper = isMetric(A.units()) ? 'a3' : 'tabloid';
     const sheet = interiorSheet({ name }, views, { paper, units: A.units(), project: String(A.host.fileName?.() || '').replace(/\.ifc$/i, ''), date: new Date().toISOString().slice(0, 10) });
     return { sheet, paper, name, views };
   }

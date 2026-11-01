@@ -42,3 +42,7 @@ When BimCraft reshapes a wall you painted (you move its end, say), the wall keep
 :::note
 The textures are drawn by BimCraft itself: they work offline and are free to use for anything (CC0). Your own image textures are not built yet.
 :::
+
+## Textures in the 3D view
+
+A painted brick wall shows its bricks, a wood floor its boards, at their real size, as soon as the paint is on. Untick **Show the textures in the 3D view** in the Paint palette to see flat colours instead (a very large model switches them off by itself and says so). Colour by property always shows its own colours. The textures are drawn by the program, so nothing is downloaded, and the renders and the glTF file carry them either way.

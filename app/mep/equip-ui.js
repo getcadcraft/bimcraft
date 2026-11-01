@@ -19,6 +19,7 @@ import { STEEL } from './tables.js';
 import { ModelWriter } from '../model-write.js';
 import { fmtLen, parseLen } from '../model-units.js';
 import { el } from '../ui-util.js';
+import { ACR_MM } from './tables-acr.js';   // 0.8 SU.888 (sx-mep): refrigerant ports are ACR tube, named by OD
 
 const D2R = Math.PI / 180;
 
@@ -161,7 +162,7 @@ export function mountEquipment(modelUi) {
     kit.field(t('mep.eq.rot'), kit.button(t('mep.eq.turn'), 'data-mp-eqturn', () => run({ rot: ((e.rot || 0) + 90) % 360 })), el('span', { className: 'bc-sub' }, Math.round(e.rot || 0) + '°'));
     for (const q of e.ports) {
       const open = Q.free.has(e.id + '#' + q.name);
-      const size = q.kind === 'pipe' ? (A.units() === 'mm' ? 'DN' + (STEEL[q.nominal]?.[3] ?? '') : q.nominal + '"') : q.shape === 'round' ? 'Ø' + L(q.size) : L(q.size) + ' × ' + L(q.h);   // i18n-ignore: size marks
+      const size = q.kind === 'pipe' && (q.system === 'refl' || q.system === 'refg') && ACR_MM[q.nominal] ? 'Ø' + ACR_MM[q.nominal] + ' (' + q.nominal + '")' : q.kind === 'pipe' ? (A.units() === 'mm' ? 'DN' + (STEEL[q.nominal]?.[3] ?? '') : q.nominal + '"') : q.shape === 'round' ? 'Ø' + L(q.size) : L(q.size) + ' × ' + L(q.h);   // i18n-ignore: size marks (0.8 SU.888 sx-mep: + the ACR mark)
       kit.rows.push(el('dt', {}, portName(q.name)), el('dd', { className: open ? 'bc-input-err' : 'bc-muted', 'data-mp-eqport': q.name },
         t(open ? 'mep.eq.port.open' : 'mep.eq.port.joined', { size, sys: systemLabel(q.kind, q.system), dir: t('mep.eq.dir.' + q.direction) })));
     }

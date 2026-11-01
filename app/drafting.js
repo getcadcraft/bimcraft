@@ -133,25 +133,27 @@ function check(d) {
   }
 }
 
-export function addDrafting(spec) {
+/** The body of addDrafting inside a writer `w` (so several can share one undo step: putDrafting).*/
+export function addDraftingIn(w, spec) {
   const kind = spec.kind === 'hatch' ? 'hatch' : 'lines';
   const d = { kind, pts: clean(spec.pts), closed: kind === 'hatch' || !!spec.closed, holes: (spec.holes || []).map(clean).filter((h) => h.length >= 3), pattern: spec.pattern || 'diagonal', scale: scaleOf(spec.scale), view: String(spec.view || '') };
   let guid = spec.guid || null;
-  return op((w) => {
-    if (!isViewKey(d.view)) refuse('model.err.dr.view');
-    const st = w.byGuid(spec.level);
-    if (!st) refuse('model.err.nolevel');
-    if (d.closed && d.pts.length > 2) { const a = d.pts[0], b = d.pts[d.pts.length - 1]; if (Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.5) d.pts.pop(); }
-    check(d);
-    if (!guid) guid = val(w.guid());
-    const sl = w.api.GetLine(w.mid, st, false);
-    const id = w.make('IFCANNOTATION', guid, w.ownerHistory(), w.L(kind === 'hatch' ? 'Hatch region' : 'Drafting line'), null, w.L(OBJECT_TYPE), w.H(w.placeAt(sl.ObjectPlacement.value, 0, 0, 0, 0)), null, ...(/^IFC4X3/i.test(w.schema || '') ? ['USERDEFINED'] : []));   // i18n-ignore: IFC Name / ObjectType (IFC4X3 adds PredefinedType)
-    w.noteGuid(guid, id);
-    writeShape(w, id, d);
-    w.contain(id, st);
-    w.upsertPset(id, DRAFT_PSET, [['View', 'IFCLABEL', d.view], ['Kind', 'IFCLABEL', kind], ['Pattern', 'IFCLABEL', kind === 'hatch' ? d.pattern : ''], ['PatternScale', 'IFCREAL', kind === 'hatch' ? round(d.scale, 3) : 1]]);
-    return { id, ids: [id], made: new Map([[guid, id]]), guid };
-  });
+  if (!isViewKey(d.view)) refuse('model.err.dr.view');
+  const st = w.byGuid(spec.level);
+  if (!st) refuse('model.err.nolevel');
+  if (d.closed && d.pts.length > 2) { const a = d.pts[0], b = d.pts[d.pts.length - 1]; if (Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.5) d.pts.pop(); }
+  check(d);
+  if (!guid) guid = val(w.guid());
+  const sl = w.api.GetLine(w.mid, st, false);
+  const id = w.make('IFCANNOTATION', guid, w.ownerHistory(), w.L(kind === 'hatch' ? 'Hatch region' : 'Drafting line'), null, w.L(OBJECT_TYPE), w.H(w.placeAt(sl.ObjectPlacement.value, 0, 0, 0, 0)), null, ...(/^IFC4X3/i.test(w.schema || '') ? ['USERDEFINED'] : []));   // i18n-ignore: IFC Name / ObjectType (IFC4X3 adds PredefinedType)
+  w.noteGuid(guid, id);
+  writeShape(w, id, d);
+  w.contain(id, st);
+  w.upsertPset(id, DRAFT_PSET, [['View', 'IFCLABEL', d.view], ['Kind', 'IFCLABEL', kind], ['Pattern', 'IFCLABEL', kind === 'hatch' ? d.pattern : ''], ['PatternScale', 'IFCREAL', kind === 'hatch' ? round(d.scale, 3) : 1]]);
+  return { id, ids: [id], made: new Map([[guid, id]]), guid };
+}
+export function addDrafting(spec) {
+  return op((w) => addDraftingIn(w, spec));
 }
 
 const findAll = (w, guids) => { const set = new Set(guids); const list = readDrafting(w).filter((d) => set.has(d.guid)); if (!list.length) refuse('model.err.gone'); return list; };
@@ -279,4 +281,25 @@ export function draftingItem(d, key) {
     it.segs = it.solid ? [] : hatchSegments(d.pts, d.holes, d.pattern, d.scale);
   }
   return it;
+}
+
+/** Drafting items put for an owner `tag` (an add-on's drawing): the items it put before go and these are drawn, ONE undo step (add-on API 1.4 `drafting.put`).
+ *  items = [{ level (GlobalId), view? ('plan:<level>' by default), kind: 'lines' | 'hatch', pts, closed, holes, pattern, scale }]. → op ({ ids, made, removed }). */
+export const TAG_PSET = 'CadCraft_DraftTag';
+export function putDrafting(tag, items) {
+  const T = String(tag || '').replace(/[^A-Za-z0-9._-]/g, '').slice(0, 40);
+  if (!T) throw new Error('putDrafting: a tag');
+  const list = (items || []).slice(0, 4000);
+  return op((w) => {
+    const old = readDrafting(w).filter((d) => { try { return (w.readPset(d.id, TAG_PSET) || {}).Tag === T; } catch { return false; } }).map((d) => d.id);
+    if (old.length) w.dropProduct(old);
+    const ids = [], made = new Map();
+    for (const spec of list) {
+      const view = spec.view || 'plan:' + spec.level;
+      const r = addDraftingIn(w, { ...spec, view });
+      w.upsertPset(r.id, TAG_PSET, [['Tag', 'IFCLABEL', T]]);
+      ids.push(...r.ids); for (const [g, id] of r.made) made.set(g, id);
+    }
+    return { id: ids[0] ?? null, ids, made, removed: old.length };
+  });
 }

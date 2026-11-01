@@ -26,11 +26,12 @@ import { planCut, chainLoops, viewerToPlan, wallDims, wallPieces } from './model
 import { assemblySchedules } from './assembly-schedule.js';
 import { materialBackground } from './project-materials.js';
 import { schedules, scheduleCsv } from './model-schedule.js';
-import { planPdf } from './model-pdf.js';
+import { rules, onRules } from './rules-hook.js';   // 0.8 REG.1: one more schedule when a regulations add-on is on
+import { planPdf, sheetFor } from './model-pdf.js';
 import { wallOutlines, wallTypes, wallType, typeThickness, typeName, typeAt, JUSTIFICATIONS, locationLine, wallsThrough, wallLevelsPassed, topLevelChoices } from './model-walls.js';
 import { wallGeom, wallMap, arcMid, arcLength, bulgeThrough, bulgeFromHeight, arcHeight, flatPoly, BULGE_MAX } from './model-arcs.js';   // 0.6 round 2 (bim-comforts_PART_2): curved walls
 import { snapPoint, closesChain, loopSide, wallPath } from './model-tools.js';
-import { fmtLen, parseLen, parseTyped, fmtAngle, fmtArea, parsePitch, fmtPitch, getDisplayUnits, setDisplayUnits, isMetric, fillUnitSelect } from './model-units.js';
+import { fmtLen, parseLen, parseTyped, fmtAngle, fmtArea, parsePitch, fmtPitch, getDisplayUnits, setDisplayUnits, isMetric, fillUnitSelect, unitMark, lenMark } from './model-units.js';
 import { onUnitsChange } from './unit-prefs.js';   // 0.7 UNITS: Settings › General › Units
 import { copyLevel, drawWallPath, drawWalls, changeWall, changeWalls, removeWalls, newLevel, changeLevel, snapshotModel, placeOpening, changeOpening, changeOpenings, removeElements, placeFloor, placeCeiling, placeRoof, changeDerived, loopsOf } from './model-ops.js';
 import { loopAt, labelPoint, planLoops } from './model-rooms.js';
@@ -81,6 +82,7 @@ export function mountModel(host) {
   let pv = null;
   // tools other modules add (0.5 part 4, bim-residential: res-ui.js) — see extend() at the end
   const exts = [];
+  const PR = { src: null, keys: new Map() };   // 0.7.1 → 0.8: the regulations source of the shell's Problems (by the schedules below) and GlobalId → keys
   const extTool = (name) => exts.find((x) => x.tools?.includes(name)) || null;
   const ed = () => host.editor();
   const kb = () => host.model()?.keyBase || 0;
@@ -187,6 +189,7 @@ export function mountModel(host) {
     host.coords?.()?.plan(null, level(), S.planM);
     if (pv) pv.markers = host.coords?.()?.planMarkers(S.planM) || [];
     for (const x of exts) x.refresh?.();
+    PR.src?.invalidate();   // 0.7.1 → 0.8: the regulations add-on's problems, re-checked a moment later
     cutPlan();
     buildScene();
     if (fitToo) fitPlan();
@@ -355,11 +358,48 @@ export function mountModel(host) {
   // ---- dimensions, schedules, print (BM.7) ----
   ui.dims?.addEventListener('click', () => { S.dims = !S.dims; ui.dims.setAttribute('aria-pressed', S.dims ? 'true' : 'false'); buildScene(); });
   ui.schedKind?.addEventListener('change', () => { S.sched = ui.schedKind.value; renderSchedule(); });
+  onRules((p) => {   // a new pack, or the add-on switched off: the schedule is worked out again (or its entry goes)
+    if (!p) { ui.schedKind?.querySelectorAll('option[data-rules]').forEach((o) => o.remove()); if (S.sched === 'regs') { S.sched = 'doors'; if (ui.schedKind) ui.schedKind.value = 'doors'; } }
+    if (S.on) renderSchedule();
+  });
+  // 0.7.1 → 0.8 (docs/0.8-PROBLEMS-SPEC.md § Regulations): the regulations add-on's check as a live source of the shell's Problems (manifest
+  // "problems") — re-checked a moment after each edit (the store's debounce and budget), gone when the add-on is switched off; core BimCraft
+  // knows no regulations, it only asks the provider (rules-hook.js problems). Draw's stairs and rooms are found again by GlobalId (problemKeys).
+  function rulesCtx() {
+    const loops = new Map();
+    for (const l of S.data?.levels || []) if ((S.data.derived?.spaces || []).some((x) => x.storey === l.id)) loops.set(l.id, l.id === S.level && S.loops ? S.loops : loopsOf(ed(), l.id));
+    const levelName = (id) => S.data?.levels.find((l) => l.id === id)?.name || '';
+    return { snap: S.data, loops, stairs: exts.flatMap((x) => x.ruleStairs?.() || []), levelName, stairWord: t('res.stair'), fmtLen: (mm) => fmtLen(mm, S.units) };
+  }
+  function regsSource() {
+    const P = window.ccProblems, p = rules();
+    if (!P || typeof p?.problems !== 'function') { PR.src?.dispose(); PR.src = null; return; }
+    PR.src ||= P.source({
+      id: 'bimcraft.regs', kind: 'regulation', label: t('problems.src.regs'), debounceMs: 400,
+      run: () => {
+        if (!S.on || !S.data || !ed()) return null;   // Draw off: what was found stays until it is on again
+        const ctx = rulesCtx(), k = kb();
+        PR.keys.clear();
+        for (const sp of S.data.derived?.spaces || []) if (sp.guid) PR.keys.set(sp.guid, [k + sp.id]);
+        for (const st of ctx.stairs) if (st.guid && st.id != null) PR.keys.set(st.guid, [k + st.id]);
+        return rules()?.problems?.(ctx) || [];
+      },
+    });
+    PR.src.invalidate();
+  }
+  onRules(() => regsSource());
+  if (window.ccProblems) regsSource(); else document.addEventListener('cc-problems-ready', () => regsSource(), { once: true });
   function scheduleData() {
     const loops = new Map();
     for (const l of S.data?.levels || []) if ((S.data.derived?.spaces || []).some((x) => x.storey === l.id)) loops.set(l.id, l.id === S.level && S.loops ? S.loops : loopsOf(ed(), l.id));
-    const all = schedules(S.data, loops, { fmtLen: (mm) => fmtLen(mm, S.units), fmtArea: (mm2) => fmtArea(mm2, S.units), t });
+    const all = schedules(S.data, loops, { fmtLen: (mm) => fmtLen(mm, S.units), fmtArea: (mm2) => fmtArea(mm2, S.units), t, unit: unitMark(S.units) });
     if (ed()) Object.assign(all, assemblySchedules(new ModelWriter(ed().W, ed().api, ed().mid)));
+    // 0.8 REG.1: the model against the building regulations a regulations add-on says are in force (core knows none)
+    {
+      const levelName = (id) => S.data?.levels.find((l) => l.id === id)?.name || '';
+      const sc = rules()?.schedule?.({ snap: S.data, loops, stairs: exts.flatMap((x) => x.ruleStairs?.() || []), levelName, stairWord: t('res.stair'), fmtLen: (mm) => fmtLen(mm, S.units) });
+      if (sc && typeof sc.key === 'string') all[sc.key] = sc;
+    }
     for (const x of exts) Object.assign(all, x.schedules?.() || {});   // extensions' schedules (res-ui.js: the lumber cut list)
     return all;
   }
@@ -367,12 +407,13 @@ export function mountModel(host) {
     if (!ui.sched || !S.on || !S.data) return;
     const all = scheduleData(), sc = all[S.sched];
     for (const key of ['assemblies','materialLegend']) if (!ui.schedKind.querySelector('option[value="'+key+'"]')) ui.schedKind.append(el('option', {value:key}, all[key].title));
+    if (all.regs && !ui.schedKind.querySelector('option[value="regs"]')) ui.schedKind.append(el('option', {value:'regs', 'data-rules': ''}, all.regs.title));   // 0.8 REG.1: the regulations add-on's entry
     if (!sc) return;
     // a row picks what it lists
     const k = kb();
     const xs = exts.find((x) => x.scheduleKeys && (x.schedules?.() || {})[S.sched]);
     const keysOf = (i) => {
-      if (sc.rowInfo) return [];
+      if (sc.rowInfo || S.sched === 'regs') return [];
       if (xs) return xs.scheduleKeys(S.sched, i) || [];
       if (S.sched === 'doors' || S.sched === 'windows') { const kind = S.sched === 'doors' ? 'door' : 'window'; const list = S.data.openings.filter((o) => o.kind === kind); const byRow = sc.rows[i][0]; const o = list.find((x) => x.mark === byRow); return o ? [k + o.id] : []; }
       if (S.sched === 'walls') { const name = sc.rows[i][0]; return S.data.walls.filter((w) => (projectWallType(w.typeKey) ? typeName(projectWallType(w.typeKey)) : w.typeName) === name).map((w) => k + w.id); }
@@ -405,14 +446,18 @@ export function mountModel(host) {
     const base = String(host.fileName?.() || 'model').replace(/\.ifc$/i, '');
     host.download(base + ' ' + (sc.title || t('model.sch.' + S.sched)).toLowerCase() + '.csv', '\ufeff' + scheduleCsv(sc), 'text/csv');   // i18n-ignore: a file name
   });
-  ui.print?.addEventListener('click', () => {
+  ui.print?.addEventListener('click', async () => {
     if (!pv || !S.data) return;
     const sc = { ...pv.scene, dims: (pv.scene.dims || []).map((d) => ({ ...d, offPx: undefined })) };
     const lv = level(), when = new Date().toISOString().slice(0, 10);
     const base = String(host.fileName?.() || 'model').replace(/\.ifc$/i, '');
-    const r = planPdf(sc, { title: api.ask('viewTitle') || t(S.kind === 'rcp' ? 'model.print.rcpof' : 'model.print.titleof', { level: lv?.name || '' }), lines: [base, t('model.print.cut', { h: fmtLen(viewRange().cut, S.units) }), when], units: S.units, paper: isMetric(S.units) ? 'a4' : 'letter', scale: viewRange().scale || null });
+    const pdfOpts = { title: api.ask('viewTitle') || t(S.kind === 'rcp' ? 'model.print.rcpof' : 'model.print.titleof', { level: lv?.name || '' }), lines: [base, t('model.print.cut', { h: fmtLen(viewRange().cut, S.units) }), when], units: S.units, paper: isMetric(S.units) ? 'a4' : 'letter', scale: viewRange().scale || null };
+    // 0.8 D8.8 (round 3): this level's pictures go under the drawing as image objects, brought down to 200 dpi on the sheet (picture-ui.js)
+    let images = [], picFail = false;
+    try { if (window.bimcraftPicture?.pdfImages) images = await window.bimcraftPicture.pdfImages(S.level, sheetFor(sc, pdfOpts).sc[0]); } catch (e) { picFail = true; }
+    const r = planPdf(sc, { ...pdfOpts, images });
     host.download(base + ' — ' + (lv?.name || '') + (S.kind === 'rcp' ? ' ' + t('model.rcp.file') : '') + '.pdf', r.bytes, 'application/pdf');   // i18n-ignore: a file name
-    host.status(t('model.print.done', { scale: r.scale.label }) + (r.missing ? ' ' + t('model.print.missing', { n: r.missing }) : ''));
+    host.status(t('model.print.done', { scale: r.scale.label }) + (r.missing ? ' ' + t('model.print.missing', { n: r.missing }) : '') + (r.images ? ' ' + t('pic.pdf.done', { n: r.images }) : '') + (picFail ? ' ' + t('pic.pdf.failed') : ''), picFail);
   });
 
   // ---- the level select and the Levels panel ----
@@ -517,7 +562,11 @@ export function mountModel(host) {
   function readUnits() { return getDisplayUnits(); }
   if (ui.units) {
     fillUnitSelect(ui.units, S.units);   // the units turned on in Settings (0.7 UNITS) + the one in use
-    onUnitsChange(() => fillUnitSelect(ui.units, S.units));
+    onUnitsChange(() => {
+      const u = getDisplayUnits();   // the unit in use was turned off in Settings → the next one that is on
+      if (u !== S.units) { S.units = u; refresh(); renderProps(); window.dispatchEvent(new Event('bimcraft-units')); }
+      fillUnitSelect(ui.units, S.units); ui.units.value = S.units;
+    });
     ui.units.value = S.units;
     ui.units.addEventListener('change', () => { S.units = ui.units.value; setDisplayUnits(S.units); refresh(); renderProps(); window.dispatchEvent(new Event('bimcraft-units')); });
   }
@@ -1118,7 +1167,7 @@ export function mountModel(host) {
   }
   function apply(run, meta) {
     let r;
-    try { r = ed().modelChange(run, { label: meta.label || '', verb: meta.verb || '' }); }
+    try { r = ed().modelChange(run, { label: meta.label || '', verb: meta.verb || '', ...(meta.coalesce ? { coalesce: { key: meta.coalesce, merge: mergeJournals } } : {}) }); }
     catch (e) {
       refused(e, meta);
       if (meta.chain && S.chain === meta.chain) S.chain.points.pop();
@@ -1130,6 +1179,7 @@ export function mountModel(host) {
     S.data = snapshotModel(ed());
     S.loops = loopsOf(ed(), S.level);
     for (const x of exts) x.refresh?.();
+    PR.src?.invalidate();   // 0.7.1 → 0.8: the regulations add-on's problems, re-checked a moment later
     renderLevels(); fillLevelSelect();
     buildScene();
     host.afterEdit();
@@ -1146,7 +1196,7 @@ export function mountModel(host) {
   }
   function apply0(run, meta) {
     try {
-      const r = ed().modelChange(run, { label: meta.label || '', verb: meta.verb || '' });
+      const r = ed().modelChange(run, { label: meta.label || '', verb: meta.verb || '', ...(meta.coalesce ? { coalesce: { key: meta.coalesce, merge: mergeJournals } } : {}) });
       if (meta.chain && r.made) for (const g of r.made.keys()) meta.chain.guids.push(g);
     } catch (e) { refused(e, meta); }
     host.afterEdit();
@@ -1155,7 +1205,7 @@ export function mountModel(host) {
    *  asked (meta.onError, 0.6 DC.114) shows it itself, also when the change waited for a reload. */
   function refused(e, meta) {
     const k = e.key || e.message;
-    const ours = !!(k && /^(model|fam|comforts)\./.test(k));
+    const ours = !!(k && /^(model|fam|comforts|pic|tji|res\.err)\./.test(k));
     if (!ours) console.error(e);
     const why = ours ? t(k, e.fill || {}) : t('model.err.failed', { why: e.message || e });
     if (meta.onError) meta.onError(e, why); else host.status(why, true);
@@ -1376,7 +1426,8 @@ export function mountModel(host) {
       const d = p.derived[0];
       // a roof is picked by one of its parts, which are made again: pick it again by its GlobalId after the reload
       const again = () => { const r = snapshotModel(ed()).derived.roofs.find((x) => x.guid === d.guid); return r?.parts.length ? [kb() + r.parts[0]] : null; };
-      const run = (ch) => commit(changeDerived([d.guid], ch), { ...one(title), ...(d.kind === 'roof' ? { reselect: again } : {}) });
+      // GH.3-D: edits of one roof field in a row (pitch typed twice, fascia nudged) are one undo step
+      const run = (ch) => commit(changeDerived([d.guid], ch), { ...one(title), ...(d.kind === 'roof' ? { reselect: again, coalesce: 'roof:' + d.guid + ':' + Object.keys(ch).sort().join(',') } : {}) });
       const text = (value, attr, onText) => {
         const i = el('input', { type: 'text', className: 'bc-input', value: value || '', maxLength: 120, [attr]: '' });
         i.addEventListener('change', () => { if (i.value.trim() && i.value !== i.defaultValue) onText(i.value.trim()); else i.value = i.defaultValue; });
@@ -1542,6 +1593,8 @@ export function mountModel(host) {
   };
   return {
     decorate,
+    /** 0.7.1 → 0.8: the plan's keys of a stair or room the regulations check named by GlobalId ([] when not drawn). */
+    problemKeys: (guid) => PR.keys.get(guid) || [],
     // another file: its 3D view first (Draw off); New building turns Draw on again right after
     opened() { S.cutFor = null; S.level = null; S.autoFit3d = false; endChain(); S.queue = []; S.empty3d = !(host.viewer()?.allKeys?.().size); if (S.on) show(false); },
     stage(which) { if (which !== 'ifc' && S.on) show(false); },

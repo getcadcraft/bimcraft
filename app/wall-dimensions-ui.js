@@ -1,14 +1,15 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 import { el } from './ui-util.js';
 import { ModelWriter } from './model-write.js';
-import { WALL_REFERENCES, readWallDimensions, referencePoint, resolveDimension, saveWallDimension, removeWallDimensions } from './wall-dimensions.js';
+import { WALL_REFERENCES, readWallDimensions, referencePoint, resolveDimension, saveWallDimension, saveWallDimensions, removeWallDimensions } from './wall-dimensions.js';
+import { planAutoDimensions } from './autodim.js';   // 0.8 EG.20
 import { wallGeom } from './model-arcs.js';
 import { fmtLen, parseTyped } from './model-units.js';
 export function mountWallDimensions(modelUi) {
   let currentContext=null, currentView=null;
   let A, items=[], refs=[], hover=null, at=null, editing=null;
   let reference='coreExterior', axis='x';
-  const t=k=>A.t('dimension.'+k), L=n=>fmtLen(n,A.units());
+  const t=(k,v)=>A.t('dimension.'+k,v), L=n=>fmtLen(n,A.units());
   const level=()=>A.S.data?.levels.find(l=>l.id===A.S.level);
   const view=()=>A.S.callout?'callout:'+A.S.callout:(A.S.kind==='rcp'?'rcp:':'plan:')+level()?.guid;
   const walls=()=>A.S.data?.walls || [];
@@ -90,6 +91,24 @@ export function mountWallDimensions(modelUi) {
     el('button',{type:'button',className:'bc-tool',onClick:showList},t('list')));
   A.root.querySelector('[data-mopts="wall"]')?.after(el('div',{className:'bc-modelbar-row','data-mopts':'wallDimension',hidden:true},el('label',{},t('reference')+' ',refSelect),el('label',{},t('direction')+' ',axisSelect)));
   menu?.querySelector('[data-mtool="wallDimension"]')?.addEventListener('click',()=>{menu.closest('details').open=false;});
+  // 0.8 EG.20: dimension the plan by rules (autodim.js) — overall, rows along the outside, doors and windows; one undo step
+  const autoBtn=el('button',{type:'button',className:'bc-tool','data-autodim':'',title:t('auto.title')},t('auto'));
+  menu?.append(autoBtn);
+  autoBtn.addEventListener('click',()=>{menu.closest('details').open=false;autoDialog();});
+  const planFor=o=>planAutoDimensions({walls:A.S.data?.walls||[],openingRows:A.S.data?.openings||[],level:A.S.level,view:view(),existing:items.filter(d=>d.view===view()&&!d.issue).map(d=>({refs:d.refs,axis:d.axis})),...o});
+  function autoDialog(){
+    if(!A.ed()||!A.S.data||A.S.kind!=='plan'||!level()){A.host.status(t('auto.noplan'),true);return;}
+    const opt={overall:true,chains:true,openings:true};
+    const box=(k)=>{const i=el('input',{type:'checkbox',checked:true,'data-autodim-opt':k});i.addEventListener('change',()=>{opt[k]=i.checked;sum();});return el('label',{className:'bc-mb-field'},i,' ',t('auto.'+k));};
+    const say=el('p',{role:'status','data-autodim-say':''});
+    const go=el('button',{type:'button',className:'btn-plot btn-sm-cc','data-autodim-go':''},t('auto.go'));
+    const dlg=el('dialog',{className:'bc-dialog','aria-label':t('auto')},el('h2',{},t('auto')),el('p',{},t('auto.lede')),box('overall'),box('chains'),box('openings'),say);
+    let plan=null;
+    function sum(){plan=planFor({...opt,level:level().id});const c=plan.counts;go.disabled=!plan.specs.length;say.textContent=plan.specs.length?t('auto.sum',{overall:c.overall,chain:c.chain,skipped:c.skipped}):(c.skipped?t('auto.already'):t('auto.nothing'));}
+    go.addEventListener('click',()=>{sum();if(!plan.specs.length)return;A.commit(saveWallDimensions(plan.specs.map(({kind,side,...sp})=>({...sp,level:level().guid}))),{label:t('auto'),verb:A.t('model.verb.drew')});dlg.close();A.host.status(t('auto.done',{n:plan.specs.length}),false,true);});
+    const cancel=el('button',{type:'button',className:'btn-line btn-sm-cc',onClick:()=>dlg.close()},t('close'));
+    dlg.append(el('p',{},go,' ',cancel));dlg.addEventListener('close',()=>dlg.remove());A.root.append(dlg);sum();dlg.showModal();
+  }
   modelUi.extend({}); // Bind the newly inserted tool button through the normal tool dispatcher.
   function showList(){
     const dlg=el('dialog',{className:'bc-dialog','aria-label':t('list')},el('h2',{},t('list')));

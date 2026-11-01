@@ -55,6 +55,10 @@ On a trackpad: drag with one finger pressed to orbit; hold {{key:Shift}} or {{ke
 
 Orbiting always turns around a point in the middle of the model. Panning moves that point, so after a long pan the orbit may feel off-center: click {{ui:Fit}} to reset it.
 
+## Shaded, edges or wireframe
+
+Three small buttons just above the view cube pick how the model is drawn: {{ui:Shaded}}, {{ui:Shaded with edges}} (the default) and {{ui:Wireframe}}. They are also commands (View in the menus and the Customize list), so they can have keys of your own. {{ui:Plan}}, {{ui:Split}} and {{ui:3D}} are in the {{ui:View}} row of the toolbar.
+
 ## Common mistakes
 
 - **Expecting named views.** BimCraft has four fixed views ({{ui:Fit}}, {{ui:Top}}, {{ui:Front}}, {{ui:Side}}), the view cube in the bottom-right corner and free orbit. It does not save views.

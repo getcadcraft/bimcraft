@@ -12,7 +12,7 @@
  */
 import { parseLength } from './libitem.js';
 import { parseTo } from './unit-table.js';   // 0.7 UNITS: the shared table (lib/units; a copy: tools/units/sync.mjs)
-import { defaultUnit, fillSelect } from './unit-prefs.js';
+import { defaultUnit, fillSelect, isOn } from './unit-prefs.js';
 
 /*
  * Display units and the toolbar selector: Joel (yisraelk), getcadcraft/bimcraft PR #4 (0.7). Since 0.7 UNITS they are
@@ -20,19 +20,21 @@ import { defaultUnit, fillSelect } from './unit-prefs.js';
  * the one in use), a new browser starts on the starred length unit when BimCraft has it, and the choice saved in
  * localStorage "bimcraft.model.units" is kept as it was.
  */
-export const UNITS = ['ftin', 'in', 'ftdec', 'mm', 'cm', 'm'];
-/** BimCraft's unit → the shared table's id. */
-export const TABLE_ID = Object.freeze({ ftin: 'ft-in', in: 'in', ftdec: 'ft', mm: 'mm', cm: 'cm', m: 'm' });
+// GH.3-A (rule 39): the six units, the table ids and every number-to-text helper live in the neutral display-units.js
+// (lib/units; a copy: tools/units/sync-display.mjs bimcraft). Re-exported here so every import of model-units.js still works.
+import { UNITS, TABLE_ID, INCH, FACTOR, isMetric } from './display-units.js';
+export * from './display-units.js';
 const FROM_TABLE = Object.fromEntries(Object.entries(TABLE_ID).map(([k, v]) => [v, k]));
-const INCH = 25.4;
-const FACTOR = { mm: 1, cm: 10, m: 1000, in: INCH, ftdec: 12 * INCH };
-export const isMetric = (unit) => ['mm', 'cm', 'm'].includes(unit);
 let displayUnits = null;
+/** A unit BimCraft shows only while Settings › General › Units has it turned on: turning feet and inches off moves a person to metric. */
+const offered = (u) => isOn(TABLE_ID[u]);
 export function getDisplayUnits() {
-  if (displayUnits) return displayUnits;
-  try { const saved = localStorage.getItem('bimcraft.model.units'); if (UNITS.includes(saved)) return saved; } catch (e) { /* no storage */ }
+  if (displayUnits && offered(displayUnits)) return displayUnits;
+  try { const saved = localStorage.getItem('bimcraft.model.units'); if (UNITS.includes(saved) && offered(saved)) return saved; } catch (e) { /* no storage */ }
   const star = defaultUnit('length', { offer: Object.values(TABLE_ID) });
-  return star ? FROM_TABLE[star] : defaultUnits();
+  if (star) return FROM_TABLE[star];
+  const own = defaultUnits();
+  return offered(own) ? own : (UNITS.find(offered) || own);
 }
 /**
  * The toolbar's unit <select> rebuilt from Settings › General › Units: the units turned on (in the table's order) and
@@ -54,28 +56,6 @@ export function setDisplayUnits(unit) {
 /** The default for a new building or a model without a choice: feet and inches where the browser speaks US English. */
 export function defaultUnits(lang = (typeof navigator !== 'undefined' && navigator.language) || 'en-US') {
   return /^en-(US|LR|MM)$/i.test(lang) ? 'ftin' : 'mm';
-}
-
-/** Millimetres as text. `ftin`: feet-inches to 1/16" (fractions reduced); `mm`: whole millimetres (0.1 below 10). */
-export function fmtLen(mm, units = 'ftin', { unit = false } = {}) {
-  if (!Number.isFinite(mm)) return '';
-  if (units !== 'ftin' && FACTOR[units]) {
-    const value = mm / FACTOR[units];
-    const digits = units === 'mm' ? (Math.abs(value) < 10 ? 1 : 0) : units === 'in' ? 3 : 2;
-    const rounded = Number(value.toFixed(digits));
-    return (Object.is(rounded, -0) ? 0 : rounded) + (unit ? ' ' + (units === 'ftdec' ? 'ft' : units) : '');
-  }
-  const neg = mm < 0;
-  let sixteenths = Math.round(Math.abs(mm) / INCH * 16);
-  const ft = Math.floor(sixteenths / 192);
-  sixteenths -= ft * 192;
-  const inch = Math.floor(sixteenths / 16);
-  let frac = sixteenths - inch * 16, den = 16;
-  while (frac && frac % 2 === 0) { frac /= 2; den /= 2; }
-  const whole = ft || inch || !frac;   // 10'-0 1/4", but 1/4" alone
-  const inText = (whole ? String(inch) : '') + (frac ? (whole ? ' ' : '') + frac + '/' + den : '') + '"';
-  const s = ft ? ft + "'-" + inText : inText;
-  return (neg && sixteenths + ft ? '-' : '') + s;
 }
 
 /** Text → millimetres (NaN when it is not a length). Bare numbers: inches ('ftin') or millimetres ('mm'). */

@@ -119,6 +119,7 @@ const folderArg = args.indexOf('--folder');
 // --folder alone: the public folder fixture (fixtures/folder/Cad), checked against fixtures/facts.json
 if (folderArg >= 0) process.exit(await folderMode(args[folderArg + 1] && !args[folderArg + 1].startsWith('--') ? path.resolve(args[folderArg + 1]) : path.join(ROOT, 'fixtures/folder/Cad')));
 if (args.includes('--library')) process.exit(await libraryMode());
+if (args.includes('--drop')) process.exit(await dropMode());
 if (args.includes('--clipboard')) process.exit(await clipboardMode());
 if (args.includes('--dwg3d')) process.exit(await dwg3dMode());
 if (args.includes('--partial')) process.exit(await partialMode());
@@ -148,6 +149,10 @@ if (args.includes('--walls')) {
   const r = spawnSync(process.execPath, ['--test', path.join(ROOT, 'tools/bimcraft-test/wall-precision.test.mjs'), path.join(ROOT, 'tools/bimcraft-test/material-library.test.mjs')], { stdio: 'inherit' });
   process.exit(r.status ?? 1);
 }
+// 0.8 D8.9 (session d89_PART_3): any projection — UTM, EPSG codes and your own — tools/bimcraft-test/crs-pick-test.mjs
+if (args.includes('--crspick')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/crs-pick-test.mjs'))).crsPickMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.8 D8.9 round 3 (session d89b_PART_3): place a model on the map, rewrite its projected system, reproject files — tools/bimcraft-test/georef-test.mjs
+if (args.includes('--georef')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/georef-test.mjs'))).georefMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.7 BIM-MLWALL (session bim-07): walls that run through several levels — tools/bimcraft-test/mlwall-test.mjs
 if (args.includes('--mlwall')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/mlwall-test.mjs'))).mlwallMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.7 BIM-BUNDLE-OPEN (session bim-07): bundles in a folder scan — tools/bimcraft-test/bundle-open-test.mjs
@@ -163,10 +168,38 @@ if (args.includes('--famsolid')) process.exit(await (await import(path.join(ROOT
 if (args.includes('--fammore')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/families-more-test.mjs'))).famMoreMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));
 // 0.7 SU.878 (session bim-07): the I shape of BimCraft's analytical sections — tools/bimcraft-test/su878-test.mjs
 if (args.includes('--su878')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/su878-test.mjs'))).su878Mode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+if (args.includes('--sx-tags')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/tags-test.mjs'))).sxTagsMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.8 SU.915 + SU.889 (session sx-tags)
+if (args.includes('--ask')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ask-test.mjs'))).askMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 AC.8 ★ (session bim_PART_2)
+if (args.includes('--furnish')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/furnish-test.mjs'))).furnishMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.60 (session bim_PART_2)
+if (args.includes('--program-mass')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/program-mass-test.mjs'))).programMassMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.58 (session bim_PART_2)
+if (args.includes('--permit')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/permit-test.mjs'))).permitMode({ APP, ROOT }));   // 0.8 EG.44 (session bim_PART_2)
+if (args.includes('--scan-walls')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/scan-walls-test.mjs'))).scanWallsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.37 spike (session bim_PART_2)
+if (args.includes('--r47')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/r47-test.mjs'))).r47Mode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.8 R4.7 (session bim-model_PART_4): narration, add-on record, team models
+if (args.includes('--r52')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/r52-test.mjs'))).r52Mode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.8 R5.2 (session bim-build_PART_5): D8.8 sheets, BIM-FAM-MORE, SU.1055, EG.6
+if (args.includes('--scan-propose')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/scan-propose-test.mjs'))).scanProposeMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.37 build (session spikes_PART_4)
+if (args.includes('--site-ctx')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/site-ctx-test.mjs'))).siteCtxMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.63 (session civil_PART_4): the site context taken as suggestions
+if (args.includes('--acoustics')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/acoustics-test.mjs'))).acousticsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.49 (session bim-sim_PART_2)
+if (args.includes('--hazard')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/hazard-test.mjs'))).hazardMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.47 (session bim-sim_PART_2)
+if (args.includes('--lifecycle')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/lifecycle-test.mjs'))).lifecycleMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.45 (session bim-sim_PART_2)
+if (args.includes('--people')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/people-test.mjs'))).peopleMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.48 (session bim-sim_PART_2)
+if (args.includes('--phases')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/phases-test.mjs'))).phasesMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 EG.59 (session bim_PART_2)
+if (args.includes('--ifcsolids')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ifc-solids-test.mjs'))).ifcSolidsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.8 DC.115 (session ifc_PART_3)
+if (args.includes('--schedule')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/schedule-test.mjs'))).scheduleMode({ APP, ROOT, quiet }));   // 0.8 SU.931 (session ifc-08)
 // 0.5 part 3 track BM (session bim-model): the building tools — tools/bimcraft-test/model-test.mjs
+if (args.includes('--gh3ui')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/gh3ui-test.mjs'))).gh3uiMode({ APP, ROOT, quiet }));   // 0.8 GH.3 A/C (gh3ui_PART_3)
 if (args.includes('--model')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/model-test.mjs'))).modelMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.5 part 4 track RC (session bim-residential): the residential tools — tools/bimcraft-test/res-test.mjs
 if (args.includes('--res')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/res-test.mjs'))).resMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 REG.1 (regulation packs by jurisdiction): the pack format, inheritance, the two packs, the stair and room checks — tools/bimcraft-test/regs-test.mjs
+// 0.8 REG.1: write the sample house that fails some IRC rules on purpose (tools/bimcraft-test/make-regs-sample.mjs)
+if (args.includes('--make-regs-sample')) {
+  const out = path.resolve(args[args.indexOf('--make-regs-sample') + 1] || 'irc-check-sample.ifc');
+  const r = await (await import(path.join(ROOT, 'tools/bimcraft-test/make-regs-sample.mjs'))).makeRegsSample({ APP, WebIFC, IfcModel, quiet, out });
+  for (const x of r.rows) console.log((x.ok === true ? '  meets    ' : x.ok === false ? '  FAILS    ' : '  not checked ') + x.where + ' | ' + x.label + ' | ' + x.clause + ' | found ' + (x.found === null ? '-' : Math.round(x.found * 100) / 100) + ' ' + x.unit);
+  console.log(`${out}: ${r.bytes} bytes, ${r.rooms} rooms, ${r.stairs} stairs; ${r.sum.meets} meet, ${r.sum.fails} fail`);
+  process.exit(0);
+}
+if (args.includes('--regs')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/regs-test.mjs'))).regsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.6 (session bim-draw): the 0.6 drawing work — tools/bimcraft-test/draw06-test.mjs
 // 0.7 (session massing): CivilCraft's building masses developed in BimCraft — tools/bimcraft-test/mass07-test.mjs
 if (args.includes('--mass07')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/mass07-test.mjs'))).mass07Mode({ APP, ROOT, WebIFC, IfcModel, quiet }));
@@ -175,6 +208,22 @@ if (args.includes('--draw06')) process.exit(await (await import(path.join(ROOT, 
 if (args.includes('--mep')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/mep-test.mjs'))).mepMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.7 LC.9 (session mep-07): add-on API 1.1, equipment with ports, connected runs, clash sets, spools — tools/bimcraft-test/mep07-test.mjs
 if (args.includes('--mep07')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/mep07-test.mjs'))).mep07Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 SU.888 (session sx-mep): split, VRF and fan-coil equipment, refnets, line sets — tools/bimcraft-test/hvac-test.mjs
+if (args.includes('--hvac')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/hvac-test.mjs'))).hvacMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));
+// 0.8 round 2 EG.1–EG.4 (session mep_PART_2): sizing + pressure drop, tray / conduit fill, IES / LDT lighting, sprinkler libraries — tools/bimcraft-test/eg-mep-test.mjs
+if (args.includes('--eg')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eg-mep-test.mjs'))).egMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.8 round 2 EG.13 (session energy_PART_2): the EnergyPlus step — IDF writer, engine harness, readers — tools/bimcraft-test/eg-energy-test.mjs
+if (args.includes('--ep')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eg-energy-test.mjs'))).epMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.8 EG.39 (session bim-analysis_PART_4): the scan against the model and the 4D schedule — tools/bimcraft-test/scan-progress-test.mjs
+if (args.includes('--scanprogress')) { const { spawnSync } = await import('node:child_process'); process.exit(spawnSync(process.execPath, [path.join(ROOT, 'tools/bimcraft-test/scan-progress-test.mjs')], { stdio: 'inherit' }).status ?? 1); }
+// 0.8 round 2 EG.14 + EG.17 (session energy_PART_2): embodied carbon and 5D costs — tools/bimcraft-test/eg-carbon-test.mjs
+if (args.includes('--carbon')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eg-carbon-test.mjs'))).carbonMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.8 round 2 EG.15 (session energy_PART_2): solar PV — arrays, shading, yield, strings, one-line — tools/bimcraft-test/eg-pv-test.mjs
+if (args.includes('--pv')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eg-pv-test.mjs'))).pvMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.8 EG.14 / EG.17 / EG.15 (session dec-eg_PART_3): swappable data sources — tools/bimcraft-test/datapacks-test.mjs
+if (args.includes('--datapacks')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/datapacks-test.mjs'))).datapacksMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.8 SU.955 (session mep-08): the model's plumbing standard (US / Brazil ABNT) — tools/bimcraft-test/plumbstd-test.mjs
+if (args.includes('--plumbstd')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/plumbstd-test.mjs'))).plumbstdMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.6 DC.114 (session bim-families_PART_2): families on IFC types — tools/bimcraft-test/families-test.mjs
 if (args.includes('--families')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/families-test.mjs'))).familiesMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.6 round 2 (session bim-fixes_PART_2): DC.53 / DC.57 — tools/bimcraft-test/fixes2-test.mjs
@@ -182,8 +231,28 @@ if (args.includes('--fixes2')) process.exit(await (await import(path.join(ROOT, 
 if (args.includes('--views2')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/views2-test.mjs'))).views2Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.6 DC.117 (bim-views_PART_2)
 // 0.6 round 2 (session bim-comforts_PART_2): curved walls, justification, moving items, dormers, spiral stairs, interior elevations — tools/bimcraft-test/comforts-test.mjs
 if (args.includes('--comforts')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/comforts-test.mjs'))).comfortsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 SU.1055 (session bim-08): OBJ import — tools/bimcraft-test/obj-test.mjs
+if (args.includes('--obj')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/obj-test.mjs'))).objMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 SU.1055 (session bim-08): Trace Reference geometry — tools/bimcraft-test/traceref-test.mjs
+if (args.includes('--traceref')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/traceref-test.mjs'))).traceRefMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 D8.8 (session d88_PART_3): pictures as backgrounds — tools/bimcraft-test/picture-test.mjs
+if (args.includes('--picture')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/picture-test.mjs'))).pictureMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 SU.1055 (session bim-08): pen overrides — tools/bimcraft-test/pens-test.mjs
+if (args.includes('--pens')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/pens-test.mjs'))).pensMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 SU.1055 (session bim-08): a stair from a sketch — tools/bimcraft-test/stairsketch-test.mjs
+if (args.includes('--stairsketch')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/stairsketch-test.mjs'))).stairSketchMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 D8.3 (session bim-08): Move / Copy / Align / Distribute — tools/bimcraft-test/modify-test.mjs
+// 0.8 BIM-FAM-MORE step 8 (oltl2-d_PART_3): a loadable family library — tools/bimcraft-test/family-library-test.mjs
+if (args.includes('--famlib')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/family-library-test.mjs'))).famLibMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 GH.3-D / GH.3-E (session gh3build_PART_3): roof edits coalesce; TJI floor framing from a loaded table — tools/bimcraft-test/gh3-test.mjs
+if (args.includes('--gh3')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/gh3-test.mjs'))).gh3Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.8 GH.3-F/G (session gh3sym_PART_3): the symbol-set registry, electrical + plumbing sets, plan symbols — tools/bimcraft-test/symbols-test.mjs
+if (args.includes('--symbols')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/symbols-test.mjs'))).symbolsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+if (args.includes('--modify')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/modify-test.mjs'))).modifyMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 if (args.includes('--ops')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ops-test.mjs'))).opsMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.7 LC.12 / LC.20 (bim-ops)
 if (args.includes('--extra2')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/extra2-test.mjs'))).extra2Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.6 DC.22 / LC.12 / LC.20 (bim-extra_PART_2)
+if (args.includes('--shell')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/shell-mount-test.mjs'))).shellMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.8 EG.18 / EG.23 mount (oltl-eg-a_PART_3)
+if (args.includes('--photo')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/photo-material-test.mjs'))).photoMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.8 EG.62 BimCraft half (material from a photo)
 if (args.includes('--render')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/render-test.mjs'))).renderMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.5 RC.7 / RC.11 (session render)
 // 0.5 part 4 track IP.1: menu styles, keys and mouse — tools/bimcraft-test/input-test.mjs
 if (args.includes('--input')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/input-test.mjs'))).inputMode({ APP, ROOT }));
@@ -552,7 +621,7 @@ async function clipboardMode() {
   };
   const refusing = { getItem: () => { throw new Error('SecurityError'); }, setItem: () => { throw new Error('SecurityError'); }, removeItem: () => { throw new Error('SecurityError'); } };
 
-  // A full library item (as LibraryCraft hands it over) from the seed CSV.
+  // A full library item (as the Library hands it over) from the seed CSV.
   const csv = L.itemsFromCsv(fs.readFileSync(path.join(ROOT, 'tools/library/seed.csv'), 'utf8'));
   const item = { ...L.cleanItem(csv.items[0]), uuid: '11111111-1111-4111-8111-111111111111', version: 1, license: { id: 'CC0-1.0', holder: 'CadCraft', attribution: '', url: '' } };
   const fileItem = L.cleanItem(csv.items[3]);
@@ -719,6 +788,79 @@ async function clipboardMode() {
     ok(rowX && rowX.uuid === item.uuid && near(rowX.x, 1000, 1) && rowX.itemNumber === '1' && rowX.quantity === 3, 'paste in place into ' + other + ' from the stored clip\'s item: same X, Y, quantity 3, item 1 there (storey by ' + pick.how + ')');
   }
   console.log(`\n${good} passed, ${bad} failed`);
+  return bad ? 1 : 0;
+}
+
+
+/** --drop: a part dragged here from PartCraft (0.8 EG.78, studio_PART_2): the library item PartCraft builds is checked, placed and
+ *  scheduled by BimCraft's own code; the handlers drive the placement mode; ModelCraft's OBJ reader takes the other form. */
+async function dropMode() {
+  const L = await import(path.join(APP, 'libitem.js'));
+  const D = await import(path.join(APP, 'drop-item.js'));
+  const { IfcEditor } = await import(path.join(APP, 'ifc-edit.js'));
+  const PC = path.join(ROOT, 'public_html/assets/apps/partcraft', BUILD);
+  const MC = path.join(ROOT, 'public_html/assets/apps/modelcraft', BUILD);
+  const PI = await import(path.join(PC, 'part-item.js'));
+  let bad = 0, good = 0;
+  const ok = (cond, label) => { if (cond) good++; else bad++; console.log((cond ? '  ok   ' : '  FAIL ') + label); };
+  // a 300 × 200 × 400 mm block in PartCraft's own space (Y up, millimetres)
+  const box = (w, h, d) => ({ positions: [0, 0, 0, w, 0, 0, w, h, 0, 0, h, 0, 0, 0, d, w, 0, d, w, h, d, 0, h, d], indices: [0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2, 0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5] });
+  const mesh = box(300, 400, 200), part = { name: 'Pump P-101', partNumber: 'P-101' };
+  console.log('== PartCraft builds the forms');
+  const f = PI.dragForms(part, mesh);
+  ok(f.name === 'Pump P-101' && f.files.map((x) => x.kind).join() === 'item,mesh' && f.meta.partNumber === 'P-101', 'two forms: a library item and an OBJ, with the part number as meta');
+  const text = await f.files[0].file.text();
+  const got = await D.itemFromText(text, L);
+  ok(got.item && got.item.name === 'Pump P-101' && got.item.model === 'P-101' && got.item.body.type === 'mesh', 'BimCraft\'s libitem.js accepts the item (cleanItem + validateItem)');
+  const b = got.item.body;
+  let minZ = Infinity, maxZ = -Infinity; for (let i = 2; i < b.positions.length; i += 3) { minZ = Math.min(minZ, b.positions[i]); maxZ = Math.max(maxZ, b.positions[i]); }
+  ok(minZ === 0 && Math.abs(maxZ - 400) < 0.01 && got.item.params.width === 300 && got.item.params.depth === 200 && got.item.params.height === 400, 'Z up, standing on 0, 300 wide × 200 deep × 400 high (PartCraft\'s Y up turned)');
+  ok((await D.itemFromText('not json', L)).error === 'json' && (await D.itemFromText('{"format":"x"}', L)).error === 'invalid' && (await D.itemFromText(JSON.stringify({ ...JSON.parse(text), category: 'nope/nope' }), L)).error === 'invalid', 'junk, a foreign format and a bad category are refused');
+  let threw = false; try { PI.partItem(part, { positions: [], indices: [] }); } catch { threw = true; }
+  ok(threw, 'no solid → an error, not an empty item');
+
+  console.log('== BimCraft places it and schedules it');
+  const engine = await quiet(IfcModel.create)(WebIFC, null);
+  await quiet((x) => engine.load(x))(await fixtureBytes());
+  const ed = new IfcEditor(WebIFC, engine);
+  const pl = ed.placer(), info = pl.info();
+  const no = pl.nextItemNumber();
+  const r = ed.placeItem(got.item, { storey: info.storeys[0].id, x: 2000, y: 1500, rot: 0, itemNumber: no, quantity: 1, library: 'file', sha256: await L.itemHash(got.item), sourceFile: 'PartCraft: Pump P-101' });
+  const sched = ed.placer().schedule();
+  const list = Array.isArray(sched) ? sched : sched.rows || sched.list || [];
+  const row = list.find((x) => /Pump P-101/.test(x.category || '') && String(x.no) === String(no));
+  ok(r && r.id && row && row.model === 'P-101' && row.qty === '1', 'placed on the first storey and a row in the equipment schedule (item ' + no + ', model P-101)');
+  const back = ed.placer().placements().find((x) => x.id === r.id);
+  ok(back && back.name === 'Pump P-101' && Math.abs(back.x - 2000) < 1 && Math.abs(back.y - 1500) < 1 && String(back.itemNumber) === String(no) && /PartCraft/.test(back.sourceFile || ''), 'read back: name, place, item number, and where it came from');
+  ed.undo();
+  ok(!ed.placer().placements().some((x) => x.id === r.id), 'one undo takes it out again');
+
+  console.log('== the drop handler drives the placement mode');
+  const calls = [];
+  const viewer = { placeY: 7, placing: { move: () => {}, click: (pt) => calls.push(['click', pt]) }, planePoint: (cx, cy, y) => ({ x: cx, y, z: cy }) };
+  const mk = (over = {}) => D.dropHandlers({ L, startPlacing: (e) => calls.push(['start', e]), viewer, status: () => {}, t: (k, v) => k + (v ? JSON.stringify(v) : ''), ready: () => null, ...over });
+  const file = f.files[0].file;
+  const msg = await mk().item({ file, point: { clientX: 120, clientY: 80 }, name: 'Pump P-101', from: 'PartCraft' });
+  ok(calls[0][0] === 'start' && calls[0][1].item.name === 'Pump P-101' && calls[0][1].meta.library === 'file' && /^[0-9a-f]{64}$/.test(calls[0][1].meta.sha256) && /PartCraft/.test(calls[0][1].meta.sourceFile), 'a drop enters placement mode with the item and where it came from');
+  ok(calls[1][0] === 'click' && calls[1][1].x === 120 && calls[1][1].y === 7 && /drop\.item\.dropped/.test(msg), 'and clicks at the drop point on the storey plane');
+  calls.length = 0;
+  const msg2 = await mk().item({ file, point: null, name: 'Pump P-101', from: 'PartCraft' });
+  ok(calls.length === 1 && calls[0][0] === 'start' && /drop\.item\.click/.test(msg2), 'from the shelf\'s button there is no point: the ghost follows the pointer');
+  let why = ''; try { await mk({ ready: () => 'Open an IFC model' }).item({ file, point: null }); } catch (e) { why = e.message; }
+  ok(why === 'Open an IFC model', 'no model open → the reason, not a placement');
+  why = ''; try { await mk().item({ file: new File(['{'], 'x.json'), point: null }); } catch (e) { why = e.message; }
+  ok(/drop\.item\.json/.test(why), 'a broken file → the reason');
+
+  console.log('== ModelCraft takes the OBJ form');
+  const objText = await f.files[1].file.text();
+  ok(/^v /m.test(objText) && objText.split('\n').filter((l) => l.startsWith('f ')).length === 12 && /0\.300000 0\.400000 0\.200000/.test(objText), 'OBJ: metres (300 mm = 0.3), 8 vertices, 12 faces');
+  try {
+    const { readObj } = await import(path.join(MC, 'io/obj.js'));
+    const obj = await readObj(new TextEncoder().encode(objText), { resolve: async () => null });
+    const n = JSON.stringify(obj).length;
+    ok(n > 100, "ModelCraft's own OBJ reader parses it (" + Object.keys(obj).join(',') + ')');
+  } catch (e) { ok(false, "ModelCraft's OBJ reader: " + e.message); }
+  console.log('\n' + good + ' passed, ' + bad + ' failed');
   return bad ? 1 : 0;
 }
 
@@ -2239,7 +2381,7 @@ async function agentMode() {
   const call = async (name, a) => { const r = await d.call(name, a); return { r, v: r.structuredContent, text: r.content?.[0]?.text || '' }; };
   const names = (els) => els.map((e) => e.name).sort().join(', ');
   console.log('== the tools and their permissions');
-  ok(d.list().map((t) => t.name).join() === 'elements_find,element_properties', 'with read allowed: elements_find and element_properties are listed');
+  ok(d.list().map((t) => t.name).sort().join() === 'element_properties,elements_find', 'with read allowed: elements_find and element_properties are listed');
   allowed = ['read', 'edit'];
   ok(d.list().length === 3 && d.list().find((t) => t.name === 'elements_isolate')?.annotations?.readOnlyHint === false, 'with edit: elements_isolate too (not read-only)');
   allowed = ['read'];
@@ -2455,6 +2597,12 @@ async function compareMode() {
   const csv = K.compareCsv(r, { name: (s, k) => nm(s === 'a' ? ixa : ixb, k), guid: (s, k) => (s === 'a' ? ixa : ixb).value('guid', k - (s === 'a' ? ixa : ixb).keyBase) });
   const lines = csv.trim().split('\r\n');
   ok(lines[0] === 'Change,GlobalId,Element,What,Before,After' && lines.some((l) => /^Changed,\w+,W-201,p:Fixture_Data\.Cost,/.test(l)) && lines.some((l) => /^Moved,\w+,.*,0\.5$/.test(l)) && lines.some((l) => /^Added,\w+,W-203/.test(l)) && lines.some((l) => /^Removed,\w+,W-104/.test(l)), 'CSV: a row per change with the GlobalId');
+  console.log('== in words (EG.65)');
+  const say = { added: (v) => v.name + ' was added.', removed: (v) => v.name + ' was removed.', moved: (v) => v.name + ' moved ' + v.d + ' m.', reshaped: (v) => v.name + ' changed shape.', prop: (v) => v.name + ': ' + v.field + ' changed from ' + v.before + ' to ' + v.after + '.' };
+  const wd = K.compareWords(r, { name: (s, k) => nm(s === 'a' ? ixa : ixb, k), say });
+  ok(wd.total === wd.lines.length && wd.lines.includes('W-104 was removed.') && wd.lines.includes('W-203 was added.'), 'one sentence for the removed and the added element');
+  ok(wd.lines.some((l) => /^W-201: p:Fixture_Data\.Cost changed from .+ to .+\.$/.test(l)) && wd.lines.some((l) => /moved 0\.5 m\.$/.test(l)), 'the changed cost and the 0.5 m move are said in words');
+  ok(K.compareWords(r, { say, max: 2 }).lines.length === 2 && K.compareWords(r, { say, max: 2 }).total === wd.total, 'a cap keeps the count of what was left out');
   for (const im of [A, B, B2]) im.close();
   console.log(bad ? '\n' + bad + ' FAILED, ' + good + ' passed' : '\nall ' + good + ' compare checks passed');
   return bad ? 1 : 0;

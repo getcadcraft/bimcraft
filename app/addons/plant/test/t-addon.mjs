@@ -37,8 +37,8 @@ const me = () => started.list().find((a) => a.id === 'plant');
 ok(me()?.state === 'off' && me().source === 'bundled', 'Plant is bundled and starts off', JSON.stringify(me() && [me().state, me().reason, me().detail]));
 await started.loader.setEnabled('plant', true);
 ok(me()?.state === 'active', 'switched on: active', JSON.stringify(me() && [me().state, me().reason, me().detail]));
-ok(started.commandList().map((c) => c.key).sort().join() === 'plant:iso-svg,plant:layout-check,plant:place-equipment,plant:route,plant:spec-check', 'its five commands are listed');
-ok(started.exporters().map((e) => e.id).sort().join() === 'plant:equipment-ifc,plant:iso-dxf,plant:iso-svg' || started.exporters().length === 3, 'three exporters', started.exporters().map((e) => e.id).join());
+ok(started.commandList().map((c) => c.key).sort().join() === 'plant:iso-svg,plant:layout-check,plant:place-equipment,plant:process-apply-sizes,plant:process-check,plant:route,plant:route-draw,plant:spec-check', 'its eight commands are listed');
+ok(started.exporters().map((e) => e.id).sort().join() === 'plant:equipment-ifc,plant:iso-dxf,plant:iso-svg,plant:process-json' || started.exporters().length === 4, 'four exporters (the process model is the fourth)', started.exporters().map((e) => e.id).join());
 
 // Properties
 let secs = await started.propsSections([21], model);

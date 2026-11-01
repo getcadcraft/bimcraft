@@ -23,6 +23,7 @@
 import { ModelWriter } from './model-write.js';
 import { ids, val, deleteLine } from './ifc-util.js';
 import { material, isMaterialId } from './render/materials.js';
+import { ensure as ensurePhotoMaterials } from './photo-materials.js';   // 0.8 EG.62: the file's own photo materials are known before ids are read
 
 export const PSET = 'CadCraft_Render';
 export const AXES = ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-'];
@@ -89,6 +90,7 @@ export function paintOp({ ids: targets, mat, axis = null }) {
 }
 
 export function readPaint(api, mid) {
+  ensurePhotoMaterials(api, mid);
   const out = new Map();
   for (const rid of ids(api, mid, 'IFCRELDEFINESBYPROPERTIES')) {
     const r = api.GetLine(mid, rid, false);

@@ -18,6 +18,8 @@
  * `flow` is the port's direction in IFC's words: SINK (fluid enters), SOURCE (fluid leaves), SINKANDSOURCE.
  */
 
+import { bodyProfile } from '../../../process/equip/vessel2.js';   // 0.8 chem-draw_PART_4 (CH.9): the vessel body outline of the vessel calculator, revolved
+
 const N = 24;   // sides of a round body
 
 // ---------------------------------------------------------------------------------------------------- mesh helpers
@@ -81,7 +83,22 @@ const nozzle = (name, p, out, size, flow) => ({ name, p, out, size: String(size)
 // ---------------------------------------------------------------------------------------------------- the pieces
 const cylCapacity = (d, len) => (Math.PI * (d / 2) ** 2 * len + (4 / 3) * Math.PI * (d / 2) * (d / 2) * (d / 4)) / 1e9;   // m³: a cylinder and two 2:1 heads
 
+const HEADS = { ellip: 'ellipsoidal', hemi: 'hemispherical', tori: 'torispherical' };   // params are short strings (a parameter text is cut at 10 characters)
 export const TYPE = {
+  'vessel-profile': {   // a vertical vessel whose outline comes from the vessel body calculator (vessel2): ellipsoidal, hemispherical or torispherical heads, inside surface
+    ifc: { cls: 'IFCTANK', predefined: 'PRESSUREVESSEL' }, params: { d: 1000, h: 2000, leg: 600, head: 'ellip', crownR: 0, knuckleR: 0, feed: '4', out: '4', vent: '2', drain: '2' },
+    build: (p) => {
+      const b = bodyProfile({ D: p.d, Ltt: p.h, head: { type: HEADS[p.head] || 'ellipsoidal', ...(p.crownR ? { crownR: p.crownR } : {}), ...(p.knuckleR ? { knuckleR: p.knuckleR } : {}) } });
+      const r = p.d / 2, z0 = p.leg, prof = b.profile.map(([x, z]) => [Math.max(0, x < 1e-6 ? 0 : x), z + z0]);
+      const body = lathe(prof), skirt = lathe([[0, 0], [r * 0.8, 0], [r * 0.8, z0], [0, z0]]), top = z0 + b.height, bot = z0;
+      return {
+        mesh: join(body, skirt),
+        nozzles: [nozzle('top', [0, 0, top], [0, 0, 1], p.vent, 'SOURCE'), nozzle('bottom', [0, 0, bot], [0, 0, -1], p.drain, 'SOURCE'),
+          nozzle('feed', [r, 0, z0 + p.h * 0.75], [1, 0, 0], p.feed, 'SINK'), nozzle('outlet', [-r, 0, z0 + p.h * 0.15], [-1, 0, 0], p.out, 'SOURCE')],
+        capacityM3: b.volume,
+      };
+    },
+  },
   'vessel-v': {
     ifc: { cls: 'IFCTANK', predefined: 'PRESSUREVESSEL' }, params: { d: 1200, h: 2400, leg: 600, feed: '4', out: '4', vent: '2', drain: '2' },
     build: (p) => {

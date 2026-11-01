@@ -33,6 +33,14 @@ const IN = 25.4;
 export const STAIR_PSET = 'CadCraft_Stair', WELL_PSET = 'CadCraft_StairWell';
 export const STAIR_KINDS = ['straight', 'l', 'u', 'winder', 'spiral'];   // spiral: 0.6 round 2 (bim-comforts_PART_2)
 export const STAIR_LIMITS = { riserMax: 7.75 * IN, treadMin: 10 * IN, widthMin: 36 * IN, headroom: 80 * IN, railMin: 34 * IN, railMax: 38 * IN };
+/**
+ * 0.8 REG.1: the limits the checks use come from the active regulation pack (regs/active.js calls useStairLimits). Until a pack
+ * is chosen they are STAIR_LIMITS, which the United States pack (regs/packs/us-irc-2021.json) repeats exactly. A limit the pack
+ * leaves out is null and that check is skipped; the stairwell cut still needs a headroom, so it keeps STAIR_LIMITS' own.
+ */
+let LIM = STAIR_LIMITS;
+export function useStairLimits(limits) { LIM = limits ? { riserMax: null, treadMin: null, widthMin: null, headroom: null, railMin: null, railMax: null, ...limits } : STAIR_LIMITS; }
+export const stairLimits = () => LIM;
 export const STAIR_DEFAULTS = { kind: 'straight', turn: 'left', width: 36 * IN, riserMax: 7.75 * IN, tread: 10 * IN, split: 0.5, gap: 2 * IN, railings: 'both', railHeight: 36 * IN, well: true };
 const IFC_TYPE = { straight: 'STRAIGHT_RUN_STAIR', l: 'QUARTER_TURN_STAIR', u: 'HALF_TURN_STAIR', winder: 'QUARTER_WINDING_STAIR', spiral: 'SPIRAL_STAIR' };
 /**
@@ -57,7 +65,7 @@ export function stairLayout(spec0) {
   const ccw = (poly) => (area(poly) < 0 ? poly.slice().reverse() : poly);
   const pieces = [], sides = [], walk = [];
   const flight = (treads, meta) => pieces.push({ kind: 'flight', treads, ...meta });
-  const checks = { riser: r <= s.riserMax + 1e-6 && r <= STAIR_LIMITS.riserMax + 1e-6, tread: d >= STAIR_LIMITS.treadMin - 1e-6, width: w >= STAIR_LIMITS.widthMin - 1e-6, rail: s.railings === 'none' || (s.railHeight >= STAIR_LIMITS.railMin - 1e-6 && s.railHeight <= STAIR_LIMITS.railMax + 1e-6) };
+  const checks = { riser: r <= s.riserMax + 1e-6 && (LIM.riserMax === null || r <= LIM.riserMax + 1e-6), tread: LIM.treadMin === null || d >= LIM.treadMin - 1e-6, width: LIM.widthMin === null || w >= LIM.widthMin - 1e-6, rail: s.railings === 'none' || ((LIM.railMin === null || s.railHeight >= LIM.railMin - 1e-6) && (LIM.railMax === null || s.railHeight <= LIM.railMax + 1e-6)) };
   // the rails' inset from the stair's edge (half a post)
   const ins = 2 * IN;
   const railL = s.railings === 'both' || s.railings === 'left', railR = s.railings === 'both' || s.railings === 'right';
@@ -303,7 +311,7 @@ function writeStair(w, st, ctx = {}) {
     const polys = [];
     for (const f of floors) {
       const under = height + f.offset - f.thickness;   // the floor's underside over the bottom level
-      for (const pc of L.pieces) for (const t of (pc.kind === 'landing' ? [{ poly: pc.poly, z: pc.z }] : pc.treads || [])) if (t.z + STAIR_LIMITS.headroom > under) polys.push(t.poly);   // a spiral's post: none
+      for (const pc of L.pieces) for (const t of (pc.kind === 'landing' ? [{ poly: pc.poly, z: pc.z }] : pc.treads || [])) if (t.z + (LIM.headroom ?? STAIR_LIMITS.headroom) > under) polys.push(t.poly);   // a spiral's post: none
     }
     const loops = polys.length ? planLoops(polys, { snap: 0.5 }).outlines : [];
     for (const f of floors) for (const lp of loops) {

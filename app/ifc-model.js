@@ -20,6 +20,7 @@
  */
 import { openIfcAsync } from './ifc/open-async.js';
 import { t } from "./i18n.js";
+import { lengthUnitMm } from './ifc-util.js';   // GH.3-A: lengths in Properties follow the display unit
 
 const OTHER = -1; // storey key for elements outside any storey
 /** Keys per model: expressIDs stay below 2^26 (67 M lines — far beyond a file a browser can open), up to 63 models. */
@@ -216,7 +217,7 @@ export class IfcModel {
         if (!p) continue;
         const single = p.NominalValue !== undefined && p.NominalValue !== null && !Array.isArray(p.NominalValue);
         rows.push({
-          name: val(p.Name), value: fmt(p.NominalValue ?? p.EnumerationValues ?? p.ListValues),
+          name: val(p.Name), value: fmt(p.NominalValue ?? p.EnumerationValues ?? p.ListValues), len: single && /LENGTHMEASURE$/.test(p.NominalValue.name || ''),
           // What ifc-edit.js needs to change this value (single values only).
           edit: single ? { psetId: s.expressID, propId: p.expressID, fromType: !!s.fromType, setName, propName: val(p.Name), valueType: p.NominalValue.name || null } : null,
         });
@@ -224,11 +225,12 @@ export class IfcModel {
       for (const q of s.Quantities || []) {
         if (!q) continue;
         const v = q.LengthValue ?? q.AreaValue ?? q.VolumeValue ?? q.CountValue ?? q.WeightValue ?? q.TimeValue;
-        rows.push({ name: val(q.Name), value: fmt(v), edit: null });
+        rows.push({ name: val(q.Name), value: fmt(v), edit: null, len: q.LengthValue !== undefined && q.LengthValue !== null });
       }
       if (rows.length) out.sets.push({ name: setName + (s.fromType ? ' (type)' : ''), fromType: !!s.fromType, rows });
     }
     out.sets.sort((a, b) => a.name.localeCompare(b.name));
+    if (out.sets.some((s) => s.rows.some((r) => r.len))) { try { out.unitMm = lengthUnitMm(api, modelID); } catch (e) { out.unitMm = 1000; } }   // mm per file unit, for the rows marked `len`
     return out;
   }
 }

@@ -1,0 +1,7 @@
+{
+  "@locale": "ko",
+  "@name": "한국어",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "데이터 및 출처",
+  "data.bras": "BRAS, the Benchmark for Room Acoustical Simulation (TU Berlin 및 RWTH Aachen), 표면 설명, CC BY-SA 4.0"
+}

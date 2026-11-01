@@ -30,6 +30,18 @@ The arrows change the order, the pencil renames, the bin deletes. Each change is
 
 Click a walk to play it back as you walked it. {{key:Esc}} stops it.
 
+## Render a walkthrough as a video
+
+Click the film icon beside a walk. The video dialog draws every frame of the walk with the Render settings you chose last, at the size, frame rate and quality you pick here. Save it as a WebM or MP4 video, or as a ZIP with one picture per frame. Frames take as long as pictures do, so start with {{ui:Quick}}.
+
+## Narrate a walkthrough
+
+Click the speech-bubble icon beside a walk. Write one line for each thing said, and start a line with the time it starts (`12`, `0:12` or `1:02.5`); a line with no time follows the line above after the time it takes to say it. Pick the language, in the client's language if that is who will watch. {{ui:Preview}} plays the words with this computer's own voice and shows them as subtitles; the same happens whenever the walk plays. {{ui:Save with the walk}} keeps the narration in the IFC with the walk.
+
+Your own connected assistant can write the narration for you: ask it to look at the walk and the saved views, and it sets the lines in the language you name, as one undo step.
+
+The rendered video has no sound of its own, because a browser cannot record its own voice. Save the subtitles (`.srt` or `.vtt`) and add them to the video in your video player or editor. Which voices you can pick depends on the computer: a language with no voice installed still gets the subtitles.
+
 ## In the file
 
 Views and walks are kept in the IFC as the property set `CadCraft_Views` on the project: plain IFC that other programs ignore. They are in the first model's coordinates, so they still fit after the model is reloaded or another model is added.

@@ -18,6 +18,7 @@
  *   v.focusModelPoint(x, y, sheetKey);   // go to a model point (on that sheet if it shows it) and ring it
  */
 
+import { PadDetector } from './wheel-pad.js';   // 0.8 D7.56 (CadCraft's copy, byte-identical): a trackpad's two-finger swipe pans
 import { wheelFactor } from './input-mouse.js';   // 0.5 IP.1: buttons and wheel from the input profile
 
 export class DrawingView {
@@ -40,6 +41,21 @@ export class DrawingView {
     new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
     this.bind();
     this.resize();
+    // 0.8 Track ID: hand the view to the input-device layer (assets/js/app-devices-ui.js) — 2D: pan as a drag does, zoom as the
+    // wheel does (the drawing point under (x, y) stays put, same limits), fit = fit() (Zoom extents / double-click)
+    (window.ccViews ||= []).push({
+      el: canvas, kind: '2d',
+      pan: (dx, dy) => { this.cx -= dx / this.zoom; this.cy += dy / this.zoom; this.render(); },
+      zoom: (f, x = canvas.clientWidth / 2, y = canvas.clientHeight / 2) => {
+        if (!(f > 0)) return;
+        const [wx, wy] = this.toWorld(x, y);
+        this.zoom = Math.min(Math.max(this.zoom * f, 1e-9), 1e9);
+        this.cx = wx - (x - canvas.clientWidth / 2) / this.zoom;
+        this.cy = wy + (y - canvas.clientHeight / 2) / this.zoom;
+        this.render();
+      },
+      fit: () => this.fit(),
+    });
   }
 
   theme() {
@@ -200,8 +216,10 @@ export class DrawingView {
     };
     c.addEventListener('pointerup', end);
     c.addEventListener('pointercancel', end);
+    const pad = new PadDetector();
     c.addEventListener('wheel', (e) => {
       e.preventDefault();
+      if (pad.isSwipe(e)) { this.cx -= -e.deltaX / this.zoom; this.cy += -e.deltaY / this.zoom; this.render(); return; }   // D7.56: two fingers pan, a pinch and a mouse wheel zoom
       const r = c.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
       const [wx, wy] = this.toWorld(px, py);
       const f = Math.exp(-Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 120) / 120 * 0.2 * wheelFactor());   // 0.5 IP.1: the profile's wheel

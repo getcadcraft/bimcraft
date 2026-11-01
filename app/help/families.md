@@ -65,6 +65,10 @@ You do not have to start from nothing. {{ui:Duplicate}} copies a family with its
 
 A family file opened here is read as data and checked before anything is written. A family whose key is already in the model comes in as a separate family. A family that holds others (see Families inside, in the editor help) brings them along: the file lists them, and the model keeps the ones it already has.
 
+## Families in the Library
+
+Open {{ui:Families…}} and choose {{ui:From the Library…}} to see the families that have been shared in the Library. {{ui:Add to this project}} reads one like a family file: BimCraft checks every field before it makes anything, the family comes in as a family of its own, and it opens in the editor. Adding it is one undo step. To share your own, use {{ui:Save all as a library}} and send the file to the Library (the Library's staff publish a family file with a command, and each family is its own item with its sizes). If the Library cannot be reached the list says so and nothing changes.
+
 ## Other programs' types
 
 Types made by other programs show in the Families group too, grouped by a guess: by the part of their elements' names before the first colon, else by type names that differ only in their numbers. The family window says which guess it used. They are listed and you can select their elements, but they are not edited here: they have no family recipe.

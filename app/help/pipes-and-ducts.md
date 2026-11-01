@@ -21,6 +21,10 @@ The pipe snaps like walls do, and to other runs: start on a pipe's end to carry 
 
 A run started or ended on a piece of equipment's port takes its size and system and stays fixed to it: see [MEP equipment with ports](topic:mep-equipment) and [Connect pipes and ducts to equipment](topic:mep-connections).
 
+## Set the project's plumbing standard
+
+The first list in the pipe bar is the model's **plumbing standard**: **US (IPC, inches)** or **Brazil (ABNT, DN)**. It is saved in the model, so everyone who opens the file starts runs the same way. Under **US**, a new run starts in copper (water) or PVC Schedule 40 (drains), in inches, with the International Plumbing Code slope. Under **Brazil**, cold water starts as PVC soldável DN 25, sanitary and storm drains and vents as PVC esgoto DN 100 with the slope of NBR 8160, and hot water in copper. It also applies to a run started on a fixture's connector or an equipment port. Pipes already drawn keep their material and their own tables; the material list stays open, so you can still draw one Brazilian run in a US model on purpose. A file with no choice behaves as before: a new run follows the material in use.
+
 ## Draw a duct
 
 1. Choose {{ui:Duct}}. Pick the system (supply, return, exhaust or outside air) and the shape: round, rectangular or flat oval.

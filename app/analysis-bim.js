@@ -34,8 +34,10 @@
  * column nothing goes below (the `bases` rule, or a support of the user's own at that point). Releases: every beam end
  * follows `beamEnds`, members (braces) `braces`; `ends` (by GlobalId) overrides.
  */
+import { addPlates } from './frame/plate-bim.js';   // 0.8 SU.1056 step 2 (concrete-08): concrete slabs and walls as plates
 import { cleanFrame, sectionOf, torsionJ, polySection, STEEL, RELEASES, FORMAT, VERSION } from './frame/frame-model.js';
 import { solveFrame } from './frame/frame-solve.js';
+import { cleanConcrete, concreteMaterial, stiffnessFactor, diaphragmsOf } from './frame/frame-concrete.js';   // 0.8 SU.1056
 import { cleanAnalysis } from './frame/frame-panel.js';
 import { op } from './model-ops.js';
 import { findSection } from './shapes/sections.js';
@@ -300,7 +302,47 @@ export function readFrameElements(W, api, mid) {
     const kind = materialKind(mname);
     elements.push({ id, gid, cls, type, name: txt(val(el.Name) || val(el.Tag) || '', 60), a, b: e, U, V, sec: { ...sec, J, name: sec.name || txt(val(el.ObjectType) || '', 40) || prof.kind, ...(prof.kind === 'I' && prof.dims.d > 0 && prof.dims.bf > 0 && prof.dims.tw > 0 && prof.dims.tf > 0 ? { shape: { kind: 'I', d: prof.dims.d, bf: prof.dims.bf, tw: prof.dims.tw, tf: prof.dims.tf, r: prof.dims.r || 0, ...(rolledIShape([prof.name, val(el.ObjectType)], prof.dims) ? {} : { welded: true }) } } : {}) }, size, mat: { name: mname || kind, ...MATS[kind] }, approxJ: prof.kind === 'POLY' });   // (sec.shape, 0.7 SU.878: the I shape the Design checks need; rolled when its name and size are a table row — rolledIShape — else welded)
   }
-  return { elements, skipped, unit };
+  // 0.8 SU.1056 step 2 (concrete-08): CONCRETE slabs and walls (material name, like the members) as plain shapes for the plates in
+  // frame/plate-bim.js. A slab: its outline (and holes) and thickness, extruded up or down; a wall: a straight extrusion whose plan is
+  // (about) a rectangle, read as its centre line, thickness and height. What does not fit is left out and said, never guessed.
+  const slabs = [], walls = [];
+  const world = (M, [x, y]) => mul(apply(M, [x / toMm, y / toMm, 0]), toMm);
+  const shoelace = (L) => L.reduce((a, q, i) => { const n2 = L[(i + 1) % L.length]; return a + q[0] * n2[1] - n2[0] * q[1]; }, 0) / 2;
+  for (const [T, kind] of [['IFCSLAB', 'slab'], ['IFCWALL', 'wall'], ['IFCWALLSTANDARDCASE', 'wall']]) for (const id of ids(W[T])) {
+    const el = line(id);
+    if (materialKind(matName.get(id) || matName.get(typeOf.get(id)) || '') !== 'concrete') continue;
+    const gid = String(val(el.GlobalId) || '#' + id), cls = clsName(el);
+    const b = bodySolid(el);
+    if (b.why) { skipped.push({ id, gid, cls, why: b.why }); continue; }
+    const pd = line(ref(b.solid.SweptArea));
+    const prof = pd ? profileOf(pd) : { why: 'profile' };
+    if (prof.why) { skipped.push({ id, gid, cls, why: prof.why }); continue; }
+    const Mel = el.ObjectPlacement ? placement(ref(el.ObjectPlacement)) : I4();
+    const Msolid = compose(compose(Mel, b.M), b.solid.Position ? axis3(ref(b.solid.Position)) : I4());
+    const Mprof = compose(Msolid, prof.pos);
+    const ext = norm(applyDir(Msolid, dirOf(ref(b.solid.ExtrudedDirection))));
+    const depth = Number(val(b.solid.Depth)) * toMm;
+    if (!(depth > 0) || Math.abs(ext[2]) < 0.95) { skipped.push({ id, gid, cls, why: 'not-vertical' }); continue; }
+    const base = world(Mprof, [0, 0]), zA = base[2], zB = base[2] + ext[2] * depth;
+    const ref0 = { id: gid, ref: txt(val(el.Name) || val(el.Tag) || gid, 40) };
+    if (kind === 'slab') {
+      let outline = prof.loops[0].map((q) => world(Mprof, q)).map((q) => [q[0], q[1]]);
+      if (shoelace(outline) < 0) outline = outline.reverse();
+      const holes = prof.loops.slice(1).map((l) => l.map((q) => world(Mprof, q)).map((q) => [q[0], q[1]]));
+      slabs.push({ ...ref0, outline, ...(holes.length ? { holes } : {}), z: (zA + zB) / 2, t: depth });
+      continue;
+    }
+    const L0 = prof.loops[0];
+    let best = null;
+    for (let i = 0; i < L0.length; i++) { const q = L0[i], n2 = L0[(i + 1) % L0.length], d = Math.hypot(n2[0] - q[0], n2[1] - q[1]); if (!best || d > best.d) best = { d, th: Math.atan2(n2[1] - q[1], n2[0] - q[0]) }; }
+    const c = Math.cos(-best.th), sn = Math.sin(-best.th), R = L0.map(([x, y]) => [x * c - y * sn, x * sn + y * c]);
+    const x0 = Math.min(...R.map((q) => q[0])), x1 = Math.max(...R.map((q) => q[0])), y0 = Math.min(...R.map((q) => q[1])), y1 = Math.max(...R.map((q) => q[1]));
+    if (Math.abs(shoelace(R)) < 0.9 * (x1 - x0) * (y1 - y0) || prof.loops.length > 1) { skipped.push({ id, gid, cls, why: 'plate-shape' }); continue; }
+    const back = ([x, y]) => [x * Math.cos(best.th) - y * Math.sin(best.th), x * Math.sin(best.th) + y * Math.cos(best.th)];
+    const ym = (y0 + y1) / 2, a2 = world(Mprof, back([x0, ym])), b2 = world(Mprof, back([x1, ym]));
+    walls.push({ ...ref0, from: [a2[0], a2[1]], to: [b2[0], b2[1]], z0: Math.min(zA, zB), z1: Math.max(zA, zB), t: y1 - y0 });
+  }
+  return { elements, skipped, unit, slabs, walls };
 }
 
 /** An I-shape's outline with its four root fillets (arcs in 6 steps), centred, web along Y. */
@@ -332,8 +374,10 @@ function closest(p, o, q0, q1) {
 }
 
 /** The analytical model of the elements. */
-export function frameOfElements(elements, analysis, { name = '' } = {}) {
+export function frameOfElements(elements, analysis, { name = '', slabs = [], walls = [] } = {}) {
   const A = analysis;
+  const conc = cleanConcrete(A.concrete);   // 0.8 SU.1056
+  let nConc = 0, nCracked = 0;
   const notes = [], skipped = [];
   // 1. member ends carried onto the nearest other axis
   const ends = elements.map((el) => [el.a.slice(), el.b.slice()]);
@@ -380,10 +424,15 @@ export function frameOfElements(elements, analysis, { name = '' } = {}) {
     cuts.sort((x, y) => x - y);
     const at = cuts.filter((s, i) => i === 0 || s - cuts[i - 1] > MERGE_TOL);
     if (L - at[at.length - 1] > MERGE_TOL) at.push(L); else at[at.length - 1] = L;
-    const skey = el.sec.name + '|' + [el.sec.A, el.sec.Iy, el.sec.Iz, el.sec.J].map((v) => v.toPrecision(8)).join('|');
-    if (!sections.has(skey)) sections.set(skey, { id: 's' + (sections.size + 1), name: el.sec.name || 's' + (sections.size + 1), A: el.sec.A, Iy: el.sec.Iy, Iz: el.sec.Iz, J: el.sec.J, ...(el.sec.shape ? { shape: el.sec.shape } : {}) });
-    const mkey = el.mat.kind + '|' + el.mat.name;
-    if (!materials.has(mkey)) materials.set(mkey, { id: 'g' + (materials.size + 1), name: el.mat.name, E: el.mat.E, G: el.mat.G, rho: el.mat.rho });
+    // 0.8 SU.1056: with concrete settings in the analysis, a concrete element is analysed as concrete (ACI 318-19 19.2.2.1.b) with cracked bending stiffness (Table 6.6.3.1.1(a)); without them nothing changes
+    const cc = !!conc && (el.mat.kind === 'concrete' || !!conc.forms[String(el.sec.name).toUpperCase()]);
+    const vertical = Math.abs(b[2] - a[2]) > 0.999999 * L;
+    const cf = cc ? stiffnessFactor(conc.mat, vertical) : 1;
+    if (cc) { nConc++; if (cf !== 1) nCracked++; }
+    const skey = el.sec.name + '|' + [el.sec.A, el.sec.Iy, el.sec.Iz, el.sec.J].map((v) => v.toPrecision(8)).join('|') + (cf === 1 ? '' : '|' + cf);
+    if (!sections.has(skey)) sections.set(skey, { id: 's' + (sections.size + 1), name: el.sec.name || 's' + (sections.size + 1), A: el.sec.A, Iy: el.sec.Iy * cf, Iz: el.sec.Iz * cf, J: el.sec.J, ...(el.sec.shape ? { shape: el.sec.shape } : {}) });
+    const mkey = cc ? 'conc|' + conc.mat.fc : el.mat.kind + '|' + el.mat.name;
+    if (!materials.has(mkey)) materials.set(mkey, cc ? { id: 'g' + (materials.size + 1), name: "f'c " + conc.mat.fc + ' MPa', ...concreteMaterial(conc.mat) } : { id: 'g' + (materials.size + 1), name: el.mat.name, E: el.mat.E, G: el.mat.G, rho: el.mat.rho });
     // roll: the drawn section axes against the default local axes (frame-model.js axesOf), plus the principal turn
     const ez0 = Math.abs(ux[2]) > 0.999999 ? [1, 0, 0] : norm([-ux[2] * ux[0], -ux[2] * ux[1], 1 - ux[2] * ux[2]]);
     const ey0 = cross(ez0, ux);
@@ -435,11 +484,18 @@ export function frameOfElements(elements, analysis, { name = '' } = {}) {
     }
     return { id: c.id, name: c.name, kind: c.kind, selfWeight: c.selfWeight, loads };
   });
-  const { model, warnings } = cleanFrame({
+  const raw = {
     format: FORMAT, version: VERSION, name,
     nodes: nodes.map((x) => ({ id: x.id, x: x.p[0], y: x.p[1], z: x.p[2] })), materials: [...materials.values()], sections: [...sections.values()],
     members, supports: [...supports].map(([node, fix]) => ({ node, fix })), cases, combos: A.combos,
-  });
+    diaphragms: diaphragmsOf(A.concrete?.floors),   // 0.8 SU.1056: the floors people set up are rigid diaphragms (none: frame-only, as before)
+  };
+  if (slabs.length || walls.length) {   // 0.8 SU.1056 step 2: concrete slabs and walls become plates, merged with the frame's nodes
+    const pl = addPlates(raw, { slabs, walls }, { fc: A.concrete?.mat?.fc ?? 28, size: 0 });
+    for (const x of pl.skipped) skipped.push({ id: x.id, why: x.why });
+    if (pl.plates?.length) notes.push({ key: 'frame.note.ifc-plates', n: pl.plates.length });
+  }
+  const { model, warnings } = cleanFrame(raw);
   notes.push({ key: 'frame.note.ifc-elements', n: elements.length });
   notes.push({ key: A.bases === 'pinned' ? 'frame.note.bases-pinned' : 'frame.note.bases-fixed', n: nBases });
   const nb = elements.filter((e) => e.type === 'beam').length * 2, nr = elements.filter((e) => e.type === 'brace').length;
@@ -451,13 +507,21 @@ export function frameOfElements(elements, analysis, { name = '' } = {}) {
   const approx = elements.filter((e) => e.approxJ).length;
   if (approx) notes.push({ key: 'frame.note.ifc-approx-j', n: approx });
   notes.push({ key: 'frame.note.ifc-material', n: 0 }, { key: 'frame.note.worklines', n: elements.length });
+  if (nConc) notes.push({ key: nCracked ? 'frame.note.concrete-cracked' : 'frame.note.concrete-gross', n: nConc });
   if (skipped.length) notes.push({ key: 'frame.note.skipped', n: skipped.length });
   return { model, parts, nodes, skipped, notes, warnings, snapped };
 }
 
+/** 0.8 SU.1056: the sections the model's members use, with their properties (the Concrete block sets up a rectangle from A and Iy). */
+export function sectionsOfElements(elements) {
+  const seen = new Map();
+  for (const e of elements) { const k = String(e.sec.name).toUpperCase(); if (!seen.has(k)) seen.set(k, { name: e.sec.name, A: e.sec.A, Iy: e.sec.Iy, Iz: e.sec.Iz }); }
+  return [...seen.values()];
+}
+
 export function analyseIfc(W, api, mid, analysis, { name = '' } = {}) {
   const r = readFrameElements(W, api, mid);
-  const frame = frameOfElements(r.elements, analysis, { name });
+  const frame = frameOfElements(r.elements, analysis, { name, slabs: r.slabs, walls: r.walls });
   frame.skipped.push(...r.skipped.map((s) => ({ id: s.gid, why: s.why, cls: s.cls })));
   if (r.skipped.length) frame.notes.push({ key: 'frame.note.ifc-not-read', n: r.skipped.length });
   frame.elements = r.elements;

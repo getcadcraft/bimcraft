@@ -15,6 +15,8 @@
 import { planMatrix, slicePoints, SliceGrid, squareAngle, floorZ, planAdjust, rotZ, moveZ } from './cloud-slice.js';
 import { mul4 } from './ifc-util.js';
 import { fmtLen, parseLen } from './model-units.js';
+import { proposeFromScan } from './scan-propose.js';   // 0.8 EG.37 (spikes_PART_4)
+import { scanChange, pick } from './scan-build.js';
 
 const CUT = 1200;
 const MIN_WALL_POINTS = 40;   // fewer points on straight walls than this: no turn is guessed
@@ -69,9 +71,51 @@ export function mountCloudSlice(modelUi, o) {
       root.querySelector('[data-scan-floor]')?.addEventListener('click', () => align('floor'));
       root.querySelector('[data-scan-square]')?.addEventListener('click', () => align('square'));
       root.querySelector('[data-scan-reset]')?.addEventListener('click', () => align('reset'));
+      root.querySelector('[data-scan-propose]')?.addEventListener('click', () => propose());
     }
     if (b) b.setAttribute('aria-pressed', String(show));
     const th = root.querySelector('[data-scan-thick]'); if (th && document.activeElement !== th) th.value = fmtLen(thick, A.units());
+  }
+  /** 0.8 EG.37: walls and doors proposed from the slice, a checkbox for each; Accept draws the ones kept as one undo step on this level. */
+  let psrc = null;
+  function publish(list) {
+    try {
+      if (!window.ccProblems?.source) return;
+      psrc = psrc || window.ccProblems.source({ id: 'bimcraft.scan', kind: 'import', label: t('model.scan.source') });
+      psrc.set(list.map((p) => ({ code: p.code, severity: p.severity, text: p.text, about: [{ kind: 'file', id: 'scan' }] })));
+    } catch (e) { /* the panel is optional */ }
+  }
+  function propose() {
+    const box = A.root.querySelector('[data-scan-list]');
+    if (!box) return;
+    cut(true);
+    if (!R.slice?.n) { A.host.status(t('model.scan.noslice'), true); return; }
+    const r = proposeFromScan(R.slice.xy, R.slice.n);
+    publish(r.problems);
+    const doc = box.ownerDocument;
+    box.replaceChildren(); box.hidden = false;
+    const items = r.proposals;
+    if (!items.length) { const p = doc.createElement('p'); p.className = 'bc-muted'; p.textContent = t('model.scan.nothing'); box.append(p); return; }
+    const head = doc.createElement('p'); head.className = 'bc-muted'; head.textContent = t('model.scan.found', { walls: items.filter((x) => x.kind === 'wall').length, doors: items.filter((x) => x.kind === 'door').length, rooms: r.rooms.length });
+    box.append(head);
+    const boxes = [];
+    for (const it of items) {
+      const lab = doc.createElement('label'); lab.className = 'bc-mb-field';
+      const cb = doc.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.value = it.id; cb.dataset.scanItem = it.id;
+      const sp = doc.createElement('span');
+      sp.textContent = it.kind === 'wall' ? t('model.scan.item.wall', { id: it.id, len: fmtLen(Math.hypot(it.b[0] - it.a[0], it.b[1] - it.a[1]), A.units()) }) : t('model.scan.item.door', { id: it.id, wall: it.wall, w: fmtLen(it.width, A.units()) });
+      lab.append(cb, ' ', sp); box.append(lab); boxes.push(cb);
+    }
+    const ok = doc.createElement('button'); ok.type = 'button'; ok.className = 'bc-tool'; ok.dataset.scanAccept = ''; ok.textContent = t('model.scan.accept');
+    ok.addEventListener('click', () => {
+      const ids = boxes.filter((b) => b.checked).map((b) => b.value);
+      const kept = pick(r, ids);
+      if (!kept.some((x) => x.kind === 'wall')) { A.host.status(t('model.scan.none.kept'), true); return; }
+      A.commit(scanChange(kept, { storey: A.S.data?.levels?.find((l) => l.id === A.S.level)?.guid || A.S.level }), { label: t('model.scan.undo'), verb: t('model.verb.drew') });
+      box.hidden = true; box.replaceChildren();
+      A.host.status(t('model.scan.drawn', { n: kept.length }));
+    });
+    box.append(ok);
   }
   /** Align the cloud: its floor to this level, its walls square to the building, or back as it was placed. */
   function align(what) {

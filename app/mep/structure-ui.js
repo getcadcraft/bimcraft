@@ -15,6 +15,7 @@ import { SETS, setKeys, clearances, openings, openingsCsv, openingTopics, DEFAUL
 import { readRuns, systemLabel } from '../mep-model.js';
 import { elementsOf } from '../clash.js';
 import { ModelWriter } from '../model-write.js';
+import { getDisplayUnits, lenMark } from '../model-units.js';   // GH.3-A: the gap in the display unit
 import { writeBcf, newGuid } from '../bcf.js';
 
 const SET_ORDER = ['mep', 'walls', 'slabs', 'beams', 'columns', 'structure'];
@@ -114,7 +115,7 @@ export function mountStructure(ctx) {
         el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-mep-openings': '', onClick: () => opens() }, t('mep.st.open'))),
     ];
     if (S.soft) kids.push(el('ul', { className: 'bc-clash-results', 'data-mep-soft-list': '' }, S.soft.map((c, i) => el('li', {}, el('button', { type: 'button', className: 'bc-clash-row', 'data-mep-soft-row': String(i), onClick: () => ctx.show([c.a, c.b]) },
-      el('span', {}, t('clash.row', { a: ctx.nameOfKey(c.a), b: ctx.nameOfKey(c.b) })), el('span', { className: 'n' }, t('mep.st.soft.gap', { gap: Math.round(c.gap * 1000), need: Math.round(c.need * 1000) })))))));
+      el('span', {}, t('clash.row', { a: ctx.nameOfKey(c.a), b: ctx.nameOfKey(c.b) })), el('span', { className: 'n' }, t('mep.st.soft.gap.u', { gap: lenMark(c.gap * 1000, getDisplayUnits()), need: lenMark(c.need * 1000, getDisplayUnits()) })))))));
     if (S.open) {
       kids.push(el('ul', { className: 'bc-clash-results', 'data-mep-open-list': '' }, S.open.map((r, i) => el('li', {}, el('button', { type: 'button', className: 'bc-clash-row', 'data-mep-open-row': String(i), onClick: () => ctx.show([r.part, r.element]) },
         el('span', {}, t('mep.st.open.row', { n: r.n, size: sizeText(r), what: ctx.nameOfKey(r.element) })), el('span', { className: 'n' }, levelName(r.storey)))))));

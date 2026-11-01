@@ -4,12 +4,13 @@
  * play the views in order, and record a walkthrough while walking and play it back. Kept in the IFC (views-bim.js); each
  * save, rename, reorder or delete is one undo step. Imported on first use by bimcraft.js ("Views").
  *
- *   mountViews({ root, parent, viewer(), editor(), frameC(), stopWalk(), status(text, isError, fade), afterEdit() })
+ *   mountViews({ root, parent, viewer(), editor(), frameC(), stopWalk(), status(text, isError, fade), afterEdit(), renderWalk(walk) })
  *     → { open(), close(), isOpen(), refresh() }
  */
 import { t } from "./i18n.js";
 import { readViews, writeViewsOp, cleanName, viewAt, ease, MAX_WALK } from './views-bim.js';
 import { toIfcPoint, toIfcDir, fromIfcPoint, fromIfcDir } from './bcf.js';
+import { parseScript, scriptOf, cueAt, endOf, readSeconds, toSrt, toVtt, voiceFor, cleanNarration } from './narration.js';   // 0.8 EG.50
 
 const CSS = `
 .bc-views { position: absolute; left: .75rem; bottom: .75rem; z-index: 30; width: min(19rem, calc(100% - 1.5rem)); max-height: 70%;
@@ -25,6 +26,10 @@ const CSS = `
 .bc-views h3 { margin: .25rem 0 0; font-size: var(--fs-sm, .875rem); }
 .bc-views-note { margin: 0; color: var(--ink-2); }
 .bc-views .bc-ic { padding: .1rem .35rem; }
+.bc-subtitle { position: absolute; left: 50%; bottom: 3.2rem; transform: translateX(-50%); z-index: 35; max-width: min(46rem, 90%); padding: .3rem .7rem; text-align: center;
+  color: #fff; background: rgba(0,0,0,.72); border-radius: var(--radius, 2px); font-size: 1.05rem; line-height: 1.35; pointer-events: none; }
+.bc-narr textarea { width: 100%; min-height: 9rem; font-family: inherit; }
+.bc-narr-row { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: .4rem 0; }
 `;
 
 function el(tag, attrs = {}, ...kids) {
@@ -70,7 +75,42 @@ export function mountViews(o) {
     v.controls.update();
     v.render();
   }
-  function stopPlaying() { if (playing) { playing.stop = true; playing = null; renderPanel(); } }
+  // ---- narration (0.8 EG.50): subtitles over the 3D view and the computer's own voice, from the walk's cues ----
+  const synth = () => (typeof window !== 'undefined' && window.speechSynthesis && typeof window.SpeechSynthesisUtterance === 'function' ? window.speechSynthesis : null);
+  let subEl = null, lastCue = null, spoken = [];   // spoken: the cues said so far (tests read window.bimcraftNarration)
+  function showSubtitle(text) {
+    if (!text) { subEl?.remove(); subEl = null; return; }
+    if (!subEl) { subEl = el('div', { className: 'bc-subtitle', role: 'status', 'aria-live': 'polite', dataset: { subtitle: '' } }); (o.parent || o.root).append(subEl); }
+    subEl.textContent = text;
+  }
+  function say(cue, lang, slot) {
+    spoken.push({ t: cue.t, text: cue.text, lang });
+    const sy = synth();
+    if (!sy || o.muted?.()) return;
+    try {
+      sy.cancel();
+      const u = new window.SpeechSynthesisUtterance(cue.text);
+      if (lang) u.lang = lang;
+      const v = voiceFor(sy.getVoices(), lang || document.documentElement.lang || '');
+      if (v) u.voice = v;
+      u.rate = Math.max(0.85, Math.min(1.6, readSeconds(cue.text) / Math.max(1, slot)));   // a short slot: a little faster, never garbled
+      sy.speak(u);
+    } catch (e) { /* no voice on this computer: the subtitles still show */ }
+  }
+  const narrator = {
+    tick(walk, sec, duration) {
+      const n = walk.narration;
+      if (!n) return;
+      const cue = cueAt(n.cues, sec, duration);
+      if (cue === lastCue) return;
+      lastCue = cue;
+      showSubtitle(cue ? cue.text : '');
+      if (cue) { const i = n.cues.indexOf(cue); say(cue, n.lang, endOf(n.cues, i, duration) - cue.t); }
+    },
+    stop() { lastCue = null; showSubtitle(''); try { synth()?.cancel(); } catch (e) { /* none */ } },
+  };
+  window.bimcraftNarration = { get spoken() { return spoken.slice(); }, reset() { spoken = []; } };   // for tests
+  function stopPlaying() { narrator.stop(); if (playing) { playing.stop = true; playing = null; renderPanel(); } }
   /** Go to a saved view, moving there smoothly (ms 0 = at once). → a promise when there. */
   function goTo(view, ms = 900) {
     const v = o.viewer(), C = o.frameC();
@@ -115,18 +155,72 @@ export function mountViews(o) {
     renderPanel();
     v.controls.enabled = false;
     const start = performance.now(), end = walk.pts[walk.pts.length - 1].t;
+    narrator.stop();
     o.status(t('views.walk.playing', { name: walk.name }));
     const step = (now) => {
       const s = (now - start) / 1000;
       const at = viewAt(walk, s), pos = fromIfcPoint(C, at.pos), dir = fromIfcDir(C, at.dir);
+      narrator.tick(walk, s, end);
       v.camera.position.set(...pos); v.camera.lookAt(pos[0] + dir[0], pos[1] + dir[1], pos[2] + dir[2]); v.render();
       if (playing && !playing.stop && s < end) { requestAnimationFrame(step); return; }
+      narrator.stop();
       v.controls.enabled = true;
       v.controls.target.set(pos[0] + dir[0] * 3, pos[1] + dir[1] * 3, pos[2] + dir[2] * 3); v.controls.update(); v.render();
       if (playing) { playing = null; renderPanel(); o.status(t('views.walk.done'), false, true); }
     };
     requestAnimationFrame(step);
   }
+  /** The narration editor: one line per cue ("0:12 text", or just text, which follows the line above), the language, a preview, subtitle files. */
+  function editNarration(walk) {
+    const dur = walk.pts[walk.pts.length - 1].t;
+    const n = walk.narration;
+    const area = el('textarea', { className: 'bc-input', rows: 8, 'aria-label': t('narr.script'), dataset: { narrScript: '' }, spellcheck: 'true' });
+    area.value = n ? scriptOf(n.cues) : '';
+    const sy = synth();
+    const langs = [...new Set([document.documentElement.lang, ...((sy ? sy.getVoices() : []).map((v) => v.lang)), 'en-US', 'es-MX', 'fr-FR', 'de-DE', 'pt-BR', 'it-IT', 'ja-JP', 'zh-CN'].filter(Boolean))];
+    const dl = el('datalist', { id: 'bc-narr-langs' }, langs.map((l) => el('option', { value: l })));
+    const lang = el('input', { type: 'text', className: 'bc-input', size: '8', list: 'bc-narr-langs', maxlength: '16', value: n?.lang || document.documentElement.lang || 'en-US', 'aria-label': t('narr.lang'), dataset: { narrLang: '' } });
+    const note = el('p', { className: 'bc-views-note', role: 'status', dataset: { narrNote: '' } }, sy ? t('narr.hint', { s: Math.round(dur) }) : t('narr.novoice'));
+    const parsed = () => { const r = parseScript(area.value, dur); return { ...r, n: cleanNarration({ lang: lang.value.trim(), cues: r.cues }) }; };
+    const dlg = el('dialog', { className: 'bc-dialog bc-narr', 'aria-labelledby': 'bc-narr-h', dataset: { narrDialog: '' } });
+    const file = (name, text, type) => { const a = el('a', { href: URL.createObjectURL(new Blob([text], { type })), download: name }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+    const base = cleanName(walk.name) || 'walk';
+    const btn = (label, cls, fn, data) => { const b = el('button', { type: 'button', className: cls + ' btn-sm-cc', dataset: data || {} }, label); b.addEventListener('click', fn); return b; };
+    const close = () => { narrator.stop(); dlg.close(); dlg.remove(); };
+    const saveIt = () => {
+      const r = parsed();
+      const s = state(), list = s.walks.map((w) => (w.name === walk.name ? { ...w, narration: r.n || undefined } : w));
+      if (!save({ views: s.views, walks: list }, walk.name)) return false;
+      walk.narration = r.n || undefined;
+      o.status(r.n ? t('narr.saved', { n: r.n.cues.length, name: walk.name }) : t('narr.cleared', { name: walk.name }), false, true);
+      return true;
+    };
+    dlg.append(el('form', { method: 'dialog' },
+      el('h2', { className: 'bc-h', id: 'bc-narr-h' }, t('narr.h', { name: walk.name })),
+      el('p', { className: 'bc-views-note' }, t('narr.lede')),
+      area, el('div', { className: 'bc-narr-row' }, el('label', {}, t('narr.lang'), ' ', lang), dl), note,
+      el('div', { className: 'bc-narr-row' },
+        btn(t('narr.preview'), 'btn-line', () => {
+          const r = parsed();
+          if (!r.n) { note.textContent = t('narr.empty'); return; }
+          narrator.stop(); spoken = [];
+          const w = { ...walk, narration: r.n }, t0 = performance.now();
+          const tick = () => { const sec = (performance.now() - t0) / 1000; narrator.tick(w, sec, dur); if (sec < dur && dlg.isConnected) requestAnimationFrame(tick); else narrator.stop(); };
+          requestAnimationFrame(tick);
+          note.textContent = r.problems.length ? r.problems.map((p) => p.text).join(' ') : t('narr.previewing');
+        }, { narrPreview: '' }),
+        btn(t('narr.stop'), 'btn-line', () => narrator.stop()),
+        btn(t('narr.srt'), 'btn-line', () => { const r = parsed(); if (!r.n) { note.textContent = t('narr.empty'); return; } file(base + '.srt', toSrt(r.n.cues, dur), 'application/x-subrip'); }, { narrSrt: '' }),
+        btn(t('narr.vtt'), 'btn-line', () => { const r = parsed(); if (!r.n) { note.textContent = t('narr.empty'); return; } file(base + '.vtt', toVtt(r.n.cues, dur), 'text/vtt'); }, { narrVtt: '' })),
+      el('div', { className: 'bc-narr-row' },
+        btn(t('narr.save'), 'btn-plot', () => { if (saveIt()) close(); }, { narrSave: '' }),
+        btn(t('dialog.cancel'), 'btn-line', close, { narrCancel: '' }))));
+    (o.parent || o.root).append(dlg);
+    dlg.addEventListener('cancel', () => narrator.stop());
+    dlg.showModal();
+    area.focus();
+  }
+
   function toggleRecord() {
     const v = o.viewer();
     if (recording) {
@@ -193,7 +287,7 @@ export function mountViews(o) {
     const wl = el('ul', { dataset: { walkList: '' } }, walks.map((w, i) => {
       const play = el('button', { type: 'button', className: 'btn-line btn-sm-cc bc-views-go', dataset: { walkPlay: String(i) } }, t('views.walk.item', { name: w.name, s: Math.round(w.pts[w.pts.length - 1].t) }));
       play.addEventListener('click', () => { stopPlaying(); playWalk(w); });
-      return el('li', {}, play, ic('bi-trash', t('views.delete'), () => delWalk(i)));
+      return el('li', {}, play, ic('bi-chat-left-text', t(w.narration ? 'narr.edit' : 'narr.add'), () => { stopPlaying(); editNarration(w); }, { walkNarr: String(i) }), o.renderWalk ? ic('bi-camera-reels', t('views.walk.video'), () => { stopPlaying(); o.renderWalk(w); }, { walkVideo: String(i) }) : null, ic('bi-trash', t('views.delete'), () => delWalk(i)));   // 0.8 WALK: Render video of this walk
     }));
     body.replaceChildren(
       el('div', { className: 'bc-views-save' }, nameIn, saveBtn),

@@ -14,6 +14,9 @@
  *     download(blob, name), fileBase() → string, onClose()
  *     lamps() → [{key, name, lumens, on}], setLamp(key, {on | lumens})   optional: the model's lamps listed to switch and dim
  *                                    (BimCraft's light fixtures; ModelCraft edits its lamps in its own Lights panel)
+ *     engines                        optional: the engine registry (engines.js); default = the page's shared one for `where`
+ *     where: 'web' | 'studio'        which edition this is (outside engines run only in Studio; the web saves their package)
+ *     handoff(settings, {w, h}) → {files, manifest}   optional: the hand-off package for an outside engine (handoff.js, RE.2)
  *     parent                         where the dialog goes (the app's root, so its own key handling sees a dialog open)
  *   }) → {dialog, close()}
  *
@@ -25,6 +28,7 @@
 import { t, locale } from "../i18n.js";
 import { QUALITY, SIZES, SKIES, LOOK_KEYS, MODES, MINUTES, IES_MAX_TEXT, IES_MAX_LAMPS, CAM_FSTOPS, CAM_SHUTTERS, CAM_ISOS, CAM_BLADES, PROJECTIONS, cleanSettings, sizeFor } from "./looks.js";
 import { ev100 } from "./pt-camera.js";
+import { BUILTIN, sharedRegistry, engineFor, modeFor, cleanEngineOpts, defaultEngine, saveDefaultEngine } from "./engines.js";
 import { compose, mixKey, cleanMix, SHOW, MAX_PRESETS } from "./pt-mix.js";
 import { VIEWS, STREAKS, cleanPost } from "./pt-post.js";
 import { SESSION, hdriFor, lutFor, volumeFor } from "./session.js";
@@ -111,6 +115,15 @@ export function openRenderDialog(o) {
     return t('render.size.' + k, { w: z.w, h: z.h });
   };
   const sizeSel = el('select', { className: 'select-cc', dataset: { renderSize: '' } }, Object.keys(SIZES).map((k) => opt(k, sizeLabel(k), settings.size)));
+  // 0.8 RE.1: the Engine choice above Mode. Our two engines are the Mode's two values; the rest are plug-ins (engines.js).
+  const where = o.where || (globalThis.cadcraftDesktop ? 'studio' : 'web');   // Studio's shell hands the page window.cadcraftDesktop
+  const registry = o.engines || sharedRegistry(where);
+  const engineSel = el('select', { className: 'select-cc', dataset: { renderEngine: '' } }, [opt('', t('render.engine.loading'), '')]);
+  const engineNote = el('p', { className: 'cc-render-note', dataset: { renderEngineNote: '' } }, '');
+  const engineFs = el('fieldset', { dataset: { renderEngineOpts: '' }, hidden: true });
+  let engineRows = [];
+  const engineId = () => engineSel.value || engineFor(settings);
+  const isOutside = () => !BUILTIN.includes(engineId());
   const modeSel = el('select', { className: 'select-cc', dataset: { renderMode: '' } }, MODES.map((k) => opt(k, t('render.mode.' + k), settings.mode)));
   const minSel = el('select', { className: 'select-cc', dataset: { renderMinutes: '' } }, MINUTES.map((k) => opt(String(k), k ? t('render.minutes', { n: k }) : t('render.minutes.none'), String(settings.minutes))));
   const minRow = el('label', { dataset: { renderMinutesRow: '' } }, t('render.limit'), minSel);
@@ -414,7 +427,10 @@ export function openRenderDialog(o) {
   const closeBtn = el('button', { type: 'button', className: 'btn-line btn-sm-cc', dataset: { renderClose: '' } }, t('render.close'));
 
   const form = el('form', { className: 'cc-render-form', method: 'dialog' },
-    el('label', {}, t('render.mode'), modeSel),
+    el('label', {}, t('render.engine'), engineSel),
+    engineNote,
+    engineFs,
+    el('label', { dataset: { renderModeRow: '' } }, t('render.mode'), modeSel),
     modeNote,
     minRow,
     el('label', {}, t('render.size'), sizeSel),
@@ -441,9 +457,51 @@ export function openRenderDialog(o) {
     el('div', { className: 'cc-render-body' }, pic, form),
     el('div', { className: 'cc-render-foot' }, status, goBtn, resumeBtn, fmtSel, saveBtn, openBtn, openFile, closeBtn));
 
+  /** The outside engine's own fields (its `settings` list) → {engineId: {key: value}} for the engine now chosen. */
+  function readEngineOpts() {
+    const id = engineSel.value, row = engineRows.find((r) => r.id === id);
+    if (!row || !row.settings.length) return {};
+    const cur = {};
+    for (const f of row.settings) { const i = engineFs.querySelector('[data-engine-field="' + f.key + '"]'); if (i) cur[f.key] = f.type === 'check' ? i.checked : f.type === 'number' ? Number(i.value) : i.value; }
+    return { [id]: cleanEngineOpts(cur, row.settings) };
+  }
+  /** Fill the Engine select from the registry: unavailable engines stay listed, with the reason (D1). */
+  async function loadEngines() {
+    if (where === 'studio' && !o.engines) { try { (await import('./engine-unreal.js')).registerUnreal(registry, globalThis); } catch { /* the engines Studio has are simply not listed */ } }   // 0.8 RE.5 (no Blender: rule 43, RE.4 decided 2026-10-30)
+    if (!o.engines) { try { (await import('./engine-unreal.js')).registerUnrealFile(registry); } catch { /* the Unreal folder file is simply not listed */ } }   // 0.8 RE.5 the folder as a zip, web and Studio
+    if (!o.engines) { try { await (await import('./engine-open.js')).registerOpenIn(registry, globalThis); } catch { /* Open in … is simply not listed */ } }   // 0.8 RE.6
+    engineRows = await registry.describe(t);
+    const want = settings.engine || defaultEngine(globalThis.localStorage) || engineFor(settings);
+    const cur = engineRows.some((r) => r.id === want) ? want : engineFor(settings);
+    engineSel.replaceChildren(...engineRows.map((r) => {
+      const why = r.saveOnly ? t('render.engine.why.save_only') : r.ok ? '' : t('render.engine.why.' + (r.why || 'unknown'), { name: r.name });
+      const op = opt(r.id, r.name + (why ? ' — ' + why : ''), cur);
+      op.disabled = !r.ok && !r.saveOnly;
+      return op;
+    }));
+    engineSel.value = cur;
+    if (cur !== settings.engine && !BUILTIN.includes(cur)) { settings = { ...settings, engine: cur }; }
+    if (BUILTIN.includes(cur)) modeSel.value = modeFor(cur);
+    drawEngineFields();
+    syncForm();
+  }
+  function drawEngineFields() {
+    const row = engineRows.find((r) => r.id === engineSel.value);
+    engineFs.replaceChildren();
+    engineFs.hidden = !row || !row.settings.length;
+    if (engineFs.hidden) return;
+    const mine = cleanEngineOpts((settings.engineOpts || {})[row.id], row.settings);
+    engineFs.append(el('legend', {}, t('render.engine.opts', { name: row.name })), ...row.settings.map((f) => {
+      const lab = f.labelKey ? t(f.labelKey) : f.label || f.key;
+      const input = f.type === 'select' ? el('select', { className: 'select-cc', dataset: { engineField: f.key } }, f.options.map((p) => opt(String(p.value), p.labelKey ? t(p.labelKey) : p.label || String(p.value), String(mine[f.key]))))
+        : f.type === 'check' ? el('input', { type: 'checkbox', checked: !!mine[f.key], dataset: { engineField: f.key } })
+        : el('input', { type: f.type === 'number' ? 'number' : 'text', value: String(mine[f.key] ?? ''), min: f.min, max: f.max, step: f.step, className: 'form-control form-control-sm', dataset: { engineField: f.key } });
+      return el('label', f.type === 'check' ? { className: 'cc-render-check' } : {}, ...(f.type === 'check' ? [input, lab] : [lab, input]));
+    }));
+  }
   const readForm = () => {
     const s = {
-      mode: modeSel.value, minutes: Number(minSel.value),
+      mode: modeSel.value, engine: engineSel.value && !BUILTIN.includes(engineSel.value) ? engineSel.value : '', engineOpts: { ...settings.engineOpts, ...readEngineOpts() }, minutes: Number(minSel.value),
       size: sizeSel.value, quality: qualSel.value, sky: skySel.value, exposure: Number(expIn.value), edges: edgesIn.checked, ground: groundIn.checked,
       sun: null, looks: {},
       turbidity: Number(turbIn.value), envRotation: Number(rotIn.value), envExposure: Number(envExpIn.value),
@@ -464,9 +522,15 @@ export function openRenderDialog(o) {
     return cleanSettings(s);
   };
   const syncForm = () => {
+    const ext = isOutside();
+    if (!ext && engineSel.value && modeSel.value !== modeFor(engineSel.value)) modeSel.value = modeFor(engineSel.value);
+    const erow = engineRows.find((r) => r.id === engineSel.value);
+    engineNote.textContent = erow ? (erow.saveOnly ? t('render.engine.note.save_only', { name: erow.name }) : erow.ok && erow.version ? t('render.engine.note.version', { name: erow.name, version: erow.version }) : '') : '';
+    modeSel.closest('label').hidden = ext;
+    if (!running && typeof goBtn !== 'undefined') goBtn.textContent = goLabel();
     const hq = modeSel.value === 'hq';
     minRow.hidden = !hq;
-    modeNote.textContent = t(hq ? 'render.mode.hq.note' : 'render.mode.fast.note');
+    modeNote.textContent = ext ? '' : t(hq ? 'render.mode.hq.note' : 'render.mode.fast.note');
     edgesIn.closest('label').hidden = hq;
     const ev = Number(expIn.value);
     expOut.value = (ev > 0 ? '+' : '') + ev;
@@ -479,8 +543,8 @@ export function openRenderDialog(o) {
     const ee = Number(envExpIn.value);
     envExpOut.value = (ee > 0 ? '+' : '') + ee;
     media.sync(hq, settings);
-    layersFs.hidden = !hq;
-    postFs.hidden = !hq;
+    layersFs.hidden = !hq || ext;
+    postFs.hidden = !hq || ext;
     queueFs.hidden = !hq;
     camRow.hidden = expModeSel.value !== 'camera';
     dofRow.hidden = !dofIn.checked || !hq;
@@ -491,13 +555,28 @@ export function openRenderDialog(o) {
     hdriName.textContent = SESSION.hdri ? SESSION.hdri.name : settings.hdriName ? t('render.hdri.again', { file: settings.hdriName }) : t('render.hdri.none');
     if (ownIn) for (const x of [monSel, dayIn, timeIn]) x.disabled = !ownIn.checked || !!running;
   };
+  engineSel.addEventListener('change', () => {
+    if (!BUILTIN.includes(engineSel.value)) settings = { ...settings, engine: engineSel.value };
+    else { modeSel.value = modeFor(engineSel.value); settings = { ...settings, engine: '' }; }
+    saveDefaultEngine(globalThis.localStorage, engineSel.value);
+    drawEngineFields();
+  });
+  for (const ev of ['input', 'change']) modeSel.addEventListener(ev, () => { if (BUILTIN.includes(engineSel.value) || !engineSel.value) engineSel.value = modeSel.value === 'hq' ? 'pt' : 'fast'; });   // before the form's own listener puts Mode back
   form.addEventListener('input', () => { syncForm(); settings = readForm(); o.save?.(settings); dropResume(); });
   form.addEventListener('change', () => { syncForm(); settings = readForm(); o.save?.(settings); dropResume(); });
   syncForm();
+  loadEngines();
 
+  /** The Render button's words: "Send to …" / "Open in …" / "Save for …" for engines that do not draw the picture here. */
+  function goLabel() {
+    const r = engineRows.find((x) => x.id === engineSel.value);
+    if (!r || BUILTIN.includes(r.id)) return t('render.go');
+    if (registry.get(r.id)?.saveAs) return t('render.engine.go.file', { name: r.name });
+    return r.saveOnly ? t('render.engine.go.save', { name: r.name }) : r.kind === 'link' ? t('render.engine.go.link', { name: r.name }) : r.kind === 'open' ? t('render.engine.go.open', { name: r.name }) : t('render.go');
+  }
   const setRunning = (on) => {
     for (const x of form.querySelectorAll('input, select, button')) x.disabled = on;
-    goBtn.textContent = on ? t('render.stop') : t('render.go');
+    goBtn.textContent = on ? t('render.stop') : goLabel();
     goBtn.className = (on ? 'btn-line' : 'btn-plot') + ' btn-sm-cc';
     saveBtn.disabled = on || !lastBlob;
     fmtSel.disabled = on; openBtn.disabled = on;
@@ -559,12 +638,69 @@ export function openRenderDialog(o) {
       setRunning(false);
     }
   }
+  /**
+   * An outside engine (0.8 RE.1): the hand-off package (o.handoff) goes to the engine. A 'render' engine hands the picture back, which is
+   * shown like our own and labelled with the engine that drew it (D5); 'link' and 'open' engines send the package and say so; on the web
+   * (saveOnly) the package is saved as a file (D4) and nothing runs.
+   */
+  async function goOutside(w, h) {
+    const row = engineRows.find((r) => r.id === engineSel.value), eng = registry.get(engineSel.value);
+    if (!row || !eng) { status.textContent = t('render.engine.gone'); return; }
+    if (!row.ok && !row.saveOnly) { status.textContent = t('render.engine.why.' + (row.why || 'unknown'), { name: row.name }); return; }
+    if (!o.handoff) { status.textContent = t('render.engine.nohandoff'); return; }
+    running = new AbortController();
+    setRunning(true);
+    status.textContent = t('render.engine.preparing', { name: row.name });
+    try {
+      const eopts = cleanEngineOpts((settings.engineOpts || {})[eng.id], eng.settings);
+      const wantGlb = typeof eng.needsGlb === 'function' ? !!eng.needsGlb(eopts) : !!eng.needsGlb;
+      const pkg = await o.handoff(settings, { w, h, glb: wantGlb });
+      const base = o.fileBase ? o.fileBase() : 'scene';
+      if (eng.saveAs) {
+        // a file for any program that reads it (USD or glTF): the scene file alone
+        const out = await eng.saveAs(pkg, { base, opts: eopts });
+        o.download(out.blob, out.name);
+        status.textContent = t('render.engine.saved', { file: out.name, name: row.name });
+        return;
+      }
+      if (row.saveOnly) {
+        const { zipPackage } = await import('./handoff.js');
+        const name = (o.fileBase ? o.fileBase() : 'scene') + ' for ' + row.name + '.zip';
+        o.download(new Blob([zipPackage(pkg)], { type: 'application/zip' }), name);   // i18n-ignore: media type
+        status.textContent = t('render.engine.saved', { file: name, name: row.name });
+        return;
+      }
+      if (eng.kind === 'link' || eng.kind === 'open') {
+        const r = await eng.send(pkg, { settings, opts: eopts, base, signal: running.signal });
+        status.textContent = t(eng.kind === 'link' ? 'render.engine.sent' : 'render.engine.opened', { name: row.name }) + (r && r.note ? ' ' + t('render.engine.opened.where', { folder: r.note }) : '');
+        return;
+      }
+      const t0 = Date.now();
+      const r = await eng.render({ id: 'dialog', kind: 'still', w, h, settings, engine: eng.id, pkg, opts: cleanEngineOpts((settings.engineOpts || {})[eng.id], eng.settings) },
+        { signal: running.signal, onProgress: (f) => { status.textContent = t('render.engine.progress', { name: row.name, pct: Math.round(f * 100) }); } });
+      if (!r || !r.blob) { status.textContent = running.signal.aborted ? t('render.stopped.none') : t('render.engine.nopicture', { name: row.name }); return; }
+      layers = null; lastSamples = 0;
+      buildMixPanel(); syncFormats();
+      lastBlob = r.blob;
+      if (lastPic) URL.revokeObjectURL(lastPic);
+      lastPic = URL.createObjectURL(r.blob);
+      pic.replaceChildren(el('img', { src: lastPic, alt: t('render.alt'), width: String(r.w || w), height: String(r.h || h), dataset: { renderImage: '' } }));
+      const made = r.madeBy || { engine: row.name, version: row.version };
+      status.textContent = t('render.engine.done', { w: r.w || w, h: r.h || h, s: ((Date.now() - t0) / 1000).toFixed(1), name: made.engine || row.name, version: made.version || '' });
+    } catch (e) {
+      status.textContent = e?.code === 'cancelled' ? t('render.stopped.none') : e?.code === 'no_glb' ? t('render.engine.noglb') : t('render.failed', { error: String(e?.message || e) });
+    } finally {
+      running = null;
+      setRunning(false);
+    }
+  }
   async function go() {
     if (running) { running.abort(); return; }
     dropResume();
     settings = readForm();
     o.save?.(settings);
     const vs = o.viewSize(), { w, h } = sizeFor(settings, vs.w, vs.h);
+    if (isOutside()) return goOutside(w, h);
     let scene;
     try { scene = o.scene(settings); } catch (e) { status.textContent = t('render.failed', { error: String(e?.message || e) }); return; }
     if (!scene.items.some((it) => !it.lines)) { scene.dispose?.(); status.textContent = t('render.empty'); return; }

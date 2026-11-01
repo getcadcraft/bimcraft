@@ -16,7 +16,7 @@ Select one or more pipe runs in the model, then {{ui:Export}} › **Isometric of
 - A dimension on every leg: its true length along the pipe, in millimetres, or feet and inches for a drawing in inches.
 - The elevation at each end and where the run changes level; the run's tag.
 - A weld dot at each elbow, valves as symbols turned along the pipe, a flow arrow.
-- Spool balloons where the runs carry spool numbers.
+- Spool balloons with the numbers BimCraft gave a steel run when it was cut into spools (Pipes and ducts › Spools); nothing is numbered twice.
 - A bill of materials: pipe length by size and spec, elbows by angle, valves by kind, welds. A title block with the project, drawing number, revision, drawn by and date.
 
 **Not to scale.** The drawing says so. It is fitted to an A3 sheet.

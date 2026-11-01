@@ -16,6 +16,7 @@ export const FIXTURES = {
   sink:    { ifc: 'SINK', uhc: 3, dnMin: 50, dfu: 2, trapIn: 1.5 },
   shower:  { ifc: 'SHOWER', uhc: 2, dnMin: 40, dfu: 2, trapIn: 1.5 },
   laundry: { ifc: 'SINK', uhc: 3, dnMin: 40, dfu: 2, trapIn: 1.5 },
+  bath:    { ifc: 'BATH', uhc: 2, dnMin: 40, dfu: 2, trapIn: 1.5 },   // 0.8 EG.60: a bathtub, IPC 709.1 two drainage fixture units, 1.5 in. trap; NBR 8160 banheira, UHC 2, DN 40 (check against your edition)
 };
 export const FIXTURE_KINDS = Object.keys(FIXTURES);
 export const fixtureOf = (kind) => FIXTURES[kind] || null;

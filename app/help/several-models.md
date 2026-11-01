@@ -19,6 +19,10 @@ Look at models from different disciplines in one place: the architect's model wi
 5. The model with the dot is the one you edit. Click another model's dot to edit that one.
 6. Click × beside a model to take it out of the scene.
 
+## Open the team's models
+
+When the open model is a cloud file in a team project, {{ui:Open the team's models}} appears under the list. It opens the project's other IFC models beside this one, each moved by the offset the project set. Models hidden from you stay out and are counted; a model the project turns is opened unturned and counted too; files that are not IFC (a DWG, say) are skipped and named in the status line. A model that is already open is never opened twice. The button is hidden for a file that is not in a team project.
+
 ## What you should see
 
 - Every model in the first model's coordinates, as its file places it. Models exported from the same project line up without moving anything.

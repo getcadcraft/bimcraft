@@ -15,7 +15,7 @@ Draw the walls of a building on a plan of each level. Click where a wall starts 
 1. Start a new building ([Start a new building](topic:start-a-new-building)) or open an IFC model.
 2. Click {{ui:Draw}} in the toolbar. A new building opens with it on already.
 3. The plan of a level shows on the left and the 3D view on the right. Pick the level in the list at the top of the plan, or with the round button beside it in the **Levels** panel.
-4. Use {{ui:Plan}} for the plan alone, {{ui:Split}} for both, {{ui:3D}} to close the plan. When the window is narrow (or the interface size large), {{ui:Split}} puts the plan above the 3D view instead of beside it.
+4. {{ui:Plan}}, {{ui:Split}} and {{ui:3D}} are tools in the {{ui:View}} row of the toolbar (the commands PLAN, SPLIT and the keys work as before). Use {{ui:Plan}} for the plan alone, {{ui:Split}} for both, {{ui:3D}} to close the plan. When the window is narrow (or the interface size large), {{ui:Split}} puts the plan above the 3D view instead of beside it.
 
 The plan cuts the level 4'-0" (1200 mm) above its floor, as a floor plan does. Scroll to zoom, drag with the middle or right button (or hold {{key:Space}} and drag) to pan; with {{ui:Select}} on, a plain drag pans too. {{key:F}} with the pointer over the plan fits it.
 

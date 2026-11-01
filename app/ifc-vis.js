@@ -175,6 +175,25 @@ export function boundsOf(batches, keys) {
   return any ? { min, max } : null;
 }
 
+/** Bounding box of each element on its own: Map key → { min, max } (viewer space) for the keys that have geometry, one pass (0.8 AC.8). */
+export function boundsMapOf(batches, keys) {
+  const want = keys instanceof Set ? keys : new Set(keys);
+  const out = new Map();
+  for (const b of batches) {
+    const E = b.elems, P = b.positions;
+    for (let r = 0; r < E.ids.length; r++) {
+      const key = E.ids[r];
+      if (!want.has(key)) continue;
+      let bb = out.get(key);
+      if (!bb) { bb = { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] }; out.set(key, bb); }
+      for (let v = E.v0[r], vEnd = E.v0[r] + E.vn[r]; v < vEnd; v++) {
+        for (let k = 0; k < 3; k++) { const x = P[v * 3 + k]; if (x < bb.min[k]) bb.min[k] = x; if (x > bb.max[k]) bb.max[k] = x; }
+      }
+    }
+  }
+  return out;
+}
+
 /** Every element key with geometry in these batches. */
 export function keysOf(batches) {
   const out = new Set();

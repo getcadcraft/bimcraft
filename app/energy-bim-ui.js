@@ -10,6 +10,8 @@
  *   ENERGY — { inputs, lambdas, e, u, rooms, room, open }
  */
 import { el } from './ui-util.js';
+import { getDisplayUnits, localizeQuantities, fmtM2, areaMark } from './model-units.js';   // GH.3-A: results in the picked unit
+const Q = (s) => localizeQuantities(s, getDisplayUnits());
 import { t } from './i18n.js';
 import { INPUTS, gatherEnergy, uValues, loads, uOp, degreeDaysCsv } from './energy-bim.js';
 import { SKY } from './daylight-bim-sky-ui.js';
@@ -104,17 +106,17 @@ function roomDetail(r, host, ctx, recompute) {
       } }) : String(Math.round(p.u * 1000) / 1000);
     return el('tr', { 'data-energy-part': String(p.id) },
       el('td', {}, p.name || t('energy.opening'), el('span', { className: 'bc-muted' }, ' ' + t('energy.exp.' + p.exposure))),
-      el('td', {}, p.area.toFixed(2)), el('td', {}, ue, el('span', { className: 'bc-muted' }, ' ' + srcName(p.source))), el('td', {}, p.exposure === 'adjacent' ? '—' : p.ua.toFixed(2)));   // i18n-ignore: a dash for not counted
+      el('td', {}, fmtM2(p.area, getDisplayUnits(), false)), el('td', {}, ue, el('span', { className: 'bc-muted' }, ' ' + srcName(p.source))), el('td', {}, p.exposure === 'adjacent' ? '—' : p.ua.toFixed(2)));   // i18n-ignore: a dash for not counted
   });
   const H = r.H, I = r.inputs;
   return el('section', { className: 'as-detail', 'data-energy-detail': r.guid },
     el('h3', { className: 'bc-h fa-h3' }, [r.name, r.longName].filter(Boolean).join(' ')),
-    el('p', {}, t('energy.room.size', { floor: r.floorArea.toFixed(1), volume: r.volume.toFixed(1) })),
+    el('p', {}, Q(t('energy.room.size', { floor: r.floorArea.toFixed(1), volume: r.volume.toFixed(1) }))),
     el('div', { className: 'fa-wrap' }, el('table', { className: 'bc-qto-table fa-table', 'data-energy-parts': '' },
-      el('thead', {}, el('tr', {}, el('th', {}, t('energy.col.part')), el('th', {}, t('energy.col.area')), el('th', {}, t('energy.col.u')), el('th', {}, t('energy.col.ua')))),
+      el('thead', {}, el('tr', {}, el('th', {}, t('energy.col.part')), el('th', {}, t('energy.col.area').replace('m²', areaMark(getDisplayUnits()))), el('th', {}, t('energy.col.u')), el('th', {}, t('energy.col.ua')))),
       el('tbody', {}, ...rows))),
     canEdit ? null : el('p', { className: 'bc-muted' }, t('energy.u.readonly')),
-    r.open > 0.01 ? el('p', { className: 'fa-warn', 'data-energy-open': '' }, t('energy.open', { a: r.open.toFixed(2) })) : null,
+    r.open > 0.01 ? el('p', { className: 'fa-warn', 'data-energy-open': '' }, Q(t('energy.open', { a: r.open.toFixed(2) }))) : null,
     el('p', { 'data-energy-h': '' }, t('energy.room.h', { out: H.out.toFixed(2), ground: H.ground.toFixed(2), vent: H.vent.toFixed(2), ach: I.ach, v: r.volume.toFixed(1) })),
     el('p', { 'data-energy-heat': '' }, t('energy.room.heat', { fabric: W0(r.heat.fabric), ground: W0(r.heat.ground), vent: W0(r.heat.vent), total: W0(r.heat.total), ti: I.ti, te: I.te, tg: I.tg })),
     el('p', { 'data-energy-year': '' }, t('energy.room.year', { year: W0(r.annual), dd: I.dd })),

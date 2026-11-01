@@ -176,6 +176,36 @@ export function createLive(opts) {
     apply(ops) { applyOps(ops); },
     invert(ops) { const out = []; for (let i = ops.length - 1; i >= 0; i--) { const r = invertOp(ops[i]); if (r) out.push(r); } const gi = out.findIndex((o) => o.o === 'g'); if (gi > 0) out.unshift(out.splice(gi, 1)[0]); return out; },
     touched, validate,
+    /** EG.41 (studio_PART_2; bim_PART_3): where a step landed — the storey it is on is the "sheet" (its Name), the IFC classes of the elements it writes are
+     *  the `tags` (so a discipline can be held to walls or pipes). Containment is read from the file, or from the step's own IfcRelContainedInSpatialStructure
+     *  lines when the elements are new. No box: the IFC lines carry no plan extent here. null = nothing in the step is an element, or the file is not open. */
+    where(ops) {
+      const f = file();
+      if (!f || !Array.isArray(ops)) return null;
+      const REL = 'IFCRELCONTAINEDINSPATIALSTRUCTURE';
+      const home = new Map();   // element id → storey id (file first, then the step's own relations)
+      try { for (const [el, rels] of f.inverse(REL, 'RelatedElements')) for (const r of rels) { const st = f.attr(r, 'RelatingStructure'); if (st && st.ref) home.set(el, st.ref); } } catch { /* a file without the relation */ }
+      for (const op of ops) {
+        if (!op || op.o !== 'line' || op.t !== REL || !Array.isArray(op.p)) continue;
+        const to = op.p[5], list = op.p[4];
+        if (to && to.ref && Array.isArray(list)) for (const r of list) if (r && r.ref) home.set(r.ref, to.ref);
+      }
+      let sheet, tags = new Set(), any = false;
+      const nameOf = (id) => { try { const n = f.has(id) ? f.attr(id, 'Name') : null; return typeof n === 'string' ? n : String(id); } catch { return String(id); } };
+      for (const op of ops) {
+        if (!op || (op.o !== 'line' && op.o !== 'gone')) continue;
+        const type = op.o === 'line' ? op.t : (f.has(op.id) ? f.type(op.id) : null);
+        let element = false;
+        try { element = !!type && f.schema.isA(type, 'IFCPRODUCT'); } catch { element = false; }
+        if (!element) continue;
+        any = true;
+        tags.add(type);
+        const st = home.get(op.id);
+        if (st !== undefined) { const name = nameOf(st); if (sheet === undefined) sheet = name; else if (sheet !== name) sheet = '\u0000mixed'; }
+      }
+      if (!any) return null;
+      return { sheet, box: null, tags: [...tags].slice(0, 8) };
+    },
     snapshot() { const e = ed(); return pack({ v: SCHEMA, name: opts.name?.() || 'model.ifc', bytes: e.save() }); },
     load(bytes) {
       const s = unpack(bytes);

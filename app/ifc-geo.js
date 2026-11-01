@@ -4,7 +4,7 @@
  * crs.js (a byte-identical copy here, tools/bimcraft-test/crs-sync.mjs), loaded only when someone asks for a location.
  *
  *   readGeoref(api, mid) → how the file places itself, or null:
- *     { kind: 'map', crs: { name, code (EPSG number | null), description, geodeticDatum, verticalDatum, projection, zone },
+ *     { kind: 'map', crs: { name, code (EPSG number | null), record (the CadCraft_CRS set, crs-model.js | null), description, geodeticDatum, verticalDatum, projection, zone },
  *       matrix (file units, Z up → map units; IfcMapConversion / IfcRigidOperation via cc-ifc GetGeoReference),
  *       mapUnitM (metres per map unit: IfcProjectedCRS.MapUnit, else the project's length unit), fileUnitM }
  *     { kind: 'site', lat, lon (degrees), elev (m), origin [x, y, z] (file units), north [x, y] (unit, TrueNorth), fileUnitM }
@@ -21,6 +21,8 @@
  */
 
 import { ids, val, unitMm, lengthUnitMm, inv4, apply4 } from './ifc-util.js';
+import { readModelCrs } from './crs-model.js';
+import { readConversion, convMatrix, mapUnitMOf } from './georef-model.js';   // 0.8 D8.9: IFC2X3's ePSet_MapConversion   // 0.8 D8.9: the system the person chose, kept in the model
 
 const A = 6378137, F = 1 / 298.257223563, E2 = F * (2 - F);   // WGS 84
 
@@ -55,7 +57,15 @@ export function readGeoref(api, mid) {
     // IfcMapConversion's Scale is the unit difference between the model and the map, so heights take it too: cc-ifc's
     // matrix does that itself since the 0.5 final sweep (geo-ctx.js georef; BimCraft corrected it here before).
     const matrix = [...geo.matrix];
-    return { kind: 'map', crs: { ...geo.crs, code: epsgOf(geo.crs.name) ?? epsgOf(geo.crs.description) }, matrix, mapUnitM, fileUnitM };
+    return { kind: 'map', crs: { ...geo.crs, code: epsgOf(geo.crs.name) ?? epsgOf(geo.crs.description), record: readModelCrs(api, mid) }, matrix, mapUnitM, fileUnitM };
+  }
+  if (!geo) {   // 0.8 D8.9: IFC2X3 has no IfcMapConversion; the standard's property sets on the IfcProject say the same
+    const pc = readConversion(api, mid);
+    if (pc && pc.kind === 'pset') {
+      const f = pc.fields, name = val(f.Name) ?? null;
+      return { kind: 'map', crs: { name, description: val(f.Description) ?? null, geodeticDatum: val(f.GeodeticDatum) ?? null, verticalDatum: null, projection: val(f.MapProjection) ?? null, zone: val(f.MapZone) ?? null,
+        code: epsgOf(name) ?? epsgOf(val(f.Description)), record: readModelCrs(api, mid) }, matrix: convMatrix(pc.conv), mapUnitM: mapUnitMOf(val(f.MapUnit)), fileUnitM };
+    }
   }
   const siteId = ids(api, mid, 'IFCSITE')[0];
   if (siteId === undefined) return null;

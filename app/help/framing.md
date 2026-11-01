@@ -3,7 +3,7 @@ title: Framing walls, floors and roofs
 summary: Generate studs, plates, headers, joists, rafters or trusses from the model and keep them with it; they are made again when the walls, openings, floors or roof change, and the Lumber schedule is the cut list.
 section: tasks
 order: 24
-keywords: framing, frame, stud, studs, plate, top plate, header, king stud, jack stud, trimmer, cripple, sill, blocking, corner, California corner, tee, joist, rim joist, band joist, trimmer, rafter, hip rafter, valley rafter, jack rafter, ridge board, ceiling joist, collar tie, truss, lumber, cut list, board feet, 2x4, 2x6, spacing, on center
+keywords: TJI, I-joist, joist span table, load a table, framing, frame, stud, studs, plate, top plate, header, king stud, jack stud, trimmer, cripple, sill, blocking, corner, California corner, tee, joist, rim joist, band joist, trimmer, rafter, hip rafter, valley rafter, jack rafter, ridge board, ceiling joist, collar tie, truss, lumber, cut list, board feet, 2x4, 2x6, spacing, on center
 ---
 
 ## What you'll do
@@ -30,6 +30,18 @@ Pick any framing piece in the 3D view or the model tree. **Properties** shows it
 
 To keep a piece you placed on purpose when the framing is made again, pick it and choose **Keep this piece when the framing is made again**. A kept piece stays where it is; when the framing round it changes it is marked so you can check it.
 
+## TJI floors from a table you load
+
+BimCraft carries no joist maker's span tables (they are the maker's, and change with each edition). Pick a floor's framing, set **Floor joists** to **TJI (preliminary)** and choose **Load a table…** in **Properties**: a file in the `cadcraft-tji-table` format, JSON or CSV, that you made from the maker's current span tables. It names the maker, the product and edition, and where the numbers came from, and lists for each load case (live load, dead load, deflection limit, bearing length) the largest clear span of each series and depth at each spacing.
+
+- BimCraft takes the **clear span** of the floor, picks the shallowest depth, and within it the series, whose listed span reaches it for the spacing and load case you chose, and frames the floor with it. If the span or spacing is outside the table it says so and changes nothing.
+- The loads, deflection limit, bearing length, the table and the sentence "Preliminary layout guidance; final selection needs the manufacturer's tables and the project loads" are printed on the Lumber schedule, written into the model with the framing and listed in the **Problems** panel as a note. A table marked as an example says so in a warning.
+- With the **Building regulations** add-on on, its floor-joist rule reads a loaded table too; without a table TJI joists are left out of that check, as before.
+- The table stays in this browser until you clear it or load another. The file: `format` (`cadcraft-tji-table`), `version` 1, `manufacturer`, `product`, `edition`, `source`, `units` (`imperial`: inches, feet, psf; or `metric`: mm, metres, kPa), `cases` (`id`, `live`, `dead`, `deflection`, `bearing`) and `rows` (`series`, `depth`, `spans`: for each case id, the spacing and the largest clear span, such as `"16": "15-6"`). In CSV the same facts are `# key = value` lines, then `series,depth,case,spacing,span`.
+- With no table loaded, a TJI layout is refused and nothing changes: **Load a TJI table: the manufacturer's tables are theirs and are not built in.** A model framed with the older built-in TJI table (before this change) keeps every joist it has; Properties and Problems say the table is needed, and the floor can be framed again once you load one. Solid-sawn joists work as before.
+
+This is layout guidance. The final joist selection needs the maker's tables, the project's loads and the engineer.
+
 ## The cut list
 
 In the Schedules panel choose **Lumber**: every framing piece grouped by size and by the stock length you'd buy (whole 2' lengths from 8'; 600 mm steps from 2400 in millimetres), with the number of pieces and the board feet. **CSV** downloads it.
@@ -37,7 +49,7 @@ In the Schedules panel choose **Lumber**: every framing piece grouped by size an
 :::warning
 Header, joist, rafter and ceiling joist sizes come from labelled default tables for a typical one- or two-story house, not engineering. **Properties** says when a span or an opening is beyond its table. A designer or engineer checks spans, loads and connections.
 
-TJI suggestions use the 16" and 24" on-center columns of [Weyerhaeuser TJ-4000, July 2025, floor span table, page 7](https://www.weyerhaeuser.com/application/files/5617/5451/8519/TJ-4000.pdf): L/480, 40 psf live plus 10 psf dead, uniform loading and a glue-nailed subfloor. The model's I shape is schematic. The suggestion does not check bearing, point loads, cantilevers, holes, stairwell headers or connections. When no size in this subset reaches the span, BimCraft refuses the TJI layout instead of inventing one.
+TJI layouts use only a table you load, which you make from the maker's current span tables; BimCraft ships none. The suggestion does not check bearing, point loads, cantilevers, holes, stairwell headers or connections, and the model's I shape is schematic.
 :::
 
 ## What's saved

@@ -36,3 +36,7 @@ Change {{ui:Show}}:
 
 - [Find elements by class, name or property](topic:find)
 - [Color elements by a property](topic:color-by-property)
+
+## Infrastructure (IFC 4.3)
+
+Pick **Infrastructure (IFC 4.3)** in the view list to see roads, railways, bridges and marine works totalled per class and type, with the length, area and volume the file itself states. A quantity the file does not state is left blank, never worked out. **Send infrastructure quantities to TakeoffCraft** saves a `.quantities.json` file that TakeoffCraft opens as typed quantities.

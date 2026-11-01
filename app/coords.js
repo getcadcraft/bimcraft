@@ -18,6 +18,7 @@
  */
 import { ids, val, lengthUnitMm, inv4, apply4 } from './ifc-util.js';
 import { readGeoref, fileToMap, compound } from './ifc-geo.js';
+import { coordNumber, unitMark, crsUnitNote } from './model-units.js';   // GH.3-A: map coordinates follow the display unit
 
 export function readMarkers(api, mid) {
   const unitMm = lengthUnitMm(api, mid);
@@ -47,7 +48,11 @@ export function levelFor(levels, zMm) {
 }
 
 const FT = 0.3048, USFT = 1200 / 3937;
-export function mapText(georef, eM, nM) {
+export function mapText(georef, eM, nM, units = null) {
+  if (units) {   // GH.3-A: the person's display unit (eM, nM in metres, as fileToMap gives them); the map's own text is kept in `own`
+    const own = mapText(georef, eM, nM), M = 1000;   // eM, nM are metres (fileToMap)
+    return { e: coordNumber(eM * M, units), n: coordNumber(nM * M, units), unit: unitMark(units === 'ftin' ? 'ftdec' : units), own, note: crsUnitNote(units, own.unit) };   // note: the CRS's own unit id when it differs ('ft', 'us-ft', 'm')
+  }
   const u = georef?.mapUnitM || 1;
   const unit = Math.abs(u - FT) < 1e-9 ? 'ft' : Math.abs(u - USFT) < 1e-9 ? 'US ft' : 'm';   // the two feet differ by 2 ppm   // i18n-ignore: unit symbols
   const k = unit === 'm' ? 1 : u;

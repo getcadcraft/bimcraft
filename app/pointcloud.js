@@ -32,7 +32,7 @@
  * because the viewer needs more than CivilCraft's terrain import does: intensity (bytes 12–13), the class (formats 0–5
  * low 5 bits of byte 15; 6–10 byte 16) and the colour (formats 2, 3, 5, 7, 8, 10; 16-bit by the spec, but many writers
  * store 0–255 — when no value is over 255 the colours are taken as they are).
- * E57 (0.6 PF.1): through e57.js's one call, readE57 (today web-e57 in a Worker; the 0.7 Rust crate later): every scan with
+ * E57 (0.6 PF.1): through e57.js's one call, readE57 (0.8: our own reader in a Worker, web-e57 only for what it refuses; pictures come back in `pictures`): every scan with
  * its pose applied, colours (or intensity when the file has no colours), the same budget and notes; pictures in the file
  * are left out (said); up to E57_MAX_POINTS points and LIMITS.e57Bytes for now (web-e57 answers in one string).
  * Text clouds: "x y z", "x y z r g b", "x y z i", "x y z i r g b" (PTS: a first line with the count), separated by spaces,

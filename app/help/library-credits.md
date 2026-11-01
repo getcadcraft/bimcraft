@@ -25,13 +25,13 @@ Click {{ui:Equipment}} in the toolbar. The schedule is built from the placed lib
 
 ## Sign in to the library
 
-1. In the {{ui:Library}} tab, pick **LibraryCraft**.
+1. In the {{ui:Library}} tab, pick **Library**.
 2. Click {{ui:Sign in to the library}}. A small window opens on this site.
 3. Sign in if asked, then click **Connect**. The window hands BimCraft a library key and you can close it.
 
 ## What you should see
 
-- "Signed in to the library" at the top of the LibraryCraft list. Your team's items appear beside the public ones.
+- "Signed in to the library" at the top of the Library list. Your team's items appear beside the public ones.
 - Items you place are recorded as used, so the library can tell you when they change.
 
 ## Good to know

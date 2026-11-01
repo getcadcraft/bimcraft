@@ -8,16 +8,26 @@
  *   mountAnalysisBim(host) → { render(), changed(), picked(), panel (the framePanel) } | null without a pane
  *   host = { pane, W, editor() → IfcEditor | null, viewer() → Viewer3D | null, selection() → [keys], select(keys),
  *            status(text, isError), download(name, data, type), fileName(), afterEdit(), place(p mm) → [x, y, z] in the scene,
- *            shown() → is the tab showing }
+ *            setFrameProblems(list) → the concrete checks' and drift findings as Problems (0.8 SU.1056, optional),
+ *            shown() → is the tab showing, setBreakProblems(list) → the "What breaks first" findings as Problems (optional) }
  */
 import * as THREE from 'three';
 import { el } from './ui-util.js';
 import { t } from './i18n.js';
 import { framePanel, defaultAnalysis, cleanAnalysis } from './frame/frame-panel.js';
 import { resultGeometry } from './frame/frame-draw.js';
-import { readFrameElements, frameOfElements, readAnalysis, writeAnalysis } from './analysis-bim.js';
+import { readFrameElements, frameOfElements, readAnalysis, writeAnalysis, sectionsOfElements } from './analysis-bim.js';
 import { solveFrame } from './frame/frame-solve.js';
 import { KEY_SPAN } from './ifc-model.js';
+import * as B from './study/breakit.js';   // 0.8 EG.31: findings, reserve, Problems (lib/study, copied by tools/study/sync.mjs bimcraft)
+import { frameLive } from './study/live.js';   // 0.8 EG.29: live re-solve
+
+const drawnId = (id) => String(id).replace(/\.\d+$/, '');
+/** Findings point at analytical ids: back to the element's GlobalId (a member split at a crossing is its element), the combination has no element. */
+export function breakAbout(list) {
+  const own = (p) => (p.code === 'breakit.combo' && p.msg?.vars && p.msg.vars.util === undefined ? { ...p, id: p.id + ':reserve', code: 'breakit.reserve', msg: { key: 'breakit.p.reserve' + (p.severity === 'error' ? '.fail' : ''), vars: p.msg.vars } } : p);
+  return list.map(own).map((p) => ({ ...p, about: p.about.filter((a) => a.kind === 'member').map((a) => ({ ...a, id: drawnId(a.id) })) }));
+}
 
 export function mountAnalysisBim(host) {
   if (!host.pane) return null;
@@ -31,7 +41,7 @@ export function mountAnalysisBim(host) {
     if (!e) return null;
     if (cache && cache.version === version && cache.editor === e) return cache;
     const r = readFrameElements(host.W, e.api, e.mid);
-    cache = { version, editor: e, elements: r.elements, skipped: r.skipped, byGid: new Map(r.elements.map((x) => [x.gid, x])), byId: new Map(r.elements.map((x) => [x.id, x])), settings: readAnalysis(host.W, e.api, e.mid) };
+    cache = { version, editor: e, elements: r.elements, slabs: r.slabs, walls: r.walls, skipped: r.skipped, byGid: new Map(r.elements.map((x) => [x.gid, x])), byId: new Map(r.elements.map((x) => [x.id, x])), settings: readAnalysis(host.W, e.api, e.mid) };
     return cache;
   }
   function hide() {
@@ -85,7 +95,7 @@ export function mountAnalysisBim(host) {
     analyse: () => {
       const s = state();
       if (!s) throw new Error(t('frame.err.empty'));
-      const frame = frameOfElements(s.elements, s.settings || defaultAnalysis(t), { name: host.fileName() });
+      const frame = frameOfElements(s.elements, s.settings || defaultAnalysis(t), { name: host.fileName(), slabs: s.slabs, walls: s.walls });
       frame.skipped.push(...s.skipped.map((x) => ({ id: x.gid, why: x.why })));
       if (s.skipped.length) frame.notes.push({ key: 'frame.note.ifc-not-read', n: s.skipped.length });
       return { frame, sol: solveFrame(frame.model) };
@@ -104,6 +114,11 @@ export function mountAnalysisBim(host) {
     download: host.download,
     fileName: () => String(host.fileName() || 'model').replace(/\.ifc$/i, '').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').slice(0, 80) || 'model',
     show, hide,
+    breakit: { B, source: 'bimcraft.breakit', connections: () => [], setProblems: (list) => host.setBreakProblems?.(breakAbout(list)) },   // an IFC has no bolted joints the checks can read: members and the combination only
+    live: { frameLive },
+    concrete: true,   // 0.8 SU.1056: the Concrete and Seismic blocks (frame/frame-concrete-panel.js, the same as DetailCraft's)
+    sections: () => sectionsOfElements(state()?.elements || []),
+    problems: (list) => host.setFrameProblems?.(list.map((p) => ({ ...p, source: { name: 'bimcraft.frame' }, about: (p.about || []).map((a) => (a.kind === 'member' ? { ...a, id: drawnId(a.id) } : a)) }))),
     rerender: () => render(),
   });
   function render() {
@@ -113,6 +128,13 @@ export function mountAnalysisBim(host) {
   }
   return {
     panel, render,
+    /** 0.8 EG.47 (bim-sim_PART_3): the open model's analytical frame (no solve), for the earthquake run's floor stiffness; null without a model or members. */
+    frameModel() {
+      const s = state();
+      if (!s || !s.elements.length) return null;
+      const frame = frameOfElements(s.elements, s.settings || defaultAnalysis(t), { name: host.fileName(), slabs: s.slabs, walls: s.walls });
+      return frame.model && frame.model.members.length ? frame.model : null;
+    },
     /** After every edit, undo, rebuild or new model: results go stale, elements are read again. */
     changed() { version++; cache = null; panel.modelChanged(); render(); },
     picked() { render(); },
