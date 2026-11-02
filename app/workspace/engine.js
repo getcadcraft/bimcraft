@@ -8,6 +8,7 @@
  * ENGINE: ribbon tool key → { tool } a Draw tool ([data-mtool], needs a floor plan open and Draw on)
  *                         | { sel } any other button of the app      | { open } a <details> section of the left panel
  *                         | { rtab } a tab of the right panel
+ *                         | { settings } a section of the app's Settings dialog (opens Settings on the tab that holds it)
  * A ribbon tool that is in neither commands.js nor here is not built yet: its button stays, greyed, and says so.
  */
 export const ENGINE = {
@@ -25,6 +26,15 @@ export const ENGINE = {
   assemblyschedule: { sel: '[data-res-sheetsopen]', draw: true },
   paint: { sel: '[data-paint-open]' }, copy: { sel: '[data-edit-menu] [data-act="copy"]' }, delete: { sel: '[data-edit-menu] [data-act="delete"]' },
   daylight: { rtab: 'daylight' }, analysis: { rtab: 'analysis' },
+  // 0.8.1 (BIMBro, Discord 2026-11-02): tools 0.8 has that the ribbon had left greyed as "Not built"
+  image: { tool: 'picture' },                          // D8.8 pictures as backgrounds
+  cad: { sel: '[data-trace-open]', draw: true },       // Build › From a drawing…: DWG / DXF / PDF / scan, kept as an underlay
+  units: { settings: '[data-units-set]' },             // Settings › General › Units
+  // 0.8.1 sweep (BIMBro again, 2026-11-02: "fix these"): every other ribbon tool whose BimCraft tool exists in the other layouts
+  move: { tool: 'move' }, align: { tool: 'align' },    // D8.3 Move / Align
+  level: { sel: '[data-lv-addmany]', draw: true },     // Add levels… (the Levels panel's dialog)
+  phases: { open: '[data-eg59-details]' },             // EG.59 renovation phases (left panel)
+  materials: { sel: '[data-materials-menu]' },         // the material library
   rcp: { kind: 'rcp' },   // the level's reflected ceiling plan: the Draw bar's plan-kind choice ([data-model-viewkind])
 };
 
@@ -35,6 +45,7 @@ export function engineTarget(root, spec) {
   if (spec.open) return root.querySelector(spec.open);
   if (spec.rtab) return root.querySelector('[data-rtab="' + spec.rtab + '"]');
   if (spec.kind) return root.querySelector('[data-model-viewkind]');
+  if (spec.settings) return root.querySelector('[data-settings-open]') || root.ownerDocument?.querySelector('[data-settings-open]') || null;
   return null;
 }
 
@@ -43,7 +54,7 @@ export function engineTarget(root, spec) {
  * Draw tools need an open IFC and a floor plan (the workspace opens one first when none is active, see run()).
  */
 export function engineWhy(root, spec, state, t) {
-  if (!state.document) return t('ws.why.open');
+  if (!state.document && !spec.settings) return t('ws.why.open');   // Settings need no open IFC
   if (state.busy) return t(state.placing ? 'ws.why.placing' : 'ws.why.busy');
   const b = engineTarget(root, spec);
   if (!b) return t('ws.why.nothere');
@@ -67,6 +78,17 @@ export async function engineRun(root, spec, { activatePlan, showModel, state }) 
   if (!b) return false;
   if (spec.kind) {   // a select, not a button: pick the kind and say so, as a person changing it would
     if (b.value !== spec.kind) { b.value = spec.kind; b.dispatchEvent(new Event('change', { bubbles: true })); }
+    return true;
+  }
+  if (spec.settings) {   // open Settings, go to the tab that holds the section, show it
+    b.click(); await frame();
+    const doc = b.ownerDocument, box = doc.querySelector(spec.settings);
+    const pane = box?.closest('[data-settings-pane]');
+    if (pane?.hidden) doc.querySelector('[data-settings-tab="' + pane.getAttribute('data-settings-pane') + '"]')?.click();
+    await frame();
+    // the 0.7 Settings list on the left (app-settings.js: one section shown at a time): pick the section that holds it
+    const pick = [...(box?.closest('dialog')?.querySelectorAll('.shell-sec-nav button') || [])].find((n) => n.ccSet && (n.ccSet === box || n.ccSet.contains(box)));
+    if (pick) pick.click(); else box?.scrollIntoView({ block: 'start' });
     return true;
   }
   if (spec.open) {
