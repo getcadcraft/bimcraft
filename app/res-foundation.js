@@ -164,7 +164,7 @@ export function foundationGeometry(outline, p, { grade = null } = {}) {
 // ------------------------------------------------------------------------------------------------------------ reading
 function storeyOutlines(w, storey) {
   const walls = readWalls(w, storey);
-  const polys = [...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge }))).values()];
+  const polys = [...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, off: x.joinOff }))).values()];
   return { walls, ...planLoops(polys), outlines: buildingOutlines(walls) };   // 0.6 BIM-F1: posts / inside walls leave it alone
 }
 export function readFoundations(w) {

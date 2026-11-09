@@ -1,0 +1,12 @@
+{
+  "@locale": "te",
+  "@name": "తెలుగు",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "బైట్ క్రమం",
+  "opt.byteOrder.big": "బిగ్-ఎండియన్ (సాధారణ నివేదిక)",
+  "opt.byteOrder.little": "లిటిల్-ఎండియన్",
+  "opt.checksum": "చెక్‌సమ్",
+  "opt.checksum.negsum": "ఋణ మొత్తం",
+  "opt.checksum.sum": "సాధారణ మొత్తం"
+}

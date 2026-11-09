@@ -54,6 +54,8 @@
 .bc-checks input { accent-color: var(--action); width: 1rem; height: 1rem; }
 .bc-checks .n, .bc-counts .n { margin-left: auto; color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .bc-counts li { display: flex; gap: .5rem; padding: .3rem 0; }
+.bc-counts li [data-pick-only] { padding: .05rem .5rem; }   /* 0.9 D9.1: Keep only this class */
+.bc-counts li:has([data-pick-only]) { align-items: center; }
 
 /* ---- Find (0.4 B14) ---- */
 .bc-find-details > summary { cursor: pointer; margin: 0; }
@@ -500,6 +502,7 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
 .bc-coords { position: absolute; right: .75rem; bottom: .75rem; margin: 0; padding: .2rem .5rem; font-size: var(--fs-sm); font-variant-numeric: tabular-nums;
   background: var(--sheet-2); border: var(--pen-1) solid var(--line); border-radius: var(--radius); pointer-events: none; }
 .bc-coords:empty { display: none; }
+.bc-coords-plan { transition: transform .25s ease; }   /* FX.81: steps out of the wall being drawn */
 /* 3D markers for the project origin and survey point: a layer over the 3D view, clipped to it, each marker placed by left/top from coords-ui.js */
 .bc-coords-marks { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .bc-coords-marks[hidden], .bc-coords-mark[hidden] { display: none; }
@@ -634,7 +637,9 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
 .bc-lib-tags { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .15rem; }
 .bc-lib-detail .bc-prop-name { margin: .5rem 0; }
 .bc-lib-bigprev { background: #fff; border: var(--pen-1) solid var(--line); padding: .5rem; text-align: center; }
-.bc-lib-bigprev img { max-width: 100%; max-height: 14rem; }
+.bc-lib-bigprev img { max-width: 100%; max-height: min(14rem, 40vh); }
+/* 2026-11-02: one item's Place / Swap right under its name, and kept in view while its details scroll (small screens) */
+.bc-lib-actions.bc-lib-actions-top { position: sticky; top: 0; z-index: 2; margin: .5rem 0; padding: .5rem 0; background: var(--ws-panel-bg, var(--sheet, #fff)); border-bottom: var(--pen-1) solid var(--line); }
 .bc-lib-license { margin: .75rem 0; font-size: var(--fs-sm); }
 .bc-lib-license p { margin: 0 0 .3rem; overflow-wrap: anywhere; }
 .bc-lib-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .75rem 0 0; }
@@ -662,6 +667,30 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
 .bc-placebar-row .select-cc { width: auto; }
 .bc-placebar-row .bc-tool { border: var(--pen-1) solid var(--ink); border-radius: var(--radius); }
 .bc-placebar-xy { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+/* 0.9 (owner 2026-11-09): ONE compact control size in the placing bar, one button system (Place here = the primary, the rest secondary,
+   Wall snap a toggle), a readout that wraps instead of running under the view toggles or the compass, and a lighter placeholder. */
+:root { --bc-placeholder: color-mix(in srgb, var(--ink) 50%, transparent); --bc-bar-h: 1.75rem; --bc-bar-fs: .8125rem; --bc-bar-gap: .4rem; }
+.bc-placebar { right: 9rem; padding: .35rem .5rem; font-size: var(--bc-bar-fs); }
+.bc-placebar-what { margin: 0 0 .25rem; font-size: var(--bc-bar-fs); overflow-wrap: anywhere; }
+.bc-placebar-row { gap: var(--bc-bar-gap); align-items: center; }
+.bc-placebar-row label { gap: var(--bc-bar-gap); font-size: var(--bc-bar-fs); font-weight: 400; }
+.bc-placebar-row :is(.select-cc, .bc-input, .btn-line, .btn-plot) {
+  box-sizing: border-box; height: var(--bc-bar-h); min-height: 0; margin: 0; padding: 0 .55rem; font: inherit; font-size: var(--bc-bar-fs); font-weight: 600; line-height: 1;
+  border-width: var(--pen-1); border-style: solid; border-radius: var(--radius); display: inline-flex; align-items: center; gap: .3rem; vertical-align: middle; }
+.bc-placebar-row :is(.select-cc, .bc-input) { font-weight: 400; background-color: var(--sheet-2); color: var(--ink); border-color: var(--action); }
+.bc-placebar-row .select-cc { padding-right: 1.5rem; }
+.bc-placebar-row .bc-input { display: inline-block; line-height: calc(var(--bc-bar-h) - 2px); padding-top: 0; padding-bottom: 0; }
+.bc-placebar-row .bc-input::placeholder { color: var(--bc-placeholder); opacity: 1; }
+.bc-placebar-row .btn-line { color: var(--ink); background: transparent; border-color: var(--line); }
+.bc-placebar-row .btn-line:hover { border-color: var(--action); background: var(--sheet); }
+.bc-placebar-row .btn-line[aria-pressed="true"] { background: var(--action); border-color: var(--action); color: var(--on-action, #fff); }
+.bc-placebar-row :is(.btn-line, .btn-plot, .select-cc, .bc-input):focus-visible { outline: var(--pen-2) solid var(--action); outline-offset: 1px; }
+.bc-placebar-row :is(.btn-line, .btn-plot):disabled { opacity: .5; cursor: not-allowed; }
+.bc-placebar-row .bi { font-size: .875rem; line-height: 1; }
+.bc-placebar-xy { flex: 0 1 auto; min-width: 0; max-width: 100%; overflow-wrap: anywhere; line-height: 1.2; }
+/* Stop placing is the app's one destructive action here: outline red, solid red on hover (the --layer-red token follows the theme) */
+.bc-placebar-row .btn-line.bc-place-stop { color: var(--layer-red); border-color: var(--layer-red); background: transparent; }
+.bc-placebar-row .btn-line.bc-place-stop:hover, .bc-placebar-row .btn-line.bc-place-stop:focus-visible { background: var(--layer-red); border-color: var(--layer-red); color: #fff; }
 .bc-ifc-equip { z-index: 1; }
 
 /* ---- Dialogs (place prompt, credits, updates) ---- */
@@ -672,7 +701,14 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
 .bc-dlg-field { display: grid; gap: .2rem; margin: 0 0 .65rem; font-size: var(--fs-sm); font-weight: 600; }
 .bc-dlg-field .bc-input { width: 100%; }
 .bc-dialog .bc-equip-table { margin-top: .5rem; }
+/* Export › Collada (0.9 SU.1125) */
+.bc-dae-set { margin: 0 0 .6rem; padding: 0; border: 0; }
+.bc-dae-set legend { margin: 0 0 .2rem; font-size: var(--fs-sm); font-weight: 600; }
+.bc-dae-opt { display: flex; gap: .45rem; align-items: baseline; margin: 0 0 .3rem; font-size: var(--fs-sm); }
+.bc-dae-opt input:disabled + span { color: var(--ink-2); }
+.bc-dae-geo { margin: 0 0 .6rem 1.6rem; }
 .bc-placebar .bc-input { width: auto; }
+.bc-placebar-row .bc-input[data-place-xy] { width: 12.5rem; }
 
 /* Copy's fallback when the Clipboard API is refused: a textarea off screen, else a dialog to copy from */
 .bc-offscreen { position: fixed; left: -100vw; top: 0; width: 1px; height: 1px; opacity: 0; }
@@ -992,3 +1028,29 @@ html.cc-phone .bc-status { max-width: calc(100% - 7rem) !important; }
 .bc-display-mode .bc-tool { padding: .3rem .45rem; border: 0; border-radius: 0; min-width: 2rem; justify-content: center; }
 .bc-display-mode .bc-tool .bi { font-size: 1rem; line-height: 1; color: var(--layer); }
 .bc-display-mode .bc-tool[aria-pressed="true"] { background: var(--sheet); box-shadow: inset 0 -2px 0 var(--ink); }
+
+/* 0.9 FX.41: "Recover your work?" listed without locking the page (recover-offer.js): a card at the bottom corner */
+dialog.bc-recover-float { position: fixed; inset: auto 1rem 1rem auto; margin: 0; z-index: 60; max-height: calc(100vh - 2rem); overflow: auto; box-shadow: 0 .5rem 2rem rgb(0 0 0 / .3); }
+
+/* ---- panel sections: a lock beside the caret keeps one open (panel-focus.js, 0.9 FX.55) ---- */
+.bc:not([data-panel-focus]) .bc-lock { display: none; }   /* the locks show only with the setting on */
+.bc-find-details > summary:has(> .bc-lock) { display: flex; align-items: center; gap: .4rem; }
+.bc-lock { margin-left: auto; padding: 0 .3rem; border: 0; background: none; color: var(--ink-2); cursor: pointer; line-height: 1; font-size: .85em; opacity: .55; }
+.bc-lock:hover, .bc-lock:focus-visible, .bc-lock[aria-pressed="true"] { opacity: 1; }
+.bc-lock[aria-pressed="true"] { color: var(--action); }
+
+/* 0.9: a Library card dragged over the plan or the 3D view; the touch / pen drag chip; the Place split button */
+.bc-plan.is-drop-target, .bc-canvas.is-drop-target { outline: var(--pen-3) dashed var(--action); outline-offset: -3px; }
+.bc-lib-card[draggable="true"] { cursor: grab; }
+.bc-lib-dragchip { position: fixed; z-index: 2000; pointer-events: none; padding: .25rem .6rem; font-size: var(--fs-sm); font-weight: 600; color: var(--on-action, #fff); background: var(--action); border-radius: var(--radius); box-shadow: 0 2px 8px rgb(0 0 0 / .35); max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc-place-slot { display: inline-flex; flex: 0 0 auto; max-width: 100%; }
+.bc-place-split { display: inline-flex; flex: 0 0 auto; vertical-align: middle; max-width: 100%; }
+.bc-lib-actions .bc-place-main, .bc-lib-actions .bc-place-plain { flex: 0 0 auto; min-width: max-content; white-space: nowrap; overflow: visible; }
+.bc-lib-actions .bc-place-toggle { flex: 0 0 auto; }
+.bc-place-split > .btn-plot { margin: 0; }
+.bc-place-split > .bc-place-main { border-top-right-radius: 0; border-bottom-right-radius: 0; display: inline-flex; align-items: center; gap: .35rem; }
+.bc-place-split > .bc-place-toggle { border-top-left-radius: 0; border-bottom-left-radius: 0; border-left: var(--pen-1) solid color-mix(in srgb, var(--on-action, #fff) 45%, transparent); padding-left: .55rem; padding-right: .55rem; }
+.bc-place-menu { font-size: var(--fs-sm); background: var(--sheet-2); border: var(--pen-1) solid var(--line); }
+.bc-place-menu .dropdown-item { display: flex; align-items: center; gap: .4rem; color: var(--ink); background: transparent; }
+.bc-place-menu .dropdown-item:hover, .bc-place-menu .dropdown-item:focus-visible { background: var(--sheet); color: var(--ink); }
+.bc-lib-actions-top .bc-place-split { flex: 0 0 auto; }

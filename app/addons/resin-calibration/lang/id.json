@@ -1,0 +1,14 @@
+{
+  "@locale": "id",
+  "@name": "Bahasa Indonesia",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Uji paparan",
+  "note": "Resin dan printer berbeda. Cetak bagian uji sekali pada setiap paparan di tangga, lalu simpan paparan yang menghasilkan pilar tipis dan lubang terbuka paling tajam.",
+  "part": "Letakkan bagian uji di bed",
+  "part.name": "Bagian uji paparan",
+  "ladder": "Simpan tangga paparan ({n} file)",
+  "ladder.made": "{n} file disimpan untuk {list} s. Cetak masing-masing dengan resin yang sama lalu bandingkan.",
+  "ladder.nopart": "Letakkan bagian uji di bed terlebih dahulu.",
+  "ladder.failed": "Tangga tidak dapat dibuat. {why}",
+  "ladder.busy": "Membuat {i} dari {n}…"
+}

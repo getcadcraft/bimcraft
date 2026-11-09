@@ -1,0 +1,21 @@
+{
+  "@locale": "az",
+  "@name": "Azərbaycanca",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect vasitəsilə)",
+  "step.orca": "Bu kompüterdə OrcaSlicer quraşdırın.",
+  "step.orca.link": "OrcaSlicer əldə edin",
+  "step.connect": "Bu kompüterdə Bambu Connect quraşdırın.",
+  "step.connect.link": "Bambu Connect əldə edin",
+  "step.bind": "Bambu Connect-də P2S-inizi əlavə edin. Bunu bir dəfə edin.",
+  "step.send": "3D printerə göndər düyməsinə basın. Fayl Bambu Connect-də açılacaq: orada yoxlayın və çapı başladın.",
+  "note": "Bambu Connect Bambu Lab-ın digər proqramlardan çap üçün öz proqramıdır və çap orada başlayır.",
+  "confirm": "OrcaSlicer bunu öz P2S şablonları ilə hazırladı: {grams} g, {layers} qat.",
+  "confirm.next": "Bambu Connect-də açılsın? Orada başladana qədər heç nə çap olunmur.",
+  "done": "Bambu Connect-ə göndərildi. Orada yoxlayın və çapı başladın.",
+  "fail.orca": "Bu kompüterdə OrcaSlicer tapılmadı. Quraşdırın, sonra yenidən cəhd edin.",
+  "fail.slice": "OrcaSlicer bu çapı hazırlaya bilmədi. {why}",
+  "fail.nogcode": "OrcaSlicer-in faylında çap yoxdur.",
+  "fail.bed": "Bu, P2S-in masasına sığmır.",
+  "fail.connect": "Bambu Connect açılmadı. Quraşdırın, sonra yenidən cəhd edin."
+}

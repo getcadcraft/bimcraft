@@ -1,0 +1,14 @@
+{
+  "@locale": "af",
+  "@name": "Afrikaans",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Blootstellingstoets",
+  "note": "Harse en drukkers verskil. Druk die toetsdeel een keer by elke blootstelling in die leer en hou die blootstelling met die skerpste dun pilare en oop gate.",
+  "part": "Plaas die toetsdeel op die bed",
+  "part.name": "Blootstellingstoetsdeel",
+  "ladder": "Stoor die blootstellingsleer ({n} lêers)",
+  "ladder.made": "Het {n} lêers gestoor vir {list} s. Druk elkeen met dieselfde hars en vergelyk.",
+  "ladder.nopart": "Plaas eers die toetsdeel op die bed.",
+  "ladder.failed": "Die leer kon nie gemaak word nie. {why}",
+  "ladder.busy": "Maak {i} van {n}…"
+}

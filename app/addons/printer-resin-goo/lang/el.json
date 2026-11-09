@@ -1,0 +1,12 @@
+{
+  "@locale": "el",
+  "@name": "Ελληνικά",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Σειρά byte",
+  "opt.byteOrder.big": "Big-endian (η συνήθης αναφορά)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Άθροισμα ελέγχου",
+  "opt.checksum.negsum": "Αρνητικό άθροισμα",
+  "opt.checksum.sum": "Απλό άθροισμα"
+}

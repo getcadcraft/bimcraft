@@ -1,0 +1,12 @@
+{
+  "@locale": "ja",
+  "@name": "日本語",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "バイト順序",
+  "opt.byteOrder.big": "ビッグエンディアン(一般的なレポート)",
+  "opt.byteOrder.little": "リトルエンディアン",
+  "opt.checksum": "チェックサム",
+  "opt.checksum.negsum": "符号反転の合計",
+  "opt.checksum.sum": "単純合計"
+}

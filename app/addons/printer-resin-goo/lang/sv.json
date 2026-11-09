@@ -1,0 +1,12 @@
+{
+  "@locale": "sv",
+  "@name": "Svenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Byteordning",
+  "opt.byteOrder.big": "Big-endian (den vanliga rapporten)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrollsumma",
+  "opt.checksum.negsum": "Negerad summa",
+  "opt.checksum.sum": "Vanlig summa"
+}

@@ -42,6 +42,8 @@ import { t as tr } from './i18n.js';
 import { wallGeom, arcOf, arcLength, chordFor, flatPoly, arcAxisCurve, profileCurve, profileKeyPoints, BULGE_MAX } from './model-arcs.js';   // 0.6 round 2 (bim-comforts_PART_2): curved walls
 
 import { readAssemblies, readAssemblyRecords } from './wall-assemblies.js';
+import { deriveJoins, reconcile, joinsIndex, joinKey, kindOf } from './wall-joins.js';   // 0.9 FX.60: the join record
+import { squareMove } from './wall-square.js';   // 0.9 FX.65: a location line that holds moves the centre line square, the joined walls follow
 
 /** Where a plan cuts, mm above its level (the Draw plan's CUT; rooms close against what the cut meets). */
 export const PLAN_CUT = 1200;
@@ -112,11 +114,14 @@ export function wallNodes(W, tol = 1) {
   const nodes = [];
   for (let i = 0; i < W.length; i++) for (const end of ['a', 'b']) {
     const p = W[i][end];
-    let n = nodes.find((x) => dist(x.p, p) <= tol);
+    // 0.9 FX.60: Disallow join at this end: it meets nothing and nothing meets it (its own node, no T)
+    if (W[i].off && W[i].off[end]) { nodes.push({ p, ends: [{ w: i, end }], tees: [], solo: true }); continue; }
+    let n = nodes.find((x) => !x.solo && dist(x.p, p) <= tol);
     if (!n) { n = { p, ends: [], tees: [] }; nodes.push(n); }
     n.ends.push({ w: i, end });
   }
   for (const n of nodes) {
+    if (n.solo) continue;
     const here = new Set(n.ends.map((e) => e.w));
     for (let j = 0; j < W.length; j++) {
       if (here.has(j)) continue;
@@ -149,7 +154,7 @@ export function enclosingWalls(walls, { tol = 1 } = {}) {
  * else every wall, as before.
  */
 export function buildingOutlines(walls) {
-  const loopsOf = (list) => planLoops([...wallOutlines(list.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge }))).values()]).outlines.filter((o) => o.area > 1);
+  const loopsOf = (list) => planLoops([...wallOutlines(list.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, off: x.joinOff }))).values()]).outlines.filter((o) => o.area > 1);
   const ext = walls.filter((x) => (x.assembly || wallType(x.typeKey))?.exterior);
   for (const list of [enclosingWalls(ext), enclosingWalls(walls)]) {
     if (!list.length) continue;
@@ -339,12 +344,22 @@ export function readWalls(w, storey = null) {
       fixedHeight: Number(ps.Height || 0) * w.unitMm, typeKey: ps.TypeKey || '', typeName: val(line.ObjectType) || val(line.Name) || '', extSide: ps.ExteriorSide === 'right' ? 'right' : 'left', lp,
       name: val(line.Name) || '',
       bulge, justification: JUSTIFICATIONS.includes(ps.Justification) ? ps.Justification : 'center',
+      joinOff: { a: /a/.test(String(ps.JoinOff || '')), b: /b/.test(String(ps.JoinOff || '')) },   // 0.9 FX.60: Disallow join, per end
     };
     wall.referenceIssue = records.find(r=>r.key===wall.typeKey && r.issue)?.issue || null;
     wall.assembly = wall.referenceIssue ? null : wallType(wall.typeKey, assemblies);
     if(!wall.assembly) wall.referenceIssue ||= 'corrupt';
     wall.height = wallHeight(wall, levels, base);
+    // 0.9 WT.6 (wall-shape.js): a profile, attached top / base, a slant: only on walls that have one (other walls' rows are unchanged)
+    if (ps.Profile || ps.AttachTop || ps.AttachBase || ps.Slant) wall.shape = { profile: ps.Profile || '', attachTop: ps.AttachTop || '', attachBase: ps.AttachBase || '', slant: ps.Slant || '' };
     out.push(wall);
+  }
+  // 0.9 FX.60: the joins the file holds. A file with none yet (older, or from another program) has no `joins`: the tools find
+  // its joins from the geometry until the first change writes them (syncJoins)
+  const recs = readJoinRecords(w);
+  if (recs.length) {
+    const idx = joinsIndex(recs);
+    for (const x of out) x.joins = idx.get(x.guid) || [];
   }
   return out;
 }
@@ -413,7 +428,7 @@ function validWallChanges(changes) {
   for(const key of ['a','b']) if(Object.hasOwn(changes,key) && (!Array.isArray(changes[key]) || changes[key].length!==2 || !changes[key].every(Number.isFinite))) throw new Error(tr('contract.wallinvalid'));
   for(const key of ['bulge','height','baseOffset','topOffset']) if(Object.hasOwn(changes,key) && !Number.isFinite(changes[key])) throw new Error(tr('contract.wallinvalid'));
 }
-export function addWall(w, { storey, a, b, typeKey = 'ext-2x6', baseOffset = 0, topLevel = '', topOffset = 0, height = 0, extSide = 'left', guid, bulge = 0, justification = 'center' } = {}) {
+export function addWall(w, { storey, a, b, typeKey = 'ext-2x6', baseOffset = 0, topLevel = '', topOffset = 0, height = 0, extSide = 'left', guid, bulge = 0, justification = 'center', joinOff = null } = {}) {
   validWallChanges({a,b,bulge,height,baseOffset,topOffset});
   if (!(dist(a, b) >= 1)) throw Object.assign(new Error('model.err.short'), { key: 'model.err.short' });
   checkBulge(bulge);
@@ -435,7 +450,9 @@ export function addWall(w, { storey, a, b, typeKey = 'ext-2x6', baseOffset = 0, 
     ['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(height > 0 ? height : 2438.4))], ['BaseOffset', 'IFCLENGTHMEASURE', round(w.u(baseOffset))], ['TopLevel', 'IFCIDENTIFIER', topLevel || ''],
     ['TopOffset', 'IFCLENGTHMEASURE', round(w.u(topOffset))], ['ExteriorSide', 'IFCLABEL', extSide],
     // 0.6 round 2: written only when they say something (a straight wall on its centre line keeps the 0.5 set)
-    ...(bulge ? [['Bulge', 'IFCREAL', round(bulge, 9)]] : []), ...(justification && justification !== 'center' ? [['Justification', 'IFCLABEL', JUSTIFICATIONS.includes(justification) ? justification : 'center']] : [])]);
+    ...(bulge ? [['Bulge', 'IFCREAL', round(bulge, 9)]] : []), ...(justification && justification !== 'center' ? [['Justification', 'IFCLABEL', JUSTIFICATIONS.includes(justification) ? justification : 'center']] : []),
+    // 0.9 WT.3 Join off while drawing / WT.4 a split's free ends: Disallow join written with the wall (FX.70's JoinOff)
+    ...(joinOff && (joinOff.a || joinOff.b) ? [['JoinOff', 'IFCIDENTIFIER', (joinOff.a ? 'a' : '') + (joinOff.b ? 'b' : '')]] : [])]);
   w.upsertPset(id, 'Pset_WallCommon', [['Reference', 'IFCIDENTIFIER', name], ['IsExternal', 'IFCBOOLEAN', !!T.type.exterior], ['LoadBearing', 'IFCBOOLEAN', false]]);
   return { id, guid: g };
 }
@@ -476,7 +493,20 @@ export function updateWall(w, guid, changes = {}, { carryJoined = true, previous
     if (Math.abs(shift) > 1e-6) {
       const g = wallGeom(wall);
       a = g.at(0, shift); b = g.at(g.L, shift);
-      if (!wall.bulge && !bulgeChanged) {
+      if (!wall.bulge && !bulgeChanged && carryJoined) {
+        // 0.9 FX.65 (spec test 5): the join solver's square move, so the corner follows at an L, at a node of three walls or more, at a T
+        // (the stem slides along its host; partitions butting into this wall come with it) and next to a curved wall, as for a Move
+        const plan = squareMove(all, guid, shift);
+        const mine = plan.get(guid);
+        if (mine) { a = mine.a; b = mine.b; }
+        for (const [g2, m] of plan) {
+          if (g2 === guid) continue;
+          const o = all.find((x) => x.guid === g2);
+          if (!o || (dist(o.a, m.a) <= 1e-9 && dist(o.b, m.b) <= 1e-9)) continue;
+          if (dist(m.a, m.b) < 1) throw Object.assign(new Error('model.err.short'), { key: 'model.err.short' });
+          setGeom(w, o, m.a, m.b); o.a = m.a; o.b = m.b; touched.add(g2);
+        }
+      } else if (!wall.bulge && !bulgeChanged) {
         const u = mul(sub(b, a), 1 / dist(a, b)), na = a, nb = b;
         for (const [end, old] of [['a', wall.a], ['b', wall.b]]) {
           const nbs = all.filter((o) => o.guid !== guid && o.storey === wall.storey && (dist(o.a, old) <= 1 || dist(o.b, old) <= 1));
@@ -532,6 +562,11 @@ export function updateWall(w, guid, changes = {}, { carryJoined = true, previous
     if (Math.abs(M[14] - changes.baseOffset) > 1e-6) w.movePlacement(wall.lp, a[0], a[1], changes.baseOffset, ang);
   }
   if (just !== wall.justification) rows.push(['Justification', 'IFCLABEL', just]);
+  if (changes.joinAllowed && typeof changes.joinAllowed === 'object') {   // 0.9 FX.60: Allow / Disallow join at an end: { a: bool, b: bool }
+    const off = { a: wall.joinOff.a, b: wall.joinOff.b };
+    for (const e of ['a', 'b']) if (typeof changes.joinAllowed[e] === 'boolean') off[e] = !changes.joinAllowed[e];
+    rows.push(['JoinOff', 'IFCIDENTIFIER', (off.a ? 'a' : '') + (off.b ? 'b' : '') || 'none']);
+  }
   if (changes.topLevel !== undefined) rows.push(['TopLevel', 'IFCIDENTIFIER', changes.topLevel || '']);
   if (Number.isFinite(changes.topOffset)) rows.push(['TopOffset', 'IFCLENGTHMEASURE', round(w.u(changes.topOffset))]);
   if (Number.isFinite(changes.height) && changes.height > 0) rows.push(['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(changes.height))], ['TopLevel', 'IFCIDENTIFIER', '']);
@@ -573,6 +608,50 @@ export function deleteWalls(w, guids) {
   return { storeys: [...storeys].filter((s) => s !== undefined && s !== null) };
 }
 
+// ------------------------------------------------------------------------------------------------------------ the join record
+/**
+ * 0.9 FX.60 (wall tool spec section 5): a join is stored as IfcRelConnectsPathElements between the two walls: RelatingElement and
+ * RelatedElement in guid order, each with where it meets (ATSTART | ATEND | ATPATH = along its side), named "CadCraft join L|T|X".
+ * Other programs read it; the style and the per-end Disallow switch live on the wall (CadCraft_Wall JoinOff = 'a', 'b', 'ab' or 'none').
+ * Only records with that name are ours: syncJoins never removes another program's.
+ */
+const JOIN_NAME = 'CadCraft join';
+const CONN = { start: 'ATSTART', end: 'ATEND', mid: 'ATPATH' };
+const POS_OF = { ATSTART: 'start', ATEND: 'end', ATPATH: 'mid' };
+const enumOf = (v) => String(val(v) ?? '').replace(/\./g, '').toUpperCase();
+/** Our join records: [{ relId, key, kind, a: { guid, pos }, b: { guid, pos } }]. */
+export function readJoinRecords(w) {
+  const out = [];
+  let rels = [];
+  try { rels = ids(w.api, w.mid, 'IFCRELCONNECTSPATHELEMENTS'); } catch (e) { return out; }
+  const guidOf = new Map();
+  const g = (h) => { const id = h?.value; if (!id) return null; if (!guidOf.has(id)) guidOf.set(id, val(w.api.GetLine(w.mid, id, false)?.GlobalId) || null); return guidOf.get(id); };
+  for (const relId of rels) {
+    const r = w.api.GetLine(w.mid, relId, false);
+    if (!String(val(r?.Name) || '').startsWith(JOIN_NAME)) continue;
+    const A = g(r.RelatingElement), B = g(r.RelatedElement), pa = POS_OF[enumOf(r.RelatingConnectionType)], pb = POS_OF[enumOf(r.RelatedConnectionType)];
+    if (!A || !B || !pa || !pb) continue;
+    const a = { guid: A, pos: pa }, b = { guid: B, pos: pb };
+    out.push({ relId, key: joinKey(a, b), kind: kindOf(pa, pb), a, b });
+  }
+  return out;
+}
+/**
+ * Make the file's joins the ones its walls ask for (one storey's walls, as readWalls gave them): a record is made when an end lands on
+ * a wall (or crosses one), removed when it no longer does or the end is disallowed. Walls are never replaced; ids stay. → { added, removed }
+ */
+export function syncJoins(w, walls) {
+  if (!walls.length) return { added: 0, removed: 0 };
+  const here = new Set(walls.map((x) => x.guid)), idOf = new Map(walls.map((x) => [x.guid, x.id]));
+  const stored = readJoinRecords(w).filter((r) => here.has(r.a.guid) && here.has(r.b.guid));
+  const { add, remove } = reconcile(deriveJoins(walls.map((x) => ({ guid: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, joinOff: x.joinOff }))), stored);
+  for (const r of remove) { w.touch(r.relId); deleteLine(w.api, w.mid, r.relId); }
+  for (const r of add) {
+    w.make('IFCRELCONNECTSPATHELEMENTS', w.guid(), w.ownerHistory(), w.L(JOIN_NAME + ' ' + r.kind), null, null, w.H(idOf.get(r.a.guid)), w.H(idOf.get(r.b.guid)), [], [], CONN[r.b.pos], CONN[r.a.pos]);
+  }
+  return { added: add.length, removed: remove.length };
+}
+
 /**
  * Bring a storey's walls up to date: every wall whose joined outline, length or height differs from what its shape holds
  * gets a new shape, quantities and pset values; `force` (GlobalIds) are redone anyway (their openings changed).
@@ -580,16 +659,35 @@ export function deleteWalls(w, guids) {
  */
 // Below the 0.005 mm F02 bound; keep the separate 1 mm join tolerance unchanged.
 const SHAPE_TOL_MM = 0.001;
+/**
+ * 0.9 WT.6: the wall Shape tools (wall-shape.js) hand their body writer in here, so this file never imports them (no import loop):
+ * { write(w, wall, poly, host, cache, forced) → wrote?, afterMove?(w, before, after, guids) }. Without it (a Node run that never
+ * loads wall-shape.js) a shaped wall is written as its plain extrusion.
+ */
+let SHAPE_HOOKS = null;
+export function setWallShapeHooks(h) { SHAPE_HOOKS = h || null; }
+export function wallShapeHooks() { return SHAPE_HOOKS; }
+/** 0.9 WT.6: the storeys whose walls are attached to a roof, slab or ceiling made again (after those changed): → walls rewritten. */
+export function regenAttached(w) {
+  if (!SHAPE_HOOKS) return 0;
+  const st = new Set(readWalls(w).filter((x) => x.shape && (x.shape.attachTop || x.shape.attachBase)).map((x) => x.storey));
+  let n = 0;
+  for (const s0 of st) n += regenWalls(w, s0).walls;
+  return n;
+}
 export function regenWalls(w, storey, force = null) {
   const walls = readWalls(w, storey);
   if (!walls.length) return { walls: 0 };
-  const outlines = wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge })));
+  syncJoins(w, walls);   // 0.9 FX.60: the join records follow what the walls now do (every change of walls ends here)
+  const outlines = wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, off: x.joinOff })));
   const forced = new Set(force || []);
   const host = w.hostIndex();
   let n = 0;
+  const shapeCache = {};   // 0.9 WT.6: what the attached roofs and slabs are, read once for this storey's walls
   for (const wall of walls) {
     const poly = outlines.get(wall.guid);
     if (!poly) continue;
+    if (SHAPE_HOOKS && wall.shape && !wall.bulge) { if (SHAPE_HOOKS.write(w, wall, poly, host, shapeCache, forced.has(wall.guid))) n++; continue; }   // 0.9 WT.6: a shaped wall's body
     const local = profileKeyPoints(toLocal(wall, poly.bulged || poly), w.v4);
     if (!forced.has(wall.guid)) {
       const cur = storedShape(w, wall.id);

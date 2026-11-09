@@ -1,0 +1,21 @@
+{
+  "@locale": "el",
+  "@name": "Ελληνικά",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (μέσω Bambu Connect)",
+  "step.orca": "Εγκαταστήστε το OrcaSlicer σε αυτόν τον υπολογιστή.",
+  "step.orca.link": "Λήψη OrcaSlicer",
+  "step.connect": "Εγκαταστήστε το Bambu Connect σε αυτόν τον υπολογιστή.",
+  "step.connect.link": "Λήψη Bambu Connect",
+  "step.bind": "Στο Bambu Connect, προσθέστε τον P2S σας. Κάντε το μία μόνο φορά.",
+  "step.send": "Πατήστε «Αποστολή στον 3D εκτυπωτή». Το αρχείο ανοίγει στο Bambu Connect: ελέγξτε το εκεί και ξεκινήστε την εκτύπωση.",
+  "note": "Το Bambu Connect είναι πρόγραμμα της Bambu Lab για εκτύπωση από άλλο λογισμικό, και η εκτύπωση ξεκινά από εκεί.",
+  "confirm": "Το OrcaSlicer προετοίμασε αυτήν την εκτύπωση με τα προφίλ του P2S: {grams} g, {layers} στρώματα.",
+  "confirm.next": "Να ανοίξει στο Bambu Connect; Δεν εκτυπώνεται τίποτα μέχρι να ξεκινήσετε την εκτύπωση εκεί;",
+  "done": "Στάλθηκε στο Bambu Connect. Ελέγξτε το εκεί και ξεκινήστε την εκτύπωση.",
+  "fail.orca": "Το OrcaSlicer δεν βρέθηκε σε αυτόν τον υπολογιστή. Εγκαταστήστε το και δοκιμάστε ξανά.",
+  "fail.slice": "Το OrcaSlicer δεν μπόρεσε να προετοιμάσει αυτήν την εκτύπωση. {why}",
+  "fail.nogcode": "Το αρχείο του OrcaSlicer δεν περιέχει καμία εκτύπωση.",
+  "fail.bed": "Αυτό δεν χωράει στην πλατφόρμα εκτύπωσης του P2S.",
+  "fail.connect": "Το Bambu Connect δεν άνοιξε. Εγκαταστήστε το και δοκιμάστε ξανά."
+}

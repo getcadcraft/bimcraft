@@ -1,0 +1,12 @@
+{
+  "@locale": "fa",
+  "@name": "فارسی",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ترتیب بایت",
+  "opt.byteOrder.big": "بیگ‌اندین (معمول در گزارش‌ها)",
+  "opt.byteOrder.little": "لیتل‌اندین",
+  "opt.checksum": "چک‌سام",
+  "opt.checksum.negsum": "جمع منفی‌شده",
+  "opt.checksum.sum": "جمع ساده"
+}

@@ -1,0 +1,12 @@
+{
+  "@locale": "cs",
+  "@name": "Čeština",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Pořadí bajtů",
+  "opt.byteOrder.big": "Big-endian (obvyklé)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolní součet",
+  "opt.checksum.negsum": "Negovaný součet",
+  "opt.checksum.sum": "Prostý součet"
+}

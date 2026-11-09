@@ -1,0 +1,14 @@
+{
+  "@locale": "pt-PT",
+  "@name": "Português (Portugal)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Teste de exposição",
+  "note": "As resinas e as impressoras variam. Imprima a peça de teste uma vez com cada exposição da escada e mantenha a exposição com os pilares finos e os furos abertos mais nítidos.",
+  "part": "Coloque a peça de teste na base de impressão",
+  "part.name": "Peça de teste de exposição",
+  "ladder": "Guardar a escada de exposição ({n} ficheiros)",
+  "ladder.made": "Foram guardados {n} ficheiros para {list} s. Imprima cada um com a mesma resina e compare.",
+  "ladder.nopart": "Coloque primeiro a peça de teste na base de impressão.",
+  "ladder.failed": "Não foi possível criar a escada. {why}",
+  "ladder.busy": "A criar {i} de {n}…"
+}

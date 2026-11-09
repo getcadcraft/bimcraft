@@ -1,0 +1,12 @@
+{
+  "@locale": "be",
+  "@name": "Беларуская",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Парадак байтаў",
+  "opt.byteOrder.big": "Big-endian (звычайны варыянт)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Кантрольная сума",
+  "opt.checksum.negsum": "Адмоўная сума",
+  "opt.checksum.sum": "Простая сума"
+}

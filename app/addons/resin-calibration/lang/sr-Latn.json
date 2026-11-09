@@ -1,0 +1,14 @@
+{
+  "@locale": "sr-Latn",
+  "@name": "Srpski (latinica)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test ekspozicije",
+  "note": "Smole i štampači se razlikuju. Odštampaj test-deo jednom pri svakoj ekspoziciji na lestvici i zadrži ekspoziciju sa najoštrijim tankim stubićima i otvorenim rupama.",
+  "part": "Stavi test-deo na podlogu štampača",
+  "part.name": "Test-deo za ekspoziciju",
+  "ladder": "Sačuvaj lestvicu ekspozicije ({n} datoteka)",
+  "ladder.made": "Sačuvano je {n} datoteka za {list} s. Odštampaj svaku istom smolom i uporedi.",
+  "ladder.nopart": "Najpre stavi test-deo na podlogu štampača.",
+  "ladder.failed": "Lestvicu nije moguće napraviti. {why}",
+  "ladder.busy": "Pravim {i} od {n}…"
+}

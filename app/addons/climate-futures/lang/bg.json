@@ -1,0 +1,8 @@
+{
+  "@locale": "bg",
+  "@name": "Български",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Данни и източници",
+  "data.nex": "NASA NEX-GDDP-CMIP6, понижено мащабирани изходни данни на модели CMIP6 (CC BY 4.0 за всеки модел); глобално покачване на морското ниво: IPCC AR6",
+  "data.sample": "Примерен пакет: три места, един модел, по пет години за всеки период. Не е за проектиране."
+}

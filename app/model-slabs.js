@@ -56,7 +56,7 @@ export function storeyLoops(w, storey) {
   const levels = readLevels(w);
   const all = levels.length > 1 ? readWalls(w) : readWalls(w, storey);
   const walls = [...all.filter((x) => x.storey === storey), ...(levels.length > 1 ? wallsThrough(all, levels, storey, PLAN_CUT) : [])];
-  const polys = [...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge }))).values()];
+  const polys = [...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, off: x.joinOff }))).values()];
   return { walls, ...planLoops(polys), outlines: buildingOutlines(walls) };
 }
 

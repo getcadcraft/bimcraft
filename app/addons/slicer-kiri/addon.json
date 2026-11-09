@@ -1,0 +1,22 @@
+{
+  "id": "slicer-kiri",
+  "name": "Kiri:Moto slicer",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "print3d",
+      "range": "*"
+    }
+  ],
+  "description": "Adds Kiri:Moto (MIT) to the slicers in 3D Print. It runs in this page, on the web and in Studio, and downloads when first used.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

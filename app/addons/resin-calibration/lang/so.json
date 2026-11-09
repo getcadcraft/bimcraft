@@ -1,0 +1,14 @@
+{
+  "@locale": "so",
+  "@name": "Soomaali",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Tijaabinta iftiinka",
+  "note": "Resin-ka iyo printerada way kala duwan yihiin. Qaybta tijaabada mar kasta ku daabac heerka iftiinka ee silsiladda, oo ku hay heerka leh tiirarka khafiifka ah ee ugu cad iyo godadka furan.",
+  "part": "Dhig qaybta tijaabada saldhigga",
+  "part.name": "Qaybta tijaabada iftiinka",
+  "ladder": "Kaydi silsiladda iftiinka ({n} fayl)",
+  "ladder.made": "Waxaa la kaydiyay {n} fayl oo loogu talagalay {list} s. Mid kasta ku daabac isla resin-ka oo isbarbardhig.",
+  "ladder.nopart": "Marka hore dhig qaybta tijaabada saldhigga.",
+  "ladder.failed": "Silsiladda lama samayn karin. {why}",
+  "ladder.busy": "Waa la samaynayaa {i} ee {n}…"
+}

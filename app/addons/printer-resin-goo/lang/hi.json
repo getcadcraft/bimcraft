@@ -1,0 +1,12 @@
+{
+  "@locale": "hi",
+  "@name": "हिन्दी",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "बाइट क्रम",
+  "opt.byteOrder.big": "बिग-एंडियन (सामान्य रिपोर्ट)",
+  "opt.byteOrder.little": "लिटिल-एंडियन",
+  "opt.checksum": "चेकसम",
+  "opt.checksum.negsum": "ऋणात्मक योग",
+  "opt.checksum.sum": "सादा योग"
+}

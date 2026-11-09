@@ -1,0 +1,21 @@
+{
+  "@locale": "mr",
+  "@name": "मराठी",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX आणि PWS",
+  "opt.flip": "प्रतिमा आरशासारखी करा",
+  "opt.flip.off": "नाही",
+  "opt.flip.on": "हो, डावीकडून उजवीकडे",
+  "opt.version": "फाइल आवृत्ती",
+  "opt.version.v1": "आवृत्ती 1 (नेहमीची)",
+  "opt.version.v516": "आवृत्ती 516",
+  "opt.aa": "कडा गुळगुळीत करण्याचे स्तर",
+  "opt.aa.1": "1 (काहीही नाही)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "प्रति-लेयर सेटिंग्ज ध्वज",
+  "opt.perLayer.off": "बंद",
+  "opt.perLayer.on": "चालू"
+}

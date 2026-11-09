@@ -1,0 +1,12 @@
+{
+  "@locale": "mr",
+  "@name": "मराठी",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "बाइट क्रम",
+  "opt.byteOrder.big": "बिग-एंडियन (नेहमीचा अहवाल)",
+  "opt.byteOrder.little": "लिटल-एंडियन",
+  "opt.checksum": "चेकसम",
+  "opt.checksum.negsum": "नकारात्मक बेरीज",
+  "opt.checksum.sum": "साधी बेरीज"
+}

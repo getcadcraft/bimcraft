@@ -1,0 +1,12 @@
+{
+  "@locale": "ps",
+  "@name": "پښتو",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "د بایټ ترتیب",
+  "opt.byteOrder.big": "Big-endian (معمول راپور)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "چیک‌سم",
+  "opt.checksum.negsum": "منفي شوی مجموعه",
+  "opt.checksum.sum": "ساده مجموعه"
+}

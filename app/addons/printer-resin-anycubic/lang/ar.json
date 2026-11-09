@@ -1,0 +1,21 @@
+{
+  "@locale": "ar",
+  "@name": "العربية",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX و PWS",
+  "opt.flip": "اعكس الصورة",
+  "opt.flip.off": "لا",
+  "opt.flip.on": "نعم، من اليسار إلى اليمين",
+  "opt.version": "إصدار الملف",
+  "opt.version.v1": "الإصدار 1 (المعتاد)",
+  "opt.version.v516": "الإصدار 516",
+  "opt.aa": "مستويات تنعيم الحواف",
+  "opt.aa.1": "1 (بلا)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "علم إعدادات كل طبقة",
+  "opt.perLayer.off": "معطَّل",
+  "opt.perLayer.on": "مفعّل"
+}

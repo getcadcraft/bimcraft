@@ -109,8 +109,14 @@ export function mountProgram(host) {
     const body = { format: 'cadcraft-massing-options', version: 1, units: 'mm', program: parseProgram(S.text), masses: S.result.options.map((o) => ({ key: o.key, ...civilMass(o, { unitPerMm: 1 }) })) };
     host.download((host.fileName() || 'model').replace(/\.ifc$/i, '') + '-massing-options.json', JSON.stringify(body, null, 1), 'application/json');
   }
-  compute();
-  render();
-  window.addEventListener('bimcraft-units', () => { try { render(); } catch (e) { /* GH.3-A: the tab has nothing to show yet */ } });   // results follow the display unit
-  return { render, options: () => S.result?.options || [], state: S };
+  // Startup perf (2026-11-05, "apps start slowly since 0.8.1"): the first massing search took ~215 ms at page load (a 295 ms long task) for a tab
+  // nobody had opened. It now runs the first time the tab is on screen (or something asks for the options or the state).
+  let ready = false;
+  const ensure = () => { if (ready) return; ready = true; compute(); render(); };
+  if (typeof IntersectionObserver === 'function') {
+    const io = new IntersectionObserver((list) => { if (list.some((x) => x.isIntersecting)) { io.disconnect(); ensure(); } });
+    io.observe(box);
+  } else setTimeout(ensure, 3000);
+  window.addEventListener('bimcraft-units', () => { if (!ready) return; try { render(); } catch (e) { /* GH.3-A: the tab has nothing to show yet */ } });   // results follow the display unit
+  return { render: () => { ensure(); render(); }, options: () => { ensure(); return S.result?.options || []; }, get state() { ensure(); return S; } };
 }

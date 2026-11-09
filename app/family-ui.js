@@ -17,6 +17,7 @@
 import { readFamilies, readFamilyElements, unhostedFamilies, newSize, renameSize, removeSizes, duplicateFamily, newFamily, importFamilies, removeFamily,
   placeFamily, setFamilySize, familyLibrary, readFamilyLibrary, moveFamilyElement, removeFamilyElements, familyFile, familyWriter, saveFamily, importSizes, sizesCsv, setFamilyDetail, setFamilyInstance, resizeFamilyElements } from './family-ops.js';
 import { familyFor, evaluateFamily, inputParams, sizeParams, instanceParams, fullValues, DETAIL_CHOICES, isWordKind, sizeValues, planBounds, newFamilyKey, familyDetail, detailForScale, evalCtx } from './family-model.js';
+import { renameFamily, renameElement } from './rename-ops.js';   // 0.9 SU.1123: rename from the project browser
 import { dragHotspot } from './family-edit.js';
 import { valueControl, readControl } from './family-values-ui.js';
 import { readMaterials } from './project-materials.js';
@@ -93,17 +94,43 @@ export function mountFamilies(modelUi) {
   // ---------------------------------------------------------------------------------------------- the project browser
   function browserGroups({ group, row, small }) {
     const mine = R.fams.filter((f) => f.source !== 'guess'), guess = R.fams.filter((f) => f.source === 'guess');
-    const rowOf = (f) => row({ 'data-pb-family': f.key, className: f.source === 'guess' ? 'bc-pb-go bc-pb-guess' : 'bc-pb-go' }, f.name, () => openFamily(f.key),
-      el('span', { className: 'bc-pb-tag' }, t('fam.pb.sizes', { n: f.sizes.length, placed: f.count })));
+    // 0.9 SU.1123: rename the family, each size (its type) and each placed element right here; sizes and elements open under the family
+    const renameBtn = (attrs, label, fn) => el('button', { type: 'button', className: 'bc-pb-ic', ...attrs, title: label, 'aria-label': label, onClick: fn }, icon('bi-pencil'));
+    const elementName = (id) => { try { const ed = A.ed(); return String(ed.api.GetLine(ed.mid, id, false)?.Name?.value || '#' + id); } catch (e) { return '#' + id; } };
+    const elementGuid = (id) => { try { const ed = A.ed(); return String(ed.api.GetLine(ed.mid, id, false)?.GlobalId?.value || ''); } catch (e) { return ''; } };
+    const sizesOf = (f) => f.source !== 'project' || !f.sizes.length ? null : el('li', {}, el('details', { 'data-pb-famsizes': f.key }, el('summary', { className: 'bc-pb-tag' }, t('fam.pb.sizelist', { n: f.sizes.length })),
+      el('ul', {}, ...f.sizes.filter((z) => z.guid).map((z) => el('li', {}, el('span', { className: 'bc-pb-go' }, z.name), el('span', { className: 'bc-pb-tag' }, String(z.count)),
+        renameBtn({ 'data-pb-sizerename': z.guid }, t('fam.pb.rename.size', { name: z.name }), () => askRename('size', z.guid, z.name)),
+        z.elements.length && z.elements.length <= 40 ? el('ul', {}, ...z.elements.map((id) => el('li', {}, el('span', { className: 'bc-pb-go' }, elementName(id)),
+          renameBtn({ 'data-pb-elrename': elementGuid(id) }, t('fam.pb.rename.element', { name: elementName(id) }), () => askRename('element', elementGuid(id), elementName(id)))))) : null)))));
+    const rowOf = (f) => [row({ 'data-pb-family': f.key, className: f.source === 'guess' ? 'bc-pb-go bc-pb-guess' : 'bc-pb-go' }, f.name, () => openFamily(f.key),
+      el('span', { className: 'bc-pb-tag' }, t('fam.pb.sizes', { n: f.sizes.length, placed: f.count })),
+      f.source === 'project' && f.editable ? renameBtn({ 'data-pb-famrename': f.key }, t('fam.pb.rename.family', { name: f.name }), () => askRename('family', f.key, f.name)) : null), sizesOf(f)];
     const startersLeft = STARTER_KEYS.filter((k) => !mine.some((f) => f.key === k));
     const starters = el('li', {}, el('details', { 'data-pb-starters': '' }, el('summary', {}, t('fam.pb.starters') + ' (' + startersLeft.length + ')'),
       el('ul', {}, ...startersLeft.map((k) => row({ 'data-pb-starter': k }, starterRecipe(k).name, () => openFamily(k))))));
-    const items = [...mine.map(rowOf), ...(guess.length ? [el('li', { className: 'bc-pb-tag' }, t('fam.pb.guessed', { n: guess.length }))] : []), ...guess.map(rowOf), starters];
+    const items = [...mine.flatMap(rowOf).filter(Boolean), ...(guess.length ? [el('li', { className: 'bc-pb-tag' }, t('fam.pb.guessed', { n: guess.length }))] : []), ...guess.flatMap(rowOf).filter(Boolean), starters];
     return [group('families', t('fam.pb.title'), mine.length + guess.length, items, [
       small({ 'data-pb-famnew': '' }, t('fam.new'), () => openNew(), 'bi-plus-lg'),
       small({ 'data-pb-famopen': '' }, t('fam.openfile'), () => openFile(), 'bi-folder2-open'),
       small({ 'data-pb-famplace': '' }, t('fam.place'), () => startPlace(R.place.key), 'bi-box'),
     ])];
+  }
+
+  /** 0.9 SU.1123: one name to change — a family, a size or an element — in one undo step. */
+  function askRename(kind, ref, now) {
+    const nm = el('input', { type: 'text', className: 'bc-input', 'data-rn-name': '', value: now, maxLength: kind === 'element' ? 255 : 80 });
+    dialog({ 'data-rn-dialog': kind }, t('fam.pb.rename.' + kind, { name: now }), [el('label', { className: 'bc-dlg-field' }, el('span', {}, t('fam.name')), nm)],
+      [btn('ok', t('fam.pb.rename'), { 'data-rn-ok': '' }, true), btn('cancel', t('model.gp.cancel'))],
+      (what) => {
+        if (what !== 'ok') return null;
+        const v = nm.value.trim();
+        if (!v) return t('fam.err.name');
+        if (v === now) return null;
+        const o = kind === 'family' ? renameFamily(ref, v) : kind === 'size' ? renameSize(ref, v) : renameElement(ref, v);
+        return run(o, { label: v, verb: t('model.verb.renamed') });
+      }, false);
+    setTimeout(() => nm.select(), 0);
   }
 
   // ---------------------------------------------------------------------------------------------- dialogs

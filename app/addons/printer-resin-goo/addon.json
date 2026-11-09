@@ -1,0 +1,22 @@
+{
+  "id": "printer-resin-goo",
+  "name": "Resin files: Elegoo GOO",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "slicer-resin",
+      "range": "*"
+    }
+  ],
+  "description": "Writes the Elegoo GOO file for resin printers that use it (Mars 4 Ultra, Saturn 3 Ultra and similar). Written from Elegoo's published specification and read back by CadCraft only: not yet loaded on a printer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

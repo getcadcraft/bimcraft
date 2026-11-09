@@ -1,0 +1,21 @@
+{
+  "@locale": "kk",
+  "@name": "Қазақша",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX және PWS",
+  "opt.flip": "Суретті айна бейнесінде көрсету",
+  "opt.flip.off": "Жоқ",
+  "opt.flip.on": "Иә, солдан оңға қарай",
+  "opt.version": "Файл нұсқасы",
+  "opt.version.v1": "1-нұсқа (әдеттегі)",
+  "opt.version.v516": "516-нұсқа",
+  "opt.aa": "Жиек тегістеу деңгейлері",
+  "opt.aa.1": "1 (жоқ)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Қабат бойынша параметрлер белгісі",
+  "opt.perLayer.off": "Өшірулі",
+  "opt.perLayer.on": "Қосулы"
+}

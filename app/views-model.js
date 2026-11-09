@@ -93,13 +93,18 @@ export function readTemplates(w) {
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));
 }
+/** 0.9 D8.15: a placed view's scale ratio — any number (1:2.5, 1:64), 0 = the view's own / the one that fits. */
+const ratioOf = (v) => { const r = fin(v, 0); return r > 0 ? Math.min(100000, Math.round(r * 1000) / 1000) : 0; };
 export function readSheets(w) {
   const pj = project(w), ps = pj === undefined ? null : w.readPset(pj, SHEETS_PSET), out = [];
   for (const [id, v] of Object.entries(ps || {})) {
     const s = json(v);
     if (!s || !/^sheet-\d+$/.test(id)) continue;
     out.push({ id, number: String(s.number || '').slice(0, 20), title: String(s.title || '').slice(0, 120), paper: String(s.paper || ''),
-      views: (Array.isArray(s.views) ? s.views : []).filter((x) => SHEET_KINDS.includes(x.kind) && typeof x.ref === 'string').map((x) => ({ kind: x.kind, ref: x.ref.slice(0, 64), x: fin(x.x, 0), y: fin(x.y, 0), ratio: Math.max(0, Math.round(fin(x.ratio, 0))) })),
+      views: (Array.isArray(s.views) ? s.views : []).filter((x) => SHEET_KINDS.includes(x.kind) && typeof x.ref === 'string').map((x) => ({ kind: x.kind, ref: x.ref.slice(0, 64), x: fin(x.x, 0), y: fin(x.y, 0), ratio: ratioOf(x.ratio) })),
+      // 0.9 SU.1123: the sheet's title block (sheet-formats.js: 'strip', 'side' or a model's own 'titleblock-<n>') and its field words
+      titleBlock: /^(strip|side|titleblock-\d+)$/.test(String(s.titleBlock || '')) ? s.titleBlock : '',
+      fields: Object.fromEntries(Object.entries(s.fields && typeof s.fields === 'object' ? s.fields : {}).slice(0, 30).map(([k, v]) => [String(k).slice(0, 30), String(v ?? '').slice(0, 120)]).filter(([k, v]) => /^[a-z0-9-]+$/.test(k) && v)),
       legend: (Array.isArray(s.legend) ? s.legend : []).slice(0, 60).map((e, i) => ({ n: i + 1, kind: e.kind === 'classification' ? 'classification' : 'layer', key: String(e.key || '').slice(0, 80), text: String(e.text || e.key || '').slice(0, 160), count: Math.max(0, Math.round(fin(e.count, 0))) })).filter((e) => e.key) });
   }
   return out.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }) || a.id.localeCompare(b.id));
@@ -188,8 +193,8 @@ export function saveSheet(sheet) {
   return op((w) => {
     const pj = project(w);
     if (!fixed) { const have = readSheets(w); let n = 1; while (have.some((x) => x.id === 'sheet-' + n)) n++; fixed = 'sheet-' + n; }
-    const views = (S.views || []).filter((x) => SHEET_KINDS.includes(x.kind)).map((x) => ({ kind: x.kind, ref: String(x.ref), x: round(fin(x.x, 0), 2), y: round(fin(x.y, 0), 2), ratio: Math.max(0, Math.round(fin(x.ratio, 0))) }));
-    w.upsertPset(pj, SHEETS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ number: String(S.number || '').slice(0, 20), title: String(S.title || '').slice(0, 120), paper: String(S.paper || ''), views, ...(S.legend?.length ? { legend: S.legend.slice(0, 60).map((e) => ({ kind: e.kind, key: String(e.key).slice(0, 80), text: String(e.text || '').slice(0, 160), count: Math.round(fin(e.count, 0)) })) } : {}) })]]);
+    const views = (S.views || []).filter((x) => SHEET_KINDS.includes(x.kind)).map((x) => ({ kind: x.kind, ref: String(x.ref), x: round(fin(x.x, 0), 2), y: round(fin(x.y, 0), 2), ratio: ratioOf(x.ratio) }));
+    w.upsertPset(pj, SHEETS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ number: String(S.number || '').slice(0, 20), title: String(S.title || '').slice(0, 120), paper: String(S.paper || ''), views, ...(S.titleBlock ? { titleBlock: String(S.titleBlock) } : {}), ...(S.fields && Object.values(S.fields).some(Boolean) ? { fields: Object.fromEntries(Object.entries(S.fields).filter(([, v]) => v).map(([k, v]) => [k, String(v).slice(0, 120)])) } : {}), ...(S.legend?.length ? { legend: S.legend.slice(0, 60).map((e) => ({ kind: e.kind, key: String(e.key).slice(0, 80), text: String(e.text || '').slice(0, 160), count: Math.round(fin(e.count, 0)) })) } : {}) })]]);
     return { id: pj, ids: [], sheet: fixed };
   });
 }
@@ -204,7 +209,7 @@ export function readCallouts(w) {
   const pj = project(w), ps = pj === undefined ? null : w.readPset(pj, CALLOUTS_PSET), out = [];
   for (const [id, v] of Object.entries(ps || {})) {
     const c = json(v);
-    if (!c || !/^callout-\d+$/.test(id) || !parseViewKey(c.parent)) continue;
+    if (!c || !/^callout-\d+$/.test(id) || c.copy || !parseViewKey(c.parent)) continue;   // 0.9 D8.12-A: duplicated views share the set (view-copies.js)
     const crop = cropOf(Array.isArray(c.crop) ? c.crop.map(Number) : null);
     if (!crop) continue;
     out.push({ id, name: cleanName(c.name) || id, parent: String(c.parent).slice(0, 80), crop, scale: scaleOf(c.scale) });
@@ -231,6 +236,13 @@ export function calloutsInside(callouts, id) {
   while (todo.length) { const p = 'callout:' + todo.pop(); for (const c of callouts) if (c.parent === p && !out.includes(c.id) && c.id !== id) { out.push(c.id); todo.push(c.id); } }
   return out;
 }
+/** 0.9 D8.12-A: the next free "callout-<n>" of the set, counting callouts, duplicated views and removed ones' names alike. */
+export function nextViewId(w) {
+  const pj = project(w), ps = pj === undefined ? null : w.readPset(pj, CALLOUTS_PSET);
+  const used = new Set(Object.entries(ps || {}).filter(([, v]) => v).map(([k]) => k));
+  let n = 1; while (used.has('callout-' + n)) n++;
+  return 'callout-' + n;
+}
 /** Make or change a callout: { id? (to change), name, parent (a view key), crop [x0, y0, x1, y1] (the root level's plan, mm),
  *  scale (1:n, 0 = fit) }. → op whose result has { callout: id }. */
 export function saveCallout(c) {
@@ -249,7 +261,7 @@ export function saveCallout(c) {
     if (p.kind === 'callout') {
       if (!all.some((x) => x.id === p.ref) || p.ref === fixed || (fixed && calloutsInside(all, fixed).includes(p.ref))) refuse('model.err.co.parent');
     } else if (!readLevels(w).some((l) => l.guid === p.ref)) refuse('model.err.co.parent');
-    if (!fixed) { let n = 1; while (all.some((x) => x.id === 'callout-' + n)) n++; fixed = 'callout-' + n; }
+    if (!fixed) fixed = nextViewId(w);
     w.upsertPset(pj, CALLOUTS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ name: nv.name, parent: nv.parent, crop: nv.crop.map((v) => round(v, 2)), scale: scaleOf(nv.scale) })]]);
     return { id: pj, ids: [], callout: fixed };
   });

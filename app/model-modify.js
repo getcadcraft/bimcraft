@@ -17,11 +17,20 @@
  */
 import { ModelWriter } from './model-write.js';
 import { readWalls, updateWall, addWall } from './model-walls.js';
+import { moveJoined } from './wall-square.js';
 import { readOpenings, addOpening } from './model-openings.js';
 import { readColumns, copyColumn } from './model-columns.js';
 import { readDrawnFloors, shiftDrawnFloor, writeDrawnFloor } from './model-floors.js';
 import { placedItems, moveItemsIn } from './model-move.js';
-import { op, settleFor } from './model-ops.js';
+import { readStairs, moveStairIn } from './res-stair.js';
+import { readRamps, moveRampIn } from './model-ramps.js';
+import { readRailings, moveRailingIn } from './res-railing.js';
+import { readRoofPlanes, moveRoofPlaneIn } from './res-roofplane.js';
+import { readDevices, moveDeviceIn } from './res-elec.js';
+import { readHardscape, moveHardscapeIn } from './res-terrain.js';
+import { readPictures, movePictureIn } from './model-picture.js';
+import { op, settleFor, afterWallMove } from './model-ops.js';
+import { holdPlan } from './wall-tools.js';   // 0.9 WT.3 / WT.7: walls locked to others or to grid lines
 import { val } from './ifc-util.js';
 
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
@@ -41,10 +50,23 @@ export function movables(w, storey = null) {
       : [[-hw, -hd], [hw, -hd], [hw, hd], [-hw, hd]].map(([x, y]) => [c.at[0] + x * Math.cos(a) - y * Math.sin(a), c.at[1] + x * Math.sin(a) + y * Math.cos(a)]);
     out.push({ kind: 'column', guid: c.guid, storey: c.storey, box: boxOfPts(pts) });
   }
+  for (const st of readStairs(w)) {
+    if (storey !== null && st.storey !== storey) continue;
+    out.push({ kind: 'stair', guid: st.guid, storey: st.storey, ids: [st.id, ...st.parts], box: { minX: st.start[0], minY: st.start[1], maxX: st.start[0], maxY: st.start[1] } });
+  }
+  // placed by a spec (a start point, a path or an outline): moved by changing the spec and making the shape again
+  const spec = (kind, list, pts) => { for (const x of list) { if (storey !== null && x.storey !== storey) continue; const P = pts(x); if (P.length) out.push({ kind, guid: x.guid, storey: x.storey, ...(x.parts ? { ids: [x.id, ...x.parts] } : {}), box: boxOfPts(P) }); } };
+  spec('ramp', readRamps(w), (r) => [r.start]);
+  spec('railing', readRailings(w), (r) => r.points);
+  spec('roofplane', readRoofPlanes(w), (r) => r.points);
+  spec('device', readDevices(w).filter((d) => !d.wall), (d) => [d.at]);   // a device on a wall follows its wall
+  spec('hardscape', readHardscape(w), (h) => h.points);
+  spec('picture', readPictures(w), (p) => (p.plane === 'vertical' ? [p.a, p.b] : [[p.x, p.y]]));
   for (const it of placedItems(w, storey)) out.push({ kind: 'item', guid: it.guid, storey: it.storey, box: { minX: it.x, minY: it.y, maxX: it.x, maxY: it.y } });
   return out;
 }
 
+const SPEC_MOVERS = { ramp: moveRampIn, railing: moveRailingIn, roofplane: moveRoofPlaneIn, device: moveDeviceIn, hardscape: moveHardscapeIn, picture: movePictureIn };
 const SIDES = { left: ['x', 'minX'], center: ['x', 'mid'], right: ['x', 'maxX'], top: ['y', 'maxY'], middle: ['y', 'mid'], bottom: ['y', 'minY'] };
 const at = (b, ax, k) => (k === 'mid' ? (ax === 'x' ? (b.minX + b.maxX) / 2 : (b.minY + b.maxY) / 2) : b[k]);
 
@@ -88,7 +110,7 @@ export function moveElements(moves, { copy = false } = {}) {
     const kinds = new Map(movables(w).map((e) => [e.guid, e]));
     const walls = readWalls(w), ops0 = copy ? readOpenings(w, null, walls) : [];
     const cols = readColumns(w), floors = readDrawnFloors(w);
-    const storeys = new Set(), made = new Map(), items = [];
+    const storeys = new Set(), made = new Map(), items = [], wallMoves = new Map();
     const gid = (g) => { if (!gids.has(g)) gids.set(g, val(w.guid())); return gids.get(g); };
     for (const m of list) {
       const e = kinds.get(m.guid);
@@ -97,7 +119,7 @@ export function moveElements(moves, { copy = false } = {}) {
       storeys.add(e.storey);
       if (e.kind === 'wall') {
         const x = walls.find((y) => y.guid === m.guid), a = [x.a[0] + m.dx, x.a[1] + m.dy], b = [x.b[0] + m.dx, x.b[1] + m.dy];
-        if (!copy) { updateWall(w, m.guid, { a, b }, { carryJoined: false }); continue; }
+        if (!copy) { wallMoves.set(m.guid, [m.dx, m.dy]); continue; }   // 0.9 FX.62: moved together below, so the walls joined to them follow
         const r = addWall(w, { storey: x.storey, a, b, typeKey: x.typeKey, baseOffset: x.baseOffset, topLevel: x.topLevel, topOffset: x.topOffset, height: x.fixedHeight, extSide: x.extSide, bulge: x.bulge, justification: x.justification, guid: gid(m.guid) });
         made.set(r.guid, r.id);
         for (const o of ops0.filter((q) => q.wallGuid === m.guid)) {
@@ -113,10 +135,22 @@ export function moveElements(moves, { copy = false } = {}) {
         const c = cols.find((y) => y.guid === m.guid);
         if (!copy) { moveColumn(w, c, m.dx, m.dy); continue; }
         made.set(gid(m.guid), copyColumn(w, c, m.dx, m.dy, gid(m.guid)));
+      } else if (e.kind === 'stair') {
+        if (copy) fail('model.move.err.copyitem');
+        moveStairIn(w, m.guid, m.dx, m.dy);
+      } else if (SPEC_MOVERS[e.kind]) {
+        if (copy) fail('model.move.err.copyitem');
+        SPEC_MOVERS[e.kind](w, m.guid, m.dx, m.dy);
       } else if (e.kind === 'item') {
         if (copy) fail('model.move.err.copyitem');
         items.push({ guid: m.guid, dx: m.dx, dy: m.dy });
       }
+    }
+    if (wallMoves.size) {
+      // 0.9 FX.62 (wall tool spec rules 2 and 3): the walls joined to the moved ones follow and stay joined; one undo step
+      const plan = holdPlan(w, walls, moveJoined(walls, wallMoves), [...wallMoves.keys()]), ops1 = readOpenings(w, null, walls), touched = [...plan.keys()];   // 0.9 WT.3: the locks hold
+      for (const [g, p] of plan) { updateWall(w, g, { a: p.a, b: p.b }, { carryJoined: false }); storeys.add(walls.find((y) => y.guid === g).storey); }
+      afterWallMove(w, walls, ops1, touched.filter((g) => !wallMoves.has(g)), false);   // doors of the walls that were carried keep their place; the moved walls take theirs along
     }
     if (items.length) moveItemsIn(w, items);
     settleFor(w, storeys);

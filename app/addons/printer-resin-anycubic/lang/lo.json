@@ -1,0 +1,21 @@
+{
+  "@locale": "lo",
+  "@name": "ລາວ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX ແລະ PWS",
+  "opt.flip": "ສະທ້ອນຮູບພາບ",
+  "opt.flip.off": "ບໍ່",
+  "opt.flip.on": "ແມ່ນ, ຈາກຊ້າຍໄປຂວາ",
+  "opt.version": "ເວີຊັນໄຟລ໌",
+  "opt.version.v1": "ເວີຊັນ 1 (ທົ່ວໄປ)",
+  "opt.version.v516": "ເວີຊັນ 516",
+  "opt.aa": "ລະດັບການເຮັດໃຫ້ຂອບລຽບ",
+  "opt.aa.1": "1 (ບໍ່ມີ)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ຕົວໝາຍການຕັ້ງຄ່າຕໍ່ເລເຢີ",
+  "opt.perLayer.off": "ປິດ",
+  "opt.perLayer.on": "ເປີດ"
+}

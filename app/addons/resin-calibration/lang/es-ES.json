@@ -1,0 +1,14 @@
+{
+  "@locale": "es-ES",
+  "@name": "Español (España)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Prueba de exposición",
+  "note": "Las resinas y las impresoras difieren. Imprima la pieza de prueba una vez con cada exposición de la escala y conserve la exposición con los pilares finos más nítidos y los orificios abiertos.",
+  "part": "Coloque la pieza de prueba en la plataforma de impresión",
+  "part.name": "Pieza de prueba de exposición",
+  "ladder": "Guardar la escala de exposición ({n} archivos)",
+  "ladder.made": "Se han guardado {n} archivos para {list} s. Imprima cada uno con la misma resina y compárelos.",
+  "ladder.nopart": "Coloque primero la pieza de prueba en la plataforma de impresión.",
+  "ladder.failed": "No se pudo crear la escala de exposición. {why}",
+  "ladder.busy": "Creando {i} de {n}…"
+}

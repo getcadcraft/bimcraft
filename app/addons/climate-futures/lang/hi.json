@@ -1,0 +1,8 @@
+{
+  "@locale": "hi",
+  "@name": "हिन्दी",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "डेटा और स्रोत",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 मॉडल का डाउनस्केल्ड आउटपुट (प्रति मॉडल CC BY 4.0); वैश्विक समुद्र स्तर: IPCC AR6",
+  "data.sample": "नमूना पैक: तीन स्थान, एक मॉडल, प्रति अवधि पाँच वर्ष। डिज़ाइन के लिए नहीं है।"
+}

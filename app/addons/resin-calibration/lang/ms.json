@@ -1,0 +1,14 @@
+{
+  "@locale": "ms",
+  "@name": "Bahasa Melayu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Ujian pendedahan",
+  "note": "Resin dan pencetak berbeza. Cetak bahagian ujian sekali pada setiap pendedahan dalam tangga, dan simpan pendedahan yang paling tajam untuk tiang nipis dan lubang terbuka.",
+  "part": "Letakkan bahagian ujian di atas katil",
+  "part.name": "Bahagian ujian pendedahan",
+  "ladder": "Simpan tangga pendedahan ({n} fail)",
+  "ladder.made": "{n} fail disimpan untuk {list} s. Cetak setiap satu dengan resin yang sama dan bandingkan.",
+  "ladder.nopart": "Letakkan bahagian ujian di atas katil dahulu.",
+  "ladder.failed": "Tangga tidak dapat dibuat. {why}",
+  "ladder.busy": "Membuat {i} daripada {n}…"
+}

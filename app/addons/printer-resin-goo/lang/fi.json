@@ -1,0 +1,12 @@
+{
+  "@locale": "fi",
+  "@name": "Suomi",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Tavujärjestys",
+  "opt.byteOrder.big": "Big-endian (yleisin)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Tarkistussumma",
+  "opt.checksum.negsum": "Negoitu summa",
+  "opt.checksum.sum": "Yksinkertainen summa"
+}

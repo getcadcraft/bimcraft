@@ -1,0 +1,21 @@
+{
+  "@locale": "si",
+  "@name": "සිංහල",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX සහ PWS",
+  "opt.flip": "පින්තූරය දර්පණය කරන්න",
+  "opt.flip.off": "නැත",
+  "opt.flip.on": "ඔව්, වමේ සිට දකුණට",
+  "opt.version": "ගොනු අනුවාදය",
+  "opt.version.v1": "අනුවාදය 1 (සාමාන්‍ය)",
+  "opt.version.v516": "අනුවාදය 516",
+  "opt.aa": "දාර සිනිඳු කිරීමේ මට්ටම්",
+  "opt.aa.1": "1 (නැත)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ලේයරය අනුව සැකසුම් ධජය",
+  "opt.perLayer.off": "ක්‍රියාවිරහිත",
+  "opt.perLayer.on": "ක්‍රියාත්මක"
+}

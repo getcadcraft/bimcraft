@@ -1,0 +1,21 @@
+{
+  "@locale": "sk",
+  "@name": "Slovenčina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Zrkadliť obrázok",
+  "opt.flip.off": "Nie",
+  "opt.flip.on": "Áno, zľava doprava",
+  "opt.version": "Verzia súboru",
+  "opt.version.v1": "Verzia 1 (bežná)",
+  "opt.version.v516": "Verzia 516",
+  "opt.aa": "Úrovne vyhladenia hrán",
+  "opt.aa.1": "1 (žiadne)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Príznak nastavení podľa hladiny",
+  "opt.perLayer.off": "Vypnuté",
+  "opt.perLayer.on": "Zapnuté"
+}

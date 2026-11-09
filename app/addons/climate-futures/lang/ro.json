@@ -1,0 +1,8 @@
+{
+  "@locale": "ro",
+  "@name": "Română",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Date și surse",
+  "data.nex": "NASA NEX-GDDP-CMIP6, rezultate ale modelelor CMIP6 reduse la scară (CC BY 4.0 pentru fiecare model); nivelul global al mării: IPCC AR6",
+  "data.sample": "Pachet de probă: trei locații, un model, cinci ani pe perioadă. Nu pentru proiectare."
+}

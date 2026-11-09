@@ -1,0 +1,21 @@
+{
+  "@locale": "sv",
+  "@name": "Svenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (via Bambu Connect)",
+  "step.orca": "Installera OrcaSlicer på den här datorn.",
+  "step.orca.link": "Hämta OrcaSlicer",
+  "step.connect": "Installera Bambu Connect på den här datorn.",
+  "step.connect.link": "Hämta Bambu Connect",
+  "step.bind": "I Bambu Connect lägger du till din P2S. Gör detta en gång.",
+  "step.send": "Tryck på Skicka till 3D-skrivare. Filen öppnas i Bambu Connect: kontrollera den där och starta utskriften.",
+  "note": "Bambu Connect är Bambu Labs egna program för att skriva ut från andra program, och utskriften startar därifrån.",
+  "confirm": "OrcaSlicer förberedde detta med sina P2S-förinställningar: {grams} g, {layers} lager.",
+  "confirm.next": "Öppna den i Bambu Connect? Ingenting skrivs ut förrän du startar det där.",
+  "done": "Skickat till Bambu Connect. Kontrollera den där och starta utskriften.",
+  "fail.orca": "OrcaSlicer hittades inte på den här datorn. Installera det och försök igen.",
+  "fail.slice": "OrcaSlicer kunde inte förbereda den här utskriften. {why}",
+  "fail.nogcode": "OrcaSlicers fil innehöll ingen utskrift.",
+  "fail.bed": "Detta ryms inte på P2S:ens bädd.",
+  "fail.connect": "Bambu Connect öppnades inte. Installera det och försök igen."
+}

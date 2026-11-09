@@ -1,0 +1,21 @@
+{
+  "@locale": "th",
+  "@name": "ไทย",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX และ PWS",
+  "opt.flip": "สะท้อนภาพ",
+  "opt.flip.off": "ไม่",
+  "opt.flip.on": "ใช่ จากซ้ายไปขวา",
+  "opt.version": "เวอร์ชันไฟล์",
+  "opt.version.v1": "เวอร์ชัน 1 (ปกติ)",
+  "opt.version.v516": "เวอร์ชัน 516",
+  "opt.aa": "ระดับการปรับเรียบขอบ",
+  "opt.aa.1": "1 (ไม่มี)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ตัวบ่งชี้การตั้งค่าต่อเลเยอร์",
+  "opt.perLayer.off": "ปิด",
+  "opt.perLayer.on": "เปิด"
+}

@@ -1,0 +1,12 @@
+{
+  "@locale": "zh-Hans",
+  "@name": "简体中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "字节序",
+  "opt.byteOrder.big": "大端序（常用）",
+  "opt.byteOrder.little": "小端序",
+  "opt.checksum": "校验和",
+  "opt.checksum.negsum": "取反求和",
+  "opt.checksum.sum": "普通求和"
+}

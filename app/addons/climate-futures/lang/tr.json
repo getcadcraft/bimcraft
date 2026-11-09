@@ -1,0 +1,8 @@
+{
+  "@locale": "tr",
+  "@name": "Türkçe",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Veriler ve kaynaklar",
+  "data.nex": "NASA NEX-GDDP-CMIP6, ölçeği küçültülmüş CMIP6 model çıktısı (model başına CC BY 4.0); küresel deniz seviyesi: IPCC AR6",
+  "data.sample": "Örnek paket: üç yer, bir model, dönem başına beş yıl. Tasarım için değildir."
+}

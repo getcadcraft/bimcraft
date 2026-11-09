@@ -8,6 +8,7 @@
  * spot (it snaps like the Wall tool: wall ends and faces, Shift square), drag the round grip to turn it (15° steps, Shift: 1°),
  * press R to turn it 90°, or type X / Y / Rotation in Properties. Each is one undo step (IfcEditor.modelChange).
  */
+import { printSheets } from './print-style.js';   // 0.9 D8.12-B: through the pen table when the model prints through one
 import { t } from './i18n.js';
 import { el } from './ui-util.js';
 import { ModelWriter } from './model-write.js';
@@ -165,7 +166,7 @@ export function mountComforts(modelUi) {
       el('h2', { className: 'bc-h' }, set.sheet.title), el('p', { className: 'bc-sub' }, t('comforts.ie.note')), stage, el('p', { className: 'bc-actions' }, pdf, ' ', close));
     pdf.addEventListener('click', () => {
       const base = String(A.host.fileName?.() || 'model').replace(/\.ifc$/i, '');
-      A.host.download(base + ' — ' + set.sheet.title + '.pdf', setPdf([set.sheet], { paper: set.paper, title: base }), 'application/pdf');   // i18n-ignore: a file name
+      A.host.download(base + ' — ' + set.sheet.title + '.pdf', setPdf(printSheets([set.sheet]), { paper: set.paper, title: base }), 'application/pdf');   // i18n-ignore: a file name
       A.host.status(t('comforts.ie.done', { room: set.name }));
     });
     close.addEventListener('click', () => dlg.close());

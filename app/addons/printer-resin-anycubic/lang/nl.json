@@ -1,0 +1,21 @@
+{
+  "@locale": "nl",
+  "@name": "Nederlands",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX en PWS",
+  "opt.flip": "Afbeelding spiegelen",
+  "opt.flip.off": "Nee",
+  "opt.flip.on": "Ja, van links naar rechts",
+  "opt.version": "Bestandsversie",
+  "opt.version.v1": "Versie 1 (de gebruikelijke)",
+  "opt.version.v516": "Versie 516",
+  "opt.aa": "Niveaus voor randafvlakking",
+  "opt.aa.1": "1 (geen)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Vlag voor instellingen per laag",
+  "opt.perLayer.off": "Uit",
+  "opt.perLayer.on": "Aan"
+}

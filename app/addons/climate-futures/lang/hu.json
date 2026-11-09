@@ -1,0 +1,8 @@
+{
+  "@locale": "hu",
+  "@name": "Magyar",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Adatok és források",
+  "data.nex": "NASA NEX-GDDP-CMIP6, finomított (downscaled) CMIP6 modellkimenet (modellenként CC BY 4.0); globális tengerszint-emelkedés: IPCC AR6",
+  "data.sample": "Mintacsomag: három hely, egy modell, periódusonként öt év. Nem tervezéshez."
+}

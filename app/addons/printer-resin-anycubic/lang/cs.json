@@ -1,0 +1,21 @@
+{
+  "@locale": "cs",
+  "@name": "Čeština",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX a PWS",
+  "opt.flip": "Zrcadlit obrázek",
+  "opt.flip.off": "Ne",
+  "opt.flip.on": "Ano, zleva doprava",
+  "opt.version": "Verze souboru",
+  "opt.version.v1": "Verze 1 (obvyklá)",
+  "opt.version.v516": "Verze 516",
+  "opt.aa": "Úrovně vyhlazení hran",
+  "opt.aa.1": "1 (žádné)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Příznak nastavení pro jednotlivé vrstvy",
+  "opt.perLayer.off": "Vypnuto",
+  "opt.perLayer.on": "Zapnuto"
+}

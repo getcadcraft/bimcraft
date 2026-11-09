@@ -1,0 +1,12 @@
+{
+  "@locale": "da",
+  "@name": "Dansk",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Byteorden",
+  "opt.byteOrder.big": "Big-endian (den almindelige rapport)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolsum",
+  "opt.checksum.negsum": "Negeret sum",
+  "opt.checksum.sum": "Almindelig sum"
+}

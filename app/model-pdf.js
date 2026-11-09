@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 import { layerPrimitives, colorRgb } from './wall-plan-graphics.js';
 import { PHASE_PLAN } from './phase-pens.js';   // 0.8 EG.59
+import { penDash } from './pen-colors.js';   // 0.9 D8.12-B
 import { dimensionFootprint } from './dimension-geometry.js';
 import * as PDF from './picture-pdf.js';   // 0.8 D8.8 round 3: image XObjects
 /**
@@ -118,7 +119,9 @@ export function planPdf(scene, { title = '', lines = [], paper = 'letter', units
   // other cut elements: light fill, outline
   for (const c of scene.cut || []) {
     if (c.loops?.length) { ops.push('0.75 g'); for (const l of c.loops) { const pts = []; for (let i = 0; i + 1 < l.length; i += 2) pts.push([l[i], l[i + 1]]); path(pts, true); } ops.push('f*'); }
-    pen(0.25, 0); seg(c.segs); ops.push('S');
+    // 0.9 D8.12-B: a view's pen override on a cut element prints in its weight, line and colour
+    if (c.pen) { pen(c.pen.w ? penMm(c.pen.w) : 0.25, 0, penDash(c.pen.dash)); ops.push(penRgb(c.pen.color).map(n).join(' ') + ' RG'); seg(c.segs); ops.push('S'); ops.push('0 G'); }
+    else { pen(0.25, 0); seg(c.segs); ops.push('S'); }
   }
   // walls: grey fill, heavy outline
   for (const w of scene.walls || []) {
@@ -158,9 +161,12 @@ export function planPdf(scene, { title = '', lines = [], paper = 'letter', units
   }
   // 0.6 DC.117 (d): drafting lines and hatch regions drawn in this view
   for (const d of scene.drafting || []) {
-    if (d.solid && d.rings) { ops.push('0.6 g'); for (const r of d.rings) path(r, true); ops.push('f*'); }
+    const rgb = d.pen?.color ? penRgb(d.pen.color).map(n).join(' ') : null;   // 0.9 D8.12-B: a drafting pen
+    if (d.solid && d.rings) { ops.push(rgb ? rgb + ' rg' : '0.6 g'); for (const r of d.rings) path(r, true); ops.push('f*'); ops.push('0 g'); }
+    if (rgb) ops.push(rgb + ' RG');
     if (d.segs?.length) { pen(0.13, 0); seg(d.segs); ops.push('S'); }
-    pen(d.kind === 'hatch' ? 0.18 : 0.25, 0); for (const l of d.lines || []) if (l.length > 1) path(l, !!d.closed); ops.push('S');
+    pen(d.pen?.w ? penMm(d.pen.w) : d.kind === 'hatch' ? 0.18 : 0.25, 0, penDash(d.pen?.dash)); for (const l of d.lines || []) if (l.length > 1) path(l, !!d.closed); ops.push('S');
+    if (rgb) ops.push('0 G');
   }
   // dimensions: line, ticks, text above
   for (const d of scene.dims || []) {
@@ -170,6 +176,7 @@ export function planPdf(scene, { title = '', lines = [], paper = 'letter', units
     const off = d.offMm !== undefined ? d.offMm / k : d.off || 0;
     const A = [d.a[0] + nn[0] * off, d.a[1] + nn[1] * off], B = [d.b[0] + nn[0] * off, d.b[1] + nn[1] * off];
     pen(0.13, 0);
+    if (d.pen?.color) ops.push(penRgb(d.pen.color).map(n).join(' ') + ' RG');   // 0.9 D8.12-B: a dimension pen's colour
     path([A, B]);
     const ext = 1.5 / k, gap = 0.8 / k;
     for (const [i, q] of [A, B].entries()) {

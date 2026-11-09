@@ -1,0 +1,21 @@
+{
+  "@locale": "ja",
+  "@name": "日本語",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX と PWS",
+  "opt.flip": "画像を左右反転",
+  "opt.flip.off": "いいえ",
+  "opt.flip.on": "はい、左から右へ",
+  "opt.version": "ファイルのバージョン",
+  "opt.version.v1": "バージョン1(一般的)",
+  "opt.version.v516": "バージョン516",
+  "opt.aa": "エッジの平滑化レベル",
+  "opt.aa.1": "1(なし)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "レイヤーごとの設定フラグ",
+  "opt.perLayer.off": "オフ",
+  "opt.perLayer.on": "オン"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "tr",
+  "@name": "Türkçe",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Resmi aynala",
+  "opt.flip.off": "Hayır",
+  "opt.flip.on": "Evet, soldan sağa",
+  "opt.version": "Dosya sürümü",
+  "opt.version.v1": "Sürüm 1 (yaygın olan)",
+  "opt.version.v516": "Sürüm 516",
+  "opt.aa": "Kenar yumuşatma düzeyleri",
+  "opt.aa.1": "1 (yok)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Katman başına ayar bayrağı",
+  "opt.perLayer.off": "Kapalı",
+  "opt.perLayer.on": "Açık"
+}

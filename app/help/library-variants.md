@@ -15,7 +15,7 @@ Place a library item in the size or option you need, and change your mind later 
 1. Open the {{ui:Library}} tab and click the item's card.
 2. Under the name, the {{ui:Variant}} choice lists every variant with its size. The item's default is chosen first.
 3. Pick one. The plan, the size and the 3D body row follow your choice.
-4. Click {{ui:Place in the model}} and place it as any item: see [Place equipment and furniture from the library](topic:place-from-library).
+4. Click {{ui:Place in plan}} (or {{ui:Place in model}} in the 3D view) and place it as any item: see [Place equipment and furniture from the library](topic:place-from-library).
 
 The placed element is named after the item and the variant, for example *Mounting plate — Large*, so the {{ui:Equipment}} schedule and the tree tell them apart. Each variant is its own IFC type: placing the same variant twice shares one type, a different variant gets its own.
 

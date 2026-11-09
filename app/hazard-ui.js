@@ -14,6 +14,7 @@ import { t } from './i18n.js';
 import { floodScene, hazardBuilding, hazardFrameBuilding } from './hazard-model.js';
 import { floodRun, windRun, quakeRun, staticSway, groundMotion } from './hazard.js';
 import { parseScenario, scenarioAt, futureFlood } from './climate.js';   // 0.8 EG.46: the person's own scenario file; no data is shipped
+import { climateFor, floodFuture } from './climate-future-ui.js';   // 0.9 EG.46 (climate-futures-09): the Climate futures pack, present beside future
 
 const SAVE = 'bimcraft.hazard';
 const num = (v) => { const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? n : NaN; };
@@ -30,7 +31,11 @@ export function mountHazard(host) {
     source: saved.source || 'period', scText: saved.scText || '', year: saved.year || '2050', sc: null, scErr: '',
     run: null, level: '', frame: 0, playing: false };
   if (S.scText) { const p = parseScenario(S.scText); if (p.ok) S.sc = p.scenario; }
-  const keep = () => { try { localStorage.setItem(SAVE, JSON.stringify({ kind: S.kind, peak: S.peak, rise: S.rise, hold: S.hold, fall: S.fall, tol: S.tol, wind: S.wind, gust: S.gust, dir: S.dir, mass: S.mass, source: S.source, T1: S.T1, pga: S.pga, zeta: S.zeta, motion: S.motion, hz: S.hz, dur: S.dur, drift: S.drift, scText: S.scText, year: S.year })); } catch (e) { /* private window */ } };
+  S.clKind = saved.clKind || 'both';
+  const climShow = [];
+  let clim = null;
+  const climate = () => (clim ||= climateFor(host, { show: climShow, onChange: () => { S.run = null; render(); } }));
+  const keep = () => { try { localStorage.setItem(SAVE, JSON.stringify({ kind: S.kind, peak: S.peak, rise: S.rise, hold: S.hold, fall: S.fall, tol: S.tol, wind: S.wind, gust: S.gust, dir: S.dir, mass: S.mass, source: S.source, T1: S.T1, pga: S.pga, zeta: S.zeta, motion: S.motion, hz: S.hz, dur: S.dur, drift: S.drift, scText: S.scText, year: S.year, clKind: S.clKind })); } catch (e) { /* private window */ } };
   let src = null, timer = 0, canvas = null;
   const post = (list) => { try { src ||= (host.problems || window.ccProblems)?.source?.({ id: 'bimcraft.hazard', kind: 'engine', label: t('eg47.title') }); src?.set(list); } catch { /* the shell's Problems are not loaded */ } };
   const prob = (code, text, extra = {}) => ({ code, severity: 'warning', msg: { key: 'eg47.p.' + code.split('.')[1], vars: {} }, text, source: { kind: 'engine', name: 'bimcraft.hazard' }, ...extra });
@@ -38,6 +43,7 @@ export function mountHazard(host) {
   function run() {
     const ed = host.editor();
     if (!ed) { host.status(t('eg47.nomodel'), true); return null; }
+    if (S.kind === 'fire' || S.kind === 'heat') return null;   // 0.9 EG.46: those two run inside the climate block
     let r = null;
     try {
       if (S.kind === 'flood') {
@@ -48,6 +54,11 @@ export function mountHazard(host) {
         if (hold) hy.push([rise + hold, peak]);
         if (fall) hy.push([rise + hold + fall, 0]);
         r = { kind: 'flood', sc, peak, out: floodRun({ rooms: sc.rooms, openings: sc.openings, hydrograph: hy, dt: Math.max(10, Math.round(hy[hy.length - 1][0] / 240)) }) };
+        const cf = climate().future();   // 0.9 EG.46: the same flood in the picked climate future, run beside the present one
+        if (cf?.ok) {
+          const ff = floodFuture(peak, cf, S.clKind), p2 = Number.isFinite(ff.future) ? Math.max(0.05, ff.future) : null;
+          r.fut = { f: cf, ff, peak: p2, out: p2 === null ? null : floodRun({ rooms: sc.rooms, openings: sc.openings, hydrograph: hy.map(([s0, v]) => [s0, v ? p2 : 0]), dt: Math.max(10, Math.round(hy[hy.length - 1][0] / 240)) }) };
+        }
         S.level = sc.rooms[0]?.level || '';
       } else {
         let hb;
@@ -151,6 +162,7 @@ export function mountHazard(host) {
       rows.push(el('p', { 'data-eg47-sum': '' }, Q(t('eg47.sum.flood', { n: r.out.wetCount, all: r.out.rooms.length, peak: fmt(r.out.peak, 2), push: fmt(Math.round(0.5 * 1000 * 9.80665 * r.out.peak * r.out.peak) / 1000) }))));
       if (wet.length) rows.push(el('div', { style: 'overflow-x:auto' }, el('table', { className: 'bc-qto-table', 'data-eg47-table': '' }, el('thead', {}, el('tr', {}, ...[t('eg47.col.room'), t('eg47.col.first'), t('eg47.col.depth'), t('eg47.col.for')].map((h) => el('th', {}, h)))),
         el('tbody', {}, ...wet.map((x) => el('tr', {}, el('td', {}, x.name), el('td', {}, fmt(x.firstWet / 60) + ' min'), el('td', {}, Q(fmt(x.maxDepth, 2) + ' m')), el('td', {}, fmt(x.wetFor / 60) + ' min')))))));
+      if (r.fut) rows.push(...climateFlood(r));
       rows.push(el('p', { className: 'bc-muted' }, t('eg47.model.flood')));
     } else {
       const names = r.hb.storeys;
@@ -172,11 +184,24 @@ export function mountHazard(host) {
     return rows;
   }
 
+  function climateFlood(r) {   // 0.9 EG.46: present beside future
+    const C = climate(), s = C.say, F = r.fut, deep = (o) => (o ? Math.max(0, ...o.rooms.map((x) => x.maxDepth)) : NaN), head = s('clim.col.future', { scenario: s('clim.sc.' + F.f.scenario).replace(/ \(.*\)$/, ''), year: F.f.horizon });
+    const out = [el('p', { className: 'bc-h' }, el('strong', {}, s('clim.head')))];
+    if (!F.out) { out.push(...F.ff.missing.map((m) => el('p', { className: 'bc-note', 'data-eg46-missing': m }, s('clim.fl.missing.' + m)))); return out; }
+    const row = (k, a, b) => el('tr', {}, el('td', {}, k), el('td', {}, a), el('td', {}, b));
+    out.push(el('div', { style: 'overflow-x:auto' }, el('table', { className: 'bc-qto-table', 'data-eg46-compare': '' }, el('thead', {}, el('tr', {}, ...[s('clim.col.item'), s('clim.col.present'), head].map((h) => el('th', {}, h)))),
+      el('tbody', {}, row(s('clim.fl.r.level'), Q(fmt(r.out.peak, 2) + ' m'), Q(fmt(F.peak, 2) + ' m')), row(s('clim.fl.r.wet'), r.out.wetCount + ' / ' + r.out.rooms.length, F.out.wetCount + ' / ' + F.out.rooms.length),
+        row(s('clim.fl.r.deep'), Q(fmt(deep(r.out), 2) + ' m'), Q(fmt(deep(F.out), 2) + ' m'))))));
+    out.push(el('ul', { 'data-eg46-assume': '' }, ...F.ff.assumptions.map((a) => el('li', {}, s('clim.fl.a.' + a, { slr: fmt(F.f.d.slrM, 2), pct: fmt(F.f.d.rx1dayPct, 0) })))));
+    if (F.ff.missing.length) out.push(...F.ff.missing.map((m) => el('p', { className: 'bc-note', 'data-eg46-missing': m }, s('clim.fl.missing.' + m))));
+    return out;
+  }
+
   function render() {
     clearInterval(timer);
     const ed = host.editor();
     if (!ed) { box.replaceChildren(el('p', { className: 'bc-muted' }, t('eg47.nomodel'))); return; }
-    const kind = el('select', { className: 'select-cc', 'data-eg47-kind': '' }, [['flood', t('eg47.k.flood')], ['wind', t('eg47.k.wind')], ['quake', t('eg47.k.quake')]].map(([v, l]) => el('option', { value: v }, l)));
+    const kind = el('select', { className: 'select-cc', 'data-eg47-kind': '' }, [['flood', t('eg47.k.flood')], ['wind', t('eg47.k.wind')], ['quake', t('eg47.k.quake')], ['fire', climate().say('clim.fi.head')], ['heat', climate().say('clim.he.head')]].map(([v, l]) => el('option', { value: v }, l)));
     kind.value = S.kind; kind.addEventListener('change', () => { S.kind = kind.value; S.run = null; keep(); render(); });
     const field = (k, text) => { const i = el('input', { className: 'bc-input', value: S[k], 'data-eg47-field': k, 'aria-label': text }); i.addEventListener('input', () => { S[k] = i.value; keep(); }); return label(text, i); };
     const motion = el('select', { className: 'select-cc', 'data-eg47-motion': '' }, [['ricker', t('eg47.m.ricker')], ['noise', t('eg47.m.noise')]].map(([v, l]) => el('option', { value: v }, l)));
@@ -184,6 +209,13 @@ export function mountHazard(host) {
     const dir = el('select', { className: 'select-cc', 'data-eg47-dir': '' }, [['x', t('eg47.dir.x')], ['y', t('eg47.dir.y')]].map(([v, l]) => el('option', { value: v }, l)));
     dir.value = S.dir; dir.addEventListener('change', () => { S.dir = dir.value; keep(); });
     const rows = [el('p', { className: 'bc-muted' }, t('eg47.intro')), label(t('eg47.kind'), kind)];
+    climShow.length = 0;
+    if (S.kind === 'fire' || S.kind === 'heat') {   // 0.9 EG.46: wildfire screening and the future weather file live in the shared climate block
+      climShow.push(S.kind);
+      rows.push(climate().render());
+      box.replaceChildren(...rows);
+      return;
+    }
     if (S.kind === 'flood') {
       rows.push(field('peak', t('eg47.peak')), field('rise', t('eg47.rise')), field('hold', t('eg47.hold')), field('fall', t('eg47.fall')), field('tol', t('eg47.tol')));
       const file = el('input', { type: 'file', accept: '.json,.csv,.txt', 'data-eg46-file': '', 'aria-label': t('eg46.load') });
@@ -202,6 +234,12 @@ export function mountHazard(host) {
         rows.push(label(t('eg46.year'), inp), el('p', { 'data-eg46-info': '' }, Q(t('eg46.info', { name: S.sc.name || t('eg46.unnamed'), source: S.sc.source || t('eg46.nosource'), year: yr, rise: fmt(at.seaLevelRiseM, 2), factor: fmt(at.floodFactor, 2), peak: fmt(futureFlood(Math.max(0.05, num(S.peak) || 1), S.sc, yr), 2) }))));
         if (!at.exact) rows.push(el('p', { className: 'bc-note' }, t('eg46.noexact')));
         rows.push(el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-eg46-clear': '', onClick: () => { S.sc = null; S.scText = ''; keep(); render(); } }, t('eg46.clear')));
+      }
+      rows.push(climate().render());   // 0.9 EG.46: the Climate futures pack (scenario + year)
+      if (climate().future()?.ok) {
+        const ck = el('select', { className: 'select-cc', 'data-eg46-clkind': '' }, ['coastal', 'river', 'both'].map((k) => el('option', { value: k }, climate().say('clim.fl.k.' + k))));
+        ck.value = S.clKind; ck.addEventListener('change', () => { S.clKind = ck.value; S.run = null; keep(); render(); });
+        rows.push(label(climate().say('clim.fl.kind'), ck));
       }
     }
     else {

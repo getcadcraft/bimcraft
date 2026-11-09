@@ -21,8 +21,8 @@ Put a library item into an IFC model: a sink, a work table, a chair. BimCraft wr
    - **Files…**: a DWG, DXF, IFC, glTF/GLB, OBJ, RFA or CSV file on your computer. It is read in this tab; nothing is uploaded.
    - **Other feeds**: another library that speaks the same feed format. Add its address once; it is kept in this browser.
 4. Search or pick a category, then click a card. The card shows a plan preview, the name, maker and model, the license and the version.
-5. Click {{ui:Place in the model}}.
-6. Pick the storey in the placing bar. Storeys above it are hidden while you place, and the view turns to the top.
+5. Click {{ui:Place in plan}} (in the Plan view) or {{ui:Place in model}} (in the 3D view). In Split, where the plan and the 3D view both show, the button is a split button: its main action is {{ui:Place in plan}}, and the arrow at its right end opens a menu with {{ui:Place in model}}. Or drag the card, or the picture in the item's details, onto the plan or the 3D view: the item is placed where you let go. With a pen or a finger, press and hold the card for a moment, then drag.
+6. Pick the storey in the placing bar. In the 3D view, storeys above it are hidden while you place and the view turns to the top; in the plan, the plan already shows that storey. Choosing {{ui:Place in model}} from the plan alone brings the 3D view up beside it.
 7. Move the pointer over the model: a see-through box shows where the item goes.
 8. Press {{key:R}} to turn it 90°. Press {{key:Tab}} (or {{ui:Wall snap}}) to put its back against the nearest wall, facing the room.
 9. Click to place it. Or type the position in **X, Y (mm)**, for example `1200, 3400`, and press {{key:Enter}}.
@@ -31,6 +31,12 @@ A light or anything else hung from above: set **Mount** to **At the ceiling**. T
 10. Answer the one question: the **item number** (the next free number is filled in), the quantity and a note. Press {{key:Enter}}.
 11. Place more, or press {{key:Esc}} to stop.
 12. Click {{ui:Save as IFC}} to download the edited copy.
+
+## Plan or model
+
+The Library's place button follows the view you are in, and changes as soon as you change the view (the {{ui:Plan}}, {{ui:Split}} and {{ui:3D}} buttons, the keyboard, opening a file). Plan shows one button, {{ui:Place in plan}}; 3D shows one button, {{ui:Place in model}}; Split shows the split button, with {{ui:Place in plan}} as the main action and {{ui:Place in model}} in its menu. Both ways use the same placing bar and write the same IFC element: the pointer works in the plan view for one and in the 3D view for the other. Press {{key:Esc}} at any time to stop.
+
+Dragging a card has no key of its own: the split button, or the plain button, does the same with the keyboard.
 
 ## Move or turn a placed item
 
@@ -66,7 +72,7 @@ An item can carry its name, description and type in other languages. When it has
 
 ## Common mistakes
 
-- **{{ui:Place in the model}} is missing.** No IFC model is open. Open one first.
+- **The place button is missing.** No IFC model is open. Open one first.
 - **The ghost does not follow the pointer.** The pointer is off the model's area, or the storey plane is out of view. Click {{ui:Top}}.
 - **{{ui:Wall snap}} says there are no walls.** The storey has no walls in the IFC (some exports put walls on another storey). Pick that storey, or type X and Y.
 - **A file's items are the wrong size.** The file has no units, or says the wrong ones. In {{ui:Files…}} choose the units and read it again.

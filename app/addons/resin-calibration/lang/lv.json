@@ -1,0 +1,14 @@
+{
+  "@locale": "lv",
+  "@name": "Latviešu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Ekspozīcijas tests",
+  "note": "Sveķi un printeri atšķiras. Izdrukājiet testa detaļu vienreiz katrā kāpņu ekspozīcijā un paturiet to ekspozīciju, kurai ir visasākie plānie stabiņi un atvērtie caurumi.",
+  "part": "Novietojiet testa detaļu uz platformas",
+  "part.name": "Ekspozīcijas testa detaļa",
+  "ladder": "Saglabāt ekspozīcijas kāpnes ({n} faili)",
+  "ladder.made": "Saglabāti {n} faili ekspozīcijām: {list} s. Izdrukājiet katru ar tiem pašiem sveķiem un salīdziniet.",
+  "ladder.nopart": "Vispirms novietojiet testa detaļu uz platformas.",
+  "ladder.failed": "Ekspozīcijas kāpnes nevarēja izveidot. {why}",
+  "ladder.busy": "Notiek {i} no {n}…"
+}

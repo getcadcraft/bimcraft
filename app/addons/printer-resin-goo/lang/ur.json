@@ -1,0 +1,12 @@
+{
+  "@locale": "ur",
+  "@name": "اردو",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "بائٹ ترتیب",
+  "opt.byteOrder.big": "بگ اینڈین (عام طور پر یہی ہوتا ہے)",
+  "opt.byteOrder.little": "لٹل اینڈین",
+  "opt.checksum": "چیک سم",
+  "opt.checksum.negsum": "نفی شدہ جمع",
+  "opt.checksum.sum": "سادہ جمع"
+}

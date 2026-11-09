@@ -1,0 +1,8 @@
+{
+  "@locale": "vi",
+  "@name": "Tiếng Việt",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Dữ liệu và nguồn",
+  "data.nex": "NASA NEX-GDDP-CMIP6, đầu ra mô hình CMIP6 đã thu nhỏ quy mô (CC BY 4.0 theo từng mô hình); mực nước biển toàn cầu: IPCC AR6",
+  "data.sample": "Gói mẫu: ba địa điểm, một mô hình, năm năm cho mỗi giai đoạn. Không dùng cho thiết kế."
+}

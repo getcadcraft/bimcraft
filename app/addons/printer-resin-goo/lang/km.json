@@ -1,0 +1,12 @@
+{
+  "@locale": "km",
+  "@name": "ខ្មែរ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "លំដាប់បៃ",
+  "opt.byteOrder.big": "Big-endian (ធម្មតា)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "ផលបូកត្រួតពិនិត្យ",
+  "opt.checksum.negsum": "ផលបូកអវិជ្ជមាន",
+  "opt.checksum.sum": "ផលបូកធម្មតា"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "he",
+  "@name": "עברית",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "הפיכת התמונה במראה",
+  "opt.flip.off": "לא",
+  "opt.flip.on": "כן, משמאל לימין",
+  "opt.version": "גרסת קובץ",
+  "opt.version.v1": "גרסה 1 (הרגילה)",
+  "opt.version.v516": "גרסה 516",
+  "opt.aa": "רמות החלקת קצוות",
+  "opt.aa.1": "1 (ללא)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "דגל הגדרות לכל שכבה",
+  "opt.perLayer.off": "כבוי",
+  "opt.perLayer.on": "פעיל"
+}

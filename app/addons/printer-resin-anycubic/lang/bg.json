@@ -1,0 +1,21 @@
+{
+  "@locale": "bg",
+  "@name": "Български",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX и PWS",
+  "opt.flip": "Огледално отразяване на изображението",
+  "opt.flip.off": "Не",
+  "opt.flip.on": "Да, от ляво на дясно",
+  "opt.version": "Версия на файла",
+  "opt.version.v1": "Версия 1 (обичайната)",
+  "opt.version.v516": "Версия 516",
+  "opt.aa": "Нива на изглаждане на ръбовете",
+  "opt.aa.1": "1 (няма)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Флаг за настройки по слой",
+  "opt.perLayer.off": "Изключено",
+  "opt.perLayer.on": "Включено"
+}

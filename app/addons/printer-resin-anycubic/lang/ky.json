@@ -1,0 +1,21 @@
+{
+  "@locale": "ky",
+  "@name": "Кыргызча",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX жана PWS",
+  "opt.flip": "Сүрөттү чагылдыруу",
+  "opt.flip.off": "Жок",
+  "opt.flip.on": "Ооба, солдон оңго",
+  "opt.version": "Файл версиясы",
+  "opt.version.v1": "1-версия (адаттагы)",
+  "opt.version.v516": "516-версия",
+  "opt.aa": "Четтерди жумшартуу деңгээли",
+  "opt.aa.1": "1 (жок)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Катмар боюнча жөндөөлөр белгиси",
+  "opt.perLayer.off": "Өчүк",
+  "opt.perLayer.on": "Күйүк"
+}

@@ -1,0 +1,14 @@
+{
+  "@locale": "az",
+  "@name": "Azərbaycanca",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Ekspozisiya testi",
+  "note": "Qatranlar və printerlər fərqlidir. Test detalını pilləkəndəki hər ekspozisiyada bir dəfə çap edin və ən kəskin nazik sütunları və açıq deşikləri olan ekspozisiyanı saxlayın.",
+  "part": "Test detalını platformaya qoyun",
+  "part.name": "Ekspozisiya test detalı",
+  "ladder": "Ekspozisiya pilləkənini saxla ({n} fayl)",
+  "ladder.made": "Saxlanıldı: {n} fayl, müddətlər {list} s. Hər birini eyni qatranla çap edin və müqayisə edin.",
+  "ladder.nopart": "Əvvəlcə test detalını platformaya qoyun.",
+  "ladder.failed": "Pilləkən yaradıla bilmədi. {why}",
+  "ladder.busy": "Yaradılır {i} / {n}…"
+}

@@ -22,8 +22,24 @@ import { defaultUnit, fillSelect, isOn } from './unit-prefs.js';
  */
 // GH.3-A (rule 39): the six units, the table ids and every number-to-text helper live in the neutral display-units.js
 // (lib/units; a copy: tools/units/sync-display.mjs bimcraft). Re-exported here so every import of model-units.js still works.
-import { UNITS, TABLE_ID, INCH, FACTOR, isMetric } from './display-units.js';
+import { UNITS, TABLE_ID, INCH, FACTOR, isMetric, lenMark, fmtLen as fmtLenD, unitMark, pointText, smallNumber, smallMark } from './display-units.js';
 export * from './display-units.js';
+/**
+ * 0.9 GH.3-A: the shared frame panel's `host.len` (lib/frame/frame-panel.js) in the display unit, read again on every call so a
+ * unit change shows at the next draw. `units` is a unit or a function giving it (default: the pick).
+ */
+export function lengthHooks(units = () => getDisplayUnits()) {
+  const u = () => (typeof units === 'function' ? units() : units);
+  return {
+    text: (mm) => lenMark(mm, u()),
+    num: (mm) => fmtLenD(mm, u()),
+    mark: () => (u() === 'ftin' ? 'ft-in' : unitMark(u())),
+    point: (p) => pointText(p, u()),
+    small: (mm) => smallNumber(mm, u()),
+    smallMark: () => smallMark(u()),
+    parse: (text) => parseLen(text, u()),
+  };
+}
 const FROM_TABLE = Object.fromEntries(Object.entries(TABLE_ID).map(([k, v]) => [v, k]));
 let displayUnits = null;
 /** A unit BimCraft shows only while Settings › General › Units has it turned on: turning feet and inches off moves a person to metric. */

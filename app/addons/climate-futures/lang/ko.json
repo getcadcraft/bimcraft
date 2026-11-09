@@ -1,0 +1,8 @@
+{
+  "@locale": "ko",
+  "@name": "한국어",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "데이터 및 출처",
+  "data.nex": "NASA NEX-GDDP-CMIP6, 다운스케일링된 CMIP6 모델 출력 (모델별 CC BY 4.0); 전 지구 해수면: IPCC AR6",
+  "data.sample": "샘플 팩: 지역 3곳, 모델 1개, 기간별 5년. 설계용이 아닙니다."
+}

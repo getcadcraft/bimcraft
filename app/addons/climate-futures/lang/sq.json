@@ -1,0 +1,8 @@
+{
+  "@locale": "sq",
+  "@name": "Shqip",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Të dhënat dhe burimet",
+  "data.nex": "NASA NEX-GDDP-CMIP6, rezultatet e modelit CMIP6 të zvogëluara në shkallë (CC BY 4.0 për çdo model); niveli global i detit: IPCC AR6",
+  "data.sample": "Paketë mostrash: tre vende, një model, pesë vjet për çdo periudhë. Jo për projektim."
+}

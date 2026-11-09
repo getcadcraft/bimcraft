@@ -1,0 +1,21 @@
+{
+  "@locale": "da",
+  "@name": "Dansk",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX og PWS",
+  "opt.flip": "Spejl billedet",
+  "opt.flip.off": "Nej",
+  "opt.flip.on": "Ja, venstre mod højre",
+  "opt.version": "Filversion",
+  "opt.version.v1": "Version 1 (den almindelige)",
+  "opt.version.v516": "Version 516",
+  "opt.aa": "Niveauer for kantudglatning",
+  "opt.aa.1": "1 (ingen)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flag for indstillinger pr. lag",
+  "opt.perLayer.off": "Slukket",
+  "opt.perLayer.on": "Tændt"
+}

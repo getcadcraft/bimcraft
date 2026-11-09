@@ -1,0 +1,12 @@
+{
+  "@locale": "ru",
+  "@name": "Русский",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Порядок байтов",
+  "opt.byteOrder.big": "Big-endian (обычно используется в отчетах)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Контрольная сумма",
+  "opt.checksum.negsum": "Инвертированная сумма",
+  "opt.checksum.sum": "Простая сумма"
+}

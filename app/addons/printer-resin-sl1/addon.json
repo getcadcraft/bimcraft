@@ -1,0 +1,22 @@
+{
+  "id": "printer-resin-sl1",
+  "name": "Resin files: SL1",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "slicer-resin",
+      "range": "*"
+    }
+  ],
+  "description": "Writes the layered-image SL1 archive (Prusa SL1 and SL1S, and tools that read SL1). Written from public descriptions and read back by CadCraft only: not yet loaded on a printer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

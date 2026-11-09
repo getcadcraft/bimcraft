@@ -1,0 +1,8 @@
+{
+  "@locale": "el",
+  "@name": "Ελληνικά",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Δεδομένα και πηγές",
+  "data.nex": "NASA NEX-GDDP-CMIP6, υποβαθμισμένη χωρική ανάλυση των προσομοιώσεων μοντέλων CMIP6 (CC BY 4.0 ανά μοντέλο)· παγκόσμια στάθμη θάλασσας: IPCC AR6",
+  "data.sample": "Δείγμα: τρεις τοποθεσίες, ένα μοντέλο, πέντε έτη ανά περίοδο. Δεν προορίζεται για σχεδιασμό."
+}

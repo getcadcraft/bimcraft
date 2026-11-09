@@ -1,0 +1,14 @@
+{
+  "@locale": "sw",
+  "@name": "Kiswahili",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Jaribio la mwangaza",
+  "note": "Resini na vichapishi hutofautiana. Chapisha sehemu ya majaribio mara moja kwa kila muda wa mwangaza katika ngazi, kisha chagua muda wenye nguzo nyembamba kali zaidi na matundu wazi.",
+  "part": "Weka sehemu ya majaribio kwenye jukwaa la uchapishaji",
+  "part.name": "Sehemu ya jaribio la mwangaza",
+  "ladder": "Hifadhi ngazi ya mwangaza ({n} faili)",
+  "ladder.made": "Faili {n} zimehifadhiwa kwa muda wa: {list} s. Chapisha kila moja kwa resini ile ile, kisha linganisha.",
+  "ladder.nopart": "Weka kwanza sehemu ya majaribio kwenye jukwaa la uchapishaji.",
+  "ladder.failed": "Ngazi haikuweza kutengenezwa. {why}",
+  "ladder.busy": "Inatengeneza {i} kati ya {n}…"
+}

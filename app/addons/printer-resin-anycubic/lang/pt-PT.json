@@ -1,0 +1,21 @@
+{
+  "@locale": "pt-PT",
+  "@name": "Português (Portugal)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX e PWS",
+  "opt.flip": "Espelhar a imagem",
+  "opt.flip.off": "Não",
+  "opt.flip.on": "Sim, da esquerda para a direita",
+  "opt.version": "Versão do ficheiro",
+  "opt.version.v1": "Versão 1 (a habitual)",
+  "opt.version.v516": "Versão 516",
+  "opt.aa": "Níveis de suavização de arestas",
+  "opt.aa.1": "1 (nenhum)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Indicador de definições por camada",
+  "opt.perLayer.off": "Desligado",
+  "opt.perLayer.on": "Ligado"
+}

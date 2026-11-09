@@ -47,8 +47,47 @@ const CLASSES = {
   IfcSanitaryTerminal: ['IFCSANITARYTERMINAL', 'IFCSANITARYTERMINALTYPE', 'IFCFLOWTERMINAL', 'IFCSANITARYTERMINALTYPE'],
   IfcElectricAppliance: ['IFCELECTRICAPPLIANCE', 'IFCELECTRICAPPLIANCETYPE', 'IFCFLOWTERMINAL', 'IFCELECTRICAPPLIANCETYPE'],
   IfcLightFixture: ['IFCLIGHTFIXTURE', 'IFCLIGHTFIXTURETYPE', 'IFCFLOWTERMINAL', 'IFCLIGHTFIXTURETYPE'],
+  // Library doors and windows (kinds door / window, 2026-11-02): typed as doors and windows, placed as free elements (no wall cut yet)
+  IfcDoor: ['IFCDOOR', 'IFCDOORTYPE', 'IFCDOOR', 'IFCDOORSTYLE'],
+  IfcWindow: ['IFCWINDOW', 'IFCWINDOWTYPE', 'IFCWINDOW', 'IFCWINDOWSTYLE'],
 };
 export const PSETS = { placement: 'CadCraft_Placement', library: 'CadCraft_LibraryItem', equipment: 'CadCraft_Equipment', source: 'CadCraft_SourceAttributes' };
+
+/**
+ * 2026-11-02: how a Library door / window's body sits in its own axes → { turn (0 | 90), dx, dy, dz, width, depth, height } in mm.
+ * Turned (x, y) → (y, −x) when it is deeper than wide, then moved by (dx, dy, dz) its width runs 0 → width along x, its thickness is
+ * centred on y = 0 and it stands on z = 0: the axes of a wall opening (model-openings.js). Body: { type: mesh, positions } or a box.
+ */
+export const FRAME_PSET = 'CadCraft_OpeningFrame';
+export function libraryFrame(body) {
+  let P = [];
+  if (body?.type === 'mesh' && Array.isArray(body.positions)) P = body.positions;
+  else if (body?.type === 'box') P = [body.x, body.y, body.z, body.x + body.w, body.y + body.d, body.z + body.h];
+  if (P.length < 6) return null;
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+  for (let i = 0; i + 2 < P.length; i += 3) for (let k = 0; k < 3; k++) { const v = Number(P[i + k]); if (v < lo[k]) lo[k] = v; if (v > hi[k]) hi[k] = v; }
+  if (!lo.every(Number.isFinite) || !hi.every(Number.isFinite)) return null;
+  const turn = hi[1] - lo[1] > hi[0] - lo[0] ? 90 : 0;
+  // turned: x' = y, y' = −x
+  const [x0, x1, y0, y1] = turn ? [lo[1], hi[1], -hi[0], -lo[0]] : [lo[0], hi[0], lo[1], hi[1]];
+  const r = (v) => Math.round(v * 1e4) / 1e4;
+  return { turn, dx: r(-x0), dy: r(-(y0 + y1) / 2), dz: r(-lo[2]), width: r(x1 - x0), depth: r(y1 - y0), height: r(hi[2] - lo[2]) };
+}
+function frameRows(f, stretch = []) {
+  const ax = ['x', 'y', 'z'].filter((a) => Array.isArray(stretch) && stretch.includes(a));
+  return [['Stretch', 'IFCLABEL', ax.join(',')],   // 2026-11-02: the axes the Library lets it be stretched along ('' = none)
+    ['Turn', 'IFCPLANEANGLEMEASURE', f.turn], ['Dx', 'IFCLENGTHMEASURE', f.dx], ['Dy', 'IFCLENGTHMEASURE', f.dy], ['Dz', 'IFCLENGTHMEASURE', f.dz],
+    ['Width', 'IFCPOSITIVELENGTHMEASURE', f.width], ['Depth', 'IFCPOSITIVELENGTHMEASURE', f.depth], ['Height', 'IFCPOSITIVELENGTHMEASURE', f.height]];
+}
+/** The frame a type carries (mm, as libraryFrame), or null. */
+export function typeFrame(placer, typeId) {
+  const p = placer.typePsets(typeId)[FRAME_PSET]?.props;
+  if (!p) return null;
+  const n = (k) => Number(p[k]?.value ?? p[k]);
+  const f = { turn: n('Turn') === 90 ? 90 : 0, dx: n('Dx'), dy: n('Dy'), dz: n('Dz'), width: n('Width'), depth: n('Depth'), height: n('Height'),
+    stretch: String(p.Stretch?.value ?? '').split(',').filter((a) => ['x', 'y', 'z'].includes(a)) };
+  return ['dx', 'dy', 'dz', 'width', 'height'].every((k) => Number.isFinite(f[k])) && f.width > 0 && f.height > 0 ? f : null;
+}
 
 /** The pair of classes an item becomes in this schema. */
 export function classesFor(item, schema) {
@@ -209,6 +248,17 @@ export class IfcPlacer {
     }
     return out.sort((a, b) => String(a.itemNumber).localeCompare(String(b.itemNumber), undefined, { numeric: true }));
   }
+  /** Every Library item in the file with its credit: read from the property sets themselves, because a placed item has its set on the occurrence and a door or window on its type. */
+  libraryCredits() {
+    const out = [];
+    for (const id of ids(this.api, this.mid, 'IFCPROPERTYSET')) {
+      if (this.psetName(id) !== PSETS.library) continue;
+      const lib = this.propsOf(id);
+      out.push({ uuid: lib.ItemUuid?.value || '', version: lib.ItemVersion?.value ?? 0, license: lib.License?.value || '', attribution: lib.Attribution?.value || '' });
+    }
+    return out;
+  }
+
   _psetIndexAll() { this.psetsOf(-1); return this._psetIndex; }
 
   nextItemNumber() {
@@ -349,10 +399,15 @@ export class IfcPlacer {
     }
     const libPset = this.pset(PSETS.library, this.libraryProps(item, opts));
     const cls = classesFor(item, this.schema);
+    // 2026-11-02: a Library door or window's type says how its mesh sits, so any placement of it can be set into a wall opening
+    const fr = (item.kind === 'door' || item.kind === 'window') && body ? libraryFrame(body) : null;
+    const framePset = fr ? this.pset(FRAME_PSET, frameRows(fr, opts.stretch)) : null;
     const head = [this.guid(), this.ownerHistory(), this.L(item.name), this.X(!body && opts.standInHeight > 0 ? 'Stand-in box ' + opts.standInHeight + ' mm tall: the library item has no 3D body.' : item.description || null),   // i18n-ignore: Description written into the saved IFC file (file content, same in every language)
-      null, [this.H(libPset)], maps.map((m) => this.H(m)), null, this.L(item.maker && item.model ? item.maker + ' ' + item.model : null)];
+      null, [this.H(libPset), ...(framePset ? [this.H(framePset)] : [])], maps.map((m) => this.H(m)), null, this.L(item.maker && item.model ? item.maker + ' ' + item.model : null)];
     let extra = [];
-    if (cls.type === 'IFCFURNITURETYPE') extra = this.v4 ? [this.E('NOTDEFINED'), this.E('NOTDEFINED')] : [this.E('NOTDEFINED')];
+    if (cls.type === 'IFCDOORTYPE' || cls.type === 'IFCWINDOWTYPE') extra = [cls.type === 'IFCDOORTYPE' ? 'DOOR' : 'WINDOW', 'NOTDEFINED', false, null];   // as family-model.js makeType
+    else if (cls.type === 'IFCDOORSTYLE' || cls.type === 'IFCWINDOWSTYLE') { head.pop(); extra = ['NOTDEFINED', 'NOTDEFINED', false, false]; }   // IFC2X3 styles have no ElementType
+    else if (cls.type === 'IFCFURNITURETYPE') extra = this.v4 ? [this.E('NOTDEFINED'), this.E('NOTDEFINED')] : [this.E('NOTDEFINED')];
     else if (cls.type !== 'IFCFURNISHINGELEMENTTYPE') extra = [this.E('NOTDEFINED')];
     const id = this.make(cls.type, ...head, ...extra);
     return { id, created: true, maps };
@@ -368,6 +423,8 @@ export class IfcPlacer {
       ['License', 'IFCLABEL', lic.id || ''],
       ['Attribution', 'IFCTEXT', lic.attribution || ''],
       ['SourceFile', 'IFCLABEL', opts.sourceFile || item.provenance?.source_file || ''],
+      // 2026-11-02: the axes the Library lets it be stretched along ('none' unless its maker allows some; nothing stretches it otherwise)
+      ['Stretch', 'IFCLABEL', ['x', 'y', 'z'].filter((a) => Array.isArray(opts.stretch) && opts.stretch.includes(a)).join(',') || 'none'],
     ];
     // 0.7 W3.19: the chosen variant of an item with variants (its id, its name, and its option values as text)
     if (opts.variant?.id) {
@@ -415,7 +472,7 @@ export class IfcPlacer {
     const shape = this.shapeFor(type.id);
     const cls = classesFor(item, this.schema);
     const head = [this.guid(), this.ownerHistory(), this.L(item.name), this.X(item.description || null), this.L(item.name), this.H(lp), shape ? this.H(shape) : null, null];
-    const id = this.make(cls.occ, ...head, ...this.occExtra(cls.occ));
+    const id = this.make(cls.occ, ...head, ...this.occExtra(cls.occ, item));
     this.relateType(id, type.id);
     this.contain(id, opts.storey);
     this.relate(id, this.placementPset(opts));
@@ -444,7 +501,9 @@ export class IfcPlacer {
       const shape = this.shapeFor(typeId);
       const occ = String(api.GetNameFromTypeCode(src.type) || '').toUpperCase();
       const head = [this.guid(), this.ownerHistory(), src.Name ?? null, src.Description ?? null, src.ObjectType ?? null, this.H(lp), shape ? this.H(shape) : null, src.Tag ?? null];
-      const extra = this.occExtra(occ).map((x) => (x === null ? src.CompositionType ?? null : src.PredefinedType ?? x));
+      const extra = occ === 'IFCDOOR' || occ === 'IFCWINDOW'
+        ? [src.OverallHeight ?? null, src.OverallWidth ?? null, ...(this.v4 ? [src.PredefinedType ?? 'NOTDEFINED', (occ === 'IFCDOOR' ? src.OperationType : src.PartitioningType) ?? 'NOTDEFINED', null] : [])]
+        : this.occExtra(occ).map((x) => (x === null ? src.CompositionType ?? null : src.PredefinedType ?? x));
       const id = this.make(occ, ...head, ...extra);
       this.relateType(id, typeId);
       this.contain(id, opts.storey);
@@ -486,8 +545,14 @@ export class IfcPlacer {
     const ax = this.make('IFCAXIS2PLACEMENT3D', this.H(loc), this.H(this.dir(0, 0, 1)), this.H(this.dir(round(dl[0], 9), round(dl[1], 9), 0)));
     return this.make('IFCLOCALPLACEMENT', st.ObjectPlacement, this.H(ax));
   }
-  /** Attributes after Tag: IFC4 PredefinedType (not on furnishing elements / flow terminals), IFC2X3 proxy CompositionType. */
-  occExtra(occ) {
+  /** Attributes after Tag: IFC4 PredefinedType (not on furnishing elements / flow terminals), IFC2X3 proxy CompositionType; a door or
+   *  window: OverallHeight, OverallWidth (the item's height / width) and, in IFC4, PredefinedType, OperationType / PartitioningType. */
+  occExtra(occ, item = null) {
+    if (occ === 'IFCDOOR' || occ === 'IFCWINDOW') {
+      const p = item?.params || {};
+      const len = (v) => (Number(v) > 0 ? Math.round(this.u(Number(v)) * 1e6) / 1e6 : null);
+      return [len(p.height), len(p.width), ...(this.v4 ? [occ === 'IFCDOOR' ? 'DOOR' : 'WINDOW', 'NOTDEFINED', null] : [])];
+    }
     if (this.v4 && occ !== 'IFCFURNISHINGELEMENT' && occ !== 'IFCFLOWTERMINAL') return [this.E('NOTDEFINED')];
     if (!this.v4 && occ === 'IFCBUILDINGELEMENTPROXY') return [null];
     return [];
@@ -548,7 +613,7 @@ export class IfcPlacer {
     if (was && was !== cls.occ && !opts.keepClass) {
       const g = occ.GlobalId?.value ?? occ.GlobalId;   // raw: a typed IfcGloballyUniqueId is dropped (see the header)
       const e = this.api.CreateIfcEntity(this.mid, this.api.GetTypeCodeFromName(cls.occ), g, occ.OwnerHistory, occ.Name, occ.Description, occ.ObjectType,
-        occ.ObjectPlacement, occ.Representation, retypeLine(this.api, this.mid, { Tag: occ.Tag ?? null }).Tag, ...this.occExtra(cls.occ));
+        occ.ObjectPlacement, occ.Representation, retypeLine(this.api, this.mid, { Tag: occ.Tag ?? null }).Tag, ...this.occExtra(cls.occ, item));
       e.expressID = id;
       replaceLine(this.api, this.mid, e);
       (this.journal.retyped ??= []).push(id);

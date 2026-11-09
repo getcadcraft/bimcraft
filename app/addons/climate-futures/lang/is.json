@@ -1,0 +1,8 @@
+{
+  "@locale": "is",
+  "@name": "Íslenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Gögn og heimildir",
+  "data.nex": "NASA NEX-GDDP-CMIP6, niðurkvarðað úttak CMIP6 líkana (CC BY 4.0 fyrir hvert líkan); alþjóðleg sjávarstaða: IPCC AR6",
+  "data.sample": "Sýnishornasafn: þrír staðir, eitt líkan, fimm ár á hverju tímabili. Ekki ætlað til hönnunar."
+}

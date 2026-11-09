@@ -1,0 +1,14 @@
+{
+  "@locale": "hr",
+  "@name": "Hrvatski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test ekspozicije",
+  "note": "Smole i pisači se razlikuju. Ispišite probni dio jednom pri svakoj vrijednosti ekspozicije na ljestvici i zadržite onu ekspoziciju s najoštrijim tankim stupićima i otvorenim rupama.",
+  "part": "Stavite probni dio na platformu za ispis",
+  "part.name": "Probni dio za test ekspozicije",
+  "ladder": "Spremi ljestvicu ekspozicije (datoteke: {n})",
+  "ladder.made": "Spremljeno datoteka: {n} (vremena ekspozicije {list} s). Ispišite svaku istom smolom i usporedite.",
+  "ladder.nopart": "Najprije stavite probni dio na platformu za ispis.",
+  "ladder.failed": "Ljestvicu ekspozicije nije bilo moguće izraditi. {why}",
+  "ladder.busy": "Izrađujem {i} od {n}…"
+}

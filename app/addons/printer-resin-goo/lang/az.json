@@ -1,0 +1,12 @@
+{
+  "@locale": "az",
+  "@name": "Azərbaycanca",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Bayt sırası",
+  "opt.byteOrder.big": "Böyük sonluq (adətən belə olur)",
+  "opt.byteOrder.little": "Kiçik sonluq",
+  "opt.checksum": "Yoxlama cəmi",
+  "opt.checksum.negsum": "İnkar edilmiş cəm",
+  "opt.checksum.sum": "Sadə cəm"
+}

@@ -34,7 +34,7 @@
  * column nothing goes below (the `bases` rule, or a support of the user's own at that point). Releases: every beam end
  * follows `beamEnds`, members (braces) `braces`; `ends` (by GlobalId) overrides.
  */
-import { addPlates } from './frame/plate-bim.js';   // 0.8 SU.1056 step 2 (concrete-08): concrete slabs and walls as plates
+import { addPlates, floorLoadCases } from './frame/plate-bim.js';   // 0.8 SU.1056 step 2 (concrete-08): concrete slabs and walls as plates
 import { cleanFrame, sectionOf, torsionJ, polySection, STEEL, RELEASES, FORMAT, VERSION } from './frame/frame-model.js';
 import { solveFrame } from './frame/frame-solve.js';
 import { cleanConcrete, concreteMaterial, stiffnessFactor, diaphragmsOf } from './frame/frame-concrete.js';   // 0.8 SU.1056
@@ -69,7 +69,7 @@ const txt = (s, max = 60) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '
 /**
  * Is this IFC I-shape a rolled section? (0.7 SU.878, honesty-fixes.) IFC has no "rolled" flag, so a profile counts as rolled
  * only when its name (ProfileName, else the element's ObjectType) is a hot-rolled I-shape of the shared section table
- * (shapes/sections.js: AISC W and S, EN 10365 IPE, HEA, HEB; "IPE 300", "W12x26", "HE 200 A" all match) AND the file's
+ * (shapes/sections.js: AISC W and S, EN 10365 IPE, HEA, HEB, UK UB, UC; "IPE 300", "W12x26", "HE 200 A" all match) AND the file's
  * d, bf, tw and tf agree with that row within 1 % (at least 0.5 mm). Anything else (a plate girder, a custom name, a
  * renamed or edited size) stays welded, which the Design checks report as "not checked". Exported for the tests.
  */
@@ -79,7 +79,7 @@ export function rolledIShape(names, dims) {
     let key = raw.replace(/\s+/g, '').toUpperCase();
     key = key.replace(/^HE(\d+)([AB])$/, 'HE$2$1');            // "HE200A" (the older European way) → "HEA200"
     const row = findSection(key);
-    if (!row || row.kind !== 'I' || !['W', 'S', 'IPE', 'HEA', 'HEB'].includes(row.family)) continue;
+    if (!row || row.kind !== 'I' || !['W', 'S', 'IPE', 'HEA', 'HEB', 'UB', 'UC'].includes(row.family)) continue;
     const near = (a, b) => Number.isFinite(a) && Math.abs(a - b) <= Math.max(0.5, 0.01 * b);
     if (near(dims.d, row.d) && near(dims.bf, row.bf) && near(dims.tw, row.tw) && near(dims.tf, row.tf)) return row.name;
   }
@@ -494,6 +494,7 @@ export function frameOfElements(elements, analysis, { name = '', slabs = [], wal
     const pl = addPlates(raw, { slabs, walls }, { fc: A.concrete?.mat?.fc ?? 28, size: 0 });
     for (const x of pl.skipped) skipped.push({ id: x.id, why: x.why });
     if (pl.plates?.length) notes.push({ key: 'frame.note.ifc-plates', n: pl.plates.length });
+    floorLoadCases(raw, A.cases);   // 0.9 SU.1056: the pressures typed for the slabs (the Floor load box of the panel)
   }
   const { model, warnings } = cleanFrame(raw);
   notes.push({ key: 'frame.note.ifc-elements', n: elements.length });

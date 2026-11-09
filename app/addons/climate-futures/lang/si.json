@@ -1,0 +1,8 @@
+{
+  "@locale": "si",
+  "@name": "සිංහල",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "දත්ත සහ මූලාශ්‍ර",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 ආකෘති ප්‍රතිඵලවල කුඩා පරිමාණ අනුවාදය (ආකෘතිය අනුව CC BY 4.0); ගෝලීය මුහුදු මට්ටම: IPCC AR6",
+  "data.sample": "නියැදි පැකේජය: ස්ථාන තුනක්, ආකෘතියක්, කාල පරිච්ඡේදයකට වසර පහක්. නිර්මාණ කටයුතු සඳහා නොවේ."
+}

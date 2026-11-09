@@ -131,6 +131,15 @@ export function changePicture(guid, patch) {
   });
 }
 
+/** Move a picture by (dx, dy) inside a running writer (model-modify.js). */
+export function movePictureIn(w, guid, dx, dy) {
+  const cur = readPictures(w).find((p) => p.guid === guid);
+  if (!cur) refuse('pic.err.gone');
+  if (cur.locked) refuse('pic.err.locked');
+  const patch = cur.plane === 'vertical' ? { a: [cur.a[0] + dx, cur.a[1] + dy], b: [cur.b[0] + dx, cur.b[1] + dy] } : { x: cur.x + dx, y: cur.y + dy };
+  w.upsertPset(cur.id, PICTURE_PSET, rows(makePicture({ ...cur, ...patch })));
+  return cur.id;
+}
 export function removePictures(guids) {
   return op((w) => {
     const all = readPictures(w).filter((p) => guids.includes(p.guid));

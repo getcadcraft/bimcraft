@@ -1,0 +1,12 @@
+{
+  "@locale": "vi",
+  "@name": "Tiếng Việt",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Thứ tự byte",
+  "opt.byteOrder.big": "Big-endian (thường gặp nhất)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Tổng kiểm tra",
+  "opt.checksum.negsum": "Tổng âm",
+  "opt.checksum.sum": "Tổng thường"
+}

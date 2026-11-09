@@ -93,6 +93,61 @@ export function mountCoords(o) {
   const boxP = el('div', { className: 'bc-coords bc-coords-plan', 'data-coords': 'plan', role: 'status', 'aria-live': 'off', hidden: true }, linesP, button());
   o.planWrap?.append(boxP);
 
+  // Drawing a wall: the plan's readout box steps out of the way when the pointer or the wall being drawn runs under it (FX.81).
+  // A collision held for DODGE_DETECT ms moves it (eased) to a free corner or edge; it stays out at least DODGE_HOLD ms, then goes
+  // home once home is clear. If the new spot is hit by the next stretch of the wall, it moves again.
+  const DODGE_DETECT = 250, DODGE_HOLD = 4000, DODGE_PAD = 36, DODGE_EDGE = 12;
+  const dg = { dx: 0, dy: 0, since: 0, movedAt: 0, timer: 0, path: null, obs: [] };
+  const hitsPath = (r) => {
+    if (!dg.path || !dg.path.length) return false;
+    const inR = (x, y) => x >= r.l - DODGE_PAD && x <= r.r + DODGE_PAD && y >= r.t - DODGE_PAD && y <= r.b + DODGE_PAD;
+    for (let i = 0; i < dg.path.length; i++) {
+      const a = dg.path[i], b = dg.path[i + 1] || a;
+      const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 10));
+      for (let k = 0; k <= n; k++) if (inR(a.x + (b.x - a.x) * k / n, a.y + (b.y - a.y) * k / n)) return true;
+    }
+    return false;
+  };
+  const hitsObs = (r) => dg.obs.some((q) => r.l < q.right && r.r > q.left && r.t < q.bottom && r.b > q.top);
+  const clash = (r) => hitsPath(r) || hitsObs(r);
+  const dodgeApply = (dx, dy) => {
+    dg.dx = dx; dg.dy = dy;
+    boxP.style.transform = dx || dy ? 'translate(' + dx + 'px,' + dy + 'px)' : '';
+  };
+  const dodgeEval = () => {
+    dg.timer = 0;
+    if (boxP.hidden || !o.planWrap) return;
+    const now = performance.now(), b = boxP.getBoundingClientRect();
+    if (!b.width) return;
+    const home = { l: b.left - dg.dx, r: b.right - dg.dx, t: b.top - dg.dy, b: b.bottom - dg.dy };
+    const cur = { l: b.left, r: b.right, t: b.top, b: b.bottom };
+    const moved = !!(dg.dx || dg.dy), again = (ms) => { clearTimeout(dg.timer); dg.timer = setTimeout(dodgeEval, Math.max(30, ms)); };
+    if (clash(cur)) {
+      if (!dg.since) dg.since = now;
+      if (now - dg.since < DODGE_DETECT) { again(DODGE_DETECT - (now - dg.since) + 5); return; }
+      dg.since = 0;
+      const w = o.planWrap.getBoundingClientRect(), W = b.width, H = b.height, E = DODGE_EDGE;
+      const xs = [w.left + E, w.left + (w.width - W) / 2, w.right - E - W], ys = [w.top + E, w.top + (w.height - H) / 2, w.bottom - E - H];
+      const pt = dg.path && dg.path[dg.path.length - 1];
+      let best = null;
+      for (const y of ys) for (const x of xs) {
+        const r = { l: x, r: x + W, t: y, b: y + H };
+        if (Math.abs(x - home.l) < 1 && Math.abs(y - home.t) < 1 && moved) { /* home is allowed too */ }
+        const free = !clash(r);
+        const d = pt ? Math.hypot((r.l + r.r) / 2 - pt.x, (r.t + r.b) / 2 - pt.y) : 0;
+        const score = (free ? 1e6 : 0) + d;
+        if (!best || score > best.score) best = { score, dx: Math.round(x - home.l), dy: Math.round(y - home.t) };
+      }
+      if (best && (best.dx !== dg.dx || best.dy !== dg.dy)) { dodgeApply(best.dx, best.dy); dg.movedAt = now; }
+      again(DODGE_HOLD);
+      return;
+    }
+    dg.since = 0;
+    if (!moved) return;
+    if (now - dg.movedAt >= DODGE_HOLD && !clash(home)) { dodgeApply(0, 0); return; }
+    again(Math.max(DODGE_HOLD - (now - dg.movedAt), 250) + 5);
+  };
+
   const show = (box, linesEl, lines) => {
     box.hidden = !lines.length;
     linesEl.replaceChildren(...lines.map((l) => el('span', {}, l)));
@@ -178,6 +233,11 @@ export function mountCoords(o) {
       };
       place(markEls.origin, marks.origin);
       if (marks.survey && !marks.same) place(markEls.survey, marks.survey.at);
+    },
+    /** FX.81: client-pixel points the wall being drawn passes through (last chain point, pointer) and rects to keep clear of; null = nothing. */
+    dodge(path, obstacles) {
+      dg.path = path && path.length ? path : null; dg.obs = obstacles || [];
+      if (!dg.timer || dg.path) { clearTimeout(dg.timer); dg.timer = setTimeout(dodgeEval, 0); }
     },
     plan(p, level, M) {
       if (!level) { show(boxP, linesP, []); return; }

@@ -1,0 +1,21 @@
+{
+  "@locale": "uz",
+  "@name": "Oʻzbekcha",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX va PWS",
+  "opt.flip": "Tasvirni aks ettirish",
+  "opt.flip.off": "Yoʻq",
+  "opt.flip.on": "Ha, chapdan oʻngga",
+  "opt.version": "Fayl versiyasi",
+  "opt.version.v1": "1-versiya (odatiy)",
+  "opt.version.v516": "516-versiya",
+  "opt.aa": "Chekka silliqlash darajalari",
+  "opt.aa.1": "1 (yoʻq)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Har bir qatlam uchun sozlamalar belgisi",
+  "opt.perLayer.off": "Oʻchirilgan",
+  "opt.perLayer.on": "Yoqilgan"
+}

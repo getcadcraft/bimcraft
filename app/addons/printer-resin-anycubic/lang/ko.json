@@ -1,0 +1,21 @@
+{
+  "@locale": "ko",
+  "@name": "한국어",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX 및 PWS",
+  "opt.flip": "이미지 좌우 대칭",
+  "opt.flip.off": "아니요",
+  "opt.flip.on": "예, 왼쪽에서 오른쪽으로",
+  "opt.version": "파일 버전",
+  "opt.version.v1": "버전 1 (일반적인 설정)",
+  "opt.version.v516": "버전 516",
+  "opt.aa": "모서리 스무딩 단계",
+  "opt.aa.1": "1 (없음)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "도면층별 설정 플래그",
+  "opt.perLayer.off": "끄기",
+  "opt.perLayer.on": "켜기"
+}

@@ -190,29 +190,43 @@ function writeDevice(w, d, walls) {
 const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run(fn);
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
 
+/** One device written inside a running writer (placeDevice and placeDevices share it). */
+function placeIn(w, spec) {
+  const s = { ...spec };
+  const D = DEVICES[s.kind];
+  if (!D) fail('res.err.elkind');
+  if (!s.guid) s.guid = val(w.guid());
+  const storey = w.byGuid(s.level);
+  if (!storey) fail('model.err.nolevel');
+  const walls = readWalls(w, storey);
+  if (D.mount === 'wall' && !(s.wall && walls.some((x) => x.guid === s.wall))) fail('res.err.elwall');
+  const height = Number.isFinite(s.height) && s.height > 0 ? s.height : defaultHeight(s.kind, s.units, ceilingOf(w, storey));
+  if (s.tag && readDevices(w).some((x) => x.tag === String(s.tag).slice(0, 20))) fail('res.err.eltag');   // 0.9 GH.10: a typed tag is never given twice
+  const tag = String(s.tag || nextTag(w, D.prefix)).slice(0, 20);
+  const st = w.api.GetLine(w.mid, storey, false);
+  const nm = w.L(tr('res.el.kind.' + s.kind));
+  const [cls, en] = w.v4 ? D.ifc4 : [D.ifc2, null];
+  const id = w.make(cls, s.guid, w.ownerHistory(), nm, null, w.L(s.kind), w.H(w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0)), null, w.T('IFCIDENTIFIER', tag), ...(w.v4 ? [en] : []));
+  w.noteGuid(s.guid, id);
+  w.contain(id, storey);
+  const load = Number.isFinite(s.load) ? s.load : (SYMBOLS.find((x) => x.key === s.kind)?.load || 0);
+  w.upsertPset(id, ELEC_PSET, [['Level', 'IFCIDENTIFIER', s.level], ['Kind', 'IFCLABEL', s.kind], ['Circuit', 'IFCLABEL', String(s.circuit ?? '')], ['Load', 'IFCPOWERMEASURE', round(load, 3)],
+    ['MountingHeight', 'IFCLENGTHMEASURE', round(w.u(height))], ['Wall', 'IFCIDENTIFIER', s.wall || ''], ['Side', 'IFCINTEGER', s.side < 0 ? -1 : 1], ['Offset', 'IFCLENGTHMEASURE', round(w.u(s.offset || 0))], ['Controls', 'IFCTEXT', '']]);
+  writeDevice(w, { id, kind: s.kind, at: s.at || [0, 0], angle: s.angle || 0, wall: s.wall || '', side: s.side < 0 ? -1 : 1, offset: s.offset || 0, height }, walls);
+  return { id, guid: s.guid };
+}
 export function placeDevice(spec) {
   return op((w) => {
-    const s = { ...spec };
-    const D = DEVICES[s.kind];
-    if (!D) fail('res.err.elkind');
-    if (!s.guid) s.guid = val(w.guid());
-    const storey = w.byGuid(s.level);
-    if (!storey) fail('model.err.nolevel');
-    const walls = readWalls(w, storey);
-    if (D.mount === 'wall' && !(s.wall && walls.some((x) => x.guid === s.wall))) fail('res.err.elwall');
-    const height = Number.isFinite(s.height) && s.height > 0 ? s.height : defaultHeight(s.kind, s.units, ceilingOf(w, storey));
-    const tag = String(s.tag || nextTag(w, D.prefix)).slice(0, 20);
-    const st = w.api.GetLine(w.mid, storey, false);
-    const nm = w.L(tr('res.el.kind.' + s.kind));
-    const [cls, en] = w.v4 ? D.ifc4 : [D.ifc2, null];
-    const id = w.make(cls, s.guid, w.ownerHistory(), nm, null, w.L(s.kind), w.H(w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0)), null, w.T('IFCIDENTIFIER', tag), ...(w.v4 ? [en] : []));
-    w.noteGuid(s.guid, id);
-    w.contain(id, storey);
-    const load = Number.isFinite(s.load) ? s.load : (SYMBOLS.find((x) => x.key === s.kind)?.load || 0);
-    w.upsertPset(id, ELEC_PSET, [['Level', 'IFCIDENTIFIER', s.level], ['Kind', 'IFCLABEL', s.kind], ['Circuit', 'IFCLABEL', String(s.circuit ?? '')], ['Load', 'IFCPOWERMEASURE', round(load, 3)],
-      ['MountingHeight', 'IFCLENGTHMEASURE', round(w.u(height))], ['Wall', 'IFCIDENTIFIER', s.wall || ''], ['Side', 'IFCINTEGER', s.side < 0 ? -1 : 1], ['Offset', 'IFCLENGTHMEASURE', round(w.u(s.offset || 0))], ['Controls', 'IFCTEXT', '']]);
-    writeDevice(w, { id, kind: s.kind, at: s.at || [0, 0], angle: s.angle || 0, wall: s.wall || '', side: s.side < 0 ? -1 : 1, offset: s.offset || 0, height }, walls);
-    return { id, ids: [id], made: new Map([[s.guid, id]]) };
+    const r = placeIn(w, spec);
+    return { id: r.id, ids: [r.id], made: new Map([[r.guid, r.id]]) };
+  });
+}
+/** Several devices in ONE change (one undo step); a refusal on any of them undoes all of them. */
+export function placeDevices(specs) {
+  return op((w) => {
+    const made = new Map(), idl = [];
+    for (const spec of specs) { const r = placeIn(w, spec); made.set(r.guid, r.id); idl.push(r.id); }
+    return { id: idl[0] ?? null, ids: idl, made };
   });
 }
 export function changeDevice(guid, ch) {
@@ -234,10 +248,31 @@ export function changeDevice(guid, ch) {
       const lights = new Set(readDevices(w).filter((x) => isLight(x.kind)).map((x) => x.guid));
       rows.push(['Controls', 'IFCTEXT', [...new Set(ch.controls)].filter((g) => lights.has(g)).join(',')]);
     }
+    // 0.9 GH.10: a new position (and facing) in the level's plan: a device on a wall lands on the nearest wall face like a click does, the others where they are put
+    let moved = false;
+    if (Array.isArray(ch.at) && ch.at.length === 2 && ch.at.every(Number.isFinite)) {
+      const walls = readWalls(w, d.storey);
+      if (DEVICES[d.kind].mount === 'wall') {
+        const sp = wallSpot(walls.map((x) => ({ guid: x.guid, a: x.a, b: x.b, t: x.t })), ch.at, 600);
+        if (!sp) fail('res.err.elwall');
+        Object.assign(nx, { at: sp.at, angle: sp.angle, wall: sp.wall, side: sp.side, offset: sp.offset });
+        rows.push(['Wall', 'IFCIDENTIFIER', sp.wall], ['Side', 'IFCINTEGER', sp.side], ['Offset', 'IFCLENGTHMEASURE', round(w.u(sp.offset))]);
+      } else { nx.at = ch.at.slice(); if (!Number.isFinite(ch.angle)) nx.angle = d.angle; }
+      moved = true;
+    }
+    if (Number.isFinite(ch.angle) && !(ch.at && DEVICES[d.kind].mount === 'wall') && !nx.wall) { nx.angle = ch.angle; moved = true; }
     if (rows.length) w.upsertPset(d.id, ELEC_PSET, rows);
-    if (nx.height !== d.height) writeDevice(w, nx, readWalls(w, d.storey));
+    if (nx.height !== d.height || moved) writeDevice(w, nx, readWalls(w, d.storey));
     return { id: d.id, ids: [d.id] };
   });
+}
+/** Move a free-standing device by (dx, dy) inside a running writer (model-modify.js); one on a wall follows its wall. */
+export function moveDeviceIn(w, guid, dx, dy) {
+  const d = readDevices(w).find((x) => x.guid === guid);
+  if (!d) fail('model.err.gone');
+  if (d.wall) return d.id;
+  writeDevice(w, { ...d, at: [d.at[0] + dx, d.at[1] + dy] }, readWalls(w, d.storey));
+  return d.id;
 }
 /** Link a light to a switch, or unlink it when it is linked already. */
 export function linkLight(switchGuid, lightGuid) {

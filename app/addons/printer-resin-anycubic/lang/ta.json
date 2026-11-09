@@ -1,0 +1,21 @@
+{
+  "@locale": "ta",
+  "@name": "தமிழ்",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX மற்றும் PWS",
+  "opt.flip": "படத்தைப் பிரதிபலி",
+  "opt.flip.off": "இல்லை",
+  "opt.flip.on": "ஆம், இடமிருந்து வலம்",
+  "opt.version": "கோப்புப் பதிப்பு",
+  "opt.version.v1": "பதிப்பு 1 (பொதுவானது)",
+  "opt.version.v516": "பதிப்பு 516",
+  "opt.aa": "விளிம்பு மென்மையாக்கல் நிலைகள்",
+  "opt.aa.1": "1 (இல்லை)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "அடுக்கு வாரி அமைப்புக் குறி",
+  "opt.perLayer.off": "அணை",
+  "opt.perLayer.on": "இயக்கு"
+}

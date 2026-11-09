@@ -1,0 +1,8 @@
+{
+  "@locale": "az",
+  "@name": "Azərbaycanca",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Məlumatlar və mənbələr",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 modelinin aşağı miqyaslı nəticələri (hər model üçün CC BY 4.0); qlobal dəniz səviyyəsi: IPCC AR6",
+  "data.sample": "Nümunə paketi: hər dövr üçün üç yer, bir model, beş il. Layihələndirmə üçün deyil."
+}

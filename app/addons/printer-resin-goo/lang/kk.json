@@ -1,0 +1,12 @@
+{
+  "@locale": "kk",
+  "@name": "Қазақша",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Байт реті",
+  "opt.byteOrder.big": "Үлкен реттілік (әдеттегі есеп)",
+  "opt.byteOrder.little": "Кіші реттілік",
+  "opt.checksum": "Бақылау сомасы",
+  "opt.checksum.negsum": "Теріс сома",
+  "opt.checksum.sum": "Қарапайым сома"
+}

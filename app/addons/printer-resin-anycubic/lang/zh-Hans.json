@@ -1,0 +1,21 @@
+{
+  "@locale": "zh-Hans",
+  "@name": "简体中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX和PWS",
+  "opt.flip": "镜像图片",
+  "opt.flip.off": "否",
+  "opt.flip.on": "是，从左到右",
+  "opt.version": "文件版本",
+  "opt.version.v1": "版本1（常用）",
+  "opt.version.v516": "版本516",
+  "opt.aa": "边缘平滑级别",
+  "opt.aa.1": "1（无）",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "分层设置标志",
+  "opt.perLayer.off": "关",
+  "opt.perLayer.on": "开"
+}

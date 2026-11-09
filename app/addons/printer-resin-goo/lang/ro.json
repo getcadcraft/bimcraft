@@ -1,0 +1,12 @@
+{
+  "@locale": "ro",
+  "@name": "Română",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Ordinea octeților",
+  "opt.byteOrder.big": "Big-endian (varianta obișnuită)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Sumă de control",
+  "opt.checksum.negsum": "Sumă negată",
+  "opt.checksum.sum": "Sumă simplă"
+}

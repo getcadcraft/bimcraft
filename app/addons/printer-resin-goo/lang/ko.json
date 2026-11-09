@@ -1,0 +1,12 @@
+{
+  "@locale": "ko",
+  "@name": "한국어",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "바이트 순서",
+  "opt.byteOrder.big": "빅 엔디언 (일반적인 보고 방식)",
+  "opt.byteOrder.little": "리틀 엔디언",
+  "opt.checksum": "체크섬",
+  "opt.checksum.negsum": "부호 반전 합계",
+  "opt.checksum.sum": "단순 합계"
+}

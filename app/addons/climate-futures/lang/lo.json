@@ -1,0 +1,8 @@
+{
+  "@locale": "lo",
+  "@name": "ລາວ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "ຂໍ້ມູນ ແລະ ແຫຼ່ງຂໍ້ມູນ",
+  "data.nex": "NASA NEX-GDDP-CMIP6, ຜົນຜະລິດຂອງແບບຈຳລອງ CMIP6 ທີ່ຖືກຫຼຸດຂະໜາດລົງ (CC BY 4.0 ຕາມແບບຈຳລອງ); ລະດັບນ້ຳທະເລທົ່ວໂລກ: IPCC AR6",
+  "data.sample": "ຊຸດຕົວຢ່າງ: ສາມສະຖານທີ່, ໜຶ່ງແບບຈຳລອງ, ຫ້າປີຕໍ່ຊ່ວງເວລາ. ບໍ່ໃຊ້ສຳລັບການອອກແບບ."
+}

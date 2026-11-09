@@ -15,12 +15,15 @@ import * as THREE from 'three';
 import { el } from './ui-util.js';
 import { t } from './i18n.js';
 import { framePanel, defaultAnalysis, cleanAnalysis } from './frame/frame-panel.js';
+import { modalOfFrame, modeSolution, MODAL_NOTE } from './fem/frame-fem.js';
+import { DYN } from './fem/frame-dyn.js';   // 0.9 SU.1056: response spectrum, time history, pushover (lib/fem)   // 0.9 SU.908: natural frequencies (lib/fem)
 import { resultGeometry } from './frame/frame-draw.js';
 import { readFrameElements, frameOfElements, readAnalysis, writeAnalysis, sectionsOfElements } from './analysis-bim.js';
 import { solveFrame } from './frame/frame-solve.js';
 import { KEY_SPAN } from './ifc-model.js';
 import * as B from './study/breakit.js';   // 0.8 EG.31: findings, reserve, Problems (lib/study, copied by tools/study/sync.mjs bimcraft)
 import { frameLive } from './study/live.js';   // 0.8 EG.29: live re-solve
+import { lengthHooks } from './model-units.js';   // 0.9 GH.3-A: the frame tab's lengths in the display unit
 
 const drawnId = (id) => String(id).replace(/\.\d+$/, '');
 /** Findings point at analytical ids: back to the element's GlobalId (a member split at a crossing is its element), the combination has no element. */
@@ -116,11 +119,15 @@ export function mountAnalysisBim(host) {
     show, hide,
     breakit: { B, source: 'bimcraft.breakit', connections: () => [], setProblems: (list) => host.setBreakProblems?.(breakAbout(list)) },   // an IFC has no bolted joints the checks can read: members and the combination only
     live: { frameLive },
+    floorLoads: true,   // 0.9 SU.1056: a pressure on every concrete slab (plate-bim.js floorLoadCases)
+    fem: { modal: modalOfFrame, modeSolution, note: MODAL_NOTE, dyn: DYN },   // 0.9 SU.908: the Finite elements block (natural frequencies)
     concrete: true,   // 0.8 SU.1056: the Concrete and Seismic blocks (frame/frame-concrete-panel.js, the same as DetailCraft's)
     sections: () => sectionsOfElements(state()?.elements || []),
     problems: (list) => host.setFrameProblems?.(list.map((p) => ({ ...p, source: { name: 'bimcraft.frame' }, about: (p.about || []).map((a) => (a.kind === 'member' ? { ...a, id: drawnId(a.id) } : a)) }))),
     rerender: () => render(),
+    len: lengthHooks(),   // 0.9 GH.3-A: load positions, points, deflections, floor heights and drifts in the display unit (DetailCraft keeps mm)
   });
+  if (typeof window !== 'undefined') window.addEventListener('bimcraft-units', () => render());
   function render() {
     if (!host.shown()) return;
     if (!ed()) { host.pane.replaceChildren(el('p', { className: 'bc-muted' }, t('frame.ui.needs-ifc'))); return; }

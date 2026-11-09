@@ -1,0 +1,21 @@
+{
+  "@locale": "he",
+  "@name": "עברית",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "מדפסת Bambu Lab P2S (דרך Bambu Connect)",
+  "step.orca": "התקינו את OrcaSlicer במחשב זה.",
+  "step.orca.link": "הורדת OrcaSlicer",
+  "step.connect": "התקינו את Bambu Connect במחשב זה.",
+  "step.connect.link": "הורדת Bambu Connect",
+  "step.bind": "ב-Bambu Connect הוסיפו את ה-P2S שלכם. עושים זאת פעם אחת בלבד.",
+  "step.send": "לחצו על \"שליחה למדפסת תלת-ממד\". הקובץ ייפתח ב-Bambu Connect: בדקו אותו שם והתחילו את ההדפסה.",
+  "note": "תוכנת Bambu Connect של Bambu Lab מיועדת להדפסה מתוכנות אחרות, וההדפסה מתחילה משם.",
+  "confirm": "הקובץ הוכן ב-OrcaSlicer עם ההגדרות המוכנות מראש של P2S: {grams} גרם, {layers} שכבות.",
+  "confirm.next": "לפתוח אותו ב-Bambu Connect? שום דבר לא יודפס עד שתתחילו את ההדפסה שם.",
+  "done": "נשלח ל-Bambu Connect. בדקו אותו שם והתחילו את ההדפסה.",
+  "fail.orca": "תוכנת OrcaSlicer לא נמצאה במחשב זה. התקינו אותה ונסו שוב.",
+  "fail.slice": "לא ניתן היה להכין את ההדפסה ב-OrcaSlicer. {why}",
+  "fail.nogcode": "הקובץ של OrcaSlicer לא הכיל הדפסה.",
+  "fail.bed": "זה לא נכנס למשטח ההדפסה של ה-P2S‏.",
+  "fail.connect": "התוכנה Bambu Connect לא נפתחה. התקינו אותה ונסו שוב."
+}

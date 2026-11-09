@@ -1,0 +1,12 @@
+{
+  "@locale": "th",
+  "@name": "ไทย",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ลำดับไบต์",
+  "opt.byteOrder.big": "Big-endian (รูปแบบที่พบทั่วไป)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "เช็กซัม",
+  "opt.checksum.negsum": "ผลรวมลบ",
+  "opt.checksum.sum": "ผลรวมปกติ"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "uz",
+  "@name": "Oʻzbekcha",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect orqali)",
+  "step.orca": "Bu kompyuterga OrcaSlicer dasturini oʻrnating.",
+  "step.orca.link": "OrcaSlicer dasturini olish",
+  "step.connect": "Bu kompyuterga Bambu Connect dasturini oʻrnating.",
+  "step.connect.link": "Bambu Connect dasturini olish",
+  "step.bind": "Bambu Connect dasturida P2S printerini qoʻshing. Buni bir marta bajaring.",
+  "step.send": "«3D printerga yuborish» tugmasini bosing. Fayl Bambu Connect dasturida ochiladi: uni u yerda tekshirib, chop etishni boshlang.",
+  "note": "Bambu Connect — Bambu Lab kompaniyasining boshqa dasturlardan chop etish uchun oʻz dasturi boʻlib, chop etish aynan shu yerdan boshlanadi.",
+  "confirm": "OrcaSlicer buni P2S sozlamalari bilan tayyorladi: {grams} g, {layers} qatlam.",
+  "confirm.next": "Bambu Connect dasturida ochilsinmi? U yerda boshlamaguncha hech narsa chop etilmaydi.",
+  "done": "Bambu Connect dasturiga yuborildi. U yerda tekshirib, chop etishni boshlang.",
+  "fail.orca": "Bu kompyuterda OrcaSlicer topilmadi. Uni oʻrnating, soʻng qayta urinib koʻring.",
+  "fail.slice": "OrcaSlicer bu chop etishni tayyorlay olmadi. {why}",
+  "fail.nogcode": "OrcaSlicer faylida chop etiladigan maʼlumot yoʻq.",
+  "fail.bed": "Bu P2S platformasiga sigʻmaydi.",
+  "fail.connect": "Bambu Connect ochilmadi. Uni oʻrnating, soʻng qayta urinib koʻring."
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "it",
+  "@name": "Italiano",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX e PWS",
+  "opt.flip": "Specchia l'immagine",
+  "opt.flip.off": "No",
+  "opt.flip.on": "Sì, da sinistra a destra",
+  "opt.version": "Versione file",
+  "opt.version.v1": "Versione 1 (la più comune)",
+  "opt.version.v516": "Versione 516",
+  "opt.aa": "Livelli di smussatura dei bordi",
+  "opt.aa.1": "1 (nessuno)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flag impostazioni per layer",
+  "opt.perLayer.off": "Spento",
+  "opt.perLayer.on": "Acceso"
+}

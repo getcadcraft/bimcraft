@@ -162,6 +162,13 @@ export function changeRamp(guid, ch) {
   });
 }
 
+/** Move a ramp by (dx, dy) inside a running writer (model-modify.js). */
+export function moveRampIn(w, guid, dx, dy) {
+  const r = readRamps(w).find((x) => x.guid === guid);
+  if (!r) refuse('model.err.ramp.none');
+  writeRamp(w, { ...r, start: [r.start[0] + dx, r.start[1] + dy] });
+  return r.id;
+}
 export function removeRamps(guids) {
   return op((w) => {
     const rs = readRamps(w).filter((r) => guids.includes(r.guid));

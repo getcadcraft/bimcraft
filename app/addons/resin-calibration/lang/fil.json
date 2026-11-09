@@ -1,0 +1,14 @@
+{
+  "@locale": "fil",
+  "@name": "Filipino",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Pagsubok sa exposure",
+  "note": "Magkakaiba ang resin at printer. I-print ang test part nang isang beses sa bawat exposure sa ladder, at itago ang exposure na may pinakamatulis na manipis na haligi at mga bukas na butas.",
+  "part": "Ilagay ang test part sa bed",
+  "part.name": "Exposure test part",
+  "ladder": "I-save ang exposure ladder ({n} na file)",
+  "ladder.made": "Na-save ang {n} na file para sa {list} s. I-print ang bawat isa gamit ang parehong resin at ihambing.",
+  "ladder.nopart": "Ilagay muna ang test part sa bed.",
+  "ladder.failed": "Hindi magawa ang ladder. {why}",
+  "ladder.busy": "Ginagawa ang {i} ng {n}…"
+}

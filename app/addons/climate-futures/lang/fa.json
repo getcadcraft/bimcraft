@@ -1,0 +1,8 @@
+{
+  "@locale": "fa",
+  "@name": "فارسی",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "داده‌ها و منابع",
+  "data.nex": "NASA NEX-GDDP-CMIP6، خروجی ریزمقیاس‌شده مدل‌های CMIP6 (CC BY 4.0 برای هر مدل)؛ سطح جهانی دریا: IPCC AR6",
+  "data.sample": "بسته نمونه: سه مکان، یک مدل، پنج سال برای هر دوره. برای طراحی نیست."
+}

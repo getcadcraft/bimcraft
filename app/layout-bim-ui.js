@@ -17,6 +17,7 @@ import { KINDS, fieldPoints, inUnits, UNIT_MM } from './layout-bim.js';
 import { formatPoints, parsePoints, numberPoints, comparePoints, compareTable, csv, POINT_FORMATS } from './layout/layout-points.js';
 import { readGeoref } from './ifc-geo.js';
 import { KEY_SPAN } from './ifc-model.js';
+import { getDisplayUnits, smallNumber, smallMark } from './model-units.js';   // 0.9 GH.3-A: the as-built differences in the display unit
 
 const OK = [0.09, 0.44, 0.23], OUT = [0.70, 0.07, 0.18], MISS = [0.45, 0.47, 0.50], DESIGN = [0.12, 0.28, 0.78];
 
@@ -168,8 +169,8 @@ export function mountFieldPoints(host) {
         out.push(el('div', { className: 'fa-wrap' }, el('table', { className: 'bc-qto-table fa-table', 'data-fp-cmp': '' },
           el('thead', {}, el('tr', {}, ...['P', t('fieldpts.col.status'), 'dE', 'dN', 'dZ', t('fieldpts.col.dh')].map((h, i) => el('th', { scope: 'col', className: i > 1 ? 'n' : '' }, h)))),   // i18n-ignore: column letters
           el('tbody', {}, ...S.cmp.rows.slice(0, 500).map((r) => el('tr', { className: 'fp-' + r.status },
-            el('td', {}, r.n || r.built), el('td', {}, st[r.status]), ...[r.dx, r.dy, r.dz, r.dh].map((v) => el('td', { className: 'n' }, v === null ? '' : (v * (UNIT_MM[S.unit] || 1000)).toFixed(1)))))))));
-        out.push(el('p', { className: 'bc-muted' }, t('fieldpts.cmp.units')));
+            el('td', {}, r.n || r.built), el('td', {}, st[r.status]), ...[r.dx, r.dy, r.dz, r.dh].map((v) => el('td', { className: 'n' }, v === null ? '' : smallNumber(v * (UNIT_MM[S.unit] || 1000), getDisplayUnits())))))))));
+        out.push(el('p', { className: 'bc-muted', 'data-fp-cmp-units': '' }, t('fieldpts.cmp.units.u', { unit: smallMark(getDisplayUnits()) })));
       }
     }
     host.pane.replaceChildren(...out);

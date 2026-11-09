@@ -68,6 +68,133 @@ export const MESSAGES = {
   'libitem.cat.electrical.equipment': 'Electrical equipment',
   'libitem.cat.mechanical.equipment': 'Mechanical equipment',
   'libitem.cat.appliances.residential': 'Residential appliances',
+  'libitem.cat.medical.patientcare': 'Patient care',
+  'libitem.cat.medical.surgical': 'Surgical',
+  'libitem.cat.medical.imaging': 'Imaging and diagnostics',
+  'libitem.cat.medical.laboratory': 'Laboratory',
+  'libitem.cat.medical.support': 'Sterile processing and pharmacy',
+  'libitem.cat.construction.equipment': 'Construction equipment',
+  'libitem.cat.construction.temporary': 'Temporary works and site facilities',
+  'libitem.cat.construction.formwork': 'Formwork and scaffolding',
+  'libitem.cat.construction.tools': 'Tools and plant',
+  'libitem.cat.earthmoving.excavators': 'Excavators',
+  'libitem.cat.earthmoving.loaders': 'Dozers, loaders and graders',
+  'libitem.cat.earthmoving.haulage': 'Haulage and trucks',
+  'libitem.cat.earthmoving.compaction': 'Compaction and paving',
+  'libitem.cat.earthmoving.attachments': 'Attachments',
+  'libitem.cat.mining.surface': 'Surface mining',
+  'libitem.cat.mining.underground': 'Underground mining',
+  'libitem.cat.mining.processing': 'Mineral processing',
+  'libitem.cat.mining.support': 'Mine support and facilities',
+  'libitem.cat.aviation.aircraft': 'Aircraft',
+  'libitem.cat.aviation.groundsupport': 'Ground support equipment',
+  'libitem.cat.aviation.airfield': 'Airfield',
+  'libitem.cat.aviation.hangar': 'Hangar and maintenance',
+  'libitem.cat.aviation.rescue': 'Rescue and fire fighting',
+  'libitem.cat.printing.printers': 'Printers and build plates',
+  'libitem.cat.printing.parts': 'Printed parts and brackets',
+  'libitem.cat.printing.fixtures': 'Jigs, fixtures and holders',
+  'libitem.cat.printing.calibration': 'Calibration and test prints',
+  'libitem.cat.aerospace.launch': 'Launch vehicles and pads',
+  'libitem.cat.aerospace.spacecraft': 'Spacecraft and satellites',
+  'libitem.cat.aerospace.structures': 'Airframe and structural parts',
+  'libitem.cat.aerospace.ground': 'Ground and test equipment',
+  'libitem.cat.agriculture.machinery': 'Tractors and machinery',
+  'libitem.cat.agriculture.buildings': 'Barns, silos and sheds',
+  'libitem.cat.agriculture.livestock': 'Livestock equipment',
+  'libitem.cat.agriculture.irrigation': 'Irrigation and crop equipment',
+  'libitem.cat.architecture.envelope': 'Facade and envelope elements',
+  'libitem.cat.architecture.circulation': 'Stairs, ramps and circulation',
+  'libitem.cat.architecture.details': 'Architectural details',
+  'libitem.cat.architecture.massing': 'Massing and models',
+  'libitem.cat.automotive.vehicles': 'Vehicles by class',
+  'libitem.cat.automotive.components': 'Engines and components',
+  'libitem.cat.automotive.workshop': 'Workshop and garage',
+  'libitem.cat.automotive.charging': 'Fuel and charging',
+  'libitem.cat.computer.desktop': 'Computers and displays',
+  'libitem.cat.computer.peripherals': 'Peripherals',
+  'libitem.cat.computer.servers': 'Servers and racks',
+  'libitem.cat.computer.network': 'Network equipment',
+  'libitem.cat.educational.classroom': 'Classroom equipment',
+  'libitem.cat.educational.laboratory': 'Teaching laboratory',
+  'libitem.cat.educational.models': 'Teaching models',
+  'libitem.cat.educational.playground': 'Learning and play',
+  'libitem.cat.energy.generation': 'Generation',
+  'libitem.cat.energy.renewable': 'Solar, wind and storage',
+  'libitem.cat.energy.distribution': 'Transmission and distribution',
+  'libitem.cat.energy.oilgas': 'Oil and gas',
+  'libitem.cat.fixtures.lighting': 'Light fixtures',
+  'libitem.cat.fixtures.bath': 'Bath and plumbing fixtures',
+  'libitem.cat.fixtures.hardware': 'Door and cabinet hardware',
+  'libitem.cat.fixtures.fittings': 'Wall and ceiling fittings',
+  'libitem.cat.hobby.craft': 'Craft and workshop',
+  'libitem.cat.hobby.models': 'Model making',
+  'libitem.cat.hobby.collecting': 'Collecting and display',
+  'libitem.cat.hobby.outdoor': 'Outdoor hobbies',
+  'libitem.cat.household.kitchenware': 'Kitchenware',
+  'libitem.cat.household.cleaning': 'Cleaning and laundry',
+  'libitem.cat.household.storage': 'Storage and organizers',
+  'libitem.cat.household.decor': 'Home accessories',
+  'libitem.cat.industrial.products': 'Consumer products',
+  'libitem.cat.industrial.handheld': 'Handheld devices',
+  'libitem.cat.industrial.packaging': 'Packaging and containers',
+  'libitem.cat.industrial.enclosures': 'Enclosures and housings',
+  'libitem.cat.interior.lighting': 'Lamps and lighting',
+  'libitem.cat.interior.soft': 'Soft furnishings',
+  'libitem.cat.interior.accessories': 'Accessories and decor',
+  'libitem.cat.interior.finishes': 'Wall and floor features',
+  'libitem.cat.jewellery.rings': 'Rings',
+  'libitem.cat.jewellery.necklaces': 'Pendants and chains',
+  'libitem.cat.jewellery.earrings': 'Earrings and bracelets',
+  'libitem.cat.jewellery.settings': 'Settings, stones and cases',
+  'libitem.cat.fun.characters': 'Characters and figures',
+  'libitem.cat.fun.novelty': 'Novelty objects',
+  'libitem.cat.fun.puzzles': 'Puzzles and mazes',
+  'libitem.cat.fun.fantasy': 'Fantasy and sci-fi props',
+  'libitem.cat.machine.fasteners': 'Fasteners and fittings',
+  'libitem.cat.machine.transmission': 'Gears, shafts and bearings',
+  'libitem.cat.machine.frames': 'Frames and housings',
+  'libitem.cat.machine.mechanisms': 'Mechanisms and actuators',
+  'libitem.cat.marine.boats': 'Boats and hulls',
+  'libitem.cat.marine.deck': 'Deck hardware and fittings',
+  'libitem.cat.marine.harbour': 'Harbour and dock equipment',
+  'libitem.cat.marine.offshore': 'Offshore and subsea',
+  'libitem.cat.military.vehicles': 'Generic vehicles',
+  'libitem.cat.military.shelters': 'Shelters and field facilities',
+  'libitem.cat.military.field': 'Field equipment and gear',
+  'libitem.cat.military.support': 'Logistics and support',
+  'libitem.cat.nature.rocks': 'Rocks and terrain',
+  'libitem.cat.nature.trees': 'Trees and shrubs',
+  'libitem.cat.nature.water': 'Water features',
+  'libitem.cat.nature.wildlife': 'Animals and wildlife',
+  'libitem.cat.piping.fittings': 'Pipe fittings',
+  'libitem.cat.piping.valves': 'Valves',
+  'libitem.cat.piping.supports': 'Pipe supports and hangers',
+  'libitem.cat.piping.spools': 'Spools and skids',
+  'libitem.cat.robotics.arms': 'Robot arms and grippers',
+  'libitem.cat.robotics.mobile': 'Mobile robots',
+  'libitem.cat.robotics.parts': 'Robot parts and sensors',
+  'libitem.cat.robotics.cells': 'Work cells and guarding',
+  'libitem.cat.speedrun.setups': 'Run setups and desks',
+  'libitem.cat.speedrun.gear': 'Controllers and capture gear',
+  'libitem.cat.speedrun.tracks': 'Timing and race tracks',
+  'libitem.cat.speedrun.trophies': 'Trophies and boards',
+  'libitem.cat.sport.courts': 'Courts and fields',
+  'libitem.cat.sport.equipment': 'Sports equipment',
+  'libitem.cat.sport.fitness': 'Fitness equipment',
+  'libitem.cat.sport.venues': 'Stadium and venue items',
+  'libitem.cat.tech.gadgets': 'Consumer gadgets',
+  'libitem.cat.tech.audio': 'Audio and video',
+  'libitem.cat.tech.iot': 'Sensors and smart devices',
+  'libitem.cat.tech.wearables': 'Wearables and mobile',
+  'libitem.cat.tools.hand': 'Hand tools',
+  'libitem.cat.tools.power': 'Power tools',
+  'libitem.cat.tools.machine': 'Workshop machines',
+  'libitem.cat.tools.storage': 'Tool storage',
+  'libitem.cat.toys.blocks': 'Blocks and building toys',
+  'libitem.cat.toys.vehicles': 'Toy vehicles',
+  'libitem.cat.toys.dolls': 'Figures and playsets',
+  'libitem.cat.toys.games': 'Games and ride-ons',
   'libitem.cat.site.landscape': 'Landscape',
   'libitem.cat.site.vehicles': 'Vehicles',
   'libitem.cat.people.entourage': 'People',
@@ -79,6 +206,8 @@ export const MESSAGES = {
   'libitem.cat.regulations.building': 'Building regulations',
   'libitem.cat.components.process': 'Process components',
   'libitem.cat.plants.species': 'Plants',
+  'libitem.cat.openings.doors': 'Doors',
+  'libitem.cat.openings.windows': 'Windows',
   'libitem.cat.templates.specification': 'Document templates',
   'libitem.v.not_object': 'not a JSON object',
   'libitem.v.not_json': 'cannot be written as JSON',
@@ -241,8 +370,10 @@ for (const k of [
   'foodservice/warewashing', 'foodservice/ventilation', 'foodservice/prep', 'foodservice/holding', 'foodservice/beverage',
   'foodservice/ice', 'foodservice/serving', 'foodservice/other', 'furniture/seating', 'furniture/tables',
   'furniture/desks', 'furniture/storage', 'furniture/beds', 'furniture/other', 'casework/base', 'casework/wall',
-  'casework/tall', 'plumbing/fixtures', 'plumbing/equipment', 'electrical/fixtures', 'electrical/equipment',
+  'casework/tall', 'openings/doors', 'openings/windows', 'plumbing/fixtures', 'plumbing/equipment', 'electrical/fixtures', 'electrical/equipment',
   'mechanical/equipment', 'mechanical/parts', 'structural/steel', 'appliances/residential', 'site/landscape', 'site/vehicles', 'people/entourage',
+  'medical/patientcare', 'medical/surgical', 'medical/imaging', 'medical/laboratory', 'medical/support', 'construction/equipment', 'construction/temporary', 'construction/formwork', 'construction/tools', 'earthmoving/excavators', 'earthmoving/loaders', 'earthmoving/haulage', 'earthmoving/compaction', 'earthmoving/attachments', 'mining/surface', 'mining/underground', 'mining/processing', 'mining/support', 'aviation/aircraft', 'aviation/groundsupport', 'aviation/airfield', 'aviation/hangar', 'aviation/rescue',
+  'printing/printers', 'printing/parts', 'printing/fixtures', 'printing/calibration', 'aerospace/launch', 'aerospace/spacecraft', 'aerospace/structures', 'aerospace/ground', 'agriculture/machinery', 'agriculture/buildings', 'agriculture/livestock', 'agriculture/irrigation', 'architecture/envelope', 'architecture/circulation', 'architecture/details', 'architecture/massing', 'automotive/vehicles', 'automotive/components', 'automotive/workshop', 'automotive/charging', 'computer/desktop', 'computer/peripherals', 'computer/servers', 'computer/network', 'educational/classroom', 'educational/laboratory', 'educational/models', 'educational/playground', 'energy/generation', 'energy/renewable', 'energy/distribution', 'energy/oilgas', 'fixtures/lighting', 'fixtures/bath', 'fixtures/hardware', 'fixtures/fittings', 'hobby/craft', 'hobby/models', 'hobby/collecting', 'hobby/outdoor', 'household/kitchenware', 'household/cleaning', 'household/storage', 'household/decor', 'industrial/products', 'industrial/handheld', 'industrial/packaging', 'industrial/enclosures', 'interior/lighting', 'interior/soft', 'interior/accessories', 'interior/finishes', 'jewellery/rings', 'jewellery/necklaces', 'jewellery/earrings', 'jewellery/settings', 'fun/characters', 'fun/novelty', 'fun/puzzles', 'fun/fantasy', 'machine/fasteners', 'machine/transmission', 'machine/frames', 'machine/mechanisms', 'marine/boats', 'marine/deck', 'marine/harbour', 'marine/offshore', 'military/vehicles', 'military/shelters', 'military/field', 'military/support', 'nature/rocks', 'nature/trees', 'nature/water', 'nature/wildlife', 'piping/fittings', 'piping/valves', 'piping/supports', 'piping/spools', 'robotics/arms', 'robotics/mobile', 'robotics/parts', 'robotics/cells', 'speedrun/setups', 'speedrun/gear', 'speedrun/tracks', 'speedrun/trophies', 'sport/courts', 'sport/equipment', 'sport/fitness', 'sport/venues', 'tech/gadgets', 'tech/audio', 'tech/iot', 'tech/wearables', 'tools/hand', 'tools/power', 'tools/machine', 'tools/storage', 'toys/blocks', 'toys/vehicles', 'toys/dolls', 'toys/games',
   'symbols/annotation', 'symbols/electrical', 'symbols/plumbing', 'details/generic', 'other/other',
   // 0.7 MT.3 (session `materials`): surface materials (kind material: a node graph + map pictures, no geometry)
   'materials/brick', 'materials/wood', 'materials/stone', 'materials/tile', 'materials/concrete', 'materials/plaster', 'materials/metal',
@@ -258,7 +389,7 @@ for (const k of [
 ]) {
   Object.defineProperty(CATEGORIES, k, { enumerable: true, get: () => msg('libitem.cat.' + k.replace('/', '.')) });
 }
-export const KINDS = ['equipment', 'furniture', 'fixture', 'symbol', 'detail', 'material', 'regulation', 'component', 'plant', 'template'];
+export const KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'symbol', 'detail', 'material', 'regulation', 'component', 'plant', 'template'];
 /** 0.8 IND.7: a component record's vocabulary. LibraryCatalog.php has the same lists. */
 export const COMPONENT = {
   classes: ['substance', 'equipment', 'instrument', 'other'],
@@ -1171,6 +1302,9 @@ function sourceAttrs(attrs) {
   return out;
 }
 
+/** 'door' | 'window' for the doors and windows categories, else null. */
+export const opening = (category) => (category === 'openings/doors' ? 'door' : category === 'openings/windows' ? 'window' : null);
+
 /** A taxonomy key suggested from free text (KCL category, IFC class, file name); null when nothing fits. */
 export function suggestCategory(text) {
   const t = String(text || '').toLowerCase();
@@ -1182,6 +1316,8 @@ export function suggestCategory(text) {
     [/warm|holding|heated|hot well|food well/, 'foodservice/holding'], [/ice/, 'foodservice/ice'],
     [/beverage|coffee|tea|soda|dispenser/, 'foodservice/beverage'], [/mixer|slicer|prep|scale|processor/, 'foodservice/prep'],
     [/serving|display|sneeze|buffet|cashier|tray/, 'foodservice/serving'],
+    // after the foodservice words, so a "two-door reach-in" stays refrigeration
+    [/\bdoors?\b/, 'openings/doors'], [/\bwindows?\b/, 'openings/windows'],
   ];
   for (const [re, key] of rules) if (re.test(t)) return key;
   return null;
@@ -1244,7 +1380,8 @@ export function itemsFromCsv(text, { category = null, kind = null } = {}) {
     if (cat && CATEGORIES[cat]) it.category = cat;
     else { const s = suggestCategory(name); it.category = s || 'other/other'; notes.push(cat ? msg('libitem.csv.category_unknown', { row: line, name, category: cat, set: it.category }) : msg('libitem.csv.category_missing', { row: line, name, set: it.category })); }
     const k = get('kind') || kind;
-    it.kind = KINDS.includes(k) ? k : it.category.startsWith('furniture') || it.category.startsWith('casework') ? 'furniture' : 'equipment';
+    it.kind = KINDS.includes(k) ? k : opening(it.category) || (it.category.startsWith('furniture') || it.category.startsWith('casework') ? 'furniture' : 'equipment');
+    if (opening(it.category) && !get('ifc_class')) it.ifc.class = opening(it.category) === 'door' ? 'IfcDoor' : 'IfcWindow';
     const cls = get('ifc_class');
     if (/^Ifc[A-Za-z]{2,60}$/.test(cls)) it.ifc.class = cls;
     boxItemGeometry(it, w, d, h > 0 ? h : 0, z > 0 ? z : 0, name);
@@ -1308,7 +1445,10 @@ export function itemFromMesh(bytes, kind, { units = null, upAxis = null, name = 
   if (hull.length >= 3) it.plan.entities.push({ type: 'poly', layer: 'EQUIP', color: null, pts: hull, closed: true });
   it.params = { width: r4(maxX - minX), depth: r4(maxY - minY), height: r4(maxZ - minZ) };
   const s = suggestCategory(it.name);
-  if (s) { it.category = s; notes.push(msg('libitem.category.suggested_name', { category: s })); }
+  if (s) {
+    it.category = s; notes.push(msg('libitem.category.suggested_name', { category: s }));
+    const o = opening(s); if (o) { it.kind = o; it.ifc = { ...(it.ifc || {}), class: o === 'door' ? 'IfcDoor' : 'IfcWindow' }; }
+  }
   else notes.push(msg('libitem.category.set', { category: 'other/other' }));
   return { items: [it], notes };
 }

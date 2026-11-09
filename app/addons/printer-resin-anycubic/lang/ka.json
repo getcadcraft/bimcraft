@@ -1,0 +1,21 @@
+{
+  "@locale": "ka",
+  "@name": "ქართული",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX და PWS",
+  "opt.flip": "სურათის სარკისებურად ასახვა",
+  "opt.flip.off": "არა",
+  "opt.flip.on": "დიახ, მარცხნიდან მარჯვნივ",
+  "opt.version": "ფაილის ვერსია",
+  "opt.version.v1": "ვერსია 1 (ჩვეულებრივი)",
+  "opt.version.v516": "ვერსია 516",
+  "opt.aa": "კიდეების გასწორების დონეები",
+  "opt.aa.1": "1 (არ არის)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ფენების მიხედვით პარამეტრების ნიშანი",
+  "opt.perLayer.off": "გამორთული",
+  "opt.perLayer.on": "ჩართული"
+}

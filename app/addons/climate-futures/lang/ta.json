@@ -1,0 +1,8 @@
+{
+  "@locale": "ta",
+  "@name": "தமிழ்",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "தரவுகளும் மூலங்களும்",
+  "data.nex": "NASA NEX-GDDP-CMIP6, நுண்ணளவாக்கப்பட்ட CMIP6 மாதிரி வெளியீடு (ஒவ்வொரு மாதிரிக்கும் CC BY 4.0); உலகளாவிய கடல் மட்டம்: IPCC AR6",
+  "data.sample": "மாதிரித் தொகுப்பு: மூன்று இடங்கள், ஒரு மாதிரி, ஒவ்வொரு காலகட்டத்திலும் ஐந்து ஆண்டுகள். வடிவமைப்புக்கு அல்ல."
+}

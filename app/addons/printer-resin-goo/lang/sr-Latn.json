@@ -1,0 +1,12 @@
+{
+  "@locale": "sr-Latn",
+  "@name": "Srpski (latinica)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Redosled bajtova",
+  "opt.byteOrder.big": "Big-endian (uobičajeno u izveštaju)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolna suma",
+  "opt.checksum.negsum": "Negirana suma",
+  "opt.checksum.sum": "Obična suma"
+}

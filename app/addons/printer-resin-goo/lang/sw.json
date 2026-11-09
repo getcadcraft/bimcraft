@@ -1,0 +1,12 @@
+{
+  "@locale": "sw",
+  "@name": "Kiswahili",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Mpangilio wa baiti",
+  "opt.byteOrder.big": "Big-endian (ripoti ya kawaida)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Jumla hasi",
+  "opt.checksum.sum": "Jumla ya kawaida"
+}

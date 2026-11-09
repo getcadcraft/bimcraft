@@ -1,0 +1,11 @@
+{
+  "h": "Exposure test",
+  "note": "Resins and printers differ. Print the test part once at each exposure in the ladder and keep the exposure with the sharpest thin pillars and open holes.",
+  "part": "Put the test part on the bed",
+  "part.name": "Exposure test part",
+  "ladder": "Save the exposure ladder ({n} files)",
+  "ladder.made": "Saved {n} files for {list} s. Print each with the same resin and compare.",
+  "ladder.nopart": "Put the test part on the bed first.",
+  "ladder.failed": "The ladder could not be made. {why}",
+  "ladder.busy": "Making {i} of {n}…"
+}

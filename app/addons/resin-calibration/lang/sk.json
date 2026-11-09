@@ -1,0 +1,14 @@
+{
+  "@locale": "sk",
+  "@name": "Slovenčina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test expozície",
+  "note": "Živice a tlačiarne sa líšia. Vytlačte testovací diel raz pri každej expozícii v rebríku a ponechajte expozíciu s najostrejšími tenkými stĺpikmi a otvorenými otvormi.",
+  "part": "Položte testovací diel na tlačovú plochu",
+  "part.name": "Testovací diel expozície",
+  "ladder": "Uložiť rebrík expozícií (súbory: {n})",
+  "ladder.made": "Uložené súbory ({n}) pre {list} s. Vytlačte každý s rovnakou živicou a porovnajte.",
+  "ladder.nopart": "Najprv položte testovací diel na tlačovú plochu.",
+  "ladder.failed": "Rebrík expozícií sa nepodarilo vytvoriť. {why}",
+  "ladder.busy": "Vytváranie {i} z {n}…"
+}

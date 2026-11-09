@@ -1,0 +1,21 @@
+{
+  "@locale": "is",
+  "@name": "Íslenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX og PWS",
+  "opt.flip": "Spegla myndina",
+  "opt.flip.off": "Nei",
+  "opt.flip.on": "Já, vinstri til hægri",
+  "opt.version": "Útgáfa skrár",
+  "opt.version.v1": "Útgáfa 1 (algengust)",
+  "opt.version.v516": "Útgáfa 516",
+  "opt.aa": "Stig kantjöfnunar",
+  "opt.aa.1": "1 (engin)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Stillingarfáni fyrir hvert lag",
+  "opt.perLayer.off": "Slökkt",
+  "opt.perLayer.on": "Kveikt"
+}

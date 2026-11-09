@@ -1,0 +1,12 @@
+{
+  "@locale": "ms",
+  "@name": "Bahasa Melayu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Susunan bait",
+  "opt.byteOrder.big": "Big-endian (laporan biasa)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Jumlah dinafikan",
+  "opt.checksum.sum": "Jumlah biasa"
+}

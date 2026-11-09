@@ -8,11 +8,13 @@
  *   bcEdges   edges when a model opens: on / small models only / off          default on
  *   bcView    the view a model opens in: Fit / Top / Front / Side            default Fit
  *   bcSnap    wall snap is on when placing or pasting a library item starts   default off
+ *   bcPanelFocus  opening a panel section closes the others; a lock keeps one open (0.9 FX.55)   default off
  *   bcCorner  the corner indicator in the 3D views: view cube / axis icon / none   default view cube
  *   bcBoxMargin  room left round the pick by "Section box round the pick", in mm (0.5 WL.2)   default 300
  *   bcGeoCrs  the system Measure › Location gives latitude and longitude in (0.5 WL.4): WGS 84, the file's own datum, or
  *             one of a few common geographic systems (EPSG codes); 0.8 D8.9: "Choose another system…" adds any EPSG system,
  *             UTM zone or one of the person's own as one more option                         default WGS 84
+ *   bcIfcx    IFC5 alpha (IFCX) lab option: Open .ifcx and Export (0.9 SU.882)   default off
  *   bcIdsEmbed  Check against IDS: also keep the IDS text inside the IFC (0.7.1 71.25; off: only a reference, the text stays in this browser)
  *   bcAuthor  your name on BCF issues (localStorage bimcraft.author; 0.5 SI.9): signed in, [data-bc-author-account] says
  *             "From your account (<name>)" with "Use another name"; a typed name wins until cleared; not reset
@@ -20,9 +22,30 @@
  *             (read on, edit off when first turned on); the Activity list is filled by bimcraft.js        default off
  *   Menus, keys and mouse (0.5 track IP): the shell prints that fieldset first (app-settings.inc, manifest "input") and
  *             assets/js/app-input-ui.js fills it (localStorage bimcraft.input — not reset by "cc-settings-reset")
+ *   Working style (0.9 D8.12): presets "Each view its own" / "Shared annotations and pen tables" over four defaults (work-style-ui.js)
  * The dialog is wider, in two columns: the shell's own since IP.6 (app-shell.css .shell-settings-wide).
  */
 ?>
+<?php /* 0.9 D8.12 (bim-views-09): the working style — a preset of D8.12-A…D's defaults, each still changeable (work-style.js, work-style-ui.js).
+   Names describe the way of working, never a product. Stored in localStorage bimcraft.workstyle; not reset by "cc-settings-reset" (as the layout). */ ?>
+<fieldset class="shell-set bc-set-wide" data-bc-workstyle-set>
+  <legend><?= Lang::e('ws9.legend') ?></legend>
+  <div class="shell-seg" role="radiogroup" aria-label="<?= Lang::e('ws9.preset') ?>">
+    <label><input type="radio" name="bcWorkStyle" value="own" data-ws9-preset="own"> <i class="bi bi-files" aria-hidden="true"></i> <?= Lang::e('ws9.own') ?></label>
+    <label><input type="radio" name="bcWorkStyle" value="shared" data-ws9-preset="shared"> <i class="bi bi-link-45deg" aria-hidden="true"></i> <?= Lang::e('ws9.shared') ?></label>
+    <label><input type="radio" name="bcWorkStyle" value="custom" data-ws9-preset="custom" disabled> <i class="bi bi-sliders" aria-hidden="true"></i> <?= Lang::e('ws9.custom') ?></label>
+  </div>
+  <p class="shell-hint-text" data-ws9-hint></p>
+  <div class="shell-row"><label for="bc-ws9-dup"><?= Lang::e('ws9.dup') ?></label>
+    <select id="bc-ws9-dup" class="select-cc" data-ws9="dup"><option value="own"><?= Lang::e('ws9.dup.own') ?></option><option value="linked"><?= Lang::e('ws9.dup.linked') ?></option></select></div>
+  <div class="shell-row"><label for="bc-ws9-print"><?= Lang::e('ws9.print') ?></label>
+    <select id="bc-ws9-print" class="select-cc" data-ws9="print"><option value="shown"><?= Lang::e('ws9.print.shown') ?></option><option value="table"><?= Lang::e('ws9.print.table') ?></option></select></div>
+  <div class="shell-row"><label for="bc-ws9-count"><?= Lang::e('ws9.count') ?></label>
+    <select id="bc-ws9-count" class="select-cc" data-ws9="count"><option value="reported"><?= Lang::e('ws9.count.reported') ?></option><option value="drawn"><?= Lang::e('ws9.count.drawn') ?></option></select></div>
+  <div class="shell-row"><label for="bc-ws9-start"><?= Lang::e('ws9.start') ?></label>
+    <select id="bc-ws9-start" class="select-cc" data-ws9="start"><option value="blank"><?= Lang::e('ws9.start.blank') ?></option><option value="template"><?= Lang::e('ws9.start.template') ?></option></select></div>
+  <p class="shell-hint-text"><?= Lang::e('ws9.note') ?></p>
+</fieldset>
 <fieldset class="shell-set" data-bc-settings>
   <legend><?= Lang::e('set.open.legend') ?></legend>
   <label class="shell-check"><input type="checkbox" name="bcSpaces"> <?= Lang::e('ui.spaces.title') ?></label>
@@ -38,6 +61,12 @@
   <legend><?= Lang::e('ids.set.legend') ?></legend>
   <label class="shell-check"><input type="checkbox" name="bcIdsEmbed"> <?= Lang::e('ids.set.embed') ?></label>
   <p class="shell-hint-text"><?= Lang::e('ids.set.embed.hint') ?></p>
+</fieldset>
+<?php /* IFC5 alpha (IFCX), a lab option (0.9 SU.882): bimcraft.js applyIfcxOption shows Open IFC5 alpha and Export › IFC5 alpha. Default off. */ ?>
+<fieldset class="shell-set" data-bc-ifcx-settings>
+  <legend><?= Lang::e('ifcx.dialog.title') ?></legend>
+  <label class="shell-check"><input type="checkbox" name="bcIfcx"> <?= Lang::e('ifcx.set.label') ?></label>
+  <p class="shell-hint-text"><?= Lang::e('ifcx.set.hint') ?></p>
 </fieldset>
 <fieldset class="shell-set">
   <legend><?= Lang::e('set.dwgstart') ?></legend>
@@ -63,10 +92,31 @@
   </div>
   <p class="shell-hint-text"><?= Lang::e('set.turned.hint') ?></p>
 </fieldset>
+<?php /* 0.9 walls-09: the wall tool's open decisions D2 and D3, as settings (wall-tools-ui.js; localStorage bimcraft.walls, per viewer) */ ?>
+<fieldset class="shell-set" data-walls-settings>
+  <legend><?= Lang::e('walls.set.legend') ?></legend>
+  <p class="shell-hint-text" id="bc-set-wsplit-label"><strong><?= Lang::e('walls.set.split') ?></strong></p>
+  <div class="shell-seg" role="radiogroup" aria-labelledby="bc-set-wsplit-label">
+    <label><input type="radio" name="bcWallSplit" value="joined"> <?= Lang::e('walls.set.split.joined') ?></label>
+    <label><input type="radio" name="bcWallSplit" value="free"> <?= Lang::e('walls.set.split.free') ?></label>
+  </div>
+  <p class="shell-hint-text" id="bc-set-wfrom-label"><strong><?= Lang::e('walls.from') ?></strong></p>
+  <div class="shell-seg" role="radiogroup" aria-labelledby="bc-set-wfrom-label">
+    <label><input type="radio" name="bcWallFrom" value="center"> <?= Lang::e('model.from.center') ?></label>
+    <label><input type="radio" name="bcWallFrom" value="inside"> <?= Lang::e('model.from.inside') ?></label>
+    <label><input type="radio" name="bcWallFrom" value="outside"> <?= Lang::e('model.from.outside') ?></label>
+  </div>
+  <p class="shell-hint-text"><?= Lang::e('walls.set.hint') ?></p>
+</fieldset>
 <fieldset class="shell-set">
   <legend><?= Lang::e('set.snap.legend') ?></legend>
   <label class="shell-check"><input type="checkbox" name="bcSnap"> <?= Lang::e('set.snap') ?></label>
   <p class="shell-hint-text"><?= Lang::e('set.snap.hint') ?></p>
+</fieldset>
+<fieldset class="shell-set">
+  <legend><?= Lang::e('set.panelfocus.legend') ?></legend>
+  <label class="shell-check"><input type="checkbox" name="bcPanelFocus"> <?= Lang::e('set.panelfocus') ?></label>
+  <p class="shell-hint-text"><?= Lang::e('set.panelfocus.hint') ?></p>
 </fieldset>
 <fieldset class="shell-set">
   <legend><?= Lang::e('set.corner') ?></legend>

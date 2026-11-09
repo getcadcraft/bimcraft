@@ -1,0 +1,14 @@
+{
+  "@locale": "ca",
+  "@name": "Català",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Prova d'exposició",
+  "note": "Les resines i les impressores varien. Imprimiu la peça de prova una vegada amb cada exposició de l'escala i quedeu-vos amb l'exposició que tingui les columnes fines i els forats oberts més nets.",
+  "part": "Poseu la peça de prova a la plataforma",
+  "part.name": "Peça de prova d'exposició",
+  "ladder": "Desa l'escala d'exposició ({n} fitxers)",
+  "ladder.made": "S'han desat {n} fitxers per a {list} s. Imprimiu cadascun amb la mateixa resina i compareu-los.",
+  "ladder.nopart": "Poseu primer la peça de prova a la plataforma.",
+  "ladder.failed": "No s'ha pogut crear l'escala. {why}",
+  "ladder.busy": "S'està fent {i} de {n}…"
+}

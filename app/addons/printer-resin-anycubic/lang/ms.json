@@ -1,0 +1,21 @@
+{
+  "@locale": "ms",
+  "@name": "Bahasa Melayu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX dan PWS",
+  "opt.flip": "Cermin imej",
+  "opt.flip.off": "Tidak",
+  "opt.flip.on": "Ya, kiri ke kanan",
+  "opt.version": "Versi fail",
+  "opt.version.v1": "Versi 1 (lazim)",
+  "opt.version.v516": "Versi 516",
+  "opt.aa": "Tahap pelicinan tepi",
+  "opt.aa.1": "1 (tiada)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Bendera tetapan setiap lapisan",
+  "opt.perLayer.off": "Mati",
+  "opt.perLayer.on": "Hidup"
+}

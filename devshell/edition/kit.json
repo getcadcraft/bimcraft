@@ -65,6 +65,12 @@
             "spdx": "MIT",
             "url": "https://github.com/geotiffjs/geotiff.js"
         },
+        "kiri-moto": {
+            "name": "Kiri:Moto (slicer, grid-apps)",
+            "spdx": "MIT",
+            "url": "https://github.com/GridSpace/grid-apps",
+            "note": "Licence as stated in its LICENSE file (MIT, Stewart Allen). Open question PS.17: most of its source files also carry an \"All Rights Reserved\" header; legal has not answered, so this is the authors own statement, not a clearance."
+        },
         "laz-perf": {
             "name": "laz-perf",
             "spdx": "Apache-2.0",

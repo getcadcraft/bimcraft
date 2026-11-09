@@ -1,0 +1,21 @@
+{
+  "@locale": "bs",
+  "@name": "Bosanski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX i PWS",
+  "opt.flip": "Zrcalno prikaži sliku",
+  "opt.flip.off": "Ne",
+  "opt.flip.on": "Da, lijevo na desno",
+  "opt.version": "Verzija datoteke",
+  "opt.version.v1": "Verzija 1 (uobičajena)",
+  "opt.version.v516": "Verzija 516",
+  "opt.aa": "Nivoi zaglađivanja ivica",
+  "opt.aa.1": "1 (bez)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Oznaka postavki po sloju",
+  "opt.perLayer.off": "Isključeno",
+  "opt.perLayer.on": "Uključeno"
+}

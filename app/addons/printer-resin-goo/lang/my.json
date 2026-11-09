@@ -1,0 +1,12 @@
+{
+  "@locale": "my",
+  "@name": "မြန်မာ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ဘိုက်အစီအစဉ်",
+  "opt.byteOrder.big": "Big-endian (ပုံမှန်အစီရင်ခံစာ)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "အနှုတ်ပေါင်းလဒ်",
+  "opt.checksum.sum": "ရိုးရိုးပေါင်းလဒ်"
+}

@@ -131,6 +131,13 @@ export function changeRoofPlane(guid, ch) {
     return { id: rp.id, ids: [rp.id] };
   });
 }
+/** Move a roof plane by (dx, dy) inside a running writer (model-modify.js). */
+export function moveRoofPlaneIn(w, guid, dx, dy) {
+  const rp = readRoofPlanes(w).find((x) => x.guid === guid);
+  if (!rp) throw Object.assign(new Error('model.err.gone'), { key: 'model.err.gone' });
+  writePlane(w, { ...rp, points: rp.points.map(([x, y]) => [x + dx, y + dy]) });
+  return rp.id;
+}
 export function removeRoofPlanes(guids) {
   return op((w) => {
     const list = readRoofPlanes(w).filter((x) => guids.includes(x.guid));

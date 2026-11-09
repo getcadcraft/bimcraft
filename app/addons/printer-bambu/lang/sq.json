@@ -1,0 +1,21 @@
+{
+  "@locale": "sq",
+  "@name": "Shqip",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (përmes Bambu Connect)",
+  "step.orca": "Instaloni OrcaSlicer në këtë kompjuter.",
+  "step.orca.link": "Merr OrcaSlicer",
+  "step.connect": "Instaloni Bambu Connect në këtë kompjuter.",
+  "step.connect.link": "Merr Bambu Connect",
+  "step.bind": "Në Bambu Connect, shtoni P2S-in tuaj. Bëjeni këtë një herë.",
+  "step.send": "Shtyp Dërgo te printeri 3D. Skedari hapet në Bambu Connect: kontrolloje atje dhe nis printimin.",
+  "note": "Bambu Connect është programi zyrtar i Bambu Lab për printim nga programe të tjera, dhe printimi nis nga aty.",
+  "confirm": "OrcaSlicer e përgatiti këtë me preset-et e tij P2S: {grams} g, {layers} shtresa.",
+  "confirm.next": "Ta hapim në Bambu Connect? Asgjë nuk printohet derisa ta nisni atje.",
+  "done": "U dërgua te Bambu Connect. Kontrolloje atje dhe nis printimin.",
+  "fail.orca": "OrcaSlicer nuk u gjet në këtë kompjuter. Instaloje, pastaj provo përsëri.",
+  "fail.slice": "OrcaSlicer nuk mundi ta përgatiste këtë printim. {why}",
+  "fail.nogcode": "Skedari i OrcaSlicer nuk përmbante asnjë printim.",
+  "fail.bed": "Kjo nuk përshtatet në tavolinën e P2S.",
+  "fail.connect": "Bambu Connect nuk u hap. Instaloje, pastaj provo përsëri."
+}

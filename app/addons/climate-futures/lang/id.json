@@ -1,0 +1,8 @@
+{
+  "@locale": "id",
+  "@name": "Bahasa Indonesia",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data dan sumber",
+  "data.nex": "NASA NEX-GDDP-CMIP6, keluaran model CMIP6 yang diperkecil skalanya (CC BY 4.0 per model); permukaan laut global: IPCC AR6",
+  "data.sample": "Paket contoh: tiga lokasi, satu model, lima tahun per periode. Tidak untuk desain."
+}

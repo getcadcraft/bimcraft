@@ -1,0 +1,18 @@
+{
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Mirror the picture",
+  "opt.flip.off": "No",
+  "opt.flip.on": "Yes, left to right",
+  "opt.version": "File version",
+  "opt.version.v1": "Version 1 (the usual)",
+  "opt.version.v516": "Version 516",
+  "opt.aa": "Edge smoothing levels",
+  "opt.aa.1": "1 (none)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Per-layer settings flag",
+  "opt.perLayer.off": "Off",
+  "opt.perLayer.on": "On"
+}

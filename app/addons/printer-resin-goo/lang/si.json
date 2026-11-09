@@ -1,0 +1,12 @@
+{
+  "@locale": "si",
+  "@name": "සිංහල",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "බයිට් අනුපිළිවෙල",
+  "opt.byteOrder.big": "විශාල-අන්තය (සාමාන්‍ය වාර්තාව)",
+  "opt.byteOrder.little": "කුඩා-අන්තය",
+  "opt.checksum": "චෙක්සම්",
+  "opt.checksum.negsum": "ඍණ කළ එකතුව",
+  "opt.checksum.sum": "සරල එකතුව"
+}

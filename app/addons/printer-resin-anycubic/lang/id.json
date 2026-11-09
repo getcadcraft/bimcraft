@@ -1,0 +1,21 @@
+{
+  "@locale": "id",
+  "@name": "Bahasa Indonesia",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX dan PWS",
+  "opt.flip": "Cerminkan gambar",
+  "opt.flip.off": "Tidak",
+  "opt.flip.on": "Ya, kiri ke kanan",
+  "opt.version": "Versi file",
+  "opt.version.v1": "Versi 1 (yang umum)",
+  "opt.version.v516": "Versi 516",
+  "opt.aa": "Tingkat penghalusan tepi",
+  "opt.aa.1": "1 (tidak ada)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flag pengaturan per-layer",
+  "opt.perLayer.off": "Mati",
+  "opt.perLayer.on": "Nyala"
+}

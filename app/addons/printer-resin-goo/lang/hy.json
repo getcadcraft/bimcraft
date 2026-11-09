@@ -1,0 +1,12 @@
+{
+  "@locale": "hy",
+  "@name": "Հայերեն",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Բայթերի հերթականություն",
+  "opt.byteOrder.big": "Big-endian (սովորական հաշվետվություն)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Ստուգիչ գումար",
+  "opt.checksum.negsum": "Բացասական գումար",
+  "opt.checksum.sum": "Պարզ գումար"
+}

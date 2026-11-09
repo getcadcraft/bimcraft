@@ -23,6 +23,6 @@ Points come in a fixed order — by kind, then in rows across the plan — so ma
 
 When the crew sends back what they measured, choose a **tolerance** in millimetres and how to pair the points — by **point number** (they kept your numbers) or the **nearest shot** — and press {{ui:Read as-built points…}}. Read the file in the same units and coordinates you wrote.
 
-Each design point is then **within** the tolerance, **outside** it, **not measured**, and any shot nobody asked for is **extra**. The table gives the differences in millimetres (as built minus design: east, north, height, and the distance in plan); the view marks each point green or red with a line to the shot, and grey when it was not measured. {{ui:Report (CSV)}} writes the whole comparison.
+Each design point is then **within** the tolerance, **outside** it, **not measured**, and any shot nobody asked for is **extra**. The table gives the differences in the unit you pick in the toolbar, feet shown as decimal inches (as built minus design: east, north, height, and the distance in plan); the view marks each point green or red with a line to the shot, and grey when it was not measured. {{ui:Report (CSV)}} writes the whole comparison.
 
 Nothing here changes the model. Not built yet: setting out from slab edges, grid intersections or openings made for you, and sending points to an instrument directly — use the file.

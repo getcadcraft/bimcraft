@@ -1,0 +1,8 @@
+{
+  "@locale": "mn",
+  "@name": "Монгол",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Өгөгдөл ба эх сурвалж",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 загварын гаралтыг нарийвчлан тохируулсан (загвар бүрд CC BY 4.0); далайн түвшний дэлхийн өсөлт: IPCC AR6",
+  "data.sample": "Жишээ багц: гурван газар, нэг загвар, хугацаа бүрт таван жил. Зураг төсөл боловсруулахад зориулаагүй."
+}

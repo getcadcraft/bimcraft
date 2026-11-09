@@ -1,0 +1,8 @@
+{
+  "@locale": "fil",
+  "@name": "Filipino",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data at mga source",
+  "data.nex": "NASA NEX-GDDP-CMIP6, na-downscale na output ng modelong CMIP6 (CC BY 4.0 bawat model); pandaigdigang antas ng dagat: IPCC AR6",
+  "data.sample": "Sample pack: tatlong lugar, isang model, limang taon bawat period. Hindi para sa design."
+}

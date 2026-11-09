@@ -21,9 +21,15 @@ import { el } from './ui-util.js';
 import * as L from './libitem.js';
 import { BUILTIN_SYMBOLS } from './library-symbols.js';
 import { t, locale } from "./i18n.js";
+/** 0.9 (owner 2026-11-09): a Library card or detail picture dragged onto the plan / the 3D view carries this type (not a file: the page's own
+ *  file-drop handling checks for it first). The item itself is read when it is dropped (the card's load()). */
+export const DRAG_TYPE = 'application/x-cadcraft-library-item';
+const NATIVE_DND = !/Firefox\//.test(globalThis.navigator?.userAgent || '');   // Firefox does not start a drag on a <button>: its pointer fallback does the work
 import { getDisplayUnits, localizeQuantities } from './model-units.js';   // GH.3-A: a note's lengths in the display unit
 
 const API = '/api/v1/library';
+/** 2026-11-02: the axes ('x' | 'y' | 'z') an item may be stretched along, as the Library says ([] = none, the default). */
+export const stretchAxes = (v) => (Array.isArray(v) ? ['x', 'y', 'z'].filter((a) => v.includes(a)) : []);
 const TOKEN_KEY = 'bimcraft.library.token';
 const FEEDS_KEY = 'bimcraft.library.feeds';
 // Creative Commons license names are the same in every language; the other two are words, looked up when shown.
@@ -38,6 +44,8 @@ export class LibraryPanel {
   constructor(container, host) {
     this.box = container;
     this.host = host;
+    this.drag = null;           // { name, resolve() → { item, meta }, got, promise } while a card / picture is being dragged
+    this.host.onViewMode?.(() => this.syncPlaceButtons());   // the Place button's default follows the view, as soon as it changes
     this.source = 'symbols';
     this.query = '';
     this.category = '';
@@ -170,7 +178,7 @@ export class LibraryPanel {
       if (!base) { this.entries = []; this.render(); return; }
       this.loading = true; this.render();
       try {
-        const q = new URLSearchParams({ q: this.query, category: this.category, page: String(this.page), per: '24' });
+        const q = new URLSearchParams({ q: this.query, category: this.category, page: String(this.page), per: '24', openings: '1' });   // doors and windows: this build places them (the API leaves them out otherwise)
         const d = await this.getJson(base + '/items?' + q, base);
         if (token !== this.loadToken) return;
         this.total = d.total || 0;
@@ -193,7 +201,8 @@ export class LibraryPanel {
       load: async () => {
         const { item, info, version } = await this.fetchItem(x.uuid, x.version, base);
         // i18n-ignore: product name (LibraryCraft)
-        return { item, meta: { library, source: base === API ? 'Library' : t('lib.source.feed'), sha256: item.provenance?.sha256 || await L.itemHash(item), info, version, withdrawn: version?.status === 'withdrawn' } };
+        return { item, meta: { library, source: base === API ? 'Library' : t('lib.source.feed'), sha256: item.provenance?.sha256 || await L.itemHash(item), info, version, withdrawn: version?.status === 'withdrawn',
+          stretch: stretchAxes(version?.stretch ?? info?.stretch) } };   // 2026-11-02: the axes the Library lets it be stretched along
       },
     };
   }
@@ -289,6 +298,19 @@ export class LibraryPanel {
         src('feed', t('lib.src.feed'), t('lib.src.feed.title'))),
     ];
     const swapV = this.swapVariantsBlock();
+    // 2026-11-02 (owner: "the place button should be higher … small viewports"): one item stands on its own — its name and Place first,
+    // without the list's source buttons and sign-in line above it
+    if (this.detail) {
+      kids.length = 0;
+      if (swapV) kids.push(swapV);
+      kids.push(this.detailView());
+      this.box.replaceChildren(...kids.filter(Boolean));
+      // opened from far down the list: bring its name and Place to the top of the panel (once per item, not on every redraw)
+      const key = this.detail.entry?.key ?? null;
+      if (key !== this._shownDetail) { this._shownDetail = key; scrollPanelTo(this.box.querySelector('.bc-lib-detail')); }
+      return;
+    }
+    this._shownDetail = null;
     if (swapV) kids.unshift(swapV);
     if (this.source === 'librarycraft') kids.push(this.signInRow());
     if (this.source === 'feed') kids.push(this.feedRow(feeds));
@@ -395,14 +417,17 @@ export class LibraryPanel {
       return el('p', { className: 'bc-muted bc-lib-signin' }, el('i', { className: 'bi bi-person-check', 'aria-hidden': 'true' }), ' ' + t('lib.signin.done') + ' ',
         el('button', { type: 'button', className: 'bc-linkbtn', onClick: () => this.signOut() }, t('lib.signin.forget')));
     }
+    // 2026-11-02 (BIMBro: "sign in is wrong, I'm signed in"): signed in to the site, the panel says so; the link only connects the team library
+    let member = null;
+    try { member = JSON.parse(document.getElementById('cc-account')?.textContent || 'null'); } catch (e) { member = null; }
     // One sentence with the link inside it: the words round {link} come from the same string.
-    const [before, after = ''] = t('lib.signin.prompt', { link: '{link}' }).split('{link}');
+    const [before, after = ''] = t(member ? 'lib.signin.member' : 'lib.signin.prompt', { link: '{link}', name: member?.name || '' }).split('{link}');
     return el('p', { className: 'bc-muted bc-lib-signin' }, before || null,
       el('a', { href: '/library/connect?app=bimcraft', className: 'bc-linkbtn', 'data-lib-signin': '', onClick: (e) => {
         e.preventDefault();
         const w = window.open('/library/connect?app=bimcraft', 'cc-library-connect', 'width=600,height=720');
         if (!w) location.assign('/library/connect?app=bimcraft');
-      } }, t('lib.signin.link')),
+      } }, t(member ? 'lib.signin.link.member' : 'lib.signin.link')),
       after);
   }
 
@@ -454,7 +479,7 @@ export class LibraryPanel {
   }
 
   card(e) {
-    return el('li', {}, el('button', { type: 'button', className: 'bc-lib-card', onClick: () => this.showDetail(e) },
+    const btn = el('button', { type: 'button', className: 'bc-lib-card', 'data-lib-card': '', onClick: () => { if (!this.justDragged) this.showDetail(e); } },
       el('span', { className: 'bc-lib-prev' }, this.previewImg(e)),
       el('span', { className: 'bc-lib-body' },
         el('span', { className: 'bc-lib-name' }, e.name || t('clip.unnamed')),
@@ -464,8 +489,110 @@ export class LibraryPanel {
           e.local ? el('span', { className: 'bc-pill is-info' }, t('lib.card.fromfile')) : el('span', { className: 'bc-pill' }, licenseLabel(e.license)),
           e.version ? el('span', { className: 'bc-pill is-info' }, t('lib.card.version', { version: e.version })) : null,
           e.team ? el('span', { className: 'bc-pill is-info' }, t('lib.card.team')) : null,
-          e.withdrawn ? el('span', { className: 'bc-pill is-bad' }, t('lib.card.withdrawn')) : null))));
+          e.withdrawn ? el('span', { className: 'bc-pill is-bad' }, t('lib.card.withdrawn')) : null)));
+    // a card is draggable onto the plan or the 3D view: it is placed there, through the same process as the Place button
+    if (!e.withdrawn) this.dragSource(btn, e.name || t('clip.unnamed'), async () => {
+      const got = await e.load();
+      return { item: L.localizedItem(got.item, locale()), meta: got.meta };
+    });
+    return el('li', {}, btn);
   }
+
+  // ---- drag a card / picture onto the plan or the 3D view (mouse: HTML5 drag and drop; touch and pen: press and drag) ----
+  /** Make `node` draggable. `resolve()` gives the { item, meta } to place (read when it is dropped, or earlier to show the ghost). */
+  dragSource(node, name, resolve) {
+    node.setAttribute('draggable', 'true');
+    let ptype = 'mouse';
+    const spec = { name, resolve };
+    node.addEventListener('pointerdown', (ev) => { ptype = ev.pointerType || 'mouse'; this.pointerDrag(ev, node, spec); });
+    node.addEventListener('dragstart', (ev) => {
+      if (ptype !== 'mouse' || !NATIVE_DND) { ev.preventDefault(); return; }   // the pointer fallback owns touch and pen
+      ev.dataTransfer.setData(DRAG_TYPE, '1');
+      ev.dataTransfer.setData('text/plain', name);
+      ev.dataTransfer.effectAllowed = 'copy';
+      this.beginDrag(spec);
+    });
+    node.addEventListener('dragend', (ev) => { const none = ev.dataTransfer?.dropEffect === 'none'; this.endDrag(); if (none) this.host.dragRefused?.(ev.clientX, ev.clientY); });   // released where nothing takes it
+  }
+  beginDrag(spec) {
+    const d = this.drag = { name: spec.name, resolve: spec.resolve, got: null, promise: null };
+    d.load = () => (d.promise ||= spec.resolve().then((g) => { d.got = g; return g; }));
+    d.load().catch(() => { /* shown when it is dropped */ });
+  }
+  endDrag() { this.drag = null; this.host.dragEnd?.(); }
+  /** Touch and pen (and Firefox's mouse): press, hold (touch) or move (pen, mouse), then drag; a quick swipe on the list still scrolls it. */
+  pointerDrag(ev, node, spec) {
+    const type = ev.pointerType || 'mouse';
+    if ((type === 'mouse' && NATIVE_DND) || (type === 'mouse' && ev.button > 0)) return;
+    const x0 = ev.clientX, y0 = ev.clientY, touch = type === 'touch';
+    let active = false, chip = null, timer = null;
+    const block = (te) => { if (active && te.cancelable) te.preventDefault(); };   // once the drag has begun the finger no longer scrolls
+    const noMenu = (ce) => { if (touch) ce.preventDefault(); };
+    const begin = () => {
+      active = true; this.beginDrag(spec);
+      chip = el('div', { className: 'bc-lib-dragchip', 'aria-hidden': 'true' }, spec.name);
+      document.body.append(chip);
+      try { node.setPointerCapture(ev.pointerId); } catch { /* gone */ }
+    };
+    const clean = () => {
+      clearTimeout(timer);
+      document.removeEventListener('pointermove', move, true); document.removeEventListener('pointerup', up, true); document.removeEventListener('pointercancel', cancel, true);
+      document.removeEventListener('touchmove', block, true); node.removeEventListener('contextmenu', noMenu);
+      chip?.remove(); chip = null;
+    };
+    const move = (m) => {
+      if (m.pointerId !== ev.pointerId) return;
+      if (!active) {
+        if (Math.hypot(m.clientX - x0, m.clientY - y0) <= 8) return;
+        if (touch) { clean(); return; }   // moved before the hold: it is a scroll
+        begin();
+      }
+      chip.style.left = m.clientX + 12 + 'px'; chip.style.top = m.clientY + 12 + 'px';
+      this.host.dragOver?.(this.drag, m.clientX, m.clientY);
+    };
+    const up = (u) => {
+      if (u.pointerId !== ev.pointerId) return;
+      const was = active, d = this.drag;
+      clean();
+      if (!was) return;
+      this.justDragged = true; setTimeout(() => { this.justDragged = false; }, 400);   // the click that follows is not "open this card"
+      this.drag = null; this.host.dragEnd?.();
+      this.host.dropIt?.(d, u.clientX, u.clientY);
+    };
+    const cancel = (c) => { if (c.pointerId !== ev.pointerId) return; clean(); if (active) { this.drag = null; this.host.dragEnd?.(); } };
+    document.addEventListener('pointermove', move, true); document.addEventListener('pointerup', up, true); document.addEventListener('pointercancel', cancel, true);
+    if (touch) { document.addEventListener('touchmove', block, { capture: true, passive: false }); node.addEventListener('contextmenu', noMenu); timer = setTimeout(() => { if (!active) begin(); }, 350); }
+  }
+
+  /** What the Place control is for the view showing: Plan -> one plain "Place in plan"; 3D alone -> one plain "Place in model";
+   *  Split (both showing) -> the split button: main "Place in plan", its menu "Place in model". */
+  placeForm() { const v = this.host.viewMode?.() || 'model'; return v === 'plan' ? 'plan' : v === 'split' ? 'split' : 'model'; }
+  /** One function draws it. The slot is refilled in place when the view changes, so the open item, its variant and the focus stay. */
+  placeSplit(put, m) {
+    const slot = el('span', { className: 'bc-place-slot', 'data-lib-place-slot': '' });
+    slot._put = put; slot._meta = m;
+    this.fillPlaceSlot(slot);
+    return slot;
+  }
+  fillPlaceSlot(slot) {
+    const put = slot._put, m = slot._meta, form = this.placeForm();
+    if (slot.dataset.form === form) return;
+    const hadFocus = slot.contains(document.activeElement);
+    slot.dataset.form = form;
+    const go = (where) => this.host.place({ item: put, meta: m, where });
+    const where = form === 'model' ? 'model' : 'plan';
+    const main = el('button', { type: 'button', className: 'btn-plot btn-sm-cc bc-place-main' + (form === 'split' ? '' : ' bc-place-plain'), 'data-lib-place': '', 'data-lib-where': where, onClick: () => go(where) },
+      el('i', { className: 'bi bi-plus-square', 'aria-hidden': 'true' }), ' ' + t('lib.place.' + where));
+    if (form !== 'split') { slot.replaceChildren(main); if (hadFocus) main.focus(); return; }
+    const toggle = el('button', { type: 'button', className: 'btn-plot btn-sm-cc dropdown-toggle dropdown-toggle-split bc-place-toggle', 'data-lib-place-toggle': '', 'data-bs-toggle': 'dropdown', 'data-bs-popper-config': '{"strategy":"fixed"}',
+      'aria-expanded': 'false', 'aria-haspopup': 'menu', 'aria-label': t('lib.place.choose'), title: t('lib.place.choose') });
+    const menu = el('ul', { className: 'dropdown-menu bc-place-menu' }, el('li', {}, el('button', { type: 'button', className: 'dropdown-item', 'data-lib-place-where': 'model', onClick: () => go('model') },
+      el('i', { className: 'bi bi-box', 'aria-hidden': 'true' }), ' ' + t('lib.place.model'))));
+    slot.replaceChildren(el('div', { className: 'btn-group bc-place-split', role: 'group', 'aria-label': t('lib.place.choose'), 'data-lib-place-group': '' }, main, toggle, menu));
+    if (hadFocus) main.focus();
+  }
+  /** The view changed: every Place control on screen takes the form for it. */
+  syncPlaceButtons() { for (const slot of this.box.querySelectorAll('[data-lib-place-slot]')) this.fillPlaceSlot(slot); }
 
   detailView() {
     const d = this.detail, e = d.entry;
@@ -490,7 +617,8 @@ export class LibraryPanel {
       [t('lib.row.elec'), p.elec ? Object.entries(p.elec).map(([k, v]) => loc.label('elec.' + k, k) + ' ' + v).join(', ') : ''], [t('lib.row.plumb'), p.plumb ? Object.entries(p.plumb).map(([k, v]) => loc.label('plumb.' + k, k.toUpperCase()) + ' ' + v).join(', ') : ''],
       [t('lib.row.remarks'), p.remarks], [t('lib.row.body'), shown.body ? (shown.body.type === 'box' ? t('lib.body.box') : t('lib.body.mesh', { n: shown.body.indices.length / 3 })) : t('lib.body.none')],
       [t('lib.row.ports'), (shown.ports || []).length ? t('lib.ports.count', { n: shown.ports.length }) : ''],
-      [t('lib.row.version'), it.version ? String(it.version) : ''], [t('lib.row.from'), m.source]];
+      [t('lib.row.version'), it.version ? String(it.version) : ''], [t('lib.row.from'), m.source],
+      [t('lib.row.stretch'), m.stretch ? (m.stretch.length ? m.stretch.map((a) => t('lib.stretch.' + a)).join(', ') : t('lib.stretch.none')) : '']];
     const url = svgUrl(L.previewSvg(shown));
     const withdrawn = m.withdrawn || e.withdrawn;
     let variantPick = null;
@@ -500,27 +628,43 @@ export class LibraryPanel {
       sel.addEventListener('change', () => { d.variant = sel.value; this.render(); });
       variantPick = el('div', { className: 'bc-lib-variant' }, el('label', { for: 'bc-lib-variant', className: 'bc-h' }, t('lib.variant.label', { n: vlist.length })), sel);
     }
+    const bigprev = el('div', { className: 'bc-lib-bigprev' }, el('img', { src: url, alt: t('lib.detail.plan_alt', { name: it.name }), draggable: 'false' }));
+    // the detail picture drags too, with the variant chosen here
+    if (mode === 'ifc' && !withdrawn) this.dragSource(bigprev, loc.name, async () => ({ item: put, meta: m }));
+    const actions = el('div', { className: 'bc-lib-actions bc-lib-actions-top', 'data-lib-actions': '' },
+      mode === 'ifc' && !withdrawn ? this.placeSplit(put, m) : null,
+      mode === 'ifc' && swapT && !withdrawn ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => this.host.swap({ item: put, meta: m }) },
+        el('i', { className: 'bi bi-arrow-left-right', 'aria-hidden': 'true' }), ' ' + t('lib.swap', { name: swapT.name })) : null,
+      mode !== 'ifc' ? el('span', { className: 'bc-muted' }, t('lib.needs_ifc')) : null);
     return el('div', { className: 'bc-lib-detail' }, back,
-      el('div', { className: 'bc-lib-bigprev' }, el('img', { src: url, alt: t('lib.detail.plan_alt', { name: it.name }) })),
       el('p', { className: 'bc-prop-name', 'data-lib-name': '' }, loc.name),
-      variantPick,
       loc.translated && loc.name !== it.name ? el('p', { className: 'bc-muted', 'data-lib-original': '' }, t('lib.detail.original', { name: it.name })) : null,
-      loc.description ? el('p', { className: 'bc-lib-desc', 'data-lib-desc': '' }, loc.description) : null,
+      variantPick,
       withdrawn ? el('p', { className: 'bc-input-err', role: 'alert' }, m.version?.withdrawn_reason ? t('lib.withdrawn.reason', { reason: m.version.withdrawn_reason }) : t('lib.withdrawn.default')) : null,
+      actions,
+      bigprev,
+      loc.description ? el('p', { className: 'bc-lib-desc', 'data-lib-desc': '' }, loc.description) : null,
       el('dl', { className: 'bc-dl' }, rows.filter(([, v]) => v).flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}, String(v))])),
       el('div', { className: 'bc-lib-license' },
         el('p', { className: 'bc-h' }, t('lib.license.heading')),
         lic ? el('p', {}, el('span', { className: 'bc-pill' }, licenseLabel(lic.id)), ' ', lic.attribution || lic.holder || '') : el('p', { className: 'bc-muted' }, t('lib.license.fromfile')),
         lic && lic.url && /^https?:/.test(lic.url) ? el('p', {}, el('a', { href: lic.url, rel: 'noopener noreferrer', target: '_blank' }, t('lib.license.link'))) : null),   // i18n-ignore: rel attribute value
       m.notes && m.notes.length ? el('details', { className: 'bc-lib-notes' }, el('summary', {}, t('lib.notes', { n: m.notes.length })), el('ul', {}, m.notes.map((n) => el('li', {}, localizeQuantities(n, getDisplayUnits()))))) : null,
-      el('p', { className: 'bc-lib-actions' },
-        mode === 'ifc' && !withdrawn ? el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-lib-place': '', onClick: () => this.host.place({ item: put, meta: m }) },
-          el('i', { className: 'bi bi-plus-square', 'aria-hidden': 'true' }), ' ' + t('lib.place')) : null,
-        mode === 'ifc' && swapT && !withdrawn ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => this.host.swap({ item: put, meta: m }) },
-          el('i', { className: 'bi bi-arrow-left-right', 'aria-hidden': 'true' }), ' ' + t('lib.swap', { name: swapT.name })) : null,
-        it.uuid && m.library === 'librarycraft' ? el('a', { className: 'bc-linkbtn', href: '/library/item/' + encodeURIComponent(m.info?.slug || ''), target: '_blank', rel: 'noopener' }, t('lib.open_on')) : null),
-      mode !== 'ifc' ? el('p', { className: 'bc-muted' }, t('lib.needs_ifc')) : null);
+      it.uuid && m.library === 'librarycraft' ? el('p', {}, el('a', { className: 'bc-linkbtn', href: '/library/item/' + encodeURIComponent(m.info?.slug || ''), target: '_blank', rel: 'noopener' }, t('lib.open_on'))) : null);
   }
+}
+
+/** Scroll only the panel's own scroll box so `node` is at its top (scrollIntoView would also move the page and the drawing under the pointer). */
+function scrollPanelTo(node) {
+  if (!node) return;
+  let sc = node.parentElement;
+  while (sc && sc !== document.body && sc !== document.documentElement) {
+    const oy = getComputedStyle(sc).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && sc.scrollHeight > sc.clientHeight) break;
+    sc = sc.parentElement;
+  }
+  if (!sc || sc === document.body || sc === document.documentElement) return;
+  sc.scrollTop += node.getBoundingClientRect().top - sc.getBoundingClientRect().top;
 }
 
 /** A PHP server writes an empty object as []: take [] as {} where the format has an object. */

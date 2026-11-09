@@ -30,6 +30,7 @@ import { documentPages } from './assembly-schedule-layout.js';
  *                     made from the model when it opens; a preview of each and the whole set as one PDF (res-views.js,
  *                     res-sheets.js)
  */
+import { merge as mergeCredits, creditRows } from './report/credits.js';
 import { el } from './ui-util.js';
 import { readGrids, toPlan as gridsToPlan, gridsInView } from './model-grids.js';   // 0.6 DF.16 (bim-draw): grids on the elevations and sections
 import { fmtLen, parseLen, parsePitch, fmtPitch, fmtArea, isMetric } from './model-units.js';
@@ -59,6 +60,9 @@ import { loadTin, readTerrain, readPads, readHardscape, finishedSurface, existin
 import { modelTriangles, projectView, elevationDirs } from './res-views.js';
 import { sectionModel, straightElevationWidth } from './wall-section-graphics.js';
 import { readProjectedView, projectedBox } from './projected-views.js';
+import { readCopies } from './view-copies.js';
+import { printSheets } from './print-style.js';   // 0.9 D8.12-B
+import { readViewNotes, readViewDims } from './elev-edit.js';   // 0.9 SU.1123: notes written in elevations and sections   // 0.9 D8.12-A: duplicated elevations and sections on sheets
 import { readMaterials } from './project-materials.js';
 import { buildSet, setPdf, sheetSvg, PAPERS, readSectionLines, placeSectionLine, changeSectionLine, removeSectionLines, sectionDir } from './res-sheets.js';
 import { viewerToPlan } from './model-plan.js';
@@ -77,6 +81,9 @@ function inv4m(m) {
   r[12] = -t[0]; r[13] = -t[1]; r[14] = -t[2];
   return r;
 }
+
+/** The credits as a schedule: license and credit, the credit wrapped so it fits its column on the page (the sheets print one line a row). */
+export const creditsSchedule = (items, t) => ({ ref: 'credits', title: t('res.sh.credits'), head: [t('credits.col.license'), t('credits.col.attribution')], widths: [0.22, 0.78], rows: creditRows(items, { wrap: 62 }) });
 
 export function mountRes(modelUi) {
   if (!modelUi?.extend) return null;
@@ -643,7 +650,7 @@ export function mountRes(modelUi) {
     tjiSrc ||= P.source({ id: 'bimcraft.framing', kind: 'check', label: t('tji.src'), debounceMs: 400, run: () => (A.S.on ? tjiProblems() : null) });
     tjiSrc.invalidate();
   }
-  if (window.ccProblems) tjiRegister(); else document.addEventListener('cc-problems-ready', () => tjiRegister(), { once: true });
+  if (window.ccProblems) queueMicrotask(tjiRegister); else document.addEventListener('cc-problems-ready', () => tjiRegister(), { once: true });
   const sizeLabel = (sz) => (isMetric(A.units()) ? sz.replace(/^(\dx\d+)/, (m) => LUMBER[m]?.metric || m) : sz);
   // the cut list as a schedule (model-ui.js Schedules panel): size, stock length, pieces, board feet
   function lumberSchedule() {
@@ -1103,13 +1110,14 @@ export function mountRes(modelUi) {
     const fmtN = (mm) => L(mm);
     const facts = (() => { try { return openingFacts(A.S.data.openings || [], A.S.data.walls || [], wallGeom).map((o) => { const lv = levels.find((l) => l.id === o.storey), dz = lv ? lv.elevation - g.elevation : 0; return { ...o, z0: o.z0 + dz, z1: o.z1 + dz }; }); } catch (e) { return []; } })();
     const widthOn = (dir) => { const r = [dir[1], -dir[0]], xs = []; for (const x of A.S.data.walls || []) for (const q of [x.a, x.b]) xs.push(q[0] * r[0] + q[1] * r[1] - x.t / 2, q[0] * r[0] + q[1] * r[1] + x.t / 2); /* the outside faces (square walls exactly) */ return xs.length ? { x0: Math.min(...xs), x1: Math.max(...xs) } : null; };
+    const ownNotes = (key) => { try { return [...readViewNotes(w, key).map((n) => ({ t: 'text', x: n.x, y: n.y, s: n.text })), ...readViewDims(w, key).map((d) => ({ t: 'dim', a: d.a, b: d.b, off: d.off, text: fmtN(d.len) }))]; } catch (e) { return []; } };   // 0.9 SU.1123: notes and dimensions written in the view
     const noted = (view, ctx) => { try { return viewNotes(view, { ...ctx, levels: lvls, fmt: fmtN }); } catch (e) { console.error(e); return []; } };
     for (const [side, dir] of Object.entries(elevationDirs)) {
       const settings=readProjectedView(w,'elevation:'+side);
       const view = { ...projectView(els, { dir, box:projectedBox(settings), ...sectionModel(w,g.id,k) }), scale:settings.scale, grids: gridsInView(gAxes, dir) };
       if(settings.issue)view.warnings=[{reason:settings.issue}];
       view.images = pictureViews({ dir }, g);   // 0.8 D8.8 round 5
-      view.notes = noted(view, { kind: 'elevation', dir, base: g.elevation, openings: facts, width: straightElevationWidth(sectionModel(w,g.id,k).walls,dir)||widthOn(dir) });
+      view.notes = [...noted(view, { kind: 'elevation', dir, base: g.elevation, openings: facts, width: straightElevationWidth(sectionModel(w,g.id,k).walls,dir)||widthOn(dir) }), ...ownNotes('elevation:' + side)];   // 0.9 SU.1123: notes written in the view
       input.elevations.push({ ref: side, title: t('res.sh.elev.' + side), view });
     }
     for (const sl of R.secs) {
@@ -1123,9 +1131,31 @@ export function mountRes(modelUi) {
       const view = { ...projectView(modelTriangles(model, M, { skip }), { dir, cut: { o }, far: sl.depth, ...sectionModel(w,sl.storey,k), materials:cutMaterials, detail:settings.detail, scale:settings.scale||50, box:projectedBox(settings) }), scale:settings.scale, groundY:g.elevation-(levels.find(l=>l.id===sl.storey)?.elevation??g.elevation), grids: gridsInView(gridsOn(sl.storey), dir) };
       if(settings.issue)view.warnings.push({reason:settings.issue});
       view.images = pictureViews({ dir, o, guid: sl.guid }, levels.find((l) => l.id === sl.storey) || g);   // 0.8 D8.8 round 5
-      view.notes = noted(view, { kind: 'section', dir, base: levels.find((l) => l.id === sl.storey)?.elevation || 0 });
+      view.notes = [...noted(view, { kind: 'section', dir, base: levels.find((l) => l.id === sl.storey)?.elevation || 0 }), ...ownNotes('section:' + sl.guid)];   // 0.9 SU.1123
       input.sections.push({ ref: sl.guid, title: t('res.sec.name', { name: sl.name }), view });
     }
+    // 0.9 D8.12-A: duplicated elevations and sections — the same drawing; an own copy with its own detail, scale and crop
+    try {
+      for (const cp of readCopies(w).filter((c) => /^(elevation|section):/.test(c.base))) {
+        const [kind, ref] = cp.base.split(':');
+        const set = cp.mode === 'own' ? cp.range : readProjectedView(w, cp.base);
+        if (kind === 'elevation') {
+          const dir = elevationDirs[ref];
+          if (!dir) continue;
+          const view = { ...projectView(els, { dir, box: projectedBox(set), ...sectionModel(w, g.id, k) }), scale: set.scale, grids: gridsInView(gAxes, dir) };
+          view.notes = noted(view, { kind: 'elevation', dir, base: g.elevation, openings: facts, width: straightElevationWidth(sectionModel(w, g.id, k).walls, dir) || widthOn(dir) });
+          input.elevations.push({ ref: cp.id, title: cp.name, view });
+        } else {
+          const sl = R.secs.find((x) => x.guid === ref);
+          if (!sl || !levels.some((l) => l.id === sl.storey)) continue;
+          const M = viewerToPlan(C, w.storeyWorld(sl.storey));
+          const { o, dir } = sectionDir(sl);
+          const view = { ...projectView(modelTriangles(model, M, { skip }), { dir, cut: { o }, far: sl.depth, ...sectionModel(w, sl.storey, k), materials: cutMaterials, detail: set.detail, scale: set.scale || 50, box: projectedBox(set) }), scale: set.scale, groundY: g.elevation - (levels.find((l) => l.id === sl.storey)?.elevation ?? g.elevation), grids: gridsInView(gridsOn(sl.storey), dir) };
+          view.notes = noted(view, { kind: 'section', dir, base: levels.find((l) => l.id === sl.storey)?.elevation || 0 });
+          input.sections.push({ ref: cp.id, title: cp.name, view });
+        }
+      }
+    } catch (e) { console.error(e); }
     // 0.6 round 2 (comforts-views.js): every room's four walls as interior elevations, made only when a sheet shows one
     input.interiors = [];
     for (const sp of A.S.data.derived?.spaces || []) {
@@ -1152,6 +1182,11 @@ export function mountRes(modelUi) {
     const schTitle = { lumber: t('res.fr.sch.lumber'), devices: t('res.el.sch.devicesched'), circuits: t('res.el.sch.circuitsched') };
     for (const kind of ['doors', 'windows', 'rooms', 'devices', 'circuits', 'lumber']) if (sch[kind]?.rows?.length) input.schedules.push({ ref: kind, title: schTitle[kind] || t('model.sch.' + kind), ...sch[kind] });
     for (const [kind,key] of [['assemblies','assemblies'],['materialLegend','materials']]) if(sch[kind]) input.schedules.push(...documentPages(sch[kind],key));
+    // the Library credits: a schedule like the others, so it is on the set's schedule sheet and can be placed on any sheet, and it is made again from the model each time
+    try {
+      const creditItems = mergeCredits([w.libraryCredits()]);
+      if (creditItems.length) input.schedules.push(creditsSchedule(creditItems, t));
+    } catch (e) { console.error(e); }
     for (const fr of R.frames) if (fr.kind === 'wall' && fr.wallPieces?.pieces?.length) { const wall = A.S.data.walls.find((x) => x.guid === fr.host); input.framing.push({ title: t('res.sh.framewall', { len: L(wall?.len || 0), level: levels.find((l) => l.id === fr.storey)?.name || '' }), pieces: fr.wallPieces.pieces }); }
     return input;
   }
@@ -1166,7 +1201,7 @@ export function mountRes(modelUi) {
       dlg.querySelector('[data-res-shpdf]')?.addEventListener('click', () => {
         if (!R.sheets?.length) return;
         const base = String(A.host.fileName?.() || 'model').replace(/\.ifc$/i, '');
-        A.host.download(base + ' — ' + t('res.sh.set') + '.pdf', setPdf(R.sheets, { paper: paperNow(), title: base }), 'application/pdf');   // i18n-ignore: a file name
+        A.host.download(base + ' — ' + t('res.sh.set') + '.pdf', setPdf(printSheets(R.sheets), { paper: paperNow(), title: base }), 'application/pdf');   // i18n-ignore: a file name
         A.host.status(t('res.sh.done', { n: R.sheets.length }));
       });
     }

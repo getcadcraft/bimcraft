@@ -1,0 +1,21 @@
+{
+  "@locale": "sq",
+  "@name": "Shqip",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX dhe PWS",
+  "opt.flip": "Pasqyro imazhin",
+  "opt.flip.off": "Jo",
+  "opt.flip.on": "Po, nga e majta në të djathtën",
+  "opt.version": "Versioni i skedarit",
+  "opt.version.v1": "Versioni 1 (më i zakonshmi)",
+  "opt.version.v516": "Versioni 516",
+  "opt.aa": "Nivelet e lëmimit të skajeve",
+  "opt.aa.1": "1 (asnjë)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flamuri i cilësimeve për shtresë",
+  "opt.perLayer.off": "Çaktivizuar",
+  "opt.perLayer.on": "Aktivizuar"
+}

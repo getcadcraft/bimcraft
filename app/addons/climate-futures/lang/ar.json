@@ -1,0 +1,8 @@
+{
+  "@locale": "ar",
+  "@name": "العربية",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "البيانات والمصادر",
+  "data.nex": "NASA NEX-GDDP-CMIP6، مخرجات نماذج CMIP6 المُصغّرة مكانيًا (CC BY 4.0 لكل نموذج)؛ مستوى سطح البحر العالمي: IPCC AR6",
+  "data.sample": "حزمة عينة: ثلاثة مواقع، ونموذج واحد، وخمس سنوات لكل فترة. ليست للتصميم."
+}

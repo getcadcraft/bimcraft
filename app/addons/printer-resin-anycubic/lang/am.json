@@ -1,0 +1,21 @@
+{
+  "@locale": "am",
+  "@name": "አማርኛ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX እና PWS",
+  "opt.flip": "ስዕሉን አንጸባርቅ",
+  "opt.flip.off": "አይ",
+  "opt.flip.on": "አዎ፣ ከግራ ወደ ቀኝ",
+  "opt.version": "የፋይል ስሪት",
+  "opt.version.v1": "ስሪት 1 (የተለመደው)",
+  "opt.version.v516": "ስሪት 516",
+  "opt.aa": "የጠርዝ ማለስለሻ ደረጃዎች",
+  "opt.aa.1": "1 (የለም)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "የንብርብር-በንብርብር ቅንብር ምልክት",
+  "opt.perLayer.off": "ጠፍቷል",
+  "opt.perLayer.on": "በርቷል"
+}

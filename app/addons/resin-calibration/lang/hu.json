@@ -1,0 +1,14 @@
+{
+  "@locale": "hu",
+  "@name": "Magyar",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Expozíciós teszt",
+  "note": "A gyanták és a nyomtatók eltérnek. Nyomtassa ki a teszt-alkatrészt egyszer minden expozíciós szinten a létrán, és tartsa meg azt az expozíciót, amelynél a legélesebbek a vékony oszlopok és a nyitott furatok.",
+  "part": "Helyezze a teszt-alkatrészt a nyomtatási tálcára",
+  "part.name": "Expozíciós teszt-alkatrész",
+  "ladder": "Expozíciós létra mentése ({n} fájl)",
+  "ladder.made": "{n} fájl mentve. Expozíciós idők: {list} s. Mindegyiket ugyanazzal a gyantával nyomtassa ki, és hasonlítsa össze őket.",
+  "ladder.nopart": "Helyezze előbb a teszt-alkatrészt a nyomtatási tálcára.",
+  "ladder.failed": "Az expozíciós létra nem készíthető el. {why}",
+  "ladder.busy": "Készítés: {i} / {n}…"
+}

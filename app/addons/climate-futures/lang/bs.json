@@ -1,0 +1,8 @@
+{
+  "@locale": "bs",
+  "@name": "Bosanski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Podaci i izvori",
+  "data.nex": "NASA NEX-GDDP-CMIP6, izlazni podaci CMIP6 modela sa smanjenom rezolucijom (CC BY 4.0 po modelu); globalni nivo mora: IPCC AR6",
+  "data.sample": "Uzorak: tri lokacije, jedan model, pet godina po periodu. Nije za projektovanje."
+}

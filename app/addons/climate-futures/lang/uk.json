@@ -1,0 +1,8 @@
+{
+  "@locale": "uk",
+  "@name": "Українська",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Дані та джерела",
+  "data.nex": "NASA NEX-GDDP-CMIP6, результати моделей CMIP6 із пониженою роздільністю (CC BY 4.0 для кожної моделі); глобальний рівень моря: IPCC AR6",
+  "data.sample": "Зразковий набір: три місця, одна модель, пʼять років для кожного періоду. Не для проєктування."
+}

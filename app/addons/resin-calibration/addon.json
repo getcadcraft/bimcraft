@@ -1,0 +1,22 @@
+{
+  "id": "resin-calibration",
+  "name": "Resin exposure test",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "slicer-resin",
+      "range": "*"
+    }
+  ],
+  "description": "A test part and a ladder of exposures for finding the right exposure for your resin and printer: one file for each exposure, in a zip.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

@@ -1,0 +1,12 @@
+{
+  "@locale": "bg",
+  "@name": "Български",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Порядък на байтовете",
+  "opt.byteOrder.big": "Big-endian (обичайният отчет)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Контролна сума",
+  "opt.checksum.negsum": "Отрицателна сума",
+  "opt.checksum.sum": "Проста сума"
+}

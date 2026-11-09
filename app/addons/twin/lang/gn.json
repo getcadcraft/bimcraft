@@ -1,0 +1,23 @@
+{
+  "@locale": "gn",
+  "bt.title": "Gemelo digital",
+  "bt.h": "Mávapa oĩ la distribución edificio-pe",
+  "bt.note": "La distribución oúi celda listo guive térã archivo de distribución Material flow-pe hecho. Oñeguarda ko archivo IFC-pe, ha los equipos oñemboja vista 3D-pe ko'ápe reindicá lugar-pe.",
+  "bt.level": "Piso",
+  "bt.rot": "Girar (grados)",
+  "bt.nomodel": "Abrí primero un modelo IFC: la distribución oñeguarda archivo modelo-pe.",
+  "bt.file.open": "Abrir un archivo de distribución",
+  "bt.file.save": "Guardar la distribución como archivo",
+  "bt.file.bad": "{name} noñeme'ẽvaʼerã Material flow distribución.",
+  "bt.file.done": "{name}: {n} ítems cargados, {dropped} dejados afuera.",
+  "bt.fit.run": "Revisar contra los muros",
+  "bt.fit.nolayout": "Todavía no hay distribución para revisar. Usá una celda o abrí un archivo de distribución.",
+  "bt.fit.nolevel": "El modelo no tiene piso donde poner la distribución.",
+  "bt.fit.problems": "La distribución todavía no se arma ({list}), así que no se puede revisar.",
+  "bt.fit.touch": "{n} ítems tocan un muro en {level}: {items}. Revisado contra {walls} muros.",
+  "bt.fit.clear": "Ninguno de los {items} ítems toca alguno de los {walls} muros en {level}.",
+  "bt.fit.note": "Esto mira las cajas de los equipos contra los sólidos de los muros, en planta y en altura. Puertas y ventanas no se miran, y la corrida de flujo no conoce los muros.",
+  "bt.carries": "Un modelo de edificio guarda los ambientes, muros y pisos, no cómo se comportan las máquinas: velocidades, tiempos y lógica de control son los que se fijan en la distribución y en el panel de abajo. Nada de esto es una validación de seguridad.",
+  "bt.undo.layout": "Distribución de flujo",
+  "bt.undo.anchor": "Ubicación de la distribución de flujo"
+}

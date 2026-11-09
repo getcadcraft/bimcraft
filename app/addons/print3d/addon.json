@@ -1,0 +1,20 @@
+{
+  "id": "print3d",
+  "name": "3D Print",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.1",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "network",
+    "usb"
+  ],
+  "description": "Put elements of your building model on your printer's bed, as a scale model or life size, lay them flat, arrange them and send them to the printer, with no exporting. Sends over USB, or to Klipper, OctoPrint or PrusaLink on your network. CadCraft's basic slicer comes with it; Kiri:Moto, PrusaSlicer and OrcaSlicer are add-ons of their own.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "on"
+}

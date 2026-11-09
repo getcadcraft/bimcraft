@@ -1,0 +1,21 @@
+{
+  "@locale": "zu",
+  "@name": "isiZulu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (ngokusebenzisa i-Bambu Connect)",
+  "step.orca": "Faka i-OrcaSlicer kulolu khomputha.",
+  "step.orca.link": "Thola i-OrcaSlicer",
+  "step.connect": "Faka i-Bambu Connect kulolu khomputha.",
+  "step.connect.link": "Thola i-Bambu Connect",
+  "step.bind": "Ku-Bambu Connect, engeza i-P2S yakho. Yenza lokhu kanye.",
+  "step.send": "Cindezela “Thumela kwisishicilelo se-3D”. Ifayela livula ku-Bambu Connect: lihlole khona bese uqala ukushicilela.",
+  "note": "I-Bambu Connect uhlelo lwe-Bambu Lab lokushicilela kusuka kwezinye izinhlelo zesofthiwe, futhi ukushicilela kuqala khona.",
+  "confirm": "I-OrcaSlicer ilungiselele lokhu ngamapresethi ayo e-P2S: {grams} g, {layers} izingqimba.",
+  "confirm.next": "Vula ku-Bambu Connect? Akukho okushicilelwayo kuze uqale khona.",
+  "done": "Kuthunyelwe ku-Bambu Connect. Lihlole khona bese uqala ukushicilela.",
+  "fail.orca": "I-OrcaSlicer ayitholakali kulolu khomputha. Yifake, bese uzama futhi.",
+  "fail.slice": "I-OrcaSlicer ayikwazanga ukulungiselela lokhu kushicilelwa. {why}",
+  "fail.nogcode": "Ifayela le-OrcaSlicer alibambanga ukushicilelwa.",
+  "fail.bed": "Lokhu akulingani nebhedi ye-P2S.",
+  "fail.connect": "I-Bambu Connect ayivulekanga. Yifake, bese uzama futhi."
+}

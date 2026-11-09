@@ -1,0 +1,12 @@
+{
+  "@locale": "sq",
+  "@name": "Shqip",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Renditja e bajtëve",
+  "opt.byteOrder.big": "Big-endian (raporti i zakonshëm)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Shuma kontrolluese",
+  "opt.checksum.negsum": "Shuma e negacionuar",
+  "opt.checksum.sum": "Shuma e thjeshtë"
+}

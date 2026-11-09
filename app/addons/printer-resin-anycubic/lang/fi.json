@@ -1,0 +1,21 @@
+{
+  "@locale": "fi",
+  "@name": "Suomi",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX ja PWS",
+  "opt.flip": "Peilaa kuva",
+  "opt.flip.off": "Ei",
+  "opt.flip.on": "Kyllä, vasemmalta oikealle",
+  "opt.version": "Tiedostoversio",
+  "opt.version.v1": "Versio 1 (yleisin)",
+  "opt.version.v516": "Versio 516",
+  "opt.aa": "Reunojen tasoitustasot",
+  "opt.aa.1": "1 (ei)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Tasokohtaisten asetusten lippu",
+  "opt.perLayer.off": "Pois",
+  "opt.perLayer.on": "Päällä"
+}

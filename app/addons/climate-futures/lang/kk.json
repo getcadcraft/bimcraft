@@ -1,0 +1,8 @@
+{
+  "@locale": "kk",
+  "@name": "Қазақша",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Деректер және дереккөздер",
+  "data.nex": "NASA NEX-GDDP-CMIP6, кіші масштабтағы CMIP6 модель нәтижелері (әр модель үшін CC BY 4.0); жаһандық теңіз деңгейі: IPCC AR6",
+  "data.sample": "Үлгі жинағы: үш орын, бір модель, әр кезеңге бес жыл. Жобалау үшін емес."
+}

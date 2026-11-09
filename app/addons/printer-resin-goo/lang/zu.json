@@ -1,0 +1,12 @@
+{
+  "@locale": "zu",
+  "@name": "isiZulu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Ukuhleleka kwebhayithi",
+  "opt.byteOrder.big": "Big-endian (okuvamile kumbiko)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Isheki",
+  "opt.checksum.negsum": "Isamba esiphikisiwe",
+  "opt.checksum.sum": "Isamba esilula"
+}

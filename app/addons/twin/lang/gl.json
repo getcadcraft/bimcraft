@@ -1,0 +1,23 @@
+{
+  "@locale": "gl",
+  "bt.title": "Xemelo dixital",
+  "bt.h": "Onde se sitúa o layout no edificio",
+  "bt.note": "O layout procede dunha célula preparada máis abaixo ou dun ficheiro de layout feito en Fluxo de materiais. Gárdase neste ficheiro IFC, e o equipamento debúxase na vista 3D no lugar que indique aquí.",
+  "bt.level": "Nivel",
+  "bt.rot": "Xirar (graos)",
+  "bt.nomodel": "Abra primeiro un modelo IFC: o layout gárdase no ficheiro do modelo.",
+  "bt.file.open": "Abrir un ficheiro de layout",
+  "bt.file.save": "Gardar o layout como ficheiro",
+  "bt.file.bad": "{name} non é un layout de Fluxo de materiais.",
+  "bt.file.done": "{name}: {n} elementos cargados, {dropped} deixados fóra.",
+  "bt.fit.run": "Comprobar contra os muros",
+  "bt.fit.nolayout": "Aínda non hai layout que comprobar. Use unha célula ou abra un ficheiro de layout.",
+  "bt.fit.nolevel": "O modelo non ten nivel no que colocar o layout.",
+  "bt.fit.problems": "O layout aínda non se constrúe ({list}), polo que non se pode comprobar.",
+  "bt.fit.touch": "{n} elementos tocan un muro en {level}: {items}. Comprobado contra {walls} muros.",
+  "bt.fit.clear": "Ningún dos {items} elementos toca ningún dos {walls} muros de {level}.",
+  "bt.fit.note": "Isto mira as caixas do equipamento contra os sólidos dos muros, en planta e en altura. Non se miran portas nin xanelas, e o percorrido de fluxo non coñece os muros.",
+  "bt.carries": "Un modelo de edificio contén cuartos, muros e niveis, pero non o comportamento das máquinas: velocidades, tempos e lóxica de control son os definidos no layout e no panel de abaixo. Nada aquí é unha validación de seguridade.",
+  "bt.undo.layout": "Layout de fluxo",
+  "bt.undo.anchor": "Colocación do layout de fluxo"
+}

@@ -38,7 +38,7 @@ BimCraft decides what a file is by looking at its first bytes as well as its nam
 | {{ui:Save as IFC}} | A new IFC file with your edits, named "*original name* (edited).ifc" | Your browser's downloads folder |
 | {{ui:Download CSV}} in the equipment schedule | A CSV of the items in the list, named "*drawing name* equipment.csv" | Your browser's downloads folder |
 
-Other things are saved where they are made, each in its own topic: {{ui:USD}} ([Export the model as USD](topic:usd)), the .glb {{ui:For rendering}}, rendered pictures, sheets and plans as PDF, schedules and lists as CSV, BCF issues, the COBie spreadsheet, family files, and registered scans as LAS or E57. BimCraft does not save DWG, DXF or project files, and it never changes the files you opened.
+Other things are saved where they are made, each in its own topic: {{ui:USD}} ([Export the model as USD](topic:usd)), {{ui:Collada}} (.dae and the Google Earth .kmz: [Export the model as Collada or for Google Earth](topic:collada)), the .glb {{ui:For rendering}}, rendered pictures, sheets and plans as PDF, schedules and lists as CSV, BCF issues, the COBie spreadsheet, family files, and registered scans as LAS or E57. BimCraft does not save DWG, DXF or project files, and it never changes the files you opened.
 
 :::chromium
 Chrome and Edge save downloads to the folder set in their settings, usually Downloads. To be asked where to save each time, turn on "Ask where to save each file before downloading" in the browser's download settings.

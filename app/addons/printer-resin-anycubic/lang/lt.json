@@ -1,0 +1,21 @@
+{
+  "@locale": "lt",
+  "@name": "Lietuvių",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX ir PWS",
+  "opt.flip": "Atspindėti vaizdą",
+  "opt.flip.off": "Ne",
+  "opt.flip.on": "Taip, iš kairės į dešinę",
+  "opt.version": "Failo versija",
+  "opt.version.v1": "1 versija (įprasta)",
+  "opt.version.v516": "516 versija",
+  "opt.aa": "Kraštų glotninimo lygiai",
+  "opt.aa.1": "1 (nėra)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Parametrų pagal sluoksnius žymė",
+  "opt.perLayer.off": "Išjungta",
+  "opt.perLayer.on": "Įjungta"
+}

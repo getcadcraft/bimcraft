@@ -146,6 +146,9 @@ export function noteItems(notes, P, k) {
       out.push({ t: 'line', pts: [a, b], w: 0.13, g: 0.25, dash: [4, 0.8, 0.6, 0.8] });
       out.push({ t: 'fill', polys: [[[b[0], b[1]], [b[0] - 1.2, b[1] + 1.8], [b[0] + 1.2, b[1] + 1.8]]], g: 0 });
       out.push({ t: 'text', s: n.name, x: b[0] + 2, y: b[1] + 0.8, size: 6.5, align: 'left', bold: true }, { t: 'text', s: n.text, x: b[0] + 2, y: b[1] - 2.2, size: 6, align: 'left' });
+    } else if (n.t === 'text') {   // 0.9 SU.1123: a note written in the elevation or section view (elev-edit.js)
+      const q = P([n.x, n.y]);
+      String(n.s).split('\n').slice(0, 8).forEach((line, i) => out.push({ t: 'text', s: line, x: q[0], y: q[1] - i * 3, size: 6.5, align: 'left' }));
     } else if (n.t === 'tag') {
       const c = P([n.x, n.y]), r = String(n.s).length > 2 ? 2.8 : 2.2, pts = [];
       const sides = n.shape === 'hex' ? 6 : n.shape === 'box' ? 4 : 24, turn = n.shape === 'box' ? Math.PI / 4 : 0;

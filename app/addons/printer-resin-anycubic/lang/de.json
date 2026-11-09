@@ -1,0 +1,21 @@
+{
+  "@locale": "de",
+  "@name": "Deutsch",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX und PWS",
+  "opt.flip": "Bild spiegeln",
+  "opt.flip.off": "Nein",
+  "opt.flip.on": "Ja, von links nach rechts",
+  "opt.version": "Dateiversion",
+  "opt.version.v1": "Version 1 (die übliche)",
+  "opt.version.v516": "Version 516",
+  "opt.aa": "Kantenglättungsstufen",
+  "opt.aa.1": "1 (keine)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flag für Layer-Einstellungen",
+  "opt.perLayer.off": "Aus",
+  "opt.perLayer.on": "Ein"
+}

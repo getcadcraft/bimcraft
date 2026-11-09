@@ -1,0 +1,21 @@
+{
+  "@locale": "vi",
+  "@name": "Tiếng Việt",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (qua Bambu Connect)",
+  "step.orca": "Cài đặt OrcaSlicer trên máy tính này.",
+  "step.orca.link": "Tải OrcaSlicer",
+  "step.connect": "Cài đặt Bambu Connect trên máy tính này.",
+  "step.connect.link": "Tải Bambu Connect",
+  "step.bind": "Trong Bambu Connect, thêm P2S của bạn. Chỉ cần làm một lần.",
+  "step.send": "Nhấn Gửi tới máy in 3D. Tệp sẽ mở trong Bambu Connect: kiểm tra tại đó và bắt đầu in.",
+  "note": "Bambu Connect là chương trình riêng của Bambu Lab để in từ phần mềm khác, và việc in bắt đầu từ đó.",
+  "confirm": "OrcaSlicer đã chuẩn bị bản in này với các cấu hình sẵn P2S: {grams} g, {layers} lớp.",
+  "confirm.next": "Mở trong Bambu Connect? Chưa có gì được in cho đến khi bạn bắt đầu tại đó.",
+  "done": "Đã gửi tới Bambu Connect. Kiểm tra tại đó và bắt đầu in.",
+  "fail.orca": "Không tìm thấy OrcaSlicer trên máy tính này. Cài đặt rồi thử lại.",
+  "fail.slice": "OrcaSlicer không thể chuẩn bị bản in này. {why}",
+  "fail.nogcode": "Tệp của OrcaSlicer không chứa bản in nào.",
+  "fail.bed": "Vật thể này không vừa với bàn in của P2S.",
+  "fail.connect": "Bambu Connect không mở được. Cài đặt rồi thử lại."
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "uk",
+  "@name": "Українська",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX та PWS",
+  "opt.flip": "Відобразити зображення дзеркально",
+  "opt.flip.off": "Ні",
+  "opt.flip.on": "Так, зліва направо",
+  "opt.version": "Версія файлу",
+  "opt.version.v1": "Версія 1 (звичайна)",
+  "opt.version.v516": "Версія 516",
+  "opt.aa": "Рівні згладжування країв",
+  "opt.aa.1": "1 (немає)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Прапорець налаштувань для шару",
+  "opt.perLayer.off": "Вимк.",
+  "opt.perLayer.on": "Увімк."
+}

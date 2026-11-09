@@ -1,0 +1,14 @@
+{
+  "@locale": "pl",
+  "@name": "Polski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test ekspozycji",
+  "note": "Żywice i drukarki się różnią. Wydrukuj część testową raz przy każdej ekspozycji w drabince i zachowaj tę ekspozycję, przy której cienkie słupki i otwarte otwory wychodzą najostrzej.",
+  "part": "Umieść część testową na platformie",
+  "part.name": "Część testowa ekspozycji",
+  "ladder": "Zapisz drabinkę ekspozycji (pliki: {n})",
+  "ladder.made": "Zapisano pliki ({n}) dla czasów {list} s. Wydrukuj każdy tą samą żywicą i porównaj.",
+  "ladder.nopart": "Najpierw umieść część testową na platformie.",
+  "ladder.failed": "Nie udało się utworzyć drabinki. {why}",
+  "ladder.busy": "Tworzenie {i} z {n}…"
+}

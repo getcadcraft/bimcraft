@@ -1,0 +1,21 @@
+{
+  "@locale": "ro",
+  "@name": "Română",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX și PWS",
+  "opt.flip": "Oglindire imagine",
+  "opt.flip.off": "Nu",
+  "opt.flip.on": "Da, de la stânga la dreapta",
+  "opt.version": "Versiune fișier",
+  "opt.version.v1": "Versiunea 1 (cea obișnuită)",
+  "opt.version.v516": "Versiunea 516",
+  "opt.aa": "Niveluri de netezire a muchiilor",
+  "opt.aa.1": "1 (niciunul)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Indicator setări per strat",
+  "opt.perLayer.off": "Inactiv",
+  "opt.perLayer.on": "Activ"
+}

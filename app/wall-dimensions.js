@@ -86,7 +86,9 @@ export function syncWallDimensions(w) {
     w.upsertPset(d.id,DIMENSION_PSET,[['Geometry','IFCTEXT',signature],['Status','IFCLABEL',r.status]]);
   }
 }
-const operation = fn => ed => new ModelWriter(ed.W,ed.api,ed.mid).run(w=>{ const result=fn(w);syncWallDimensions(w);return result; });
+// 0.9 FX.71: the GlobalIds a run hands out are handed out again, in order, when Redo runs the op again (as model-ops.js op() does), so a
+// redone dimension keeps its id. Before, each run drew a fresh GlobalId and Redo made the dimension under a new one.
+const operation = fn => { const seq=[]; return ed => { const w0=new ModelWriter(ed.W,ed.api,ed.mid); let n=0; const fresh=w0.guid.bind(w0); w0.guid=()=>{ if(n<seq.length) return seq[n++]; const g=fresh(); seq.push(g); n++; return g; }; return w0.run(w=>{ const result=fn(w);syncWallDimensions(w);return result; }); }; };
 function saveInto(w, input) {
   const spec=structuredClone(input); let guid=spec.guid || null;
   checkRecordVersion(spec,'dimension');
@@ -109,6 +111,8 @@ function saveInto(w, input) {
   return {id,ids:[id],guid,made:new Map([[guid,id]])};
 }
 export function saveWallDimension(input) { return operation(w=>saveInto(w,input)); }
+/** 0.9 D8.12-A: the same inside another op (view-copies.js copies a view's dimensions onto its copy). */
+export const saveWallDimensionIn = (w, input) => saveInto(w, input);
 /** 0.8 EG.20: many dimensions in ONE undo step (the auto-dimension command). Any refused one refuses all. */
 export function saveWallDimensions(inputs) {
   return operation(w=>{

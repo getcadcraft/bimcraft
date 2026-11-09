@@ -1,0 +1,21 @@
+{
+  "@locale": "zh-Hant",
+  "@name": "繁體中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX 與 PWS",
+  "opt.flip": "鏡射影像",
+  "opt.flip.off": "否",
+  "opt.flip.on": "是，由左至右",
+  "opt.version": "檔案版本",
+  "opt.version.v1": "版本 1（常用）",
+  "opt.version.v516": "版本 516",
+  "opt.aa": "邊緣平滑等級",
+  "opt.aa.1": "1（無）",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "逐圖層設定旗標",
+  "opt.perLayer.off": "關閉",
+  "opt.perLayer.on": "開啟"
+}

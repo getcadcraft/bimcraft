@@ -27,6 +27,7 @@
  *     one "Not in the scheme" row (scheme.other); no value → scheme.none. range: by from ≤ v < to (the last range takes its to).
  */
 
+import { readReportAs } from './report-as-core.js';   // 0.9 D8.12-C
 export const CATEGORICAL = {
   light: ['#B3122E', '#1E48C8', '#8A6200', '#9A1F86', '#17703A', '#5B3CC4', '#A84A00'],
   dark: ['#EF5467', '#688CF0', '#B78B00', '#D65AC4', '#25AD5C', '#987DE5', '#D47713'],
@@ -85,6 +86,11 @@ export function propertyIndex(W, api, mid, model, { spaces = false } = {}) {
     put('predefined', '', '', id, plain(l.PredefinedType));
     put('guid', '', '', id, plain(l.GlobalId));
   }
+  // 0.9 D8.12-C: an element reported as another class counts as it (takeoff, Find, Color by, model checks / Problems)
+  try {
+    const setv = (fid, id, v) => { if (v === undefined || v === '') return; if (!vals.has(fid)) { vals.set(fid, new Map()); meta.set(fid, { label: '', group: '' }); } vals.get(fid).set(id, v); };
+    for (const [id, r] of readReportAs(api, mid)) if (want.has(id)) { setv('cls', id, r.cls); setv('predefined', id, r.type === 'USERDEFINED' && r.name ? r.name : r.type); }
+  } catch (e) { /* a file without them */ }
   // a set's single values and quantities
   const setRows = (psId) => {
     const ps = get(psId);

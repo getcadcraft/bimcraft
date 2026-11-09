@@ -1,0 +1,8 @@
+{
+  "@locale": "et",
+  "@name": "Eesti",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Andmed ja allikad",
+  "data.nex": "NASA NEX-GDDP-CMIP6, ruumiliselt täpsustatud CMIP6 mudeli väljund (CC BY 4.0 mudeli kohta); globaalne merevee tase: IPCC AR6",
+  "data.sample": "Näidispakett: kolm asukohta, üks mudel, viis aastat igas perioodis. Ei sobi projekteerimiseks."
+}

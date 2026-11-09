@@ -18,12 +18,15 @@ import { readMaterials } from './project-materials.js';
 import { syncWallDimensions } from './wall-dimensions.js';
 import { ModelWriter } from './model-write.js';
 import { readLevels, addLevel, setLevel } from './model-levels.js';
-import { addWall, updateWall, deleteWalls, regenWalls, readWalls, wallLevelsPassed } from './model-walls.js';
-import { addOpening, updateOpening, deleteOpenings, readOpenings, regenOpenings } from './model-openings.js';
+import { addWall, updateWall, deleteWalls, regenWalls, readWalls, wallLevelsPassed, regenAttached, wallShapeHooks } from './model-walls.js';
+import { addOpening, updateOpening, deleteOpenings, readOpenings, regenOpenings, adoptLibraryOpenings } from './model-openings.js';
 import { syncDerived, readDerived, storeyLoops, addFloor, addCeiling, addRoof, updateDerived, deleteDerived } from './model-slabs.js';
 import { wallPath } from './model-tools.js';
 import { val } from './ifc-util.js';
+import { t as tr } from './i18n.js';
+import { readReportAs } from './report-as-core.js';   // 0.9 D8.12-C
 import { syncResidential } from './res-follow.js';   // 0.5 part 4 track RC: wall framing follows its doors and windows
+import { holdPlan } from './wall-tools.js';   // 0.9 WT.3 / WT.7: the Hold block (locks) after a wall change
 
 /** Wrap a writing function as an op: a fresh writer on the editor's model, one journal. */
 export function op(fn) {
@@ -33,7 +36,15 @@ export function op(fn) {
     let n = 0;
     const fresh = w.guid.bind(w);
     w.guid = () => { if (n < seq.length) return seq[n++]; const g = fresh(); seq.push(g); n++; return g; };
-    return w.run(writer => { assertAssembliesEditable(writer); readMaterials(writer); const result = fn(writer); syncWallDimensions(writer); return result; });
+    return w.run(writer => {
+      assertAssembliesEditable(writer); readMaterials(writer);
+      const result = fn(writer);
+      // 2026-11-02: a Library door / window standing where a wall now runs goes into it (placed first, the wall drawn after)
+      const took = adoptLibraryOpenings(writer);
+      if (took.length) afterOpenings(writer, took);
+      syncWallDimensions(writer);
+      return result;
+    });
   };
 }
 const storeyId = (w, guid) => {
@@ -71,6 +82,7 @@ function settle(w, storeys, force = null) {
       for (const l of levels.slice(lowest + 1)) if (!set.has(l.id) && (passed.has(l.id) || have.has(l.id))) syncDerived(w, l.id);
     }
   }
+  regenAttached(w);   // 0.9 WT.6: walls attached to a roof, slab or ceiling follow it once those are up to date
 }
 /** For ops written elsewhere (model-trim.js, 0.6): the same follow-ups as this file's own wall changes. */
 export const afterWallMoveFor = (w, before, ops0, guids) => afterWallMove(w, before, ops0, guids, false);
@@ -221,14 +233,34 @@ export function changeWall(guid, changes, opts = {}) {
     if (!wall) throw Object.assign(new Error('model.err.nowall'), { key: 'model.err.nowall' });
     const ops0 = readOpenings(w, null, before);
     const r = updateWall(w, guid, changes, opts);
+    // 0.9 WT.3 / WT.7: a wall that moved keeps its locks (the walls held to it follow; a lock it would break refuses the change)
+    if (changes.a || changes.b || changes.typeKey || changes.justification || changes.extSide) {
+      const after = readWalls(w), done = new Map(r.guids.map((g) => [g, after.find((x) => x.guid === g)]).filter(([, x]) => x).map(([g, x]) => [g, { a: x.a, b: x.b }]));
+      const more = holdPlan(w, before, done, [guid]);
+      for (const [g, m] of more) if (!done.has(g)) { updateWall(w, g, { a: m.a, b: m.b }, { carryJoined: false }); r.guids.push(g); }
+    }
     afterWallMove(w, before, ops0, r.guids, !!changes.typeKey);
     settle(w, [wall.storey], r.guids);
     return { id: w.byGuid(guid), ids: [w.byGuid(guid)] };
   });
 }
+/**
+ * 0.9 FX.22 (wall-square.js): a change worked out on the level's walls, written as one undo step. plan(walls) → Map guid →
+ * { a, b }. Each wall is written with carryJoined off: the plan names every wall that moves. An empty plan changes nothing.
+ */
+export function changeWallsBy(guid, plan) {
+  return op((w) => {
+    const before = readWalls(w), wall = before.find((x) => x.guid === guid);
+    if (!wall) throw Object.assign(new Error('model.err.nowall'), { key: 'model.err.nowall' });
+    const moves = holdPlan(w, before, plan(before), [guid]), guids = [...moves.keys()], ops0 = readOpenings(w, null, before);   // 0.9 WT.3: the locks hold
+    for (const g of guids) updateWall(w, g, moves.get(g), { carryJoined: false });
+    if (guids.length) { afterWallMove(w, before, ops0, guids, false); settle(w, [wall.storey], guids); }
+    return { id: w.byGuid(guid), ids: [w.byGuid(guid)] };
+  });
+}
 /** Doors and windows of walls that moved or changed: same place in the world when a wall end slid along its line; made
  *  again for a new thickness; fitted into a shorter wall (or the change is refused: model.err.nofit). */
-function afterWallMove(w, before, ops0, guids, rethick) {
+export function afterWallMove(w, before, ops0, guids, rethick) {
   const after = readWalls(w);
   for (const g of guids) {
     const A = before.find((x) => x.guid === g), B = after.find((x) => x.guid === g);
@@ -242,6 +274,7 @@ function afterWallMove(w, before, ops0, guids, rethick) {
     if (!moved) continue;
     for (const o of mine) updateOpening(w, o.guid, { offset: o.offset - shift });
   }
+  wallShapeHooks()?.afterMove?.(w, before, after, guids);   // 0.9 WT.6: wall openings (no door or window) keep their place too
 }
 
 /** Change several walls the same way (Properties with many picked; "Change type…"). */
@@ -268,6 +301,21 @@ export function placeOpening(spec) {
   return op((w) => {
     if (!s.guid) { s.guid = val(w.guid()); s.openingGuid = val(w.guid()); }
     const r = addOpening(w, s);
+    afterOpenings(w, [s.wall]);
+    return { id: r.id, ids: [r.id], made: new Map([[r.guid, r.id], [r.opening, w.byGuid(r.opening)]]) };
+  });
+}
+/**
+ * 2026-11-02: a Library door or window (an item of kind door | window) into a wall: its type, made once per item version with its
+ * mesh and frame (IfcPlacer.typeFor), then the opening as for any door (fixed size: the item's). `placeOpts` = the Library's
+ * { library, sha256, sourceFile } for the type's CadCraft_LibraryItem set.
+ */
+export function placeLibraryOpening(item, spec, placeOpts = {}) {
+  const s = { ...spec };
+  return op((w) => {
+    if (!s.guid) { s.guid = val(w.guid()); s.openingGuid = val(w.guid()); }
+    const { id: typeId } = w.typeFor(item, placeOpts);
+    const r = addOpening(w, { ...s, library: { typeId } });
     afterOpenings(w, [s.wall]);
     return { id: r.id, ids: [r.id], made: new Map([[r.guid, r.id], [r.opening, w.byGuid(r.opening)]]) };
   });
@@ -346,6 +394,7 @@ export function changeDerived(guids, changes) {
     const storeys = new Set();
     for (const g of [].concat(guids)) { const r = updateDerived(w, g, changes); if (r.storey !== null) storeys.add(r.storey); }
     for (const st of storeys) syncDerived(w, st);
+    regenAttached(w);   // 0.9 WT.6: a changed roof, floor or ceiling takes the walls attached to it along
     const ids = [].concat(guids).map((g) => w.byGuid(g)).filter(Boolean);
     return { id: ids[0] ?? null, ids };
   });
@@ -371,6 +420,27 @@ export function newLevel({ name, elevation, height }) {
   });
 }
 
+/**
+ * 0.9 DC.119: a new level below the lowest one (a basement, a footing level). Its top meets the lowest level's floor: elevation = lowest
+ * elevation - height, so the elevation is negative when the lowest level is at 0. Nothing else moves. The name is "Level -n" (the next free);
+ * the height is the one asked for, else the lowest level's. One undo step; redo makes the same level (the GlobalId is fixed the first time).
+ */
+export function newLevelBelow({ name, height } = {}) {
+  const fixed = { guid: null };
+  return op((w) => {
+    const levels = readLevels(w);
+    const low = levels[0];
+    const h = height > 0 ? height : (low ? low.height : 3000);
+    const used = new Set(levels.map((l) => l.name));
+    let n = levels.filter((l) => l.elevation < -0.5).length + 1, nm = name;
+    if (!nm) { nm = tr('new.level.below', { n }); while (used.has(nm)) nm = tr('new.level.below', { n: ++n }); }
+    if (!fixed.guid) fixed.guid = val(w.guid());
+    const r = addLevel(w, { name: nm, elevation: (low ? low.elevation : 0) - h, height: h, guid: fixed.guid });
+    regenAll(w);
+    return { id: r.id, ids: [r.id], made: new Map([[r.guid, r.id]]) };
+  });
+}
+
 /** Rename, move or change the height of a level (levels above move with it by default); walls follow. */
 export function changeLevel(guid, changes) {
   return op((w) => {
@@ -384,7 +454,9 @@ export function changeLevel(guid, changes) {
 export function snapshotModel(ed) {
   const w = new ModelWriter(ed.W, ed.api, ed.mid);
   const walls = readWalls(w);
-  return { levels: readLevels(w), walls, openings: readOpenings(w, null, walls), derived: readDerived(w), unitMm: w.unitMm, v4: w.v4 };
+  let reported = null;
+  try { reported = readReportAs(ed.api, ed.mid); } catch (e) { reported = null; }   // 0.9 D8.12-C: elements reported as another class
+  return { levels: readLevels(w), walls, openings: readOpenings(w, null, walls), derived: readDerived(w), unitMm: w.unitMm, v4: w.v4, reported };
 }
 /** The rooms and building outlines of a level, from its walls now (the plan's labels and the tools' hover). */
 export function loopsOf(ed, storey) { return storeyLoops(new ModelWriter(ed.W, ed.api, ed.mid), storey); }

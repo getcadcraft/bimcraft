@@ -1,0 +1,12 @@
+{
+  "@locale": "sr-Cyrl",
+  "@name": "Српски (ћирилица)",
+  "@note": "Draft: made from sr-Latn by tools/lang/sr-cyrl.mjs (transliteration); edit sr-Latn, not this file",
+  "label": "Елегоо GOO",
+  "opt.byteOrder": "Редослед бајтова",
+  "opt.byteOrder.big": "Биг-ендиан (уобичајено у извештају)",
+  "opt.byteOrder.little": "Литтле-ендиан",
+  "opt.checksum": "Контролна сума",
+  "opt.checksum.negsum": "Негирана сума",
+  "opt.checksum.sum": "Обична сума"
+}

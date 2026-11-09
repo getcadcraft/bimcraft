@@ -1,0 +1,14 @@
+{
+  "@locale": "it",
+  "@name": "Italiano",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test di esposizione",
+  "note": "Resine e stampanti differiscono. Stampare il pezzo di prova una volta per ogni esposizione della scala e tenere l'esposizione con i pilastrini sottili e i fori aperti più nitidi.",
+  "part": "Posizionare il pezzo di prova sul piano di stampa",
+  "part.name": "Pezzo di prova per l'esposizione",
+  "ladder": "Salva la scala di esposizione ({n} file)",
+  "ladder.made": "Salvati {n} file per {list} s. Stampare ciascuno con la stessa resina e confrontarli.",
+  "ladder.nopart": "Posizionare prima il pezzo di prova sul piano di stampa.",
+  "ladder.failed": "Impossibile creare la scala. {why}",
+  "ladder.busy": "Creazione {i} di {n}…"
+}

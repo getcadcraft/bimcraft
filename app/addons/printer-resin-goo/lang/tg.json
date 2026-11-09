@@ -1,0 +1,12 @@
+{
+  "@locale": "tg",
+  "@name": "Тоҷикӣ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Тартиби байтҳо",
+  "opt.byteOrder.big": "Бузург-охирин (маъмулан ҳисобот)",
+  "opt.byteOrder.little": "Хурд-охирин",
+  "opt.checksum": "Санҷиши суммавӣ",
+  "opt.checksum.negsum": "Суммаи инкорӣ",
+  "opt.checksum.sum": "Суммаи оддӣ"
+}

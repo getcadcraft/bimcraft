@@ -1,0 +1,12 @@
+{
+  "@locale": "gn",
+  "h": "Prueba de exposición",
+  "note": "Las resinas y las impresoras son distintas. Imprima la pieza de prueba una vez con cada exposición de la escala y guarde la exposición con los pilares finos más nítidos y los agujeros abiertos.",
+  "part": "Coloque la pieza de prueba en la cama",
+  "part.name": "Pieza de prueba de exposición",
+  "ladder": "Guardar la escala de exposición ({n} archivos)",
+  "ladder.made": "Se guardaron {n} archivos para {list} s. Imprima cada uno con la misma resina y compare.",
+  "ladder.nopart": "Primero coloque la pieza de prueba en la cama.",
+  "ladder.failed": "No se pudo crear la escala de exposición. {why}",
+  "ladder.busy": "Creando {i} de {n}…"
+}

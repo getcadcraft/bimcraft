@@ -1,0 +1,14 @@
+{
+  "@locale": "nb",
+  "@name": "Norsk bokmål",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Eksponeringstest",
+  "note": "Harpiks og skrivere er ulike. Skriv ut testdelen én gang for hver eksponering i serien, og behold eksponeringen med de skarpeste tynne søylene og åpne hull.",
+  "part": "Legg testdelen på byggeplaten",
+  "part.name": "Eksponeringstestdel",
+  "ladder": "Lagre eksponeringsserien ({n} filer)",
+  "ladder.made": "Lagret {n} filer for {list} s. Skriv ut hver med samme harpiks og sammenlign.",
+  "ladder.nopart": "Legg testdelen på byggeplaten først.",
+  "ladder.failed": "Eksponeringsserien kunne ikke lages. {why}",
+  "ladder.busy": "Lager {i} av {n}…"
+}

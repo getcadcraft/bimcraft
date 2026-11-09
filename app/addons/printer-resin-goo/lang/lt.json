@@ -1,0 +1,12 @@
+{
+  "@locale": "lt",
+  "@name": "Lietuvių",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Baitų tvarka",
+  "opt.byteOrder.big": "Didysis baitas pirmas (įprastas formatas)",
+  "opt.byteOrder.little": "Mažasis baitas pirmas",
+  "opt.checksum": "Kontrolinė suma",
+  "opt.checksum.negsum": "Neigiama suma",
+  "opt.checksum.sum": "Paprasta suma"
+}

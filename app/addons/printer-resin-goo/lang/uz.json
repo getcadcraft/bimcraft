@@ -1,0 +1,12 @@
+{
+  "@locale": "uz",
+  "@name": "Oʻzbekcha",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Baytlar tartibi",
+  "opt.byteOrder.big": "Big-endian (odatiy hisobot)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Nazorat yigʻindisi",
+  "opt.checksum.negsum": "Inkor etilgan yigʻindi",
+  "opt.checksum.sum": "Oddiy yigʻindi"
+}

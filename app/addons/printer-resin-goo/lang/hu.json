@@ -1,0 +1,12 @@
+{
+  "@locale": "hu",
+  "@name": "Magyar",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Bájtsorrend",
+  "opt.byteOrder.big": "Big-endian (a szokásos)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Ellenőrző összeg",
+  "opt.checksum.negsum": "Negált összeg",
+  "opt.checksum.sum": "Egyszerű összeg"
+}

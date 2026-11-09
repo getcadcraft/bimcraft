@@ -1,0 +1,21 @@
+{
+  "@locale": "vi",
+  "@name": "Tiếng Việt",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Đối xứng hình ảnh",
+  "opt.flip.off": "Không",
+  "opt.flip.on": "Có, từ trái sang phải",
+  "opt.version": "Phiên bản tệp",
+  "opt.version.v1": "Phiên bản 1 (thông dụng)",
+  "opt.version.v516": "Phiên bản 516",
+  "opt.aa": "Mức làm mịn cạnh",
+  "opt.aa.1": "1 (không)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Cờ cài đặt theo lớp",
+  "opt.perLayer.off": "Tắt",
+  "opt.perLayer.on": "Bật"
+}

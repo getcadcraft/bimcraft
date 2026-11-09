@@ -1,0 +1,14 @@
+{
+  "@locale": "is",
+  "@name": "Íslenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Lýsingarprófun",
+  "note": "Plastefni og prentarar eru mismunandi. Prentaðu prófunarhlutinn einu sinni með hverri lýsingu í stiganum og veldu lýsinguna þar sem þunnu súlurnar og opnu götin eru skörpust.",
+  "part": "Settu prófunarhlutinn á prentbeðið",
+  "part.name": "Prófunarhlutur fyrir lýsingu",
+  "ladder": "Vista lýsingarstigann ({n} skrár)",
+  "ladder.made": "Vistaðar {n} skrár, lýsingar: {list} s. Prentaðu hverja með sama plastefni og berðu saman.",
+  "ladder.nopart": "Settu prófunarhlutinn á prentbeðið fyrst.",
+  "ladder.failed": "Ekki tókst að búa til lýsingarstigann. {why}",
+  "ladder.busy": "Bý til {i} af {n}…"
+}

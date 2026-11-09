@@ -1,0 +1,8 @@
+{
+  "@locale": "uz",
+  "@name": "Oʻzbekcha",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Maʼlumotlar va manbalar",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 modeli natijalarining masshtabi kichraytirilgan versiyasi (har bir model uchun CC BY 4.0); global dengiz sathi: IPCC AR6",
+  "data.sample": "Namuna toʻplami: uchta joy, bitta model, har bir davr uchun besh yil. Loyihalash uchun emas."
+}

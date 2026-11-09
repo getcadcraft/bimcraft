@@ -1,0 +1,21 @@
+{
+  "@locale": "fa",
+  "@name": "فارسی",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "قرینه کردن تصویر",
+  "opt.flip.off": "خیر",
+  "opt.flip.on": "بله، از چپ به راست",
+  "opt.version": "نسخه فایل",
+  "opt.version.v1": "نسخه 1 (معمول)",
+  "opt.version.v516": "نسخه 516",
+  "opt.aa": "سطوح نرم‌سازی لبه",
+  "opt.aa.1": "1 (بدون)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "پرچم تنظیمات هر لایه",
+  "opt.perLayer.off": "خاموش",
+  "opt.perLayer.on": "روشن"
+}

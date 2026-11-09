@@ -1,0 +1,21 @@
+{
+  "@locale": "zu",
+  "@name": "isiZulu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Bonisa umfanekiso ngokuphambene",
+  "opt.flip.off": "Cha",
+  "opt.flip.on": "Yebo, kusukela kwesobunxele kuya kwesokudla",
+  "opt.version": "Inguqulo yefayela",
+  "opt.version.v1": "Inguqulo 1 (ejwayelekile)",
+  "opt.version.v516": "Inguqulo 516",
+  "opt.aa": "Amazinga okubushelelezisa imiphetho",
+  "opt.aa.1": "1 (akukho)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Ibhanuza lezilungiselelo zongqimba ngamunye",
+  "opt.perLayer.off": "Kuvaliwe",
+  "opt.perLayer.on": "Kuvulekile"
+}

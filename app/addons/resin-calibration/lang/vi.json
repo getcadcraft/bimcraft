@@ -1,0 +1,14 @@
+{
+  "@locale": "vi",
+  "@name": "Tiếng Việt",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Kiểm tra phơi sáng",
+  "note": "Nhựa và máy in khác nhau. In chi tiết thử nghiệm một lần ở mỗi mức phơi sáng trong dãy, rồi giữ mức phơi sáng cho các trụ mảnh và lỗ thông rõ nét nhất.",
+  "part": "Đặt chi tiết thử nghiệm lên bàn in",
+  "part.name": "Chi tiết thử nghiệm phơi sáng",
+  "ladder": "Lưu dãy phơi sáng ({n} tệp)",
+  "ladder.made": "Đã lưu {n} tệp cho {list} s. In từng tệp với cùng loại nhựa rồi so sánh.",
+  "ladder.nopart": "Đặt chi tiết thử nghiệm lên bàn in trước",
+  "ladder.failed": "Không thể tạo dãy phơi sáng. {why}",
+  "ladder.busy": "Đang tạo {i} trên {n}…"
+}

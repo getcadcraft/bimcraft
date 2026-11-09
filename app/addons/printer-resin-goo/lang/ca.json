@@ -1,0 +1,12 @@
+{
+  "@locale": "ca",
+  "@name": "Català",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Ordre dels bytes",
+  "opt.byteOrder.big": "Big-endian (el més habitual)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Suma de verificació",
+  "opt.checksum.negsum": "Suma negada",
+  "opt.checksum.sum": "Suma simple"
+}

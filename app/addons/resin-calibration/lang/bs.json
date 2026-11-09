@@ -1,0 +1,14 @@
+{
+  "@locale": "bs",
+  "@name": "Bosanski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test ekspozicije",
+  "note": "Smole i štampači se razlikuju. Odštampaj probni dio jednom za svaku ekspoziciju u ljestvici i zadrži ekspoziciju s najoštrijim tankim stubićima i otvorenim rupama.",
+  "part": "Postavi probni dio na radnu ploču",
+  "part.name": "Probni dio za test ekspozicije",
+  "ladder": "Spasi ljestvicu ekspozicije (datoteke: {n})",
+  "ladder.made": "Spašeno je datoteka: {n}. Ekspozicije: {list} s. Odštampaj svaku istom smolom i uporedi.",
+  "ladder.nopart": "Prvo postavi probni dio na radnu ploču.",
+  "ladder.failed": "Ljestvicu ekspozicije nije moguće napraviti. {why}",
+  "ladder.busy": "Pravim {i} od {n}…"
+}

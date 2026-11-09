@@ -1,0 +1,12 @@
+{
+  "@locale": "ka",
+  "@name": "ქართული",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ბაიტების რიგი",
+  "opt.byteOrder.big": "დიდი ბოლოსკენ (ჩვეულებრივი ანგარიში)",
+  "opt.byteOrder.little": "პატარა ბოლოსკენ",
+  "opt.checksum": "საკონტროლო ჯამი",
+  "opt.checksum.negsum": "უარყოფითი ჯამი",
+  "opt.checksum.sum": "მარტივი ჯამი"
+}

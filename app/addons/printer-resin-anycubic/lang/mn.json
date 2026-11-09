@@ -1,0 +1,21 @@
+{
+  "@locale": "mn",
+  "@name": "Монгол",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX ба PWS",
+  "opt.flip": "Зургийг толин тусгалаар харуулах",
+  "opt.flip.off": "Үгүй",
+  "opt.flip.on": "Тийм, зүүнээс баруун тийш",
+  "opt.version": "Файлын хувилбар",
+  "opt.version.v1": "Хувилбар 1 (ихэвчлэн)",
+  "opt.version.v516": "Хувилбар 516",
+  "opt.aa": "Ирмэг жигдрүүлэх түвшин",
+  "opt.aa.1": "1 (байхгүй)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Давхарга тус бүрийн тохиргооны тэмдэг",
+  "opt.perLayer.off": "Унтраалттай",
+  "opt.perLayer.on": "Асаалттай"
+}

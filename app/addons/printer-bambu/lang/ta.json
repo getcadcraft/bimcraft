@@ -1,0 +1,21 @@
+{
+  "@locale": "ta",
+  "@name": "தமிழ்",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect வழியாக)",
+  "step.orca": "இந்தக் கணினியில் OrcaSlicer ஐ நிறுவவும்.",
+  "step.orca.link": "OrcaSlicer ஐப் பெறு",
+  "step.connect": "இந்தக் கணினியில் Bambu Connect ஐ நிறுவவும்.",
+  "step.connect.link": "Bambu Connect ஐப் பெறு",
+  "step.bind": "Bambu Connect இல் உங்கள் P2S ஐச் சேர்க்கவும். இதை ஒருமுறை மட்டும் செய்யவும்.",
+  "step.send": "3D அச்சுப்பொறிக்கு அனுப்பு என்பதை அழுத்தவும். கோப்பு Bambu Connect இல் திறக்கும்: அங்கே சரிபார்த்து அச்சைத் தொடங்கவும்.",
+  "note": "Bambu Connect என்பது Bambu Lab நிறுவனத்தின் சொந்த நிரல். மற்ற மென்பொருளில் இருந்து அச்சிட இது பயன்படும்; அச்சு அங்கிருந்தே தொடங்கும்.",
+  "confirm": "OrcaSlicer இதை அதன் P2S முன்னமைவுகளுடன் தயாரித்தது: {grams} g, {layers} அடுக்குகள்.",
+  "confirm.next": "Bambu Connect இல் திறக்கவா? நீங்கள் அங்கு தொடங்கும் வரை எதுவும் அச்சிடப்படாது.",
+  "done": "Bambu Connect க்கு அனுப்பப்பட்டது. அங்கே சரிபார்த்து அச்சைத் தொடங்கவும்.",
+  "fail.orca": "இந்தக் கணினியில் OrcaSlicer கண்டறியப்படவில்லை. அதை நிறுவிவிட்டு மீண்டும் முயலவும்.",
+  "fail.slice": "OrcaSlicer ஆல் இந்த அச்சைத் தயாரிக்க முடியவில்லை. {why}",
+  "fail.nogcode": "OrcaSlicer இன் கோப்பில் அச்சுத் தரவு இல்லை.",
+  "fail.bed": "இது P2S இன் அச்சுத் தட்டில் பொருந்தாது.",
+  "fail.connect": "Bambu Connect திறக்கப்படவில்லை. அதை நிறுவிவிட்டு மீண்டும் முயலவும."
+}

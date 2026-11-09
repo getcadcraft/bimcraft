@@ -1,0 +1,21 @@
+{
+  "@locale": "es-MX",
+  "@name": "Español (México)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX y PWS",
+  "opt.flip": "Reflejar la imagen",
+  "opt.flip.off": "No",
+  "opt.flip.on": "Sí, de izquierda a derecha",
+  "opt.version": "Versión de archivo",
+  "opt.version.v1": "Versión 1 (la habitual)",
+  "opt.version.v516": "Versión 516",
+  "opt.aa": "Niveles de suavizado de bordes",
+  "opt.aa.1": "1 (ninguno)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Indicador de configuración por capa",
+  "opt.perLayer.off": "Desactivado",
+  "opt.perLayer.on": "Activado"
+}

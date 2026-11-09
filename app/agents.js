@@ -70,6 +70,7 @@ import { autodimTools } from './autodim-agents.js';   // 0.8 EG.20
 import { narrationTools } from './narration-agents.js';   // 0.8 EG.50
 import { scanTools } from './scan-agents.js';
 import { scanProgressTools } from './scan-progress-agents.js';   // 0.8 EG.39 (bim-analysis_PART_4)   // 0.8 EG.37 (spikes_PART_4)
+import { elecTools } from './elec-agents.js';   // 0.9 GH.10 (bim-hosts-09): devices_add, device_change, lights_set, devices_delete, devices_list
 import { mepTools } from './mep-agents.js';   // 0.8 EG.1–EG.4 (mep_PART_2's line 1)
 import { massingOptions, buildOption } from './program-mass.js';   // 0.8 EG.58 (bim_PART_2)
 import { askTools } from './ask-tools.js';   // 0.8 AC.8 ★ (bim_PART_2): walls_find, rooms_find, elements_above_find
@@ -345,6 +346,7 @@ export function modelTools(env) {
     ...scanProgressTools({ ...env, progress: () => (typeof window !== 'undefined' ? window.bimcraftScanProgress : null) }),   // EG.39: the scan against the model and the 4D schedule
     ...autodimTools({ ...env, levels: () => snapshotModel(env.ed()).levels }),   // bim-model_PART_4: EG.20 dimension a plan by rules
     ...narrationTools(env),   // bim-model_PART_4: EG.50 narrated walkthroughs
+    ...elecTools(env),   // bim-hosts-09: electrical devices for the assistant (GH.10)
     ...mepTools(env),   // mep_PART_2: pipe, duct, cable and lighting calculations (EG.1–EG.4)
     ...energyTools(env), ...carbonTools(env), ...cost5dTools(env), ...pvTools(env),   // energy_PART_2: EnergyPlus, carbon, 5D cost and solar tools (EG.13–EG.17)
     ...simTools(env),   // bim-sim_PART_2: people_run, escape_check, acoustics_check (EG.48, EG.49)
