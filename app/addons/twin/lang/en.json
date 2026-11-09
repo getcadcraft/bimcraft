@@ -8,6 +8,7 @@
   "bt.file.open": "Open a layout file",
   "bt.file.save": "Save the layout as a file",
   "bt.file.bad": "{name} is not a Material flow layout.",
+  "bt.file.ask": "Replace the current layout with this file?",
   "bt.file.done": "{name}: {n} items loaded, {dropped} left out.",
   "bt.fit.run": "Check against the walls",
   "bt.fit.nolayout": "There is no layout to check yet. Use a cell or open a layout file.",
