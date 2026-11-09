@@ -1,0 +1,8 @@
+{
+  "@locale": "bn",
+  "@name": "বাংলা",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "ডেটা ও উৎস",
+  "data.nex": "NASA NEX-GDDP-CMIP6, ডাউনস্কেল করা CMIP6 মডেলের আউটপুট (প্রতিটি মডেল অনুযায়ী CC BY 4.0); বৈশ্বিক সমুদ্রপৃষ্ঠের উচ্চতা: IPCC AR6",
+  "data.sample": "নমুনা প্যাক: তিনটি স্থান, একটি মডেল, প্রতি সময়কালে পাঁচ বছর। ডিজাইনের জন্য নয়।"
+}

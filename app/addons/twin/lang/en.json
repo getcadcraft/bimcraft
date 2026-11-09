@@ -1,0 +1,22 @@
+{
+  "bt.title": "Digital twin",
+  "bt.h": "Where the layout stands in the building",
+  "bt.note": "The layout comes from a ready cell below or from a layout file made in Material flow. It is kept in this IFC file, and the equipment is drawn in the 3D view at the place you give here.",
+  "bt.level": "Level",
+  "bt.rot": "Turn (degrees)",
+  "bt.nomodel": "Open an IFC model first: the layout is kept in the model file.",
+  "bt.file.open": "Open a layout file",
+  "bt.file.save": "Save the layout as a file",
+  "bt.file.bad": "{name} is not a Material flow layout.",
+  "bt.file.done": "{name}: {n} items loaded, {dropped} left out.",
+  "bt.fit.run": "Check against the walls",
+  "bt.fit.nolayout": "There is no layout to check yet. Use a cell or open a layout file.",
+  "bt.fit.nolevel": "The model has no level to put the layout on.",
+  "bt.fit.problems": "The layout does not build yet ({list}), so it cannot be checked.",
+  "bt.fit.touch": "{n} items touch a wall on {level}: {items}. Checked against {walls} walls.",
+  "bt.fit.clear": "None of the {items} items touches any of the {walls} walls on {level}.",
+  "bt.fit.note": "This looks at the equipment boxes against the walls' solids, in plan and in height. Doors and windows are not looked at, and the flow run does not know about the walls.",
+  "bt.carries": "A building model carries the rooms, walls and levels, not how machines behave: speeds, times and control logic are the ones set in the layout and the panel below. Nothing here is a safety validation.",
+  "bt.undo.layout": "Flow layout",
+  "bt.undo.anchor": "Flow layout place"
+}

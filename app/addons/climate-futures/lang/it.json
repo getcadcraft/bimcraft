@@ -1,0 +1,8 @@
+{
+  "@locale": "it",
+  "@name": "Italiano",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Dati e fonti",
+  "data.nex": "NASA NEX-GDDP-CMIP6, output dei modelli CMIP6 ridimensionato (downscaled) (CC BY 4.0 per modello); livello globale del mare: IPCC AR6",
+  "data.sample": "Pacchetto di esempio: tre località, un modello, cinque anni per periodo. Non per la progettazione."
+}

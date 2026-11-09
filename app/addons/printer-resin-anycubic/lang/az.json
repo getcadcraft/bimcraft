@@ -1,0 +1,21 @@
+{
+  "@locale": "az",
+  "@name": "Azərbaycanca",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX və PWS",
+  "opt.flip": "Şəkli güzgü şəklində çevirin",
+  "opt.flip.off": "Xeyr",
+  "opt.flip.on": "Bəli, soldan sağa",
+  "opt.version": "Fayl versiyası",
+  "opt.version.v1": "Versiya 1 (adi)",
+  "opt.version.v516": "Versiya 516",
+  "opt.aa": "Kənar hamarlama səviyyələri",
+  "opt.aa.1": "1 (yoxdur)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Qat üzrə parametrlər bayrağı",
+  "opt.perLayer.off": "Söndürülüb",
+  "opt.perLayer.on": "Yandırılıb"
+}

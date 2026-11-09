@@ -1,0 +1,21 @@
+{
+  "@locale": "fi",
+  "@name": "Suomi",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect -ohjelman kautta)",
+  "step.orca": "Asenna OrcaSlicer tähän tietokoneeseen.",
+  "step.orca.link": "Hae OrcaSlicer",
+  "step.connect": "Asenna Bambu Connect tähän tietokoneeseen.",
+  "step.connect.link": "Hae Bambu Connect",
+  "step.bind": "Lisää P2S Bambu Connect -ohjelmassa. Tee tämä kerran.",
+  "step.send": "Paina Lähetä 3D-tulostimeen. Tiedosto avautuu Bambu Connect -ohjelmassa: tarkista se siellä ja aloita tulostus.",
+  "note": "Bambu Connect on Bambu Lab -yhtiön oma ohjelma tulostamiseen muista ohjelmistoista, ja tulostus käynnistyy siellä.",
+  "confirm": "OrcaSlicer valmisteli tämän P2S-esiasetuksilla: {grams} g, {layers} kerrosta.",
+  "confirm.next": "Avataanko se Bambu Connect -ohjelmassa? Mitään ei tulosteta, ennen kuin aloitat tulostuksen siellä.",
+  "done": "Lähetetty Bambu Connect -ohjelmaan. Tarkista se siellä ja aloita tulostus.",
+  "fail.orca": "OrcaSlicer-ohjelmaa ei löytynyt tältä tietokoneelta. Asenna se ja yritä uudelleen.",
+  "fail.slice": "OrcaSlicer ei voinut valmistella tätä tulostusta. {why}",
+  "fail.nogcode": "OrcaSlicer-tiedostossa ei ollut tulostusta.",
+  "fail.bed": "Tämä ei mahdu tulostimen alustalle.",
+  "fail.connect": "Bambu Connect -ohjelmaa ei avattu. Asenna se ja yritä uudelleen."
+}

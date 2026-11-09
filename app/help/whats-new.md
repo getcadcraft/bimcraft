@@ -1,112 +1,77 @@
 ---
-title: What's new in 0.7
-summary: BimCraft adds walls through several levels and Copy this level, walls from PDFs and scans, your own wall assemblies, richer families, MEP equipment with ports, clash sets, openings and pipe spools, asset documents, COBie and sensor readings, sky, sun, daylight on a grid and heating and cooling loads, scan registration, a live view and path tracing on the graphics card, STEP and USD, library variants, and more for AI assistants.
+title: What's new in 0.8 and 0.8.1
+summary: BimCraft adds people walked through the building, room acoustics you can hear, flood, wind and earthquake playback, a fifty-year life-cycle view, checks against an IDS, tags and schedules, Move, Align and Distribute, pictures under the plan, walls from a scan, panel drawings, solar, split and VRF systems, pipe and cable sizing, concrete and seismic checks, any map projection, a render engine choice, and Studio undo; 0.8.1 fixes the Ribbon layout's greyed tools.
 section: start
 order: 5
-keywords: whats new, what's new, release notes, changelog, changes, 0.7, version, new features, walls through levels, copy this level, pdf, scan, trace, walls from plans, wall assemblies, layers, core, membrane, reference dimensions, material library, display units, view style, framing, joists, families, parameters, plan symbol, hotspots, repeat, detail level, nested families, csv sizes, per element, equipment, ports, connections, clearances, openings, spools, spool sheets, field weld, duct cut list, documents, cobie, sensors, mqtt, live feed, vertical sky component, solar gain, daylight grid, heating, cooling, loads, u-value, register scans, icp, e57, live view, path tracing, webgpu, denoise, physical sky, light mixing, render queue, your machine, step, usd, project bundle, develop a mass, variants, assistants, add-on api, plant, electrical, design checks
+keywords: whats new, what's new, release notes, changelog, changes, 0.8, 0.8.1, version, new features, evacuation, people, queues, acoustics, reverberation, impulse response, flood, wind, earthquake, hazard, life cycle, service life, ids, tags, schedules, move, align, distribute, picture, background, scan to walls, site from civilcraft, panel drawings, framing, solar, pv, split, vrf, fan coil, pipe sizing, cable tray, illuminance, concrete, seismic, compare scan, epsg, projection, documents, template, carbon, cost, energyplus, render engine, open in, usd, glb, unreal, undo, add-ons, pcf, symbols, plants, trace, pens, ribbon, project browser, layout
 ---
 
-This is what changed in BimCraft 0.7, compared with 0.6. The list is grouped by area, with the most important first.
+This is what changed in BimCraft 0.8 (2026-11-01) and 0.8.1 (2026-11-02), compared with 0.7. BimCraft can now answer questions about a building and test it, with people, sound, water, wind and earthquakes, and draw it with more tools; 0.8.1 is a fix release.
 
 ## New
 
-### Draw a building
+### Test the building
 
-- **Walls through several levels.** The Wall tool's height list offers **Up to** any level further up, as Properties does for a picked wall. The plans of the levels in between show the wall lighter, rooms there close against it, and doors and windows can be placed in it from those plans; **Runs through** in Properties names the levels it passes. See [Change a wall, door or window](topic:change-a-wall-or-door#change-a-wall).
-- **Copy this level.** {{ui:Copy this level…}} in the Levels panel draws a level's walls with their doors and windows, its floors and ceilings again on another level or on a new one on top, in one undo step; rooms appear by themselves. See [Draw walls](topic:draw-walls#levels).
-- **Walls from a PDF or a scan.** {{ui:Build}} › {{ui:From a drawing…}} now takes a PDF (line work or a scan inside it) or a scanned plan (PNG, JPEG, TIFF, many pages): each page becomes the walls, doors, windows and rooms of a level, with the page kept under its plan. The trace uses no network and no trained model, and the result is what the lines gave: check each level against its page. See [Walls from a set of plans](topic:walls-from-plans).
-- **Your own wall assemblies.** {{ui:Wall assemblies…}} builds a wall type layer by layer, with a core, air gaps and membranes, and a dimensioned preview; {{ui:Material library…}} keeps the project's materials in the IFC; {{ui:Annotate}} › {{ui:Reference dimension}} measures to faces and core lines and follows the walls when they change. From a community contributor, Doc (drsurfbum). See [Wall assemblies and reference dimensions](topic:wall-assemblies).
-- **Display units and view controls.** {{ui:Units}} on the toolbar shows lengths in feet and inches, inches, decimal feet, millimeters, centimeters or meters, in dimensions, schedules, coordinates, measurements and sections. {{ui:Plan}}, {{ui:Split}} and {{ui:3D}} sit in the toolbar, the split can be dragged (or moved from the keyboard), {{ui:Shaded}}, {{ui:Edges}} and {{ui:Wireframe}} sit beside the view cube, and roof pitch, fascia and soffit change the picked roof at once. From a community contributor, Joel (yisraelk). See [Draw walls](topic:draw-walls#levels).
-- **Floor joists by span.** {{ui:Framing}} can lay out engineered joists (preliminary) as well as sawn lumber, picking the smallest listed series and depth that reaches the span, 16" or 24" on center, in either direction; they go in the IFC and the cut list. A suggestion from a maker's published table, not engineering. Also from Joel. See [Framing walls, floors and roofs](topic:framing).
-- **More electrical devices.** {{ui:Electrical}} adds data, phone and audio-video outlets, a selector switch, a timer, a thermostat, smoke and heat detectors, a pull station and a siren, a fan, an energy meter and a sub-panel, each its own IFC class. See [The electrical plan](topic:electrical-plan).
+- **People in the building.** The {{ui:People in the building}} section of the left panel walks an evacuation or a normal day's arrivals through your rooms, doors and stairs. You see the queues where the building narrows, the longest walk to an exit from each room and how long the last person takes. Tick {{ui:Shut}} on a door to see what changes, and tick {{ui:Show the people in the 3D view}} to watch the walkers. The findings go to Problems. A coarse crowd model for design decisions, not a fire-safety certificate. See [Walk people through the building](topic:people-in-the-building).
+- **Room acoustics, and hear it.** The {{ui:Room acoustics}} section gives each room's reverberation time by octave band (Sabine and Eyring) from its size and the finishes you pick, and with a target of your own says how much absorption would meet it. {{ui:Play it in this room}} plays a voice, a clap, plucked notes or your own sound file through an impulse response computed for the room. The absorption figures are typical published values for you to replace. See [Room acoustics](topic:room-acoustics).
+- **Flood, wind and earthquake playback.** {{ui:Hazard playback}} plays water rising through the rooms, wind pressure on each storey and an earthquake shaking the storeys, on a plan or an elevation with a time slider. Simple models with their assumptions on the panel; not a code check. See [Play a flood, wind or an earthquake](topic:hazard-playback).
+- **What wears out in fifty years.** {{ui:Life-cycle view}} lists the windows, doors, finishes and roof with a service life each, the years they are replaced and, when you type a cost per unit, the cost by year and its present value. {{ui:Save the schedule (CSV)}} writes it out. The service lives are planning figures. See [See what wears out over fifty years](topic:life-cycle-view).
+- **Concrete and seismic checks.** The {{ui:Concrete members}} and {{ui:Seismic loads}} blocks of the {{ui:Analysis}} tab check concrete beams and columns to ACI 318-19 and make equivalent lateral forces to ASCE 7-22 on rigid floors, with storey drift. For an engineer to check. See [Check concrete members and make seismic loads](topic:concrete-and-seismic).
 
-### Families
+### Check and report
 
-- **Families do more.** Parameters can be whole numbers, text, a material, a pen or a fill; a family can draw its own plan symbol, repeat a solid, mark parts for coarser detail levels, hold other families (a leg in a table), and have hotspots you drag, also on a placed element in the plan. Sizes come from a CSV table, and parameters marked **Per element** let two doors of one size differ. See [Edit a family](topic:family-editor#plan-symbol) and [Families and their sizes](topic:families#sizes-from-a-table).
+- **Check against an IDS.** Load the `.ids` file a client gave you and see every element that does not meet it in Problems, before you deliver the IFC. Open {{ui:Check against an IDS}} under {{ui:Model checks}}. See [Check a model against a client's IDS](topic:check-against-ids).
+- **Tags and schedules.** Define your own tags, set them on many elements at once and make schedules whose columns, filters and groups read them; the tags are kept in the IFC. See [Tags and schedules](topic:tags-and-schedules).
+- **Documents from the model.** {{ui:Documents from the model}} fills a specification template from the open IFC and saves it as a PDF, a Word document or Markdown. See [Documents from the model](topic:documents-from-the-model).
+- **Compare a scan with the model.** With a point cloud open, {{ui:Compare}} judges each element as built, partly built, missing or not reached, and shows the percent built. See [Compare a scan with the model](topic:compare-scan-with-model).
+- **Carbon and cost.** The Carbon pane adds up embodied carbon from a factor table you can edit, and the Cost pane spreads prices over the 4D schedule. The factors that come with BimCraft are generic and marked unchecked. See [Embodied carbon and cost](topic:embodied-carbon-and-5d-cost).
+- **Any map projection.** {{ui:Measure}} › {{ui:Coordinate system…}} takes an EPSG number, a UTM zone, a name or your own projection definition. See [Georeference with any projection](topic:georeference-any-projection).
 
-### Pipes, ducts and equipment
+### Draw and edit
 
-- **Equipment with ports.** {{ui:Build}} › {{ui:Equipment}} places a generic air handler, inline fan, pump, boiler, water heater, terminal unit, diffuser, grille or tank, sized by the values you type, with its pipe and duct connections as ports. Each is saved as its IFC class with IFC ports. See [MEP equipment with ports](topic:mep-equipment).
-- **Connected runs.** A pipe or duct started on a port takes its size and system and stays fixed to it: move the pump and its pipe follows. {{ui:Check connections}} lists open ports, loose ends, size and system mismatches and runs nothing supplies. See [Connect pipes and ducts to equipment](topic:mep-connections).
-- **Pipes and ducts against the structure.** The {{ui:Clash check}} has ready-made sets and {{ui:Pipes and ducts × structure}} in one click; {{ui:Check clearances}} uses each run's insulation plus a gap you type; {{ui:Openings needed}} lists where runs pass through walls and slabs, as CSV and BCF issues. Nothing is cut. See [Check pipes and ducts against the structure](topic:mep-against-structure).
-- **Steel pipe spools.** A steel run is cut into numbered spools at a longest length and at {{ui:Field weld}}s you place; {{ui:Spool sheets (PDF)}} gives a page per spool with its isometric view, cut lengths, fittings, welds and bill of materials, and {{ui:Duct cut list}} lists straight duct pieces. See [Steel pipe spools and spool sheets](topic:pipe-spools).
+- **Move, Align and Distribute.** Under {{ui:Build}}; {{key:Shift+M}} starts Move (plain {{key:M}} is still Measure). Move copies as you go with {{key:C}}, each step is one undo, and it travels in a Live TeamWork session. See [Move, copy, align and distribute](topic:move-align-distribute).
+- **Pictures under the plan.** {{ui:Build}} › {{ui:Picture}} places a PNG, JPEG or WebP under a level's plan or on a vertical plane. Set the scale by two points, and move, turn, fade and lock it. An area copied in MarkupCraft pastes in at its sheet's scale. See [Put a picture under the plan](topic:pictures-as-backgrounds).
+- **Walls from a scan.** With a scan open, walls, doors and rooms come as proposals you keep or reject one by one, in one undo step. Only walls in two perpendicular directions are found. See [Turn a scan into walls](topic:scan-to-walls).
+- **Trace, pens and sketch stair.** {{ui:Trace}} shows another level dashed under the plan, {{ui:Pens}} gives walls, doors and windows their own line weight in one view, and {{ui:Sketch stair}} turns a walking line into a stair. A Wavefront OBJ mesh opens. See [Trace a level, pens and a stair from a sketch](topic:trace-pens-stairs-obj).
+- **Buildings round an address.** The buildings and parcel that CivilCraft's Address to site found arrive as suggestions; you tick the ones to add. See [Start from CivilCraft's site](topic:site-from-civilcraft).
+- **Panel drawings.** {{ui:Build}} › {{ui:Panel drawings}} frames walls, floors and roofs in timber or light-gauge steel and saves a cut list as CSV and shop drawings as a PDF. Starting values, not a structural design. See [Panel drawings](topic:panel-drawings).
+- **Symbol palette and plants.** {{ui:Build}} › {{ui:Symbol palette}} finds electrical and plumbing symbols by name; the {{ui:Plants}} source of the {{ui:Library}} lists about 400 plants with plan symbols. See [Symbol palette](topic:symbol-palette) and [Place a plant](topic:plant-list).
 
-These are drafting and coordination aids, sized by an engineer: no flows, pressures or balancing.
+### Pipes, ducts and energy
 
-### Running the building
+- **Split, VRF and fan coils.** Indoor and outdoor units with their connections, and line sets sized from a table of typical example values that you can change. See [Split, VRF and fan coils](topic:split-vrf-fan-coils).
+- **Calculations.** The Calculations pane checks supply pipe and duct sizes with pressure drop, routes cables through trays and conduits and shows their fill, and computes illuminance from IES or EULUMDAT files. Defaults are labeled; type the values of your code. See [Pipe, duct, cable and light calculations](topic:mep-calculations).
+- **PCF files.** The Pipe tool's **Export PCF** writes the runs for pipe-stress and isometric programs, and a PCF file read back draws its pipe. See [Piping component files](topic:piping-pcf).
+- **Solar PV.** Fit arrays on roofs or the ground, shade them from the model, estimate yearly energy, check strings and make one-line diagram data. The starter module and losses are generic. See [Solar PV](topic:solar-pv).
+- **EnergyPlus file.** The Check with EnergyPlus pane writes the model as an IDF to run in your own EnergyPlus. Running it in the browser needs a build you host yourself and type the address of; BimCraft does not carry it. See [Check heating and cooling with EnergyPlus](topic:check-with-energyplus).
 
-- **Documents per asset.** The {{ui:Assets}} tab links manuals, warranties, photos and drawings to an asset by a file name beside the IFC or a web address; only the link goes in the IFC. See [Documents](topic:assets-and-maintenance#documents).
-- **COBie spreadsheet.** {{ui:Save as COBie (.xlsx)}} writes the COBie 2.4 handover workbook, and a COBie workbook read back lists every change before one {{ui:Apply}}. It has not been through a COBie validator yet. See [COBie spreadsheet](topic:assets-and-maintenance#cobie-spreadsheet).
-- **Sensor readings and live feeds.** Open a CSV of readings, or {{ui:Connect}} straight from the browser to your own MQTT broker or an address your building system answers: each asset shows its latest reading and a chart, is coloured on the model, and is flagged outside the limits saved in the IFC. Readings stay in the tab; passwords are never saved. See [Sensor readings](topic:assets-and-maintenance#sensor-readings) and [Live readings](topic:assets-and-maintenance#live-readings).
+### Pictures and files
 
-### Daylight and energy
+- **Choose the render engine.** {{ui:Render}} has an {{ui:Engine}} choice. Our two built-in engines (Fast and Path tracer) stay the default. **Open in** saves the scene as a USD or glTF file, and an Unreal project folder as a .zip; in CadCraft Studio an add-on can add an engine. The Unreal plug-in that opens the project is not released. See [Choose which program draws the picture](topic:render-engines).
+- **Studio undo.** Inside CadCraft Studio, BimCraft tells Studio each finished step so Studio can undo your last step in whichever window you used last. See [Undo across apps](topic:undo-across-apps).
+- **Add-ons in your file.** An IFC records which add-ons wrote into it, and offers the ones you lack when you open it. See [Add-ons in your file](topic:add-ons-in-your-file).
 
-- **Sky and sun at every window.** The {{ui:Daylight}} tab gives each window its vertical sky component and angle of obstruction, follows the sun through a date with {{ui:Sun through the windows on a date}}, and works out the {{ui:Daylight factor on a grid}} across each room, drawn on its plan. See [Vertical sky component of each window](topic:daylight-factor#vertical-sky-component-of-each-window).
-- **Heating and cooling loads.** {{ui:Heating and cooling loads}} works out each room's heat loss, its heating over a year from degree-days and its cooling peak, from what bounds it in the model and each element's U-value; a U-value typed there is written into the IFC. See [Estimate heating and cooling loads](topic:heating-and-cooling-loads).
+### In every app
 
-Both are design aids by published methods, not compliance calculations, and every panel says so.
+- **Connect your AI.** Your own assistant can drive BimCraft through Studio's connection and answer questions about the model, such as which rooms are under a given area. Studio has no AI of its own. See [Let an AI assistant work with your model](topic:assistants).
+- **Toolbar rows.** {{ui:Settings}} › {{ui:General}} › {{ui:Toolbar rows}} offers Wrap, 2 rows or 1 row; Wrap stays the default.
+- **Input devices.** Trackpad, pen, 3D mouse, controller and MIDI settings are shared by all apps.
+- **Problems and Live.** The warnings panel and Live sessions work as before, with the new checks above feeding Problems.
+- **Languages.** 54 languages, ten of them new. Those other than English are machine drafts not yet read by a native speaker; help topics are mostly English.
 
-### Scans
+## Fixed in 0.8.1
 
-- **Register several scans.** {{ui:Register scans…}} (on the start panel, or in {{ui:Show}}) places scans in one frame by picked point pairs or typed targets, refines them with ICP point to point then point to plane, saves the registration as a small project file and writes the registered cloud as one LAS or E57 file. See [Register several scans into one](topic:register-scans).
-
-### Pictures and the live view
-
-- **The live view.** {{ui:Live view}} on the toolbar shows the model in the real-time look beside the 3D view, following it and every change, with Walk, the time of day and the month; {{ui:Live view in a new window}} puts it on a second screen. See [The live view](topic:live-view).
-- **Path tracing on the graphics card.** With WebGPU, {{ui:Render}} › {{ui:High quality (path traced)}} runs CadCraft's own path tracer on the graphics card, can stop and {{ui:Resume}}, and is denoised at the end; without WebGPU it uses the WebGL path tracer as before. See [High quality](topic:render#high-quality).
-- **More in the Render dialog** (on the graphics card, so it needs WebGPU): a physical sky and sky pictures, IES light profiles, a camera with f-stop, depth of field, two-point perspective, white balance and 360° panoramas, a grade for the finished picture, light mixing and render elements after the render, fog, smoke and caustics, saving as 16-bit PNG, EXR or a render file, and a render queue. See [Skies and light profiles on the graphics card](topic:render#skies-and-light-profiles-on-the-graphics-card) and [The render queue](topic:render#the-render-queue).
-- **Your machine.** {{ui:Settings}} › {{ui:BimCraft}} › {{ui:Rendering}} › {{ui:Your machine}} shows the graphics, processor cores and memory this browser lets the app use, and the level rendering starts at. See [What your machine renders with](topic:your-machine).
-
-### Files and other apps
-
-- **STEP files open.** A `.step` or `.stp` part, piece of equipment or supplier's model (AP203, AP214, AP242) opens as a small IFC model, each solid an element you can inspect, section, measure and save as IFC. Colors and the assembly's part names are not read yet. See [Files BimCraft opens and saves](topic:files#what-it-opens).
-- **USD export.** {{ui:USD}} on the toolbar writes the open models as `.usda`, `.usdc` or `.usdz`, laid out site, building, storey and discipline, with every element's IFC class, GlobalId and properties. See [Export the model as USD](topic:usd).
-- **A mass from CivilCraft.** A building mass sent from CivilCraft's site view shows its study numbers in Properties, and {{ui:Develop this mass}} builds walls on every level and a floor from it in one undo step. See [Develop a building mass from a site study](topic:develop-a-mass).
-- **Library items with variants.** An item that comes in several variants has a {{ui:Variant}} choice in the {{ui:Library}} tab; the placed element keeps its variant in the IFC, {{ui:Swap item…}} lists the other variants, and copies and updates keep it. See [Place and swap a library item that has variants](topic:library-variants).
-- **Project bundles in a folder.** {{ui:Open a folder}} lists `.ccbundle.zip` files under {{ui:Project bundles}}, and each layout in a bundle has **Open in …**: the PDF to MarkupCraft, the DWG to CadCraft, in a new tab. See [Open a layout](topic:open-project-bundle#open-a-layout).
-
-### Assistants and add-ons
-
-- **More for AI assistants.** An assistant can now rename elements and set property values, move and delete elements, change walls, doors and windows, export USD, and render a picture or run the render queue; each change is one undo step. See [Let an AI assistant work with your model](topic:assistants).
-- **Add-ons can build in the model.** The add-on API 1.1 lets an add-on make a change in the model as one undo step (it travels in Live TeamWork), read the model, and read pipe and duct runs, ports, equipment and spools.
-- **The Plant add-on** (switched off until you turn it on in {{ui:Settings}} › {{ui:General}} › {{ui:Add-ons}}): pipe specs checked against the runs, isometric drawings of a run as SVG and DXF with a bill of materials, generic process equipment with nozzles placed in the model, a router between two ports, and a factory layout check. A drafting aid, not an engineering approval; its words are English only.
-
-## Changed
-
-- **A first house on a laptop.** On a laptop-sized screen BimCraft starts with the plan alone, the Draw bar is a narrow panel with the plan fitted beside it, the plan and the 3D view come back into view when the drawing leaves them, the 3D view frames the whole house in a narrow pane, and doors and windows are picked before dimension lines.
-- **Saving a picture.** **Save PNG** in the Render dialog is now {{ui:Save}}, with {{ui:Save as}} beside it for the other formats. See [Save the picture](topic:render#save-the-picture).
-- **The Analysis tab** has a {{ui:Design checks}} block: it makes the load combinations of ASCE 7 or EN 1990 for your cases and checks each rolled steel I-shape (a W, S, IPE, HEA or HEB size by its profile name and size) to AISC 360 or EN 1993-1-1, showing how much of its capacity it uses. An aid until an engineer has reviewed it; welded shapes and other sections say "not checked". See [Design checks](topic:frame-analysis#design-checks).
-
-## Fixed
-
-- Redo after a step that made a new family size failed ("no size"). Every step now makes the same IFC GlobalIds again on a redo, so redo works for families and every other change.
-- When two people saved the same family (in a Live TeamWork session or two windows), the second save silently replaced the first one's change. It now refuses and says how to see their change and make yours again.
-- A model in US survey feet was read as 0.3048 m to the foot instead of 0.3048006096 m, which moved every georeferenced IFC in US feet on the map.
-- The family editor: closing it no longer drops the keyboard focus to the page, its Save stays in sight on a phone, and its fields no longer make a phone zoom in.
-
-## In every app
-
-- **Units.** {{ui:Settings}} › {{ui:General}} › {{ui:Units}} has one list each for length, area, volume, angle and slope, with the exact sizes the units' definitions give (the US survey foot is its own unit). Switch off the units you never use and they leave the unit lists; star one and new work starts in it. A file always keeps its own unit. In BimCraft the {{ui:Units}} list on the toolbar follows the switches, the star sets the display units until you pick them on the toolbar (your earlier pick is kept), and the drawing tools' length boxes take any unit's mark, such as `3.5 m` or `10 US ft`. See [Units, typed values and the unit lists](common:unit-lists).
-- **A denser layout and panels that tidy away.** {{ui:Settings}} › {{ui:General}} › {{ui:Layout density}} › {{ui:Compact}} fits more on the screen (touch screens and phones keep their large buttons). Each side panel has a slim title bar: drag it to dock or float the panel, drop it on another panel's bar to share one frame as tabs, pin it to slide away to the edge, or hide it and bring it back from the edge. See [Arrange the panels](common:arrange-panels#make-the-layout-denser).
-- **Dialogs move.** Drag a dialog by its title bar out of the way of the drawing; it comes back where you left it. Double-click the title bar to centre it again. See [Move a dialog](common:arrange-panels#move-a-dialog).
-- **Recipes for AI assistants.** Ten worked requests for your own assistant (tidy a drawing, plot a set, check drawings, ask a model questions, total a takeoff, try a part variant…), each with the tools it calls and the permissions it needs, and each replayed by our tests. The apps contain no AI. See [Recipes for AI assistants](common:assistants-recipes).
-- **Languages.** **Português (Portugal)** is new in {{ui:Settings}} › {{ui:General}} › {{ui:Language}}. It, **Português (Brasil)**, **Español (México)** and **Bahasa Indonesia** now have every word of the apps, as drafts not yet reviewed by a native speaker. Help topics are in English, with a few in Spanish.
-- **CadCraft Studio** says why an update check failed (no file for your system yet, no network, a bad signature) instead of just "Done", and stops bringing back a What's new card you closed until there is a newer release.
+- **Ribbon + Project browser layout.** Insert › Import CAD, Insert › Image and Manage › Project Units said "Not built in BimCraft yet". Image now opens the Picture tool, Import CAD opens {{ui:Build}} › {{ui:From a drawing…}} (DWG, DXF, PDF or a scan), and Project Units opens {{ui:Settings}} › {{ui:Global}} › {{ui:Units}}. Move and Align run the Move and Align tools, Level opens {{ui:Add levels…}}, Phases opens the Renovation phases section and Materials opens the material library.
+- **DWG classes section.** It was read as the wrong type; fixed in BimCraft and the other apps that read DWG.
+- **Language at run time.** Studio and the packed editions can now switch language without a restart. This is not yet tested on every platform; tell us if the language does not change.
+- **Archicad bundle script.** `archicad_bundle.py`, a separate download, now finds Archicad's path, watches the folder for up to 20 seconds and retries beside the bundle.
 
 ## Not in this version yet
 
-- **0.7 is not code-signed.** Signing, and the Microsoft Store package, moved to 0.8 because the certificate validation has not come through yet. Check the SHA-256 beside each file on getcadcraft.com/download. On Windows, if SmartScreen stops the installer, choose {{ui:More info}}, then {{ui:Run anyway}}. On a Mac, the first time, right-click CadCraft Studio and choose {{ui:Open}}. CadCraft Studio is not in an app store yet, and there is no iPad or iPhone build yet.
-- The angle and slope lists in {{ui:Units}} are saved, but no box reads them yet.
-- Path tracing on the graphics card, the extras in the Render dialog and the render queue need WebGPU (without it, high quality uses the WebGL path tracer); the live view uses WebGPU where the browser has it, else WebGL 2. They have been tested here on a software graphics stand-in only, not yet on real graphics cards. The live view has no scatter or sharing in BimCraft (ModelCraft's has them).
-- Rendering a recorded walkthrough as a video isn't built in BimCraft.
-- Design checks: an I-shape whose IFC profile name is not a W, S, IPE, HEA or HEB size (or whose size differs from it) is taken as welded and comes back "not checked", as do tubes, angles, channels, slender parts and torsion. No engineer has reviewed the checks yet.
-- Drawn elements can't be copied one by one, turned, mirrored or arrayed (a whole level can be copied), and there is no split wall, Text tool or curtain wall. A wall that meets a wall from a lower level on an upper level isn't cut into that wall's 3D body, and schedules list an upper-level opening under its wall's own level.
-- Families: a library of families shared between projects isn't built. Families and copied levels have not yet been opened in other BIM programs.
-- MEP: equipment is generic (no makers' data); tees and reducers on steel spools are generic, not from the ASME B16.9 table; ports of library items placed from the {{ui:Library}} tab aren't written into the IFC; nothing is reviewed by an engineer.
-- The Plant add-on can't yet draw a routed run into the model, number spools on its isometrics or check the layout of equipment placed from the library.
-- Plants from CivilCraft's plant library can't be placed from BimCraft's {{ui:Library}} tab yet.
-- Energy: no hourly simulation, no ISO 52016-1 method and no climate files. Assets: no hosted twin that keeps readings or sends alerts while BimCraft is closed.
-- Scan registration has been tried on test scans, not yet on a real scanner's scan set; E57 files still open up to 6 million points and 512 MB.
-- Project bundles open in BimCraft only (the other apps take a layout through **Open in …**), and bundles and the two-program kit have been tested against stand-ins, not yet with Archicad or Revit themselves.
+- **Safety and design aids.** People in the building has no travel-distance limit from a building code (you type the limit) and has not been checked by hand on a real plan. The acoustics, life-cycle and hazard figures are planning values, not a code check.
+- **Climate futures and EnergyPlus.** No built-in climate futures: you can load a scenario file for the flood run. The EnergyPlus run in the browser is not part of this release.
+- **Ribbon layout.** Material Takeoff stays "Not built" because BimCraft has no material quantity list, and 54 other greyed ribbon tools have no BimCraft tool behind them yet.
+- **Signing and platforms.** Windows installers and the macOS .dmg are unsigned, so SmartScreen shows {{ui:More info}}, then {{ui:Run anyway}}, and macOS needs right-click then {{ui:Open}}. The iPad and iPhone build was not rebuilt for 0.8.1.
+- **Real-page tests.** Some older BimCraft browser tests still fail in our test page, as they did before 0.8.1.
 
-Everything else is in [What is not built yet](topic:not-built-yet).
+Everything else is in [What is not built yet](topic:not-built-yet). Earlier changes are in [What's new in 0.7](topic:whats-new-0-7).

@@ -1,0 +1,21 @@
+{
+  "@locale": "el",
+  "@name": "Ελληνικά",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX και PWS",
+  "opt.flip": "Συμμετρία της εικόνας",
+  "opt.flip.off": "Όχι",
+  "opt.flip.on": "Ναι, από αριστερά προς τα δεξιά",
+  "opt.version": "Έκδοση αρχείου",
+  "opt.version.v1": "Έκδοση 1 (η συνηθισμένη)",
+  "opt.version.v516": "Έκδοση 516",
+  "opt.aa": "Επίπεδα εξομάλυνσης ακμών",
+  "opt.aa.1": "1 (καμία)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Σημαία ρυθμίσεων ανά επίπεδο",
+  "opt.perLayer.off": "Ανενεργό",
+  "opt.perLayer.on": "Ενεργό"
+}

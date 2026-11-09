@@ -1,0 +1,12 @@
+{
+  "@locale": "dv",
+  "@name": "ދިވެހި",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ބައިޓް ތަރުތީބު",
+  "opt.byteOrder.big": "ބިގް-އެންޑިއަން (އާންމު ރިޕޯޓު)",
+  "opt.byteOrder.little": "ލިޓްލް-އެންޑިއަން",
+  "opt.checksum": "ޗެކްސަމް",
+  "opt.checksum.negsum": "ނެގޭ ޖުމްލަ",
+  "opt.checksum.sum": "ސާދާ ޖުމްލަ"
+}

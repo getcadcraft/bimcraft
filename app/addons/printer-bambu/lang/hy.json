@@ -1,0 +1,21 @@
+{
+  "@locale": "hy",
+  "@name": "Հայերեն",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect-ի միջոցով)",
+  "step.orca": "Տեղադրեք OrcaSlicer այս համակարգչում։",
+  "step.orca.link": "Ստանալ OrcaSlicer",
+  "step.connect": "Տեղադրեք Bambu Connect այս համակարգչում։",
+  "step.connect.link": "Ստանալ Bambu Connect",
+  "step.bind": "Bambu Connect-ում ավելացրեք ձեր P2S-ը։ Սա արեք մեկ անգամ։",
+  "step.send": "Սեղմեք «Ուղարկել եռաչափ տպիչին»։ Ֆայլը կբացվի Bambu Connect-ում. ստուգեք այնտեղ և սկսեք տպումը։",
+  "note": "Bambu Connect-ը Bambu Lab-ի սեփական ծրագիրն է՝ այլ ծրագրերից տպելու համար, և տպումը սկսվում է հենց դրանից։",
+  "confirm": "OrcaSlicer-ը սա պատրաստել է իր P2S նախադրյալներով՝ {grams} g, {layers} շերտ։",
+  "confirm.next": "Բացել Bambu Connect-ում։ Մինչև այնտեղ չսկսեք, ոչինչ չի տպվի։",
+  "done": "Ուղարկվեց Bambu Connect-ին։ Ստուգեք այնտեղ և սկսեք տպումը։",
+  "fail.orca": "OrcaSlicer-ը չի գտնվել այս համակարգչում։ Տեղադրեք այն և նորից փորձեք։",
+  "fail.slice": "OrcaSlicer-ը չի կարողացել պատրաստել այս տպումը։ {why}",
+  "fail.nogcode": "OrcaSlicer-ի ֆայլը տպման տվյալներ չի պարունակել։",
+  "fail.bed": "Սա չի տեղավորվում P2S-ի սեղանի վրա։",
+  "fail.connect": "Bambu Connect-ը չբացվեց։ Տեղադրեք այն և նորից փորձեք։"
+}

@@ -1,0 +1,8 @@
+{
+  "@locale": "zh-Hant",
+  "@name": "繁體中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "資料與來源",
+  "data.nex": "NASA NEX-GDDP-CMIP6，降尺度 CMIP6 模式輸出（每個模式為 CC BY 4.0）；全球海平面：IPCC AR6",
+  "data.sample": "範例資料包：三個地點、一個模式、每個時期五年。不可用於設計。"
+}

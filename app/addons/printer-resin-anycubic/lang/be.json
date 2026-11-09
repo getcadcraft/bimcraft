@@ -1,0 +1,21 @@
+{
+  "@locale": "be",
+  "@name": "Беларуская",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Адлюстраваць люстэркава",
+  "opt.flip.off": "Не",
+  "opt.flip.on": "Так, злева направа",
+  "opt.version": "Версія файла",
+  "opt.version.v1": "Версія 1 (звычайная)",
+  "opt.version.v516": "Версія 516",
+  "opt.aa": "Узроўні згладжвання рабрын",
+  "opt.aa.1": "1 (няма)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Сцяжок налад для кожнага пласта",
+  "opt.perLayer.off": "Выключана",
+  "opt.perLayer.on": "Уключана"
+}

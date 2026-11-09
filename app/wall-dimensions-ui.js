@@ -5,14 +5,20 @@ import { WALL_REFERENCES, readWallDimensions, referencePoint, resolveDimension, 
 import { planAutoDimensions } from './autodim.js';   // 0.8 EG.20
 import { wallGeom } from './model-arcs.js';
 import { fmtLen, parseTyped } from './model-units.js';
+import { dimensionMove } from './walls/modify.js';   // 0.9 WT.3 (walls-09): edit by dimension
+import { addHold, removeHolds, readHolds } from './wall-tools.js';   // 0.9 WT.3: Lock dimension
+import { changeWallsBy } from './model-ops.js';
+import { squareMove } from './wall-square.js';
 export function mountWallDimensions(modelUi) {
   let currentContext=null, currentView=null;
   let A, items=[], refs=[], hover=null, at=null, editing=null;
   let reference='coreExterior', axis='x';
   const t=(k,v)=>A.t('dimension.'+k,v), L=n=>fmtLen(n,A.units());
   const level=()=>A.S.data?.levels.find(l=>l.id===A.S.level);
-  const view=()=>A.S.callout?'callout:'+A.S.callout:(A.S.kind==='rcp'?'rcp:':'plan:')+level()?.guid;
+  // 0.9 D8.12-A: a linked duplicate shows (and adds to) its source's dimensions: views-ui.js viewKey() says whose
+  const view=()=>globalThis.bimcraftViews?.api?.viewKey?.()||(A.S.callout?'callout:'+A.S.callout:(A.S.kind==='rcp'?'rcp:':'plan:')+level()?.guid);
   const walls=()=>A.S.data?.walls || [];
+  const wallHolds=()=>{try{const ed=A.ed();return ed?readHolds(new ModelWriter(ed.W,ed.api,ed.mid)):[];}catch(e){return [];}};
   const label=r=>t('ref.'+r.toLowerCase());
   function pickRef(p) {
     let best=null, distance=Infinity;
@@ -48,7 +54,23 @@ export function mountWallDimensions(modelUi) {
   function props(selected,k) {
     const ds=selected.map(s=>items.find(d=>d.guid===s.guid)).filter(Boolean);if(!ds.length)return null;
     if(ds.length===1){const d=ds[0],r=resolveDimension(d,walls());
-      k.field(t('value'),el('span',{},r.status==='ok'?L(r.value):t('status.'+r.status)));
+      // 0.9 WT.3 Edit by dimension (spec test 4, FX.58): typing the value moves the wall of the second reference square to itself, the
+      // first reference holds and the joined walls follow; Lock dimension (the Hold block) keeps the value through later edits
+      const holds=wallHolds(), lock=holds.find(h=>h.kind==='dim'&&h.dim===d.guid), same=d.refs[0].wall===d.refs[1].wall;
+      if(r.status==='ok' && !d.issue){
+        const v=k.lenInput(r.value,'data-mp-dimvalue',mm=>{
+          if(lock){A.host.status(A.t('walls.err.held'),true);A.renderProps();return;}
+          if(same){A.host.status(A.t('walls.dim.samewall'),true);A.renderProps();return;}
+          const mover=walls().find(w=>w.guid===d.refs[1].wall), dd=mover?dimensionMove(r,mm,mover):null;
+          if(dd===null||!Number.isFinite(dd)){A.host.status(A.t('walls.dim.nomove'),true);A.renderProps();return;}
+          A.commit(changeWallsBy(mover.guid,ws=>squareMove(ws,mover.guid,dd)),{...k.one(t('title')),verb:A.t('model.verb.moved')});
+        },{min:1});
+        v.title=A.t('walls.dim.edit'); if(lock) v.disabled=true;
+        k.field(t('value'),v);
+        const c=el('input',{type:'checkbox',checked:!!lock,'data-mp-dimlock':''});
+        c.addEventListener('change',()=>A.commit(c.checked?addHold({kind:'dim',dim:d.guid}):removeHolds([lock.id]),k.one(t('title'))));
+        k.field('',el('label',{},c,' '+A.t('walls.dim.lock')));
+      } else k.field(t('value'),el('span',{},r.status==='ok'?L(r.value):t('status.'+r.status)));
       if(d.issue || ['unsupported','corrupt'].includes(r.status)){k.field('',el('p',{role:'alert'},A.t('contract.recovery')));return {title:t('title')};}
       for(let i=0;i<2;i++)k.field(t(i?'second':'first'),el('span',{},label(d.refs[i].reference)+' · '+(walls().find(w=>w.guid===d.refs[i].wall)?.typeName || t('missingwall'))));
       k.field(t('offset'),k.lenInput(d.offset,'data-mp-dimoffset',mm=>A.commit(saveWallDimension({...d,offset:mm,level:level().guid}),k.one(t('title'))),{any:true}));

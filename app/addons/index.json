@@ -1,1 +1,27 @@
-{"addons": ["cabinetcraft", "energyplus", "plant", "regs", "sprinkler", "trusscraft", "acoustic-materials"]}
+{
+  "addons": [
+    "cabinetcraft",
+    "energyplus",
+    "plant",
+    "regs",
+    "sprinkler",
+    "trusscraft",
+    "acoustic-materials",
+    "climate-futures",
+    "lightdesign",
+    "pointcloud",
+    "scanbim",
+    "print3d",
+    "slicer-kiri",
+    "slicer-prusaslicer",
+    "slicer-orcaslicer",
+    "printer-bambu",
+    "twin",
+    "slicer-resin",
+    "printer-resin-goo",
+    "printer-resin-sl1",
+    "resin-calibration",
+    "printer-resin-chitu",
+    "printer-resin-anycubic"
+  ]
+}

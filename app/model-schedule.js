@@ -8,13 +8,17 @@
  *   schedules(snap, loops, { fmtLen, fmtArea, t, unit }) → { doors, windows, walls, rooms }, each { head: [labels], rows: [[cells]],
  *     total: [cells] | null, nums: [[numbers]] } — cells are text in the chosen units; nums the same rows in mm / mm² for tests
  *   loops: Map(storey → { rooms, outlines }) (model-ops.js loopsOf)
+ *   countBy 'reported' (default) leaves out walls reported as another class (0.9 D8.12-C: snap.reported); 'drawn' counts them as drawn
  */
 import { loopAt } from './model-rooms.js';
 import { openingType, openingTypeName } from './model-openings.js';
 import { wallType, typeName } from './model-walls.js';
 import { tableCsv } from './ifc-qto.js';
 
-export function schedules(snap, loops, { fmtLen, fmtArea, t, unit = '' }) {
+export function schedules(snap, loops, { fmtLen, fmtArea, t, unit = '', countBy = 'reported' }) {
+  // 0.9 D8.12-C: a wall reported as another class (a panel, a covering) is counted as that, not as a wall (unless the working style counts the drawn class)
+  const away = (x, re) => countBy !== 'drawn' && snap.reported?.get(x.id) && !re.test(snap.reported.get(x.id).cls);
+  snap = { ...snap, walls: snap.walls.filter((w) => !away(w, /^IfcWall/)), openings: snap.openings.filter((o) => !away(o, /^Ifc(Door|Window)/)) };
   const H = (s) => (unit ? s + ' (' + unit + ')' : s);   // GH.3-A: a length column says its unit when the cells do not (every unit but feet-inches)
   const levelName = (id) => snap.levels.find((l) => l.id === id)?.name || '';
   const levelIx = (id) => snap.levels.findIndex((l) => l.id === id);

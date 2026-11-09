@@ -1,0 +1,8 @@
+{
+  "@locale": "mk",
+  "@name": "Македонски",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Податоци и извори",
+  "data.nex": "NASA NEX-GDDP-CMIP6, понижен излез од модели CMIP6 (CC BY 4.0 по модел); глобално ниво на морето: IPCC AR6",
+  "data.sample": "Пакет со примероци: три места, еден модел, пет години по период. Не е за проектирање."
+}

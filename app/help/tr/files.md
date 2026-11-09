@@ -1,50 +1,50 @@
 ---
 title: BimCraft'ın açtığı ve kaydettiği dosyalar
-summary: BimCraft'ın açtığı her biçim, neyi koruduğu, neyi kaydettiği, kaydedilen dosyaların nereye gittiği ve tarayıcılar arasında ile çevrimdışıyken neyin değiştiği.
+summary: BimCraft'ın açtığı her biçim, okuduğu bilgiler, kaydettiği dosyalar, dosyaların kaydedildiği yer ve tarayıcılar arasındaki ile çevrimdışıyken değişen şeyler.
 keywords: biçimler, aç, kaydet, dışa aktar, indir, ifc, rvt, rfa, rte, rft, dwg, dxf, step, stp, csv, yükle, gizlilik, dosya boyutu
-from: a1f0161b
+from: a7275dbf
 ---
 
-BimCraft, bilgisayarınızdaki dosyaları tarayıcı sekmesinde okur. CadCraft'a veya bir başkasına **hiçbir şey yüklenmez**. Kaydettiğinizde BimCraft tarayıcıya indirilmek üzere yeni bir dosya verir; açtığınız bir dosyanın üzerine hiçbir zaman yazmaz.
+BimCraft dosyaları bilgisayarınızda, tarayıcı sekmesinde okur. **Hiçbir şey** CadCraft'a ya da başka birine yüklenmez. Kaydettiğinizde BimCraft tarayıcıya indirilecek yeni bir dosya verir; açtığınız bir dosyanın üzerine hiçbir zaman yazmaz.
 
-## Neleri açar
+## Açtığı dosyalar
 
 | Biçim | Uzantılar | Ne elde edersiniz |
 |---|---|---|
-| IFC | `.ifc` | Modelin 3B hali, katlar, öğe sayıları ve her öğenin özellikleri. Adlar, etiketler ve tek tek özellik değerleri değiştirilebilir. |
+| IFC | `.ifc` | Modeli 3B olarak, katları, öğe sayılarını ve her öğenin özelliklerini. Adlar, etiketler ve tek özellik değerleri değiştirilebilir. |
 | Proje ve aile dosyaları | `.rvt` `.rfa` `.rte` `.rft` | Bir dosya kartı: sürüm, derleme, ortak çalışma, proje bilgileri, aile parametreleri, bağlı dosyalar ve önizleme resmi. 3B yok. |
-| DWG | `.dwg` | Çizim 2B olarak: model uzayı, her sayfa, katmanlar, bağlı çizimler, resimler ve çıktı görünümü. Model uzayı 3B olarak da. AutoCAD 2000'den 2018'e kadar olan biçimler denetlenmiştir. |
+| DWG | `.dwg` | Çizim 2B olarak: model uzayı, her sayfa, katmanlar, bağlı çizimler, resimler ve çıktı görünümü. Model uzayı 3B olarak da. AutoCAD 2000'den 2018'e kadar olan biçimler sınanmış olanlardır. |
 | DXF | `.dxf` | DWG ile aynı. |
-| STEP | `.step` `.stp` | Bir parça, bir ekipman veya bir tedarikçinin modeli (AP203, AP214, AP242) 3B olarak: her katı, tek bir katta küçük bir IFC modelinin bir öğesi (bir yapı öğesi vekili) olur; üçgenler olarak, gerçek boyutunda okunur; dosyanın yerleştirdiği yerde her parçasıyla bir montajdır. Buradan sonra herhangi bir IFC gibi çalışır: özellikler, kesitler, ölçme, IFC olarak kaydetme. Renkler ve montaj ağacı okunmaz. |
-| Nokta bulutları | `.las` `.laz` `.e57` `.ply` `.pcd` `.ptx` `.pts` `.xyz` | Tarama 3B görünümde, bir modelin yanında veya tek başına: bkz. [Modelin yanında bir nokta bulutu gösterme](topic:point-clouds). |
-| Proje paketi | `.ccbundle.zip` | Model, görünümleri, düzenleri ve özellik grupları ile birlikte: bkz. [Bir proje paketini açma](topic:open-project-bundle). |
-| Bir klasör | herhangi | İçindeki her model, çizim ve proje paketinin raporu. Rapordaki her IFC, model, çizim veya paket bir tıklamayla açılır. |
+| STEP | `.step` `.stp` | Bir parça, bir ekipman parçası ya da bir tedarikçinin modeli (AP203, AP214, AP242) 3B olarak: her katı, tek katta küçük bir IFC modelinin bir öğesi olur (building element proxy), gerçek boyutunda üçgenler olarak okunur; dosyanın yerleştirdiği her parçayla birlikte bir montaj. Bundan sonra herhangi bir IFC gibi çalışır: özellikler, kesitler, ölçüm, IFC olarak farklı kaydet. Renkler ve montaj ağacı okunmaz. |
+| Nokta bulutları | `.las` `.laz` `.e57` `.ply` `.pcd` `.ptx` `.pts` `.xyz` | Tarama, 3B görünümde, bir modelin yanında ya da tek başına: bkz. [Modelin yanında bir nokta bulutu gösterin](topic:point-clouds). |
+| Proje paketi | `.ccbundle.zip` | Görünümleri, düzenleri ve özellik gruplarıyla model: bkz. [Bir proje paketi açın](topic:open-project-bundle). |
+| Bir klasör | herhangi | İçindeki her model, çizim ve proje paketinin raporu. Rapordaki herhangi bir IFC, model, çizim ya da paket bir tıklamayla açılır. |
 
-[BimCraft'ın her biçimden okuduğu şeyler](topic:file-formats) ayrıntıya girer.
+[BimCraft'ın her biçimden okuduğu bilgiler](topic:file-formats) ayrıntılı anlatılır.
 
-BimCraft bir dosyanın ne olduğuna adına bakmanın yanı sıra ilk baytlarına da bakarak karar verir; bu yüzden olağandışı uzantılı bir proje dosyası yine de dosya kartı olarak açılır.
+BimCraft bir dosyanın ne olduğuna adına ek olarak ilk baytlarına bakarak karar verir; bu yüzden olağandışı uzantılı bir proje dosyası da dosya kartı olarak açılır.
 
 ### Açılmayanlar
 
-- `.ifczip` ve `.ifcxml`: BimCraft şunu söyler: ".ifczip henüz desteklenmiyor. Modeli düz bir .ifc dosyası olarak kaydedin veya dışa aktarın." `.ifczip` dosyasını açın (içinde düz bir `.ifc` vardır) ya da düz IFC olarak yeniden dışa aktarın.
-- DGN çizimleri klasör raporunda listelenir ama açılmaz.
-- PDF, resim ve ofis dosyaları kendi başlarına açılmaz. Resimler bir DWG içinde resim olarak kullanılır; {{ui:Oluştur}} › {{ui:Bir çizimden…}} ise bir PDF'nin veya taramanın sayfalarını duvarlara dönüştürür: bkz. [Bir plan takımından duvarlar](topic:walls-from-plans).
+- `.ifczip` ve `.ifcxml`: BimCraft şunu söyler: ".ifczip henüz desteklenmiyor. Modeli düz bir .ifc dosyası olarak kaydedin ya da dışa aktarın." `.ifczip` dosyasını açın (içinde düz bir `.ifc` bulunur) ya da modeli yeniden düz IFC olarak dışa aktarın.
+- DGN çizimleri bir klasör raporunda listelenir ama açılmaz.
+- PDF, resimler ve ofis dosyaları tek başına açılmaz. Resimler bir DWG'nin içinde resim olarak kullanılır; {{ui:Derleme}} › {{ui:Bir çizimden…}} bir PDF'nin ya da taramanın sayfalarını duvarlara dönüştürür: bkz. [Bir plan takımından duvarlar](topic:walls-from-plans).
 
-## Neleri kaydeder
+## Ne kaydeder
 
-| Tıkladığınız | Elde ettiğiniz | Nereye |
+| Tıklarsınız | Elde edersiniz | Nerede |
 |---|---|---|
-| {{ui:IFC olarak farklı kaydet}} | Düzenlemelerinizi içeren yeni bir IFC dosyası; adı "*özgün ad* (edited).ifc" | Tarayıcınızın indirilenler klasörü |
-| Ekipman listesinde {{ui:CSV indir}} | Listedeki kalemlerin bir CSV'si; adı "*çizim adı* equipment.csv" | Tarayıcınızın indirilenler klasörü |
+| {{ui:IFC olarak farklı kaydet}} | Düzenlemelerinizle yeni bir IFC dosyası, "*özgün ad* (edited).ifc" adıyla | Tarayıcınızın indirilenler klasörü |
+| Ekipman listesinde {{ui:CSV indir}} | Listedeki öğelerin bir CSV dosyası, "*çizim adı* equipment.csv" adıyla | Tarayıcınızın indirilenler klasörü |
 
-Diğer şeyler yapıldıkları yerde kaydedilir, her biri kendi konusunda: {{ui:USD}} ([Modeli USD olarak dışa aktarma](topic:usd)), .glb dosyası {{ui:Render için}}, render edilmiş resimler, PDF olarak sayfalar ve planlar, CSV olarak listeler ve tablolar, BCF sorunları, COBie tablosu, aile dosyaları ve LAS veya E57 olarak hizalanmış taramalar. BimCraft DWG, DXF veya proje dosyalarını kaydetmez ve açtığınız dosyaları hiçbir zaman değiştirmez.
+Diğer şeyler yapıldıkları yerde kaydedilir; her biri kendi konusunda: {{ui:USD}} ([Modeli USD olarak dışa aktarın](topic:usd)), {{ui:Collada}} (.dae ve Google Earth .kmz: [Modeli Collada ya da Google Earth için dışa aktarın](topic:collada)), {{ui:Render için}} .glb, render edilmiş resimler, sayfalar ve planlar PDF olarak, tablolar ve listeler CSV olarak, BCF sorunları, COBie elektronik tablosu, aile dosyaları ve kayıtlı taramalar LAS ya da E57 olarak. BimCraft DWG, DXF ya da proje dosyalarını kaydetmez ve açtığınız dosyaları asla değiştirmez.
 
 :::chromium
-Chrome ve Edge, indirmeleri ayarlarında belirtilen klasöre, genellikle İndirilenler'e kaydeder. Her seferinde nereye kaydedileceğinin sorulması için tarayıcının indirme ayarlarında "İndirmeden önce her dosyanın nereye kaydedileceğini sor" seçeneğini açın.
+Chrome ve Edge indirmeleri, ayarlarında belirlenen klasöre kaydeder; genellikle İndirilenler. Her dosya için nereye kaydedeceğinizin sorulmasını istiyorsanız tarayıcının indirme ayarlarında "İndirmeden önce her dosyanın nereye kaydedileceğini sor" seçeneğini açın.
 :::
 
 :::firefox
-Firefox, ayarlarında "Dosyaların nereye kaydedileceğini her zaman sor" seçilmedikçe İndirilenler klasörüne kaydeder.
+Firefox, ayarlarında "Dosyaları nereye kaydedeceğimi her zaman sor" seçmediğiniz sürece İndirilenler klasörüne kaydeder.
 :::
 
 :::safari
@@ -53,27 +53,27 @@ Safari, **Safari > Ayarlar > Genel > Dosya indirme konumu** altında başka bir 
 
 ## İkinci kez kaydetme
 
-Her kayıt, yalnızca son kayıttan sonraki değişiklikleri değil, **açtığınızdan beri yapılan her değişikliği** içeren modelin tamamını indirir. {{ui:Değişiklikler}} listesi her kayıttan sonra yeniden boşalır; bu yüzden bir kaydın ötesine geri alamazsınız. Özgün halden yeniden başlamak için özgün dosyayı yeniden açın.
+Her kayıt, modeli **açtığınızdan beri yapılan her düzenlemeyle** birlikte tamamen indirir; yalnızca son kayıttan sonraki düzenlemeler değil. {{ui:Değişiklikler}} listesi her kayıttan sonra yeniden boş başlar, bu yüzden bir kaydın gerisine geri alamazsınız. Baştan başlamak için orijinal dosyayı yeniden açın.
 
 ## Büyük dosyalar ve bellek
 
-- **IFC** dosyaları sekmenin belleğine tamamen okunur ve 3B geometri bunun üstüne daha fazla bellek alır. Birkaç yüz megabaytlık bir model bir dizüstü bilgisayar için fazla olabilir. 1,5 milyon üçgenin üzerinde bellek tasarrufu için kenarlar kapatılır ("Kenarlar çok büyük modellerde kapalı").
-- **Proje dosyaları** bütünüyle okunmaz. BimCraft dosya ne kadar büyük olursa olsun yalnızca ihtiyaç duyduğu küçük parçaları, yaklaşık 40 KB ile 100 KB arasını okur; bu yüzden bir ağ sürücüsündeki 500 MB'lık bir merkezi model bir anda açılır.
-- **DWG ve DXF** dosyaları tamamen okunur. Çok büyük bir çizim "Bu çizim çok büyük; yalnızca bir kısmı gösteriliyor." iletisini gösterir.
-- **Klasörler**: 20.000 dosyaya kadar olanlar açılır. Her model kartının ihtiyaç duyduğu birkaç kilobayt dışında hiçbir şey okunmaz.
+- **IFC** dosyaları sekmenin belleğine tamamen okunur ve 3B geometri bunun üstüne daha fazla bellek alır. Birkaç yüz megabaytlık bir model bir dizüstü bilgisayar için fazla olabilir. 1.5 milyon üçgenin üzerinde kenarlar bellek tasarrufu için kapatılır ("Çok büyük modellerde kenarlar kapalıdır").
+- **Proje dosyaları** tamamen okunmaz. BimCraft yalnızca ihtiyaç duyduğu küçük parçaları okur; dosya ne kadar büyük olursa olsun yaklaşık 40 KB ila 100 KB. Bu yüzden bir ağ sürücüsündeki 500 MB'lık merkezi model bir anda açılır.
+- **DWG ve DXF** dosyaları tamamen okunur. Çok büyük bir çizim "Bu çizim çok büyük; yalnızca bir kısmı gösteriliyor." uyarısını verir.
+- **Klasörler** 20.000 dosyaya kadar açılır. Her model kartının ihtiyaç duyduğu yalnızca birkaç kilobayt okunur.
 
 Daha fazlası için bkz. [Tarayıcılar, cihazlar ve bellek](topic:platforms).
 
 ## Çevrimiçi ve çevrimdışı
 
-Dosya açmak hiçbir zaman internet gerektirmez. Bir okuyucu, ihtiyaç duyduğunuz ilk seferde siteden yüklenir: bir IFC modelini ilk açtığınızda IFC motoru ("IFC motoru başlatılıyor…"). DWG ve DXF okuyucuları uygulamanın parçasıdır.
+Dosya açmak asla internet bağlantısı gerektirmez. Bir okuyucu, ihtiyaç duyduğunuz ilk seferde siteden yüklenir: IFC motoru, bir IFC modelini ilk açtığınızda ("IFC motoru başlatılıyor…"). DWG ve DXF okuyucuları uygulamanın bir parçasıdır.
 
 :::offline
-Çevrimdışısınız. Uygulama çubuğundaki düğme {{ui:Çevrimdışı hazır}} diyorsa her biçim her zamanki gibi açılır. Demiyorsa, bu sekmede zaten bir IFC modeli açılmadıysa bir IFC modeli açılamaz: önce yeniden bağlanın. Bkz. [Çevrimiçi ve çevrimdışı](topic:online-offline).
+Çevrimdışısınız. Uygulama çubuğundaki düğme {{ui:Çevrimdışı hazır}} diyorsa her biçim her zamanki gibi açılır. Demiyorsa, bu sekmede daha önce açılmış bir IFC modeli dışında IFC modeli açılamaz: önce bağlantıyı yeniden kurun. Bkz. [Çevrimdışı ve çevrimiçi](topic:online-offline).
 :::
 
-BimCraft'ı bağlantı olmadan kullanmak için çevrimiçiyken uygulama çubuğunda {{ui:Çevrimdışı için kaydet}} düğmesine tıklayın ve {{ui:Çevrimdışı hazır}} yazısını bekleyin. Kaydedilen kopya yaklaşık 33 MB'dır; IFC motorunu içerir, bu yüzden IFC modelleri çevrimdışıyken de açılır. [Çevrimdışı çalışma](common:offline), kaydedilen kopyaları genel olarak açıklar.
+BimCraft'ı bağlantı olmadan kullanmak için çevrimiçiyken uygulama çubuğundaki {{ui:Çevrimdışı için kaydet}} düğmesine tıklayın ve {{ui:Çevrimdışı hazır}} görünene kadar bekleyin. Kaydedilen kopya yaklaşık 33 MB'tır; IFC motorunu da içerir, bu yüzden IFC modelleri de çevrimdışı açılır. [Çevrimdışı çalışma](common:offline) kaydedilmiş kopyaları genel olarak açıklar.
 
-## Bulutta kaydetme
+## Bulut kaydetme
 
-Bulutta kaydetme henüz mevcut değil. Düzenlenmiş kopyalarınızı, diğer dosyalar gibi, kendi bilgisayarınıza veya ofisinizin dosya sunucusuna kaydedin. Bkz. [Dosyalarınız](common:your-files).
+Bulut kaydetme henüz kullanılamıyor. Düzenlenmiş kopyalarınızı, diğer tüm dosyalarda yaptığınız gibi, kendi bilgisayarınıza ya da ofisinizin dosya sunucusuna kaydedin. Bkz. [Dosyalarınız](common:your-files).

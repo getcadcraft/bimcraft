@@ -1,0 +1,10 @@
+{
+  "@locale": "gn",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Orden de bytes",
+  "opt.byteOrder.big": "Big-endian (el habitual)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Suma de comprobación",
+  "opt.checksum.negsum": "Suma negada",
+  "opt.checksum.sum": "Suma simple"
+}

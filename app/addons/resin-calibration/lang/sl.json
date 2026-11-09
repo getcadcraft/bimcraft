@@ -1,0 +1,14 @@
+{
+  "@locale": "sl",
+  "@name": "Slovenščina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Preskus ekspozicije",
+  "note": "Smole in tiskalniki se razlikujejo. Preskusni del natisnite enkrat pri vsaki ekspoziciji na lestvici in obdržite ekspozicijo z najostrejšimi tankimi stebrički in odprtimi luknjami.",
+  "part": "Preskusni del položite na tiskalno ploščo",
+  "part.name": "Preskusni del za ekspozicijo",
+  "ladder": "Shrani lestvico ekspozicije (datoteke: {n})",
+  "ladder.made": "Shranjeno: {n} datotek za {list} s. Vsako natisnite z enako smolo in primerjajte.",
+  "ladder.nopart": "Najprej položite preskusni del na tiskalno ploščo.",
+  "ladder.failed": "Lestvice ni mogoče izdelati. {why}",
+  "ladder.busy": "Izdelovanje {i} od {n}…"
+}

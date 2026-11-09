@@ -1,0 +1,21 @@
+{
+  "@locale": "fr",
+  "@name": "Français",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX et PWS",
+  "opt.flip": "Miroir de l'image",
+  "opt.flip.off": "Non",
+  "opt.flip.on": "Oui, de gauche à droite",
+  "opt.version": "Version du fichier",
+  "opt.version.v1": "Version 1 (la plus courante)",
+  "opt.version.v516": "Version 516",
+  "opt.aa": "Niveaux de lissage des bords",
+  "opt.aa.1": "1 (aucun)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Indicateur des paramètres par calque",
+  "opt.perLayer.off": "Désactivé",
+  "opt.perLayer.on": "Activé"
+}

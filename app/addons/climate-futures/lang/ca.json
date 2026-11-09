@@ -1,0 +1,8 @@
+{
+  "@locale": "ca",
+  "@name": "Català",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Dades i fonts",
+  "data.nex": "NASA NEX-GDDP-CMIP6, sortida de models CMIP6 reduïda d'escala (CC BY 4.0 per model); nivell global del mar: IPCC AR6",
+  "data.sample": "Paquet de mostra: tres ubicacions, un model, cinc anys per període. No per al disseny."
+}

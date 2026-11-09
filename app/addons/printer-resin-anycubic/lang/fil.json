@@ -1,0 +1,21 @@
+{
+  "@locale": "fil",
+  "@name": "Filipino",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX at PWS",
+  "opt.flip": "I-mirror ang larawan",
+  "opt.flip.off": "Hindi",
+  "opt.flip.on": "Oo, kaliwa papuntang kanan",
+  "opt.version": "Bersyon ng file",
+  "opt.version.v1": "Bersyon 1 (ang karaniwan)",
+  "opt.version.v516": "Bersyon 516",
+  "opt.aa": "Mga antas ng edge smoothing",
+  "opt.aa.1": "1 (wala)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flag ng per-layer settings",
+  "opt.perLayer.off": "Off",
+  "opt.perLayer.on": "On"
+}

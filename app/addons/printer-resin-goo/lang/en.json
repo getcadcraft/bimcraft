@@ -1,0 +1,9 @@
+{
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Byte order",
+  "opt.byteOrder.big": "Big-endian (the usual report)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Negated sum",
+  "opt.checksum.sum": "Plain sum"
+}

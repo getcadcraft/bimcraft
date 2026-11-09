@@ -1,0 +1,21 @@
+{
+  "@locale": "sl",
+  "@name": "Slovenščina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX in PWS",
+  "opt.flip": "Zrcali sliko",
+  "opt.flip.off": "Ne",
+  "opt.flip.on": "Da, od leve proti desni",
+  "opt.version": "Različica datoteke",
+  "opt.version.v1": "Različica 1 (običajna)",
+  "opt.version.v516": "Različica 516",
+  "opt.aa": "Stopnje glajenja robov",
+  "opt.aa.1": "1 (brez)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Zastavica nastavitev po slojih",
+  "opt.perLayer.off": "Izklopljeno",
+  "opt.perLayer.on": "Vklopljeno"
+}

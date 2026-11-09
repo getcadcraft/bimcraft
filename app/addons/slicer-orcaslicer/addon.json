@@ -1,0 +1,22 @@
+{
+  "id": "slicer-orcaslicer",
+  "name": "OrcaSlicer slicer",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": ["engine.run"],
+  "needs": [
+    {
+      "id": "print3d",
+      "range": "*"
+    }
+  ],
+  "description": "Adds OrcaSlicer to the slicers in 3D Print, using your own installed copy. OrcaSlicer is separate AGPL-3.0 software that you install yourself; CadCraft never ships it. Works from CadCraft Studio on a computer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

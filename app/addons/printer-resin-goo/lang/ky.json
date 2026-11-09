@@ -1,0 +1,12 @@
+{
+  "@locale": "ky",
+  "@name": "Кыргызча",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Байттардын тартиби",
+  "opt.byteOrder.big": "Big-endian (адаттагы отчет)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Контролдук сумма",
+  "opt.checksum.negsum": "Терс сумма",
+  "opt.checksum.sum": "Жөнөкөй сумма"
+}

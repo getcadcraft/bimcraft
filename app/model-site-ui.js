@@ -80,7 +80,7 @@ export function mountSite(modelUi) {
       if (e.submitter?.value !== 'ok') return;
       if (mode.value === 'at') {
         const list = heights.value.split(/[,;]+/).map((x) => x.trim()).filter(Boolean).map((x) => parseLen(x, u));
-        if (!list.length || !list.every((v) => Number.isFinite(v) && v >= 0)) { e.preventDefault(); err.textContent = t('model.lvd.bad'); return; }
+        if (!list.length || !list.every((v) => Number.isFinite(v) && v >= -100000)) { e.preventDefault(); err.textContent = t('model.lvd.bad'); return; }
         A.commit(addLevels({ elevations: list }), { label: t('model.lvd.levels', { n: list.length }), verb: t('model.verb.added') });
       } else {
         const T = parseLen(total.value, u), n = Math.floor(Number(count.value));

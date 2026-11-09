@@ -1,0 +1,8 @@
+{
+  "@locale": "he",
+  "@name": "עברית",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "נתונים ומקורות",
+  "data.nex": "NASA NEX-GDDP-CMIP6, פלט מודלי CMIP6 מוקטנים מרחבית (CC BY 4.0 לכל מודל); מפלס הים הגלובלי: IPCC AR6",
+  "data.sample": "חבילת דוגמה: שלושה מקומות, מודל אחד, חמש שנים לכל תקופה. לא לשימוש בתכנון."
+}

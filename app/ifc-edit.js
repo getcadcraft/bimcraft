@@ -41,6 +41,7 @@
  * same place, a new element id). Any new change clears what could be redone, as in every editor.
  */
 
+import { withReportedClasses, restoreDrawnClasses } from './report-as-core.js';   // 0.9 D8.12-C
 import { IfcPlacer, undoJournal } from './ifc-place.js';
 import { IfcElements } from './ifc-elements.js';
 import { ids } from './ifc-util.js';
@@ -59,6 +60,8 @@ export class IfcEditor {
     this.moved = new Map();   // element id → the id it got when a redo placed it again
     this.propRefs = null;     // propertyId → number of property sets that list it
     this.relsByPset = null;   // psetId → [IfcRelDefinesByProperties ids]
+    this._reported = false;
+    try { restoreDrawnClasses(WebIFC, this.api, this.mid); } catch (e) { /* 0.9 D8.12-C: a file with "Report as": its elements back to their drawing tool's class */ }
   }
 
   get api() { return this.model.api; }
@@ -193,7 +196,7 @@ export class IfcEditor {
   }
 
   /** After lines were added or removed the property indexes are rebuilt on the next edit. */
-  reindex() { this.propRefs = null; this.relsByPset = null; }
+  reindex() { this.propRefs = null; this.relsByPset = null; if (this._reported) { this._reported = false; restoreDrawnClasses(this.W, this.api, this.mid); } }   // 0.9 D8.12-C: after a reload of the saved bytes
 
   /** Undo the last change by writing the old value back (copies made on the way stay; they are harmless). */
   undo() {
@@ -244,8 +247,9 @@ export class IfcEditor {
   now(id) { const seen = new Set(); while (this.moved.has(id) && !seen.has(id)) { seen.add(id); id = this.moved.get(id); } return id; }
 
   /** The bytes of a new IFC file with every change applied. */
+  /** The file's bytes. 0.9 D8.12-C: elements with "Report as" are written as their reported class (report-as-core.js). */
   save() {
-    return this.api.SaveModel(this.mid);
+    return withReportedClasses(this.W, this.api, this.mid, () => this.api.SaveModel(this.mid), () => { this._reported = true; });
   }
 
   // ---- internals ----

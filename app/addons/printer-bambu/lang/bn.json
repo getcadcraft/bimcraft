@@ -1,0 +1,21 @@
+{
+  "@locale": "bn",
+  "@name": "বাংলা",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect-এর মাধ্যমে)",
+  "step.orca": "এই কম্পিউটারে OrcaSlicer ইনস্টল করুন।",
+  "step.orca.link": "OrcaSlicer পান",
+  "step.connect": "এই কম্পিউটারে Bambu Connect ইনস্টল করুন।",
+  "step.connect.link": "Bambu Connect পান",
+  "step.bind": "Bambu Connect-এ আপনার P2S যুক্ত করুন। এটি একবারই করুন।",
+  "step.send": "3D প্রিন্টারে পাঠান চাপুন। ফাইলটি Bambu Connect-এ খুলবে: সেখানে দেখে নিন এবং প্রিন্ট শুরু করুন।",
+  "note": "Bambu Connect হলো Bambu Lab-এর নিজস্ব প্রোগ্রাম, যা অন্য সফটওয়্যার থেকে প্রিন্ট করতে ব্যবহৃত হয়; প্রিন্ট সেখান থেকেই শুরু হয়।",
+  "confirm": "OrcaSlicer এটি তার P2S প্রিসেট দিয়ে প্রস্তুত করেছে: {grams} g, {layers} স্তর।",
+  "confirm.next": "Bambu Connect-এ খুলবেন? সেখানে শুরু না করা পর্যন্ত কিছুই প্রিন্ট হবে না।",
+  "done": "Bambu Connect-এ পাঠানো হয়েছে। সেখানে দেখে নিন এবং প্রিন্ট শুরু করুন।",
+  "fail.orca": "এই কম্পিউটারে OrcaSlicer পাওয়া যায়নি। ইনস্টল করে আবার চেষ্টা করুন।",
+  "fail.slice": "OrcaSlicer এই প্রিন্ট প্রস্তুত করতে পারেনি। {why}",
+  "fail.nogcode": "OrcaSlicer-এর ফাইলে কোনো প্রিন্ট ছিল না।",
+  "fail.bed": "এটি P2S-এর বেডে ফিট হবে না।",
+  "fail.connect": "Bambu Connect খোলা যায়নি। ইনস্টল করে আবার চেষ্টা করুন।"
+}

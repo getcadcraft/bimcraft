@@ -1,0 +1,14 @@
+{
+  "@locale": "ko",
+  "@name": "한국어",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "노광 시험",
+  "note": "레진과 프린터마다 다릅니다. 시험 부품을 노광 단계마다 한 번씩 출력하고, 가장 얇은 기둥과 열린 구멍이 가장 선명한 노광값을 고르십시오.",
+  "part": "베드에 시험 부품 놓기",
+  "part.name": "노광 시험 부품",
+  "ladder": "노광 단계 파일 저장 ({n}개)",
+  "ladder.made": "{list} s 노광용 파일 {n}개를 저장했습니다. 같은 레진으로 각각 출력해 비교하십시오.",
+  "ladder.nopart": "먼저 시험 부품을 베드에 놓으십시오.",
+  "ladder.failed": "노광 단계를 만들 수 없습니다. {why}",
+  "ladder.busy": "만드는 중 {i}/{n}…"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "ru",
+  "@name": "Русский",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX и PWS",
+  "opt.flip": "Отразить изображение зеркально",
+  "opt.flip.off": "Нет",
+  "opt.flip.on": "Да, слева направо",
+  "opt.version": "Версия файла",
+  "opt.version.v1": "Версия 1 (обычная)",
+  "opt.version.v516": "Версия 516",
+  "opt.aa": "Уровни сглаживания краев",
+  "opt.aa.1": "1 (нет)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Флаг настроек для каждого слоя",
+  "opt.perLayer.off": "Выкл",
+  "opt.perLayer.on": "Вкл"
+}

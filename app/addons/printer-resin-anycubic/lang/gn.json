@@ -1,0 +1,19 @@
+{
+  "@locale": "gn",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Espejar la imagen",
+  "opt.flip.off": "Nahániri",
+  "opt.flip.on": "Heẽ, izquierda a derecha",
+  "opt.version": "Versión de archivo",
+  "opt.version.v1": "Versión 1 (la habitual)",
+  "opt.version.v516": "Versión 516",
+  "opt.aa": "Niveles de suavizado de bordes",
+  "opt.aa.1": "1 (ninguno)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Indicador de ajustes por capa",
+  "opt.perLayer.off": "Apagado",
+  "opt.perLayer.on": "Encendido"
+}

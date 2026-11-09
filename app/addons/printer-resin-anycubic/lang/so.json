@@ -1,0 +1,21 @@
+{
+  "@locale": "so",
+  "@name": "Soomaali",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX iyo PWS",
+  "opt.flip": "Rogi sawirka",
+  "opt.flip.off": "Maya",
+  "opt.flip.on": "Haa, bidix ilaa midig",
+  "opt.version": "Nooca faylka",
+  "opt.version.v1": "Nooca 1 (caadiga)",
+  "opt.version.v516": "Nooca 516",
+  "opt.aa": "Heerarka jilcinta geesaha",
+  "opt.aa.1": "1 (midna)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Calaamadda dejinta lakab-lakab",
+  "opt.perLayer.off": "Demi",
+  "opt.perLayer.on": "Shid"
+}

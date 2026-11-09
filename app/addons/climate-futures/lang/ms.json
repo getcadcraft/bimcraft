@@ -1,0 +1,8 @@
+{
+  "@locale": "ms",
+  "@name": "Bahasa Melayu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data dan sumber",
+  "data.nex": "NASA NEX-GDDP-CMIP6, output model CMIP6 yang diskalakan turun (CC BY 4.0 bagi setiap model); aras laut global: IPCC AR6",
+  "data.sample": "Pek sampel: tiga lokasi, satu model, lima tahun bagi setiap tempoh. Bukan untuk reka bentuk."
+}

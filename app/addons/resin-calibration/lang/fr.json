@@ -1,0 +1,14 @@
+{
+  "@locale": "fr",
+  "@name": "Français",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test d'exposition",
+  "note": "Les résines et les imprimantes diffèrent. Imprimez la pièce test une fois à chaque exposition de la série, puis gardez l'exposition qui donne les piliers fins les plus nets et les trous ouverts.",
+  "part": "Placez la pièce test sur le plateau",
+  "part.name": "Pièce test d'exposition",
+  "ladder": "Enregistrer la série d'expositions ({n} fichiers)",
+  "ladder.made": "{n} fichiers enregistrés pour {list} s. Imprimez chacun avec la même résine et comparez les résultats.",
+  "ladder.nopart": "Placez d'abord la pièce test sur le plateau.",
+  "ladder.failed": "La série n'a pas pu être créée. {why}",
+  "ladder.busy": "Création {i} sur {n}…"
+}

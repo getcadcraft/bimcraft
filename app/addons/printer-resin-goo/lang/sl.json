@@ -1,0 +1,12 @@
+{
+  "@locale": "sl",
+  "@name": "Slovenščina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Vrstni red bajtov",
+  "opt.byteOrder.big": "Big-endian (običajno)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolna vsota",
+  "opt.checksum.negsum": "Negirana vsota",
+  "opt.checksum.sum": "Navadna vsota"
+}

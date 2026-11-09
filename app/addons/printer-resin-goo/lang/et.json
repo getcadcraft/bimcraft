@@ -1,0 +1,12 @@
+{
+  "@locale": "et",
+  "@name": "Eesti",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Baidi järjestus",
+  "opt.byteOrder.big": "Big-endian (tavaline)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrollsumma",
+  "opt.checksum.negsum": "Negeeritud summa",
+  "opt.checksum.sum": "Lihtsumma"
+}

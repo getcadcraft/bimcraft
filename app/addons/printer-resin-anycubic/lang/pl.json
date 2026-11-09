@@ -1,0 +1,21 @@
+{
+  "@locale": "pl",
+  "@name": "Polski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX i PWS",
+  "opt.flip": "Odbij lustrzanie obraz",
+  "opt.flip.off": "Nie",
+  "opt.flip.on": "Tak, od lewej do prawej",
+  "opt.version": "Wersja pliku",
+  "opt.version.v1": "Wersja 1 (standardowa)",
+  "opt.version.v516": "Wersja 516",
+  "opt.aa": "Poziomy wygładzania krawędzi",
+  "opt.aa.1": "1 (brak)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flaga ustawień dla każdej warstwy",
+  "opt.perLayer.off": "Wyłączone",
+  "opt.perLayer.on": "Włączone"
+}

@@ -45,7 +45,7 @@ ok(FX.FIXTURES.wc.uhc === 6 && FX.FIXTURES.wc.dnMin === 100 && FX.FIXTURES.lav.u
 ok(FX.FIXTURES.wc.dfu === 3 && FX.FIXTURES.wc.trapIn === 3 && FX.FIXTURES.lav.dfu === 1 && FX.FIXTURES.sink.dfu === 2 && FX.FIXTURES.shower.dfu === 2 && FX.FIXTURES.laundry.dfu === 2, 'IPC Table 709.1: water closet (1.6 gpf, private) 3 DFU on 3 in., lavatory 1, sink, shower and laundry tray 2');
 
 console.log('== the starter fixtures (family-starters.js)');
-ok(FS.STARTER_FIXTURES.length === 5 && FS.STARTER_FIXTURES.every((k) => FS.STARTER_KEYS.includes(k)), 'five starter fixtures, among the starter keys');
+ok(FS.STARTER_FIXTURES.length === 6 && FS.STARTER_FIXTURES.every((k) => FS.STARTER_KEYS.includes(k)), 'six starter fixtures (a bath tub joined in 0.8 EG.60), among the starter keys');
 for (const key of FS.STARTER_FIXTURES) {
   const r = FM.readFamily(FS.starterRecipe(key));
   const fam = r.family, ev = r.ok ? FM.evaluateFamily(fam, {}) : null;
@@ -76,14 +76,14 @@ const w0 = new ModelWriter(WebIFC, ed.api, ed.mid);
 ok(FS.STARTER_FIXTURES.every((k) => FO.unhostedFamilies(w0).some((f) => f.key === k && f.starter)), 'Place family offers the five fixtures');
 FS.STARTER_FIXTURES.forEach((family, i) => ed.modelChange(FO.placeFamily({ storey: L1, family, x: i * 1500, y: 0 }), { label: 'Place' }));
 const txt = dec(ed.save());
-ok(count(txt, /IFCSANITARYTERMINAL\(/g) === 5 && /IFCSANITARYTERMINALTYPE\([^;]*\.TOILETPAN\.\)/.test(txt) && /IFCSANITARYTERMINALTYPE\([^;]*\.WASHHANDBASIN\.\)/.test(txt) && /IFCSANITARYTERMINALTYPE\([^;]*\.SHOWER\.\)/.test(txt),
-  'five IfcSanitaryTerminal; their types say what they are (TOILETPAN, WASHHANDBASIN, SINK, SHOWER)');
-ok(count(txt, /IFCDISTRIBUTIONPORT\(/g) === 10 && count(txt, /IFCLABEL\('wc'\)/g) === 2, 'ten ports, each with the fixture it belongs to (the water closet\'s two say "wc")');
+ok(count(txt, /IFCSANITARYTERMINAL\(/g) === 6 && /IFCSANITARYTERMINALTYPE\([^;]*\.TOILETPAN\.\)/.test(txt) && /IFCSANITARYTERMINALTYPE\([^;]*\.WASHHANDBASIN\.\)/.test(txt) && /IFCSANITARYTERMINALTYPE\([^;]*\.SHOWER\.\)/.test(txt) && /IFCSANITARYTERMINALTYPE\([^;]*\.BATH\.\)/.test(txt),
+  'six IfcSanitaryTerminal; their types say what they are (TOILETPAN, WASHHANDBASIN, SINK, SHOWER, BATH)');
+ok(count(txt, /IFCDISTRIBUTIONPORT\(/g) === 12 && count(txt, /IFCLABEL\('wc'\)/g) === 2, 'twelve ports, each with the fixture it belongs to (the water closet\'s two say "wc")');
 const fx = M.readFixturePorts(new ModelWriter(WebIFC, ed.api, ed.mid));
-ok(fx.length === 10 && fx.filter((q) => q.system === 'san').map((q) => q.fixture).sort().join() === 'laundry,lav,shower,sink,wc', 'readFixturePorts gives each drain\'s fixture');
+ok(fx.length === 12 && fx.filter((q) => q.system === 'san').map((q) => q.fixture).sort().join() === 'bath,laundry,lav,shower,sink,wc', 'readFixturePorts gives each drain\'s fixture');
 const eng2 = await quiet(IfcModel.create)(WebIFC, null);
 const m2 = await quiet((b) => eng2.load(b))(ed.save());
-ok(m2.elements >= 5, 'the file opens again');
+ok(m2.elements >= 6, 'the file opens again');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

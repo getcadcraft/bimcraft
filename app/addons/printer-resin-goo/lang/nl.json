@@ -1,0 +1,12 @@
+{
+  "@locale": "nl",
+  "@name": "Nederlands",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Bytevolgorde",
+  "opt.byteOrder.big": "Big-endian (de gebruikelijke)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Controlesom",
+  "opt.checksum.negsum": "Negatieve som",
+  "opt.checksum.sum": "Gewone som"
+}

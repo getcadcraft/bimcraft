@@ -31,6 +31,8 @@ The plan cuts the level 4'-0" (1200 mm) above its floor, as a floor plan does. S
 
 The corners join by themselves: two walls meet at a mitre, a wall that ends on another one stops at its face (a T), and three or more walls at one point share the corner. Walls that cross are left as they are.
 
+A whole room at once: open {{ui:Shapes}} for a rectangle, a rotated rectangle, a polygon, arcs, walls on picked lines or round an outline (see [Wall shapes, split, offset, stretch and lock](topic:wall-tools)).
+
 ## Choose the drawing reference
 
 Choose **Centerline**, **Inside face** or **Outside face** before the first click. With a face selected, your clicks and typed lengths describe that face; BimCraft offsets the wall centerline by half the total thickness and joins consecutive corners. Choose **Outside on left** or **Outside on right** relative to the direction you draw. For a closed outline drawn counterclockwise, the outside is on the right; clockwise, on the left. With **Inside face** the wall's body goes to the outside side of your line; with **Outside face**, to the other side. Face drawing keeps your chosen outside side when you close the loop. On the centerline, walls that do not close a room take the outside side you chose; closing a room sets every wall's outside to the outside of the room by itself, whichever way you drew it.
@@ -85,6 +87,7 @@ The **Levels** panel lists every level with its elevation and height.
 
 - Type a new name, elevation or height and press {{key:Enter}}. Changing a level's height (or elevation) moves the levels above it by the same amount, and walls that run up to a level follow.
 - {{ui:Add a level on top}} adds a level above the top one, as tall as it.
+- {{ui:Add a level below}} adds a level under the lowest one (a basement), as tall as that one: its elevation is negative when the lowest level is at 0, and no other level moves. Undo takes it off again.
 - {{ui:Copy this level…}} draws what is on the level you are looking at again on another level, or on a new one on top: its walls with their doors and windows, floors and ceilings (not roofs). Walls that ran up to the level above run up to the level above the new one; rooms appear by themselves. One {{ui:Undo}} takes all of it back. If the other level already has walls, the copy is added to them.
 - {{ui:Units}} on the toolbar chooses the units (feet and inches, inches, decimal feet, millimeters, centimeters or meters) for everything the drawing tools show and read.
 

@@ -1,0 +1,14 @@
+{
+  "@locale": "et",
+  "@name": "Eesti",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Valotuse test",
+  "note": "Vaigud ja printerid erinevad. Prindi testdetail üks kord iga redeli valotusega ja jäta alles see valotus, millel on kõige teravamad õhukesed sambad ja avatud augud.",
+  "part": "Aseta testdetail printimisalusele",
+  "part.name": "Valotustesti detail",
+  "ladder": "Salvesta valotusredel ({n} faili)",
+  "ladder.made": "Salvestati {n} faili. Valotusajad (s): {list}. Prindi igaüks sama vaiguga ja võrdle.",
+  "ladder.nopart": "Aseta esmalt testdetail printimisalusele.",
+  "ladder.failed": "Redelit ei saanud luua. {why}",
+  "ladder.busy": "Koostan {i} / {n}…"
+}

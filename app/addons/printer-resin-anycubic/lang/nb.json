@@ -1,0 +1,21 @@
+{
+  "@locale": "nb",
+  "@name": "Norsk bokmål",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX og PWS",
+  "opt.flip": "Speil bildet",
+  "opt.flip.off": "Nei",
+  "opt.flip.on": "Ja, venstre til høyre",
+  "opt.version": "Filversjon",
+  "opt.version.v1": "Versjon 1 (vanlig)",
+  "opt.version.v516": "Versjon 516",
+  "opt.aa": "Nivåer for kantutjevning",
+  "opt.aa.1": "1 (ingen)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flagg for innstillinger per layer",
+  "opt.perLayer.off": "Av",
+  "opt.perLayer.on": "På"
+}

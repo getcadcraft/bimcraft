@@ -1,0 +1,12 @@
+{
+  "@locale": "so",
+  "@name": "Soomaali",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Kala-horaynta baytka",
+  "opt.byteOrder.big": "Big-endian (warbixinta caadiga ah)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Isku-darka diidan",
+  "opt.checksum.sum": "Isku-darka caadiga ah"
+}

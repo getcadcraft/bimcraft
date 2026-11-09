@@ -1,0 +1,8 @@
+{
+  "@locale": "be",
+  "@name": "Беларуская",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Даныя і крыніцы",
+  "data.nex": "NASA NEX-GDDP-CMIP6, пераінтэрпаляваныя вынікі мадэлявання CMIP6 (CC BY 4.0 для кожнай мадэлі); глабальны ўзровень мора: IPCC AR6",
+  "data.sample": "Пробны набор: тры месцы, адна мадэль, пяць гадоў на кожны перыяд. Не для праектавання."
+}

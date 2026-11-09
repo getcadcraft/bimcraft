@@ -388,6 +388,15 @@ export function changeStair(guid, ch) {
     return { id: st.id, ids: [st.id] };
   });
 }
+/** Move a stair by (dx, dy) in its level's plan, inside a writer that is already running (model-modify.js): start point shifts, geometry is made again. */
+export function moveStairIn(w, guid, dx, dy) {
+  const st = readStairs(w).find((x) => x.guid === guid);
+  if (!st) fail('model.err.gone');
+  const nx = { ...st, start: [st.start[0] + dx, st.start[1] + dy] };
+  w.upsertPset(st.id, STAIR_PSET, rowsOf(w, nx));
+  writeStair(w, { ...nx, key: '' });
+  return st.id;
+}
 export function removeStairs(guids) {
   return op((w) => {
     const list = readStairs(w).filter((x) => guids.includes(x.guid));

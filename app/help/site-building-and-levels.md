@@ -26,7 +26,7 @@ With {{ui:Site}} on, type the building's **X** and **Y** on the site and its **T
 
 ## Add levels
 
-In the {{ui:Levels}} panel, {{ui:Add a level on top}} adds one. {{ui:Add levels…}} adds several at once:
+In the {{ui:Levels}} panel, {{ui:Add a level on top}} adds one, {{ui:Add a level below}} adds one under the lowest (a basement, at a negative elevation). {{ui:Add levels…}} adds several at once:
 
 - **At these heights**: type heights above the lowest level, separated by commas (for example `12', 24', 36'`). Heights that already have a level are skipped.
 - **Split the building's height**: type the building's height and the number of levels. The levels you have move to their new heights from the lowest up, missing ones are added, and any above them stay where they are.

@@ -1,0 +1,21 @@
+{
+  "@locale": "ps",
+  "@name": "پښتو",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "انځور منعکس کول",
+  "opt.flip.off": "نه",
+  "opt.flip.on": "هو، له کیڼ څخه ښي خوا ته",
+  "opt.version": "د فایل نسخه",
+  "opt.version.v1": "نسخه 1 (عادي)",
+  "opt.version.v516": "نسخه 516",
+  "opt.aa": "د کنارو نرموالي کچې",
+  "opt.aa.1": "1 (هیڅ)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "د هرې لایې امستنو نښه",
+  "opt.perLayer.off": "بند",
+  "opt.perLayer.on": "چالان"
+}

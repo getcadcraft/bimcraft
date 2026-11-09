@@ -1,0 +1,14 @@
+{
+  "@locale": "lt",
+  "@name": "Lietuvių",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Ekspozicijos bandymas",
+  "note": "Dervos ir spausdintuvai skiriasi. Kiekvienai ekspozicijai iš serijos atspausdinkite bandomąją detalę kartą ir pasirinkite tą ekspoziciją, kuri duoda ryškiausias plonas kolonėles ir atviras skyles.",
+  "part": "Padėkite bandomąją detalę ant stalo",
+  "part.name": "Ekspozicijos bandomoji detalė",
+  "ladder": "Įrašyti ekspozicijos seriją (failai: {n})",
+  "ladder.made": "Įrašyta failų: {n}. Ekspozicijos trukmė, s: {list}. Kiekvieną atspausdinkite su ta pačia derva ir palyginkite.",
+  "ladder.nopart": "Pirma padėkite bandomąją detalę ant stalo.",
+  "ladder.failed": "Serijos sukurti nepavyko. {why}",
+  "ladder.busy": "Kuriama {i} iš {n}…"
+}

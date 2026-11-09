@@ -49,8 +49,11 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         <i class="bi bi-folder2-open" aria-hidden="true"></i>
         <span class="bc-drop-main"><?= Lang::e('ui.drop.main') ?></span>
         <span class="bc-drop-sub"><?= Lang::e('ui.drop.sub') ?></span>
-        <input type="file" id="bc-file" class="visually-hidden" accept=".ifc,.rvt,.rfa,.rte,.rft,.dwg,.dxf,.step,.stp,.obj,.pln,.pla,.tpl,.bpn,.ccbundle,.zip,.las,.laz,.xyz,.pts,.ply,.pcd,.ptx,.e57" data-file>
+        <input type="file" id="bc-file" class="visually-hidden" accept=".ifc,.rvt,.rfa,.rte,.rft,.dwg,.dxf,.step,.stp,.obj,.ifcx,.pln,.pla,.tpl,.bpn,.ccbundle,.zip,.las,.laz,.xyz,.pts,.ply,.pcd,.ptx,.e57" data-file>
       </label>
+      <?php /* IFC5 alpha (IFCX), a lab option (0.9 SU.882): shown only while Settings › BimCraft turns it on; bimcraft.js openIfcx → ifcx-bimcraft.js on cc-ifcx (./ifcx/). */ ?>
+      <button type="button" class="btn-line bc-folder-btn" data-ifcx-open hidden title="<?= Lang::e('ifcx.open.title') ?>"><i class="bi bi-file-earmark-code" aria-hidden="true"></i> <?= Lang::e('ifcx.open.button') ?></button>
+      <input type="file" class="visually-hidden" accept=".ifcx,.json" multiple tabindex="-1" aria-hidden="true" data-ifcx-input>
       <button type="button" class="btn-line bc-folder-btn" data-pick-folder><i class="bi bi-folder-symlink" aria-hidden="true"></i> <?= Lang::e('ui.open.folder') ?></button>
       <?php /* The Documents panel (0.8 SU.1058, vault-08): bimcraft.js openVault, vault/vault-app.js */ ?>
       <button type="button" class="btn-line bc-folder-btn" data-vault-open><i class="bi bi-folder2-open" aria-hidden="true"></i> <?= Lang::e('sx.vault.title') ?></button>
@@ -75,6 +78,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
       <div class="bc-change-actions">
         <button type="button" class="btn-line btn-sm-cc" data-undo disabled title="<?= Lang::e('ui.undo.title') ?>"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> <?= Lang::e('ui.undo') ?></button>
         <button type="button" class="btn-plot btn-sm-cc" data-save disabled title="<?= Lang::e('ui.save.title') ?>"><i class="bi bi-download" aria-hidden="true"></i><span> <?= Lang::e('ui.save') ?></span></button>
+        <?php /* 0.9 D8.12-D (bim-views-09): Save as template (template-ui.js) */ ?>
+        <button type="button" class="btn-line btn-sm-cc" data-tpl-save title="<?= Lang::e('tpl.save.button.title') ?>"><i class="bi bi-file-earmark-ruled" aria-hidden="true"></i> <?= Lang::e('tpl.save.button') ?></button>
       </div>
       <p class="bc-note"><?= Lang::e('ui.save.note') ?></p>
     </section>
@@ -356,6 +361,10 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <button type="button" class="bc-tool" data-gltf-export title="<?= Lang::e('gltf.title') ?>"><i class="bi bi-file-earmark-code" aria-hidden="true"></i><span><?= Lang::e('gltf.button') ?></span></button>
           <?php /* Export › USD (0.7 XF.8, session usd): bimcraft.js "exportUsd" → usd-bimcraft.js on cc-usd (./usd/, lib/usd synced). */ ?>
           <button type="button" class="bc-tool" data-usd-export title="<?= Lang::e('usd.export.title') ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span><?= Lang::e('usd.export.button') ?></span></button>
+          <?php /* Export › IFC5 alpha (0.9 SU.882, a lab option, hidden unless Settings › BimCraft turns it on): bimcraft.js "exportIfcx" → ifcx-bimcraft.js bimIfcx on cc-ifcx. */ ?>
+          <button type="button" class="bc-tool" data-ifcx-export hidden title="<?= Lang::e('ifcx.export.title') ?>"><i class="bi bi-file-earmark-code" aria-hidden="true"></i><span><?= Lang::e('ifcx.export.button') ?></span></button>
+          <?php /* Export › Collada (0.9 SU.1125, session bim-dae-09): bimcraft.js "exportDae" → dae-bim.js on cc-collada (collada-write.js, lib/collada synced). */ ?>
+          <button type="button" class="bc-tool" data-dae-export title="<?= Lang::e('dae.title') ?>"><i class="bi bi-globe-americas" aria-hidden="true"></i><span><?= Lang::e('dae.button') ?></span></button>
           <?php /* Paint materials (0.5 RC.7): bimcraft.js "Paint materials" → paint-ui-bim.js + paint-bim.js. */ ?>
           <button type="button" class="bc-tool" data-paint-open="paint" aria-pressed="false" title="<?= Lang::e('ui.paint.title') ?>"><i class="bi bi-paint-bucket" aria-hidden="true"></i><span><?= Lang::e('ui.paint') ?></span></button>
           <?php /* Views (0.5 RC.7): bimcraft.js "Views" → views-ui-bim.js + views-bim.js (saved cameras and walkthroughs in the IFC). */ ?>
@@ -423,13 +432,13 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
       <div class="bc-placebar-row">
         <label><?= Lang::e('qto.sp.storey') ?> <select class="select-cc" data-place-storey></select></label>
         <label><?= Lang::e('ui.place.xy') ?> <input type="text" class="bc-input" data-place-xy inputmode="decimal" placeholder="1200, 3400" size="14"></label>
-        <button type="button" class="btn-line btn-sm-cc" data-place-typed><?= Lang::e('ui.place.here') ?></button>
-        <button type="button" class="bc-tool" data-place-snap aria-pressed="false" title="<?= Lang::e('ui.place.snap.title') ?>"><i class="bi bi-magnet" aria-hidden="true"></i><span><?= Lang::e('ui.place.snap') ?></span></button>
+        <button type="button" class="btn-plot btn-sm-cc" data-place-typed title="<?= Lang::e('ui.place.here.title') ?>"><?= Lang::e('ui.place.here') ?></button>
+        <button type="button" class="btn-line btn-sm-cc" data-place-snap aria-pressed="false" title="<?= Lang::e('ui.place.snap.title') ?>"><i class="bi bi-magnet" aria-hidden="true"></i><span><?= Lang::e('ui.place.snap') ?></span></button>
+        <button type="button" class="btn-line btn-sm-cc" data-place-turn title="<?= Lang::e('place.turn.title') ?>"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span><?= Lang::e('place.turn') ?></span></button>
         <?php /* 0.6 DC.117 (bim-views_PART_2): on the floor, or at the ceiling (a light: its top at the ceiling's underside) */ ?>
         <label><?= Lang::e('ui.place.mount') ?> <select class="select-cc" data-place-mount><option value="floor"><?= Lang::e('ui.place.mount.floor') ?></option><option value="ceiling"><?= Lang::e('ui.place.mount.ceiling') ?></option></select></label>
+        <button type="button" class="btn-line btn-sm-cc btn-outline-danger bc-place-stop" data-place-stop title="<?= Lang::e('ui.place.stop.title') ?>"><?= Lang::e('ui.place.stop') ?></button>
         <span class="bc-placebar-xy" data-place-at aria-live="polite"></span>
-        <button type="button" class="bc-tool" data-place-turn title="<?= Lang::e('place.turn.title') ?>"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i><span><?= Lang::e('place.turn') ?></span></button>
-        <button type="button" class="btn-line btn-sm-cc" data-place-stop><?= Lang::e('ui.place.stop') ?></button>
       </div>
     </div>
 
@@ -459,6 +468,12 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
               <?php /* dimensions, print, sheets, takeoff, fit: the plan's own (the toolbox layout moves this span to its Document slot) */ ?>
               <span class="bc-mb-right">
                 <button type="button" class="bc-tool" data-model-dims aria-pressed="true" title="<?= Lang::e('model.dims.title') ?>"><i class="bi bi-arrows" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('model.dims') ?></span></button>
+                <?php /* 0.9 D3 / spec test 9 (walls-09): what the plan's wall dimensions and the Length field measure from (the same setting) */ ?>
+                <label title="<?= Lang::e('walls.from.title') ?>"><span class="visually-hidden"><?= Lang::e('walls.from') ?></span><select class="bc-mb-select" data-model-from aria-label="<?= Lang::e('walls.from') ?>">
+                  <option value="center"><?= Lang::e('model.from.center') ?></option>
+                  <option value="inside"><?= Lang::e('model.from.inside') ?></option>
+                  <option value="outside"><?= Lang::e('model.from.outside') ?></option>
+                </select></label>
                 <button type="button" class="bc-tool" data-model-print title="<?= Lang::e('model.print.title') ?>"><i class="bi bi-printer" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('model.print') ?></span></button>
                 <button type="button" class="bc-tool" data-res-sheetsopen title="<?= Lang::e('res.sh.open.title') ?>"><i class="bi bi-files" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('res.sh.title') ?></span></button>
                 <button type="button" class="bc-tool" data-res-takeoff data-handoff-url="<?= e($__takeoffUrl) ?>" title="<?= Lang::e('res.to.title') ?>"><i class="bi bi-calculator" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('res.to.button') ?></span></button>
@@ -471,7 +486,22 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
               <span class="bc-tool-label" aria-hidden="true"><?= Lang::e('model.bar.group.draw') ?></span>
               <div class="bc-tool-row">
                 <button type="button" class="bc-tool" data-mtool="select" aria-pressed="true" title="<?= Lang::e('model.tool.select.title') ?>"><i class="bi bi-cursor" aria-hidden="true"></i><span><?= Lang::e('model.tool.select') ?></span></button>
+                <?php /* Measure on the plan (0.9 D9.3, model-measure-ui.js): temporary, never saved. */ ?>
+                <button type="button" class="bc-tool" data-mtool="pmeasure" aria-pressed="false" title="<?= Lang::e('model.tool.pmeasure.title') ?>"><i class="bi bi-rulers" aria-hidden="true"></i><span><?= Lang::e('model.tool.pmeasure') ?></span></button>
                 <button type="button" class="bc-tool" data-mtool="wall" aria-pressed="false" title="<?= Lang::e('model.tool.wall.title') ?>"><i class="bi bi-bricks" aria-hidden="true"></i><span><?= Lang::e('model.tool.wall') ?></span></button>
+                <?php /* 0.9 WT.2 (walls-09): the wall shapes as tools with the CadCraft icons (wall-tools-ui.js); the Wall row's Shape list holds the same */ ?>
+                <details class="bc-mb-more" data-wall-shapes>
+                  <summary class="bc-tool" title="<?= Lang::e('walls.shapes.title') ?>"><i class="bi bi-bounding-box-circles" aria-hidden="true" data-ccic="wallrect"></i><span><?= Lang::e('walls.shapes') ?></span></summary>
+                  <div class="bc-mb-menu" role="group" aria-label="<?= Lang::e('walls.shapes') ?>">
+                    <button type="button" class="bc-tool" data-mtool="wrect" aria-pressed="false" title="<?= Lang::e('walls.shape.rect') ?>"><i class="bi bi-square" aria-hidden="true" data-ccic="wallrect"></i><span><?= Lang::e('walls.shape.rect') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wrectrot" aria-pressed="false" title="<?= Lang::e('walls.shape.rectrot') ?>"><i class="bi bi-diamond" aria-hidden="true" data-ccic="wallrectrot"></i><span><?= Lang::e('walls.shape.rectrot') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wpoly" aria-pressed="false" title="<?= Lang::e('walls.shape.poly') ?>"><i class="bi bi-hexagon" aria-hidden="true" data-ccic="wallpoly"></i><span><?= Lang::e('walls.shape.poly') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="warcc" aria-pressed="false" title="<?= Lang::e('walls.shape.arcc') ?>"><i class="bi bi-circle-half" aria-hidden="true" data-ccic="wallarcc"></i><span><?= Lang::e('walls.shape.arcc') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wtan" aria-pressed="false" title="<?= Lang::e('walls.shape.tan') ?>"><i class="bi bi-bezier" aria-hidden="true" data-ccic="walltan"></i><span><?= Lang::e('walls.shape.tan') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wpick" aria-pressed="false" title="<?= Lang::e('walls.shape.pick') ?>"><i class="bi bi-cursor" aria-hidden="true" data-ccic="wallpick"></i><span><?= Lang::e('walls.shape.pick') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wtrace" aria-pressed="false" title="<?= Lang::e('walls.shape.trace') ?>"><i class="bi bi-magic" aria-hidden="true" data-ccic="walltrace"></i><span><?= Lang::e('walls.shape.trace') ?></span></button>
+                  </div>
+                </details>
                 <button type="button" class="bc-tool" data-mtool="door" aria-pressed="false" title="<?= Lang::e('model.tool.door.title') ?>"><i class="bi bi-door-open" aria-hidden="true"></i><span><?= Lang::e('model.tool.door') ?></span></button>
                 <button type="button" class="bc-tool" data-mtool="window" aria-pressed="false" title="<?= Lang::e('model.tool.window.title') ?>"><i class="bi bi-window" aria-hidden="true"></i><span><?= Lang::e('model.tool.window') ?></span></button>
                 <button type="button" class="bc-tool" data-mtool="floor" aria-pressed="false" title="<?= Lang::e('model.tool.floor.title') ?>"><i class="bi bi-layers" aria-hidden="true"></i><span><?= Lang::e('model.tool.floor') ?></span></button>
@@ -547,6 +577,18 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                     <button type="button" class="bc-tool" data-mtool="corner" aria-pressed="false" title="<?= Lang::e('model.tool.corner.title') ?>"><i class="bi bi-bounding-box-circles" aria-hidden="true"></i><span><?= Lang::e('model.tool.corner') ?></span></button>
                   </div>
                 </details>
+                <?php /* Walls (0.9 WT.3, WT.4, walls-09): wall-tools-ui.js through model-ui.js extend(); icons from the CadCraft set when it is loaded. */ ?>
+                <details class="bc-mb-more" data-wall-tools>
+                  <summary class="bc-tool" title="<?= Lang::e('walls.tools.title') ?>"><i class="bi bi-bricks" aria-hidden="true" data-ccic="wallsplit"></i><span><?= Lang::e('walls.tools') ?></span></summary>
+                  <div class="bc-mb-menu" role="group" aria-label="<?= Lang::e('walls.tools') ?>">
+                    <button type="button" class="bc-tool" data-mtool="wsplit" aria-pressed="false" title="<?= Lang::e('walls.tool.split.title') ?>"><i class="bi bi-scissors" aria-hidden="true" data-ccic="wallsplit"></i><span><?= Lang::e('walls.tool.split') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wdelseg" aria-pressed="false" title="<?= Lang::e('walls.tool.delseg.title') ?>"><i class="bi bi-eraser" aria-hidden="true" data-ccic="walldelseg"></i><span><?= Lang::e('walls.tool.delseg') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wrejoin" aria-pressed="false" title="<?= Lang::e('walls.tool.rejoin.title') ?>"><i class="bi bi-link" aria-hidden="true" data-ccic="walljoin"></i><span><?= Lang::e('walls.tool.rejoin') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="woffset" aria-pressed="false" title="<?= Lang::e('walls.tool.offset.title') ?>"><i class="bi bi-distribute-vertical" aria-hidden="true" data-ccic="walloffset"></i><span><?= Lang::e('walls.tool.offset') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wbox" aria-pressed="false" title="<?= Lang::e('walls.tool.box.title') ?>"><i class="bi bi-bounding-box" aria-hidden="true" data-ccic="wallbox"></i><span><?= Lang::e('walls.tool.box') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="walign" aria-pressed="false" title="<?= Lang::e('walls.tool.align.title') ?>"><i class="bi bi-lock" aria-hidden="true" data-ccic="wallalignlock"></i><span><?= Lang::e('walls.tool.align') ?></span></button>
+                  </div>
+                </details>
                 <?php /* Annotate (0.6 DC.117 (c)(d), bim-views_PART_2): a callout of this view (views-ui.js) and drafting drawn in it (drafting-ui.js). */ ?>
                 <details class="bc-mb-more" data-annot-tools>
                   <summary class="bc-tool" title="<?= Lang::e('model.tools.annot.title') ?>"><i class="bi bi-pencil-square" aria-hidden="true"></i><span><?= Lang::e('model.tools.annot') ?></span></summary>
@@ -586,6 +628,14 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <label><span class="visually-hidden"><?= Lang::e('comforts.wall.shape') ?></span><select class="bc-mb-select" data-model-wallshape aria-label="<?= Lang::e('comforts.wall.shape') ?>">
             <option value="straight"><?= Lang::e('comforts.wall.shape.straight') ?></option>
             <option value="arc"><?= Lang::e('comforts.wall.shape.arc') ?></option>
+            <?php /* 0.9 WT.2 (walls-09): the Draw recipes of the wall tool spec (wall-tools-ui.js; lib/walls/draw.js), each its own tool */ ?>
+            <option value="rect"><?= Lang::e('walls.shape.rect') ?></option>
+            <option value="rectrot"><?= Lang::e('walls.shape.rectrot') ?></option>
+            <option value="poly"><?= Lang::e('walls.shape.poly') ?></option>
+            <option value="arcc"><?= Lang::e('walls.shape.arcc') ?></option>
+            <option value="tan"><?= Lang::e('walls.shape.tan') ?></option>
+            <option value="pick"><?= Lang::e('walls.shape.pick') ?></option>
+            <option value="trace"><?= Lang::e('walls.shape.trace') ?></option>
           </select></label>
           <label><span class="visually-hidden"><?= Lang::e('model.wall.reference') ?></span><select class="bc-mb-select" data-model-wallref aria-label="<?= Lang::e('model.wall.reference') ?>">
             <option value="center"><?= Lang::e('model.wall.ref.center') ?></option>
@@ -731,8 +781,12 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         <div class="bc-modelbar-row" data-mopts="grid" hidden>
           <button type="button" class="btn-line btn-sm-cc" data-grid-place><?= Lang::e('model.grid.place') ?></button>
           <label><span><?= Lang::e('model.grid.bubbles') ?></span> <select class="bc-mb-select" data-grid-bubbles></select></label>
+          <?php /* 0.9 D9.2: the grid's spacings and overall size on every plan (CadCraft_Grid Dims). */ ?>
+          <label title="<?= Lang::e('model.grid.dims.title') ?>"><input type="checkbox" data-grid-dims> <span><?= Lang::e('model.grid.dims') ?></span></label>
           <span data-grid-picked hidden>
             <label><span><?= Lang::e('model.grid.tag') ?></span> <input type="text" class="bc-input bc-num" data-grid-tag size="5" maxlength="12"></label>
+            <?php /* 0.9 WT.7 (walls-09): move the picked line square to itself; the walls locked to it follow */ ?>
+            <label title="<?= Lang::e('walls.gridmove.title') ?>"><span><?= Lang::e('walls.gridmove') ?></span> <input type="text" class="bc-input bc-num" data-grid-move size="7"></label>
             <button type="button" class="btn-line btn-sm-cc" data-grid-del><?= Lang::e('model.grid.del') ?></button>
           </span>
         </div>

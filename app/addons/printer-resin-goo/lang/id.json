@@ -1,0 +1,12 @@
+{
+  "@locale": "id",
+  "@name": "Bahasa Indonesia",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Urutan byte",
+  "opt.byteOrder.big": "Big-endian (yang biasa dilaporkan)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Jumlah negatif",
+  "opt.checksum.sum": "Jumlah biasa"
+}

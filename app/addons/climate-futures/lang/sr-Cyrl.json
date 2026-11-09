@@ -1,0 +1,8 @@
+{
+  "@locale": "sr-Cyrl",
+  "@name": "Српски (ћирилица)",
+  "@note": "Draft: made from sr-Latn by tools/lang/sr-cyrl.mjs (transliteration); edit sr-Latn, not this file",
+  "data.sources": "Подаци и извори",
+  "data.nex": "NASA NEX-GDDP-CMIP6, смањена резолуција резултата CMIP6 модела (CC BY 4.0 по моделу); глобални ниво мора: IPCC AR6",
+  "data.sample": "Пробни пакет: три локације, један модел, пет година по периоду. Није за пројектовање."
+}

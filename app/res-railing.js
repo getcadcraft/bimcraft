@@ -128,6 +128,13 @@ export function changeRailing(guid, ch) {
     return { id: r.id, ids: [r.id] };
   });
 }
+/** Move a railing by (dx, dy) inside a running writer (model-modify.js). */
+export function moveRailingIn(w, guid, dx, dy) {
+  const r = readRailings(w).find((x) => x.guid === guid);
+  if (!r) fail('model.err.gone');
+  writeRailing(w, { ...r, points: r.points.map(([x, y]) => [x + dx, y + dy]) });
+  return r.id;
+}
 export function removeRailings(guids) {
   return op((w) => {
     const list = readRailings(w).filter((x) => guids.includes(x.guid));

@@ -1,0 +1,21 @@
+{
+  "@locale": "km",
+  "@name": "ខ្មែរ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX និង PWS",
+  "opt.flip": "ឆ្លុះរូបភាព",
+  "opt.flip.off": "ទេ",
+  "opt.flip.on": "បាទ ពីឆ្វេងទៅស្ដាំ",
+  "opt.version": "កំណែឯកសារ",
+  "opt.version.v1": "កំណែ 1 (ធម្មតា)",
+  "opt.version.v516": "កំណែ 516",
+  "opt.aa": "កម្រិតធូរស្រួលគែម",
+  "opt.aa.1": "1 (គ្មាន)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ទង់ការកំណត់តាមស្រទាប់",
+  "opt.perLayer.off": "បិទ",
+  "opt.perLayer.on": "បើក"
+}

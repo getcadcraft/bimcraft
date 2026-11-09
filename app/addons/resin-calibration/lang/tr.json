@@ -1,0 +1,14 @@
+{
+  "@locale": "tr",
+  "@name": "Türkçe",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Pozlama testi",
+  "note": "Reçineler ve yazıcılar farklıdır. Test parçasını merdivendeki her pozlama değerinde bir kez yazdırın ve en keskin ince sütunları ve açık delikleri veren pozlamayı saklayın.",
+  "part": "Test parçasını tablaya yerleştirin",
+  "part.name": "Pozlama test parçası",
+  "ladder": "Pozlama merdivenini kaydet ({n} dosya)",
+  "ladder.made": "{list} sn için {n} dosya kaydedildi. Her birini aynı reçineyle yazdırıp karşılaştırın.",
+  "ladder.nopart": "Önce test parçasını tablaya yerleştirin.",
+  "ladder.failed": "Merdiven oluşturulamadı. {why}",
+  "ladder.busy": "{n} içinden {i}. oluşturuluyor…"
+}

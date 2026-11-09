@@ -1,0 +1,14 @@
+{
+  "@locale": "zu",
+  "@name": "isiZulu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Isivivinyo sokuvezwa",
+  "note": "Iresini namaphrinta ahlukile. Phrinta ingxenye yokuhlola kanye ngokuvezwa ngakunye ohlwini bese ugcina ukuvezwa okunezinsika ezincane ezibukhali nezimbobo ezivulekile.",
+  "part": "Beka ingxenye yokuhlola ebhedini",
+  "part.name": "Ingxenye yokuhlola yokuvezwa",
+  "ladder": "Londoloza uhlu lokuvezwa: {n} amafayela",
+  "ladder.made": "Alondoloziwe amafayela {n} ezikhathini: {list} s. Phrinta ngalinye ngeresini efanayo uqhathanise.",
+  "ladder.nopart": "Beka kuqala ingxenye yokuhlola ebhedini.",
+  "ladder.failed": "Uhlu lokuvezwa aluzange lukwazi ukwenziwa. {why}",
+  "ladder.busy": "Kuyenziwa: {i}/{n}…"
+}

@@ -1,0 +1,12 @@
+{
+  "@locale": "bs",
+  "@name": "Bosanski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Redoslijed bajtova",
+  "opt.byteOrder.big": "Big-endian (uobičajeno)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolni zbroj",
+  "opt.checksum.negsum": "Negirani zbir",
+  "opt.checksum.sum": "Obični zbir"
+}

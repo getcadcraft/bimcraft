@@ -1,0 +1,14 @@
+{
+  "@locale": "zh-Hans",
+  "@name": "简体中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "曝光测试",
+  "note": "不同的树脂和打印机效果不同。请在阶梯中的每个曝光值下各打印一次测试件，保留细小立柱和通孔最清晰的那个曝光值。",
+  "part": "将测试件放到打印平台上",
+  "part.name": "曝光测试件",
+  "ladder": "保存曝光阶梯（{n}个文件）",
+  "ladder.made": "已为{list}秒保存{n}个文件。用同一种树脂逐一打印并比较。",
+  "ladder.nopart": "先将测试件放到打印平台上。",
+  "ladder.failed": "无法制作曝光阶梯。{why}",
+  "ladder.busy": "正在制作第{i}个，共{n}个……"
+}

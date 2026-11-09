@@ -1,0 +1,8 @@
+{
+  "@locale": "fi",
+  "@name": "Suomi",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data ja lähteet",
+  "data.nex": "NASA NEX-GDDP-CMIP6, skaalattu CMIP6-mallidata (CC BY 4.0 mallikohtaisesti); globaali merenpinnan korkeus: IPCC AR6",
+  "data.sample": "Näytepaketti: kolme paikkaa, yksi malli, viisi vuotta jaksoa kohden. Ei suunnitteluun."
+}

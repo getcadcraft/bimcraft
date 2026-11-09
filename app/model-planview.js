@@ -293,7 +293,10 @@ export class PlanView {
       g.fillStyle = sel(c.key) ? action : poche; g.globalAlpha = sel(c.key) ? 0.35 : 0.8;
       if (c.loops?.length) { g.beginPath(); for (const l of c.loops) { for (let i = 0; i < l.length; i += 2) { const s = S([l[i], l[i + 1]]); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); } g.closePath(); } g.fill('evenodd'); }
       g.globalAlpha = 1;
-      g.strokeStyle = sel(c.key) || hov(c.key) ? action : ink; g.lineWidth = 1.5; segs(c.segs);
+      // 0.9 D8.12-B: a view's pen override on a cut element (any category): its weight, line and colour
+      g.strokeStyle = sel(c.key) || hov(c.key) ? action : (c.pen?.color && C[c.pen.color]) || ink; g.lineWidth = c.pen?.w || 1.5;
+      if (c.pen?.dash && c.pen.dash !== 'solid') g.setLineDash(c.pen.dash === 'dash' ? [8, 4] : [2, 3]);
+      segs(c.segs); g.setLineDash([]);
     }
     // 0.7 BIM-MLWALL: walls of other levels that run up through this one: lighter, never picked (edited on their own level)
     for (const w of this.scene.through || []) {
@@ -346,7 +349,7 @@ export class PlanView {
     this.drawDrafting(g, C, S, sel, hov);   // 0.6 DC.117 (d)
     // dimensions
     g.font = '600 11px system-ui, sans-serif';
-    for (const d of this.scene.dims || []) this.drawDim(g, d, d.key && (this.selection.has(d.key) || this.hover === d.key) ? action : ink2, S);
+    for (const d of this.scene.dims || []) this.drawDim(g, d, d.key && (this.selection.has(d.key) || this.hover === d.key) ? action : (d.pen?.color && C[d.pen.color]) || ink2, S);   // 0.9 D8.12-B: a dimension pen's colour
     // room labels on top
     g.textAlign = 'center'; g.textBaseline = 'middle';
     for (const r of this.scene.rooms || []) {
@@ -365,11 +368,13 @@ export class PlanView {
     if (!list.length) return;
     const ink = C['--ink'] || '#111', action = C['--action'] || '#2563eb';
     for (const d of list) {
-      const col = sel(d.key) || hov(d.key) ? action : ink;
+      const col = sel(d.key) || hov(d.key) ? action : (d.pen?.color && C[d.pen.color]) || ink;   // 0.9 D8.12-B: a drafting pen
       if (d.solid && d.rings) { g.beginPath(); for (const r of d.rings) r.forEach((q, i) => { const s = S(q); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); g.closePath(); g.fillStyle = col; g.globalAlpha = 0.35; g.fill('evenodd'); g.globalAlpha = 1; }
       if (d.segs?.length) { g.strokeStyle = col; g.lineWidth = 0.75; g.beginPath(); const a = d.segs; for (let i = 0; i < a.length; i += 4) { const p = S([a[i], a[i + 1]]), q = S([a[i + 2], a[i + 3]]); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); } g.stroke(); }
-      g.strokeStyle = col; g.lineWidth = d.kind === 'hatch' ? 1 : (sel(d.key) ? 2 : 1.25);
+      g.strokeStyle = col; g.lineWidth = d.pen?.w || (d.kind === 'hatch' ? 1 : (sel(d.key) ? 2 : 1.25));
+      if (d.pen?.dash && d.pen.dash !== 'solid') g.setLineDash(d.pen.dash === 'dash' ? [8, 4] : [2, 3]);
       for (const l of d.lines || []) { g.beginPath(); l.forEach((q, i) => { const s = S(q); if (i) g.lineTo(s.x, s.y); else g.moveTo(s.x, s.y); }); if (d.closed) g.closePath(); g.stroke(); }
+      g.setLineDash([]);
     }
   }
   /** 0.6 DC.117: the crop region — the plan outside it veiled in the sheet's colour, a dashed frame on its edge. */

@@ -1,0 +1,21 @@
+{
+  "@locale": "is",
+  "@name": "Íslenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (í gegnum Bambu Connect)",
+  "step.orca": "Settu OrcaSlicer upp á þessari tölvu.",
+  "step.orca.link": "Sækja OrcaSlicer",
+  "step.connect": "Settu Bambu Connect upp á þessari tölvu.",
+  "step.connect.link": "Sækja Bambu Connect",
+  "step.bind": "Í Bambu Connect skaltu bæta P2S prentaranum þínum við. Gerðu þetta einu sinni.",
+  "step.send": "Ýttu á Senda í þrívíddarprentara. Skráin opnast í Bambu Connect: athugaðu hana þar og ræstu prentunina.",
+  "note": "Bambu Connect er eigið forrit Bambu Lab til að prenta úr öðrum hugbúnaði, og prentunin hefst þaðan.",
+  "confirm": "OrcaSlicer undirbjó þetta með P2S forstillingunum sínum: {grams} g, {layers} lög.",
+  "confirm.next": "Opna í Bambu Connect? Ekkert prentast fyrr en þú ræsir það þar.",
+  "done": "Sent til Bambu Connect. Athugaðu það þar og ræstu prentunina.",
+  "fail.orca": "OrcaSlicer fannst ekki á þessari tölvu. Settu það upp og reyndu aftur.",
+  "fail.slice": "OrcaSlicer gat ekki undirbúið þessa prentun. {why}",
+  "fail.nogcode": "Skráin frá OrcaSlicer innihélt enga prentun.",
+  "fail.bed": "Þetta passar ekki á prentflöt P2S.",
+  "fail.connect": "Bambu Connect opnaðist ekki. Settu það upp og reyndu aftur."
+}

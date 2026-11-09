@@ -1,0 +1,12 @@
+{
+  "@locale": "is",
+  "@name": "Íslenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Bætaröð",
+  "opt.byteOrder.big": "Big-endian (venjuleg skýrsla)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Gátsumma",
+  "opt.checksum.negsum": "Neikvæð summa",
+  "opt.checksum.sum": "Einföld summa"
+}

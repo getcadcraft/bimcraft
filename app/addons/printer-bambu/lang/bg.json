@@ -1,0 +1,21 @@
+{
+  "@locale": "bg",
+  "@name": "Български",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (през Bambu Connect)",
+  "step.orca": "Инсталирайте OrcaSlicer на този компютър.",
+  "step.orca.link": "Изтегляне на OrcaSlicer",
+  "step.connect": "Инсталирайте Bambu Connect на този компютър.",
+  "step.connect.link": "Изтегляне на Bambu Connect",
+  "step.bind": "В Bambu Connect добавете Вашия P2S. Направете това веднъж.",
+  "step.send": "Натиснете „Изпращане към 3D принтер“. Файлът се отваря в Bambu Connect: проверете го там и стартирайте печата.",
+  "note": "Bambu Connect е собствената програма на Bambu Lab за печат от други програми, а печатът се стартира оттам.",
+  "confirm": "OrcaSlicer подготви това с предварителните настройки за P2S: {grams} g, слоеве: {layers}.",
+  "confirm.next": "Да се отвори в Bambu Connect? Нищо не се печата, докато не го стартирате там.",
+  "done": "Изпратено към Bambu Connect. Проверете го там и стартирайте печата.",
+  "fail.orca": "OrcaSlicer не е открит на този компютър. Инсталирайте го и опитайте отново.",
+  "fail.slice": "OrcaSlicer не можа да подготви този печат. {why}",
+  "fail.nogcode": "Файлът от OrcaSlicer не съдържа печатна задача.",
+  "fail.bed": "Това не се побира в работната платформа на P2S.",
+  "fail.connect": "Bambu Connect не се отвори. Инсталирайте го и опитайте отново."
+}

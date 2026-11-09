@@ -1,0 +1,8 @@
+{
+  "@locale": "am",
+  "@name": "አማርኛ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "ውሂብ እና ምንጮች",
+  "data.nex": "NASA NEX-GDDP-CMIP6፣ የCMIP6 ሞዴል ውጤት ዝቅ ተደርጎ የተሰላ (CC BY 4.0 በእያንዳንዱ ሞዴል)፤ ዓለም አቀፍ የባሕር ከፍታ: IPCC AR6",
+  "data.sample": "ናሙና ጥቅል: ሶስት ቦታዎች፣ አንድ ሞዴል፣ በእያንዳንዱ ጊዜ አምስት ዓመታት። ለዲዛይን አይደለም።"
+}

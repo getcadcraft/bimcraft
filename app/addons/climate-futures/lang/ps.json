@@ -1,0 +1,8 @@
+{
+  "@locale": "ps",
+  "@name": "پښتو",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "ډیټا او سرچینې",
+  "data.nex": "NASA NEX-GDDP-CMIP6، د CMIP6 ماډل محصول چې کوچنۍ سیمې ته اړول شوی (هر ماډل لپاره CC BY 4.0)؛ نړیوال سمندري سطحه: IPCC AR6",
+  "data.sample": "د نمونې بسته: درې ځایونه، یو ماډل، د هرې دورې لپاره پنځه کاله. د ډیزاین لپاره نه ده."
+}

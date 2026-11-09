@@ -1,0 +1,22 @@
+{
+  "id": "printer-resin-anycubic",
+  "name": "Resin files: Anycubic Photon Workshop",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "slicer-resin",
+      "range": "*"
+    }
+  ],
+  "description": "Writes the Anycubic Photon Workshop resin files PWMX and PWS. Our own code, written from a specification: read back by CadCraft only, not yet loaded on a printer. Options let you switch the choices the format leaves open.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

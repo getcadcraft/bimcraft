@@ -1,0 +1,8 @@
+{
+  "@locale": "cs",
+  "@name": "Čeština",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data a zdroje",
+  "data.nex": "NASA NEX-GDDP-CMIP6, zjemněné výstupy modelů CMIP6 (CC BY 4.0 podle modelu); globální hladina moře: IPCC AR6",
+  "data.sample": "Ukázkový balíček: tři místa, jeden model, pět let na období. Není určeno pro projektování."
+}

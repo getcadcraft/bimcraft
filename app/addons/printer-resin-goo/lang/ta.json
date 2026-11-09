@@ -1,0 +1,12 @@
+{
+  "@locale": "ta",
+  "@name": "தமிழ்",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "பைட் வரிசை",
+  "opt.byteOrder.big": "பெரிய-முனை (Big-endian) (வழக்கமான அறிக்கை)",
+  "opt.byteOrder.little": "சிறிய-முனை (Little-endian)",
+  "opt.checksum": "சரிபார்ப்புத்தொகை",
+  "opt.checksum.negsum": "எதிர்மறைக் கூட்டுத்தொகை",
+  "opt.checksum.sum": "எளிய கூட்டுத்தொகை"
+}

@@ -4,6 +4,9 @@ import { documentItems } from './assembly-schedule-layout.js';
 import { layerPrimitives, colorRgb } from './wall-plan-graphics.js';
 import { cutFaceItems } from './wall-section-graphics.js';
 import { dimensionFootprint } from './dimension-geometry.js';
+import { penHex, penMm, penDash } from './pen-colors.js';
+import { parseTitleSvg, svgTitleItems } from './title-svg.js';   // 0.9 D8.17: a design of the person's own
+import { titleBlockItems } from './title-block.js';   // 0.9 SU.1123: title blocks from the library   // 0.9 D8.12-B: sheets print the view pens as shown
 /**
  * res-sheets.js — a print-ready drawing set made from the model (0.5 part 4, RC.5): plans of each level, the four exterior
  * elevations, building sections from section lines, schedules, framing elevations of each framed wall — laid out on
@@ -39,7 +42,25 @@ import * as PDFI from './picture-pdf.js';   // 0.8 D8.8 round 5: pictures in sec
 import { noteItems } from './comforts-views.js';   // 0.6 round 2 (bim-comforts_PART_2): dimensions, level marks and tags on views
 
 export const SECTION_PSET = 'CadCraft_SectionLine';
-export const PAPERS = { letter: [279.4, 215.9], tabloid: [431.8, 279.4], archd: [914.4, 609.6], a3: [420, 297], a1: [841, 594] };
+export const PAPERS = { letter: [279.4, 215.9], tabloid: [431.8, 279.4], archd: [914.4, 609.6], a3: [420, 297], a1: [841, 594], a4: [297, 210], a2: [594, 420], a0: [1189, 841], archc: [609.6, 457.2], arche: [1219.2, 914.4] };   // 0.9: A4 (the plan Print's paper); SU.1123 adds the library's formats at run time (sheet-formats.js)
+/** 0.9 D8.14: a sheet is landscape (the table above) or portrait: the paper key + ':p' (a3:p = 297 × 420), so every place that reads PAPERS[key] works as it was. */
+export const PORTRAIT = ':p';
+export const isPortrait = (k) => String(k).endsWith(PORTRAIT);
+export const baseKey = (k) => (isPortrait(k) ? String(k).slice(0, -PORTRAIT.length) : String(k));
+export const portraitKey = (k) => baseKey(k) + PORTRAIT;
+for (const [k, [w, h]] of Object.entries(PAPERS)) PAPERS[k + PORTRAIT] = [h, w];
+/** 0.9 D8.15: a scale typed by the person → the ratio (paper : real = 1 : ratio), or null when it is not one.
+ *  "1:64", "1:2.5", "2:1" (enlarged: 0.5), "64", "1/4\" = 1'", "3/16 in = 1 ft", "1/8=1'-0\"". */
+export function parseScale(text) {
+  const s = String(text ?? '').trim().replace(/[\u2033\u201d]/g, '"').replace(/[\u2032\u2019]/g, "'").replace(/\s+/g, ' ');
+  if (!s) return null;
+  const frac = (x) => { const m = /^(\d+(?:\.\d+)?)(?:\s*\/\s*(\d+(?:\.\d+)?))?$/.exec(x.trim()); return m ? (m[2] ? Number(m[1]) / Number(m[2]) : Number(m[1])) : NaN; };
+  let r = NaN, m;
+  if ((m = /^(\d+(?:\.\d+)?)\s*:\s*(\d+(?:\.\d+)?)$/.exec(s))) r = Number(m[2]) / Number(m[1]);
+  else if (/^\d+(?:\.\d+)?$/.test(s)) r = Number(s);
+  else if ((m = /^(\d+(?:\s*\/\s*\d+)?(?:\.\d+)?)\s*(?:"|in|inch|inches)?\s*=\s*(\d+(?:\.\d+)?)\s*(?:'|ft|feet|foot)?(?:\s*-?\s*0\s*"?)?$/i.exec(s))) r = (Number(m[2]) * 12) / frac(m[1]);
+  return Number.isFinite(r) && r >= 0.01 && r <= 100000 ? Math.round(r * 1000) / 1000 : null;
+}
 export const scalesFor = (units) => SCALES[isMetric(units) ? 'mm' : 'ftin'].map(([ratio, label]) => ({ ratio, label }));   // 0.6 DF.19: the sheet editor's list
 const SCALES = {
   ftin: [[16, '3/4" = 1\'-0"'], [24, '1/2" = 1\'-0"'], [32, '3/8" = 1\'-0"'], [48, '1/4" = 1\'-0"'], [64, '3/16" = 1\'-0"'], [96, '1/8" = 1\'-0"'], [192, '1/16" = 1\'-0"'], [384, '1/32" = 1\'-0"']],   // i18n-ignore: drawing scales
@@ -60,19 +81,24 @@ export function scaleFor(w, h, room, units = 'ftin', minRatio = 0) {
 const at = (k, ox, oy) => (p) => [ox + p[0] * k, oy + p[1] * k];
 function planItems(scene, P, k) {
   const out = [], seg = (a, w, g, dash) => { for (let i = 0; i < a.length; i += 4) out.push({ t: 'line', pts: [P([a[i], a[i + 1]]), P([a[i + 2], a[i + 3]])], w, g, dash }); };
+  // 0.9 D8.12-B: segments in a view pen { w (screen px), dash, color (token) }
+  const segPen = (a, pen, w0) => { const w = pen.w ? penMm(pen.w) : w0, color = pen.color ? penHex(pen.color) : undefined, dash = penDash(pen.dash) || undefined; for (let i = 0; i < a.length; i += 4) out.push({ t: 'line', pts: [P([a[i], a[i + 1]]), P([a[i + 2], a[i + 3]])], w, g: 0, color, dash }); };
   if (scene.underlay?.segs?.length) seg(scene.underlay.segs, 0.13, 0.72);   // 0.6 DC.117: another level, light, under everything
   for (const b of scene.below || []) seg(b.segs, 0.13, 0.45);
   for (const b of scene.above || []) seg(b.segs, 0.13, 0.45, [2, 1.2]);   // 0.6 DF.19: above the cut, under the range's top
   for (const c of scene.cut || []) {
     if (c.loops?.length) out.push({ t: 'fill', polys: c.loops.map((l) => { const pts = []; for (let i = 0; i + 1 < l.length; i += 2) pts.push(P([l[i], l[i + 1]])); return pts; }), g: 0.75 });
-    seg(c.segs, 0.25, 0);
+    if (c.pen) segPen(c.segs, c.pen, 0.25); else seg(c.segs, 0.25, 0);   // 0.9 D8.12-B: printed as shown
   }
   for (const w of scene.walls || []) {
     if (w.layers) for (const it of layerPrimitives(w)) out.push(it.t === 'fill' ? { ...it, polys: it.polys.map(p => p.map(P)) } : { ...it, pts: it.pts.map(P) });
     else for (const p of w.pieces || [w.poly]) if (p?.length) out.push({ t: 'fill', polys: [p.map(P)], g: 0.55 });
   }
   for (const p of scene.wallEdges || []) out.push({ t: 'line', pts: [...p.map(P), P(p[0])], w: 0.5, g: 0 });
+  // 0.9 D8.12-B: a view's pen override on a wall, printed as the screen shows it: the outline again in that weight, line and colour
+  for (const w of scene.walls || []) if (w.pen) for (const p of w.pieces || [w.poly]) if (p?.length) out.push({ t: 'line', pts: [...p.map(P), P(p[0])], w: penMm(w.pen.w || 1.75), g: 0, color: w.pen.color ? penHex(w.pen.color) : undefined, dash: penDash(w.pen.dash) || undefined });
   for (const s of scene.symbols || []) {
+    if (s.lw || s.color) { for (const l of s.lines || []) segPen(l, { w: s.lw, color: s.color }, 0.35); } else   // 0.9 D8.12-B: a door / window pen
     for (const l of s.lines || []) seg(l, 0.35, 0);
     for (const a of s.arcs || []) { const steps = Math.max(8, Math.ceil(Math.abs(a.a1 - a.a0) / (Math.PI / 32))); const pts = []; for (let i = 0; i <= steps; i++) { const t = a.a0 + (a.a1 - a.a0) * i / steps; pts.push(P([a.c[0] + a.r * Math.cos(t), a.c[1] + a.r * Math.sin(t)])); } out.push({ t: 'line', pts, w: 0.18, g: 0 }); }
     for (const l of s.thin || []) seg(l, 0.18, 0);
@@ -80,16 +106,17 @@ function planItems(scene, P, k) {
   }
   // 0.6 DC.117 (d): drafting lines and hatch regions drawn in this view
   for (const d of scene.drafting || []) {
-    if (d.solid && d.rings) out.push({ t: 'fill', polys: d.rings.map((r) => r.map(P)), g: 0.6 });
-    if (d.segs?.length) seg(d.segs, 0.13, 0);
-    for (const l of d.lines || []) if (l.length > 1) out.push({ t: 'line', pts: [...l.map(P), ...(d.closed ? [P(l[0])] : [])], w: d.kind === 'hatch' ? 0.18 : 0.25, g: 0 });
+    const col = d.pen?.color ? penHex(d.pen.color) : undefined;   // 0.9 D8.12-B: a drafting pen
+    if (d.solid && d.rings) out.push({ t: 'fill', polys: d.rings.map((r) => r.map(P)), g: 0.6, color: col });
+    if (d.segs?.length) { if (col) segPen(d.segs, { color: d.pen.color }, 0.13); else seg(d.segs, 0.13, 0); }
+    for (const l of d.lines || []) if (l.length > 1) out.push({ t: 'line', pts: [...l.map(P), ...(d.closed ? [P(l[0])] : [])], w: d.pen?.w ? penMm(d.pen.w) : d.kind === 'hatch' ? 0.18 : 0.25, g: 0, color: col, dash: penDash(d.pen?.dash) || undefined });
   }
   for (const d of scene.dims || []) {
     const L = Math.hypot(d.b[0] - d.a[0], d.b[1] - d.a[1]);
     if (L < 1) continue;
     const u = [(d.b[0] - d.a[0]) / L, (d.b[1] - d.a[1]) / L], n = [-u[1], u[0]], off = d.offPx !== undefined ? d.offPx * 0.3 / k : d.off || 0;   // screen px → about 0.3 mm of paper
     const A = [d.a[0] + n[0] * off, d.a[1] + n[1] * off], B = [d.b[0] + n[0] * off, d.b[1] + n[1] * off];
-    out.push({ t: 'line', pts: [P(A), P(B)], w: 0.13, g: 0 });
+    out.push({ t: 'line', pts: [P(A), P(B)], w: 0.13, g: 0, color: d.pen?.color ? penHex(d.pen.color) : undefined });
     if (d.witnesses) for (const [i, q] of [A, B].entries()) out.push({ t: 'line', pts: [P(d.witnesses[i]), P(q)], w: 0.13, g: 0 });
     const tk = 1 / k, tick = [(u[0] - n[0]) * tk, (u[1] - n[1]) * tk];
     for (const q of [A, B]) out.push({ t: 'line', pts: [P([q[0] - tick[0], q[1] - tick[1]]), P([q[0] + tick[0], q[1] + tick[1]])], w: 0.13, g: 0 });
@@ -161,8 +188,10 @@ function framingItems(fr, P) {
   return out;
 }
 function tableItems(sc, x, yTop, width) {
-  const out = [], rowH = 5, cols = sc.head.length, cw = width / cols;
-  const row = (cells, y, bold) => cells.forEach((c, i) => out.push({ t: 'text', s: String(c ?? ''), x: x + i * cw + 1.5, y: y - rowH + 1.6, size: 7, align: 'left', bold }));
+  const out = [], rowH = 5, cols = sc.head.length;
+  // sc.widths: each column's share of the width (a schedule with long text); the default is equal columns
+  const shares = sc.widths || sc.head.map(() => 1 / cols), at = shares.map((_, i) => shares.slice(0, i).reduce((a, b) => a + b, 0) * width);
+  const row = (cells, y, bold) => cells.forEach((c, i) => out.push({ t: 'text', s: String(c ?? ''), x: x + at[i] + 1.5, y: y - rowH + 1.6, size: 7, align: 'left', bold }));
   out.push({ t: 'line', pts: [[x, yTop], [x + width, yTop]], w: 0.35, g: 0 });
   row(sc.head, yTop, true);
   out.push({ t: 'line', pts: [[x, yTop - rowH], [x + width, yTop - rowH]], w: 0.25, g: 0 });
@@ -189,15 +218,21 @@ function boundsOfScene(scene) {
   return { x0: b.x0 - pad, y0: b.y0 - pad, x1: b.x1 + pad, y1: b.y1 + pad };
 }
 /** A sheet: its frame, the title block along the bottom, its cells laid out left to right. */
-function sheet(number, title, cells, { paper, project, date }) {
+function sheet(number, title, cells, { paper, project, date, titleBlock = null, fields = {}, margin = null }) {
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
-  const m = 10, strip = 18, items = [];
+  const m = margin ?? 10, strip = 18;
+  let items = [];
+  if (titleBlock) {   // 0.9 SU.1123: a title block from the library (sheet-formats.js); the strip below is the built-in 'strip'
+    const labels = Object.fromEntries(['project', 'client', 'drawn', 'checked', 'scale', 'date', 'revision'].map((k) => [k, tr('sf.field.' + k)]));
+    items = titleBlockItems(titleBlock, { PW, PH, margin: m, number, title, project, date, fields, labels, madeWith: tr('res.sh.madewith') }).items;
+  } else {
   items.push({ t: 'line', pts: [[m, m], [PW - m, m], [PW - m, PH - m], [m, PH - m], [m, m]], w: 0.5, g: 0 });
   items.push({ t: 'line', pts: [[m, m + strip], [PW - m, m + strip]], w: 0.35, g: 0 });
   items.push({ t: 'line', pts: [[PW - m - 40, m], [PW - m - 40, m + strip]], w: 0.35, g: 0 });
   items.push({ t: 'text', s: number, x: PW - m - 20, y: m + 6, size: 18, bold: true });
   items.push({ t: 'text', s: title, x: m + 4, y: m + 10, size: 12, align: 'left', bold: true });
   items.push({ t: 'text', s: [project, date, tr('res.sh.madewith')].filter(Boolean).join('    '), x: m + 4, y: m + 4, size: 7, align: 'left', g: 0.25 });   // i18n-ignore: spacing between the strip's items
+  }
   const room = [PW - 2 * m, PH - 2 * m - strip], cw = room[0] / Math.max(1, cells.length);
   const views = [];
   cells.forEach((c, i) => {
@@ -267,7 +302,7 @@ export function buildSet(input, { paper = 'tabloid', units = 'ftin', project = '
   for (const sc of (input.schedules || []).filter((x) => !x.document && x.rows.length)) {
     for (let r = 0; r < sc.rows.length; r += fit) {
       const last = r + fit >= sc.rows.length;
-      pieces.push({ title: r ? tr('res.sh.continued', { title: sc.title }) : sc.title, head: sc.head, rows: sc.rows.slice(r, r + fit), total: last ? sc.total : null });
+      pieces.push({ title: r ? tr('res.sh.continued', { title: sc.title }) : sc.title, head: sc.head, widths: sc.widths, rows: sc.rows.slice(r, r + fit), total: last ? sc.total : null });
     }
   }
   for (let i = 0; i < pieces.length; i += perSheet) {
@@ -294,7 +329,7 @@ export const LEGEND_W = 70;
 export const legendBlock = (paper) => { const [PW, PH] = PAPERS[paper] || PAPERS.tabloid; return { x: PW - 16 - LEGEND_W + 4, y: PH - 22 }; };
 export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', project = '', date = '' } = {}) {
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
-  const s = sheet(spec.number || '', spec.title || '', [], { paper, project, date });
+  const s = sheet(spec.number || '', spec.title || '', [], { paper, project, date, titleBlock: spec.titleBlockSpec || null, fields: spec.fields || {}, margin: spec.margin ?? null });   // 0.9 SU.1123
   s.views = []; s.missing = [];
   const label = (r) => SCALES[isMetric(units) ? 'mm' : 'ftin'].find((x) => x[0] === r)?.[1] || '1:' + r;   // i18n-ignore: a scale ratio
   const find = (kind, ref) => ((kind === 'plan' ? input.plans : kind === 'rcp' ? input.rcps : kind === 'callout' ? input.callouts : kind === 'elevation' ? input.elevations : kind === 'interior' ? input.interiors : kind === 'section' ? input.sections : input.schedules) || []).find((x) => x.ref === ref);
@@ -337,7 +372,12 @@ export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', p
  *  does not fit, `fits` is false and the views run past the top (the person changes the paper). */
 export function arrangeSheet(spec, input, { paper = 'tabloid', units = 'ftin', gap = 8 } = {}) {
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
-  const left = 16, right = PW - 16 - (spec.legend?.length ? LEGEND_W : 0), bottom = 10 + 18 + 6, top = PH - 14, strip = 14;
+  let left = 16, right = PW - 16 - (spec.legend?.length ? LEGEND_W : 0), bottom = 10 + 18 + 6, top = PH - 14;
+  const strip = 14;
+  if (spec.titleBlockSpec?.place === 'svg') {   // 0.9 D8.17: the person's own design says where the views go (its drawing-area rectangle, else inside the border)
+    const p = parseTitleSvg(spec.titleBlockSpec.svg);
+    if (p.ok) { const r = svgTitleItems(p, { PW, PH }).room; left = r[0] + 6; right = r[2] - 6 - (spec.legend?.length ? LEGEND_W : 0); bottom = r[1] + 6; top = r[3] - 4; }
+  }
   const list = SCALES[isMetric(units) ? 'mm' : 'ftin'].map(([r, l]) => ({ ratio: r, label: l })).filter((x) => x.ratio >= (isMetric(units) ? 50 : 48)).sort((a, b) => a.ratio - b.ratio);
   const attempt = (ratio) => {
     const v2 = (spec.views || []).map((v) => ({ ...v, ratio: v.kind === 'schedule' ? 0 : ratio }));

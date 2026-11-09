@@ -1,0 +1,14 @@
+{
+  "@locale": "es-MX",
+  "@name": "Español (México)",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Prueba de exposición",
+  "note": "Las resinas y las impresoras difieren. Imprima la pieza de prueba una vez con cada exposición de la escalera y conserve la exposición con las columnas finas más nítidas y los orificios abiertos.",
+  "part": "Coloque la pieza de prueba en la plataforma",
+  "part.name": "Pieza de prueba de exposición",
+  "ladder": "Guardar la escalera de exposición ({n} archivos)",
+  "ladder.made": "Se guardaron {n} archivos para {list} s. Imprima cada uno con la misma resina y compárelos.",
+  "ladder.nopart": "Coloque primero la pieza de prueba en la plataforma.",
+  "ladder.failed": "No se pudo crear la escalera. {why}",
+  "ladder.busy": "Creando {i} de {n}…"
+}

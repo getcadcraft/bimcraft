@@ -1,0 +1,21 @@
+{
+  "@locale": "ur",
+  "@name": "اردو",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX اور PWS",
+  "opt.flip": "تصویر کا آئینہ بنائیں",
+  "opt.flip.off": "نہیں",
+  "opt.flip.on": "ہاں، بائیں سے دائیں",
+  "opt.version": "فائل ورژن",
+  "opt.version.v1": "ورژن 1 (عام)",
+  "opt.version.v516": "ورژن 516",
+  "opt.aa": "کنارے ہموار کرنے کی سطحیں",
+  "opt.aa.1": "1 (کوئی نہیں)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "فی لیئر ترتیبات کا فلیگ",
+  "opt.perLayer.off": "آف",
+  "opt.perLayer.on": "آن"
+}

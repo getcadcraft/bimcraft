@@ -1,0 +1,8 @@
+{
+  "@locale": "sk",
+  "@name": "Slovenčina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Údaje a zdroje",
+  "data.nex": "NASA NEX-GDDP-CMIP6, downškálovaný výstup modelov CMIP6 (CC BY 4.0 pre každý model); globálna hladina mora: IPCC AR6",
+  "data.sample": "Vzorová sada: tri lokality, jeden model, päť rokov na každé obdobie. Nie je určená na projektovanie."
+}

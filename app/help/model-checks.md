@@ -29,6 +29,7 @@ Look over a model before you hand it on: the problems that break schedules, quan
 
 - Checks look at the active model when several are open. See [See several IFC models together](topic:several-models).
 - After an edit, run the checks again.
+- In the {{ui:Problems}} panel, lengths, areas and volumes in a problem's words follow the {{ui:Units}} picked in the toolbar (an "800 mm" door reads 2'-7 1/2" in feet and inches); change the unit and the panel rewords them.
 
 ## Next
 

@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "entry": "./main.js",
   "permissions": ["storage"],
-  "description": "Opens the Energy tab's Energy simulation step: writes the model as an EnergyPlus file and, with an EnergyPlus engine you point to (your own WebAssembly build), lists its heating and cooling loads beside the quick design aid's. The engine is not part of BimCraft; EnergyPlus's BSD-3-Clause licence and naming clause are in the step's notice. A second opinion, not a compliance report.",
+  "description": "Opens the Energy tab's Energy simulation step: writes the model as an EnergyPlus file and, with an EnergyPlus engine you point to (your own WebAssembly build, fetched only when you press Simulate), lists heating and cooling loads beside the quick design aid's. The engine is not part of BimCraft; EnergyPlus is BSD-3-Clause (notice in the step). A second opinion, not a compliance report.",
   "author": "CadCraft",
   "lang": "./lang/",
   "default": "off"

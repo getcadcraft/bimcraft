@@ -1,0 +1,12 @@
+{
+  "@locale": "am",
+  "@name": "አማርኛ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "የባይት ቅደም ተከተል",
+  "opt.byteOrder.big": "ትልቅ-ኤንዲያን (የተለመደው ሪፖርት)",
+  "opt.byteOrder.little": "ትንሽ-ኤንዲያን",
+  "opt.checksum": "ቼክሰም",
+  "opt.checksum.negsum": "የተገላቢጦሽ ድምር",
+  "opt.checksum.sum": "ቀላል ድምር"
+}

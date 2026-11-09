@@ -1,0 +1,12 @@
+{
+  "@locale": "fil",
+  "@name": "Filipino",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Byte order",
+  "opt.byteOrder.big": "Big-endian (ang karaniwang report)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Negated sum",
+  "opt.checksum.sum": "Plain sum"
+}

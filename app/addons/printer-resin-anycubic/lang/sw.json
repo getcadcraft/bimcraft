@@ -1,0 +1,21 @@
+{
+  "@locale": "sw",
+  "@name": "Kiswahili",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX na PWS",
+  "opt.flip": "Geuza picha kama kioo",
+  "opt.flip.off": "Hapana",
+  "opt.flip.on": "Ndiyo, kushoto kwenda kulia",
+  "opt.version": "Toleo la faili",
+  "opt.version.v1": "Toleo 1 (la kawaida)",
+  "opt.version.v516": "Toleo 516",
+  "opt.aa": "Viwango vya kulainisha kingo",
+  "opt.aa.1": "1 (hakuna)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Alama ya mipangilio ya kila tabaka",
+  "opt.perLayer.off": "Imezimwa",
+  "opt.perLayer.on": "Imewashwa"
+}

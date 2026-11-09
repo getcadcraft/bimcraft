@@ -3,7 +3,7 @@ title: Work on one model together with Live TeamWork
 summary: What changes in BimCraft while you are in a Live TeamWork session from CadCraft Studio: everyone's edits to the same IFC model, your own undo, and joining from a browser on the same network.
 section: tasks
 order: 199
-keywords: live, live teamwork, studio live, together, collaborate, session, share live, join, ifc, properties, rename, undo, host
+keywords: live, live teamwork, studio live, together, collaborate, session, share live, join, ifc, properties, rename, cursor, pointer, see each other, names, color, selection, undo, host
 ---
 
 ## What you will learn
@@ -18,13 +18,19 @@ The host's model comes to everyone who joins. Rename elements, change their prop
 - **An element someone just removed** can't be edited any more: your edit is taken back, and the status bar says why.
 - Each person's new lines in the model get numbers of their own, so two people never make the same one.
 
+## See each other
+
+Everyone in the session has a color of their own. In the 3D view you see each person's pointer as an arrow in their color with their name beside it, on the element they are pointing at, and a dashed box in their color round each element they have selected.
+
+Pointers, names and selections are only for the session: they are never saved in the file and never go into anyone's undo. They glide to where each person is, so they stay smooth on a slow connection too.
+
 ## Undo undoes your own work
 
 {{ui:Undo}} undoes your own last edit and leaves everyone else's alone. When someone changed the same thing since, nothing is undone and the status bar says who.
 
 ## Join from a browser
 
-A teammate without Studio can scan the picture under the host's code with a phone, tablet or computer on the same network. BimCraft opens in the browser and opens the host's model once the host lets you in. Invite links, for joining from another network, are not open yet.
+A teammate without Studio can scan the picture under the host's code with a phone, tablet or computer on the same network. BimCraft opens in the browser and opens the host's model once the host lets you in. An invite link lets someone join from another network: the host needs a Team Cloud Plan seat for the app, everyone else joins free, and the link works only while the host's session is open.
 
 ## When the session ends
 

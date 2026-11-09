@@ -1,0 +1,21 @@
+{
+  "@locale": "ca",
+  "@name": "Català",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX i PWS",
+  "opt.flip": "Reflecteix la imatge",
+  "opt.flip.off": "No",
+  "opt.flip.on": "Sí, d'esquerra a dreta",
+  "opt.version": "Versió del fitxer",
+  "opt.version.v1": "Versió 1 (la habitual)",
+  "opt.version.v516": "Versió 516",
+  "opt.aa": "Nivells de suavitzat de vores",
+  "opt.aa.1": "1 (cap)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Indicador de configuració per capa",
+  "opt.perLayer.off": "Desactivat",
+  "opt.perLayer.on": "Activat"
+}

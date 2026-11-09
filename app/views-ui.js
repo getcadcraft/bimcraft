@@ -26,16 +26,27 @@ import { readProjectedView, setProjectedView } from './projected-views.js';
  *                    with Up [data-co-back]; its parent draws its rectangle and a tag (name, "1 / A-501" once on a sheet) that opens it
  *                    with the Select tool. Missing ([data-pb-comissing]): a parent gone, listed with Delete [data-pb-codel]. Sheets take
  *                    callouts (input.callouts, kind 'callout'). Drafting in each view: drafting-ui.js (mounted here).
+ *   Duplicates       0.9 D8.12-A (bim-views-09): every plan, ceiling plan, callout, elevation and section row has Duplicate [data-pb-dup=<view
+ *                    key>] → dialog [data-dup-dialog] (name [data-dup-name], Own copy / Linked [data-dup-mode]; the working style picks the
+ *                    first); Project browser › Duplicated views ([data-pb-copy=<id>] opens one, [data-pb-cpedit=<id>] its dialog [data-cp-dialog]:
+ *                    name, View range / Graphics of an own copy, Make own copy of a linked one, Delete). A copy of a plan, ceiling plan or
+ *                    callout opens like a callout (S.callout = its id) with the chip [data-co-chip]; one of an elevation or section is a
+ *                    sheet view (res-ui.js setInput). view-copies.js keeps them.
  * IFC: views-model.js. Test hook: window.bimcraftViews = { state, api }.
  */
 import { readPlanViews, readTemplates, readSheets, effectiveView, setPlanView, saveTemplate, deleteTemplate, saveSheet, deleteSheet, underlaySegments, ceilingGrid, RCP_DEFAULTS,
   readCallouts, saveCallout, deleteCallout, calloutRoot, calloutsInside, parseViewKey } from './views-model.js';
-import { mountDrafting } from './drafting-ui.js';   // 0.6 DC.117 (d): drafting lines and hatch regions in this view
+import { mountDrafting } from './drafting-ui.js';
+import { readCopies, copyRoot, annotationKey, duplicateView, saveCopy, makeOwn, deleteCopy, projectedKind } from './view-copies.js';   // 0.9 D8.12-A
+import { readStyle } from './work-style.js';
+import { printSheets } from './print-style.js';
+import { readFormats, registerPapers, paperKey, saveFormat, deleteFormat, readLibrary, importLibrary, libraryText } from './sheet-formats.js';   // 0.9 SU.1123   // 0.9 D8.12-B: through the pen table when the model prints through one   // 0.9 D8.12: which Duplicate is offered first   // 0.6 DC.117 (d): drafting lines and hatch regions in this view
 import { CEILING_PATTERNS } from './model-slabs.js';
 import { loopAt, labelPoint } from './model-rooms.js';
 import { readViews } from './views-bim.js';
 import { buildLegend, legendToText, legendFromText, parseKeynoteFile } from './keynotes.js';
-import { composeSheet, arrangeSheet, setPdf, sheetSvg, PAPERS, scalesFor, readSectionLines } from './res-sheets.js';
+import { composeSheet, arrangeSheet, setPdf, sheetSvg, PAPERS, scalesFor, readSectionLines, isPortrait, baseKey, portraitKey, parseScale } from './res-sheets.js';
+import { openTitleDesigner } from './title-designer.js';   // 0.9 D8.17: draw your own title block
 import { ModelWriter } from './model-write.js';
 import { mul4, inv4 } from './ifc-util.js';
 import { fmtLen, parseLen, isMetric } from './model-units.js';
@@ -85,11 +96,15 @@ const CSS = `
 @media (max-width: 760px) { .bc-sh-body { grid-template-columns: 1fr; } .bc-sh-src { max-height: 30vh; } }
 .bc-co-chip { display: inline-flex; align-items: center; gap: .35rem; font-size: var(--fs-sm, .875rem); white-space: nowrap; }
 .bc-co-chip[hidden] { display: none; }
+.bc-dup-modes { border: 0; padding: 0; margin: .5rem 0; display: grid; gap: .4rem; }
+.bc-dup-modes legend { font-size: var(--fs-sm, .875rem); font-weight: 600; margin-bottom: .2rem; }
+.bc-dup-mode { display: flex; gap: .5rem; align-items: flex-start; font-size: var(--fs-sm, .875rem); }
+.bc-dup-mode input { margin-top: .2rem; }
 `;
 
 export function mountViewsBim(modelUi, o = {}) {
   if (typeof document !== 'undefined' && !document.getElementById('bc-pb-css')) { const st = document.createElement('style'); st.id = 'bc-pb-css'; st.textContent = CSS; document.head.append(st); }
-  const R = { views: new Map(), rcps: new Map(), templates: [], sheets: [], callouts: [], open: new Set(['plans', 'rcp', 'callouts', 'missing', 'sheets', 'tpl', 'families']), sec: null, crop: null, under: null, co: null, chip: null };
+  const R = { views: new Map(), rcps: new Map(), templates: [], sheets: [], callouts: [], copies: [], open: new Set(['plans', 'rcp', 'callouts', 'copies', 'missing', 'sheets', 'tpl', 'families']), sec: null, crop: null, under: null, co: null, chip: null };
   let A = null;
   const t = (...a) => A.t(...a);
   const W = () => (A.ed() ? new ModelWriter(A.ed().W, A.ed().api, A.ed().mid) : null);
@@ -98,8 +113,8 @@ export function mountViewsBim(modelUi, o = {}) {
   const icon = (c) => el('i', { className: 'bi ' + c, 'aria-hidden': 'true' });
   function read() {
     const w = W();
-    if (!w) { R.views = new Map(); R.rcps = new Map(); R.templates = []; R.sheets = []; R.callouts = []; return; }
-    try { R.views = readPlanViews(w); R.rcps = readPlanViews(w, 'rcp'); R.templates = readTemplates(w); R.sheets = readSheets(w); R.callouts = readCallouts(w); } catch (e) { R.views = new Map(); R.rcps = new Map(); R.templates = []; R.sheets = []; R.callouts = []; }
+    if (!w) { R.views = new Map(); R.rcps = new Map(); R.templates = []; R.sheets = []; R.callouts = []; R.copies = []; return; }
+    try { R.views = readPlanViews(w); R.rcps = readPlanViews(w, 'rcp'); R.templates = readTemplates(w); R.sheets = readSheets(w); R.callouts = readCallouts(w); R.copies = readCopies(w); } catch (e) { R.views = new Map(); R.rcps = new Map(); R.templates = []; R.sheets = []; R.callouts = []; R.copies = []; }
     // the callout shown was deleted (or its parent's level): back to the level's own view
     if (A.S.callout && !rootOf(A.S.callout)) A.S.callout = null;
   }
@@ -107,6 +122,13 @@ export function mountViewsBim(modelUi, o = {}) {
   const levelByGuid = (g) => A.S.data?.levels.find((l) => l.guid === g) || null;
   /** The view range in force on a level: null = no settings of its own (model-ui.js keeps its plain cut). */
   function rangeOf(levelId, kind = 'plan', callout = null) {
+    // 0.9 D8.12-A: a duplicated view: an own copy's range is its own; a linked one shows its source's
+    const cp = callout ? R.copies.find((x) => x.id === callout) : null;
+    if (cp) {
+      if (cp.mode === 'linked') { const p = parseViewKey(cp.of); const e = rangeOf(levelId, kind, p?.kind === 'callout' ? p.ref : null); return e ? { ...e, callout: cp.id } : e; }
+      const e = effectiveView({ ...cp.range, kind }, R.templates, levelOf(levelId)?.height || 3000, kind);
+      return { ...e, crop: cp.range.crop, ...(cp.range.template ? {} : { scale: cp.range.scale }), callout: cp.id };
+    }
     const v = (kind === 'rcp' ? R.rcps : R.views).get(levelId);
     const c = callout ? R.callouts.find((x) => x.id === callout) : null;
     if (!v && !c) return null;
@@ -118,9 +140,12 @@ export function mountViewsBim(modelUi, o = {}) {
   }
   // ------------------------------------------------------------------------------------- callouts (0.6 DC.117 (c))
   const levelGuids = () => new Set((A.S.data?.levels || []).map((l) => l.guid));
-  const rootOf = (id) => calloutRoot(R.callouts, id, levelGuids());
+  // 0.9 D8.12-A: callouts and duplicated views share one chain (a callout drawn inside a copy, a copy of a callout)
+  const rootOf = (id) => { const r = copyRoot(R.copies, R.callouts, id, { levels: levelGuids() }); return r && (r.kind === 'plan' || r.kind === 'rcp') ? { kind: r.kind, level: r.ref, chain: r.chain } : null; };
+  const copyOf = (id) => R.copies.find((x) => x.id === id) || null;
   /** The key of the view shown: 'callout:<id>', else 'rcp:' / 'plan:' + the level's GlobalId. */
   function viewKey() {
+    if (A.S.callout && copyOf(A.S.callout)) return annotationKey(R.copies, A.S.callout);   // 0.9 D8.12-A: a linked copy draws in its source
     if (A.S.callout) return 'callout:' + A.S.callout;
     const g = levelOf(A.S.level)?.guid;
     return g ? (A.S.kind === 'rcp' ? 'rcp:' : 'plan:') + g : null;
@@ -129,7 +154,7 @@ export function mountViewsBim(modelUi, o = {}) {
   function viewName(key) {
     const p = parseViewKey(key);
     if (!p) return '';
-    if (p.kind === 'callout') return R.callouts.find((c) => c.id === p.ref)?.name || t('model.co.gone');
+    if (p.kind === 'callout') return R.callouts.find((c) => c.id === p.ref)?.name || copyOf(p.ref)?.name || t('model.co.gone');
     const lv = levelByGuid(p.ref);
     return lv ? t(p.kind === 'rcp' ? 'model.co.of.rcp' : 'model.co.of.plan', { level: lv.name }) : t('model.co.gone');
   }
@@ -146,8 +171,9 @@ export function mountViewsBim(modelUi, o = {}) {
   }
   /** Back from a callout to its parent view. */
   function backToParent() {
+    const cp = copyOf(A.S.callout);
     const c = R.callouts.find((x) => x.id === A.S.callout);
-    const p = c ? parseViewKey(c.parent) : null;
+    const p = cp ? parseViewKey(cp.of) : c ? parseViewKey(c.parent) : null;
     if (p?.kind === 'callout') { openCallout(p.ref); return; }
     const lv = p ? levelByGuid(p.ref) : levelOf(A.S.level);
     if (lv) A.showKind(lv.id, p?.kind === 'rcp' ? 'rcp' : 'plan');
@@ -182,6 +208,14 @@ export function mountViewsBim(modelUi, o = {}) {
     if (!R.chip?.isConnected) {
       R.chip = el('span', { className: 'bc-co-chip', 'data-co-chip': '', hidden: true });
       (kindSel.closest('label') || kindSel).after(R.chip);
+    }
+    const cp = A.S.on && A.S.callout ? copyOf(A.S.callout) : null;
+    if (cp) {   // 0.9 D8.12-A
+      R.chip.hidden = false;
+      R.chip.replaceChildren(el('strong', {}, t(cp.mode === 'own' ? 'model.dup.chip.own' : 'model.dup.chip.linked', { name: cp.name })),
+        el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-co-back': '', title: t('model.co.back', { name: viewName(cp.of) }), onClick: () => backToParent() }, icon('bi-arrow-90deg-up'), ' ' + t('model.co.up')),
+        el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-cp-chipedit': cp.id, title: t('model.dup.edit', { name: cp.name }), 'aria-label': t('model.dup.edit', { name: cp.name }), onClick: () => editCopy(cp.id) }, icon('bi-sliders')));
+      return;
     }
     const c = A.S.on && A.S.callout ? R.callouts.find((x) => x.id === A.S.callout) : null;
     R.chip.hidden = !c;
@@ -258,6 +292,68 @@ export function mountViewsBim(modelUi, o = {}) {
       [btn('yes', t('model.co.del.yes', { n: inside.length + 1 }), { 'data-co-yes': '' }, true), btn('cancel', t('model.gp.cancel'))],
       (what) => (what === 'yes' ? run(deleteCallout(id), { label: c.name, verb: t('model.verb.deleted') }) : null));
   }
+  // ------------------------------------------------------------------------------- duplicated views (0.9 D8.12-A)
+  /** A view key in words, for any view Duplicate takes (elevations and sections too). */
+  function anyName(key) {
+    const m = /^(elevation|section):(.+)$/.exec(key || '');
+    if (m?.[1] === 'elevation') return t('res.sh.elev.' + m[2]);
+    if (m?.[1] === 'section') { let n = ''; try { n = readSectionLines(W()).find((x) => x.guid === m[2])?.name || ''; } catch (e) { n = ''; } return t('res.sec.name', { name: n }); }
+    return viewName(key);
+  }
+  const dupButton = (key) => el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-dup': key, title: t('model.dup.button.title', { name: anyName(key) }), 'aria-label': t('model.dup.button.title', { name: anyName(key) }), onClick: () => askDuplicate(key) }, icon('bi-copy'));
+  function nextCopyName(key) { const base = anyName(key); let name = t('model.dup.default', { name: base }), n = 2; while (R.copies.some((c) => c.name === name)) name = t('model.dup.defaultn', { name: base, n: n++ }); return name; }
+  /** Duplicate: a name and Own copy / Linked; the working style says which is offered first. */
+  function askDuplicate(key) {
+    if (!A.ed()) { A.host.status(t('model.needs.ifc'), true); return; }
+    const nm = el('input', { type: 'text', className: 'bc-input', 'data-dup-name': '', value: nextCopyName(key), maxLength: 60 });
+    const first = readStyle().dup;
+    const radio = (mode) => { const r = el('input', { type: 'radio', name: 'bc-dup-mode', value: mode, 'data-dup-mode': mode }); r.checked = mode === first; return el('label', { className: 'bc-dup-mode' }, r, el('span', {}, el('strong', {}, t('model.dup.' + mode)), ' ', el('span', { className: 'bc-muted' }, t('model.dup.' + mode + '.hint')))); };
+    dialog({ 'data-dup-dialog': '' }, t('model.dup.title', { name: anyName(key) }),
+      [field(t('model.dup.name'), nm), el('fieldset', { className: 'bc-dup-modes' }, el('legend', {}, t('model.dup.mode')), radio('own'), radio('linked')), el('p', { className: 'bc-muted' }, t('model.dup.note'))],
+      [btn('ok', t('model.dup.ok'), { 'data-dup-ok': '' }, true), btn('cancel', t('model.gp.cancel'))],
+      (what) => {
+        if (what !== 'ok') return null;
+        const mode = A.root.querySelector('[data-dup-dialog] [data-dup-mode]:checked')?.value || first;
+        if (!nm.value.trim()) return t('model.err.co.name');
+        const name = nm.value.trim();
+        const why = runIn(duplicateView({ of: key, mode, name }), { label: name, verb: t('model.verb.made') });
+        if (why) return why;
+        A.host.status(t(mode === 'own' ? 'model.dup.made.own' : 'model.dup.made.linked', { name }));
+        if (!projectedKind(key)) setTimeout(() => { read(); const c = R.copies.filter((x) => x.name === name).pop(); if (c) openCallout(c.id); }, 0);
+        return null;
+      });
+  }
+  function openCopy(id) {
+    const c = copyOf(id);
+    if (!c) return;
+    if (projectedKind(c.base)) { if (c.mode === 'own') openProjected(c.base, id); else A.host.status(t('model.dup.onsheets'), false); return; }
+    openCallout(id);
+  }
+  /** A copy's dialog: name; View range or Graphics (own copies); Make own copy (linked ones); Open; Delete. */
+  function editCopy(id) {
+    const c = copyOf(id);
+    if (!c) return;
+    const nm = el('input', { type: 'text', className: 'bc-input', 'data-cp-name': '', value: c.name, maxLength: 60 });
+    const missing = !copyRoot(R.copies, R.callouts, id, { levels: levelGuids(), sections: null });
+    const proj = projectedKind(c.base);
+    dialog({ 'data-cp-dialog': '' }, t('model.dup.edit', { name: c.name }),
+      [field(t('model.dup.name'), nm), el('p', { className: 'bc-muted', 'data-cp-mode': c.mode }, t(c.mode === 'own' ? 'model.dup.is.own' : 'model.dup.is.linked', { name: anyName(c.of) })), el('p', { className: 'bc-muted' }, t(c.mode === 'own' ? 'model.dup.own.hint' : 'model.dup.linked.hint'))],
+      [btn('ok', t('model.co.ok'), { 'data-cp-ok': '' }, true),
+        !missing && c.mode === 'own' ? btn('range', t(proj ? 'proj.settings' : 'model.pv.button'), { 'data-cp-range': '' }) : null,
+        !missing && c.mode === 'linked' ? btn('own', t('model.dup.makeown'), { 'data-cp-makeown': '' }) : null,
+        !missing && !proj ? btn('open', t('model.co.open'), { 'data-cp-open': '' }) : null,
+        btn('delete', t('model.co.delete'), { 'data-cp-delete': '' }), btn('cancel', t('model.gp.cancel'))].filter(Boolean),
+      (what) => {
+        if (what === 'cancel' || !what) return null;
+        if (what === 'delete') { if (A.S.callout === id) backToParent(); return runIn(deleteCopy(id), { label: c.name, verb: t('model.verb.deleted') }); }
+        if (what === 'open') { setTimeout(() => openCopy(id), 0); return null; }
+        if (what === 'own') return runIn(makeOwn(id), { label: c.name, verb: t('model.verb.changed') });
+        if (!nm.value.trim()) return t('model.err.co.name');
+        const why = nm.value.trim() === c.name ? null : runIn(saveCopy(id, { name: nm.value }), { label: nm.value.trim(), verb: t('model.verb.changed') });
+        if (!why && what === 'range') setTimeout(() => { if (proj) openProjected(c.base, id); else { const r = rootOf(id); if (r) openRange(r.level, r.kind, id); } }, 0);
+        return why;
+      });
+  }
   const guidOfKey = (k) => { const ed = A.ed(); if (!ed) return null; try { return ed.api.GetLine(ed.mid, k - A.kb(), false)?.GlobalId?.value || null; } catch (e) { return null; } };
 
   // ---------------------------------------------------------------------------------------------- the project browser
@@ -286,17 +382,17 @@ export function mountViewsBim(modelUi, o = {}) {
       const v = R.views.get(l.id);
       return row({ 'data-pb-plan': l.guid, 'aria-current': l.id === A.S.level && A.S.on && A.S.kind !== 'rcp' ? 'true' : null }, l.name, () => goPlan(l.id),
         v?.template ? el('span', { className: 'bc-pb-tag' }, v.template) : null,
-        el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-range': l.guid, title: t('model.pv.open', { level: l.name }), 'aria-label': t('model.pv.open', { level: l.name }), onClick: () => openRange(l.guid) }, icon('bi-sliders'), ' ' + t('model.pv.button')));
+        el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-range': l.guid, title: t('model.pv.open', { level: l.name }), 'aria-label': t('model.pv.open', { level: l.name }), onClick: () => openRange(l.guid) }, icon('bi-sliders'), ' ' + t('model.pv.button')), dupButton('plan:' + l.guid));
     });
     // 0.6 DC.117: every level's reflected ceiling plan
     const rcps = levels.map((l) => row({ 'data-pb-rcp': l.guid, 'aria-current': l.id === A.S.level && A.S.on && A.S.kind === 'rcp' ? 'true' : null }, l.name, () => A.showKind(l.id, 'rcp'),
-      el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-rcprange': l.guid, title: t('model.pv.rcpopen', { level: l.name }), 'aria-label': t('model.pv.rcpopen', { level: l.name }), onClick: () => openRange(l.guid, 'rcp') }, icon('bi-sliders'), ' ' + t('model.pv.button'))));
+      el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-rcprange': l.guid, title: t('model.pv.rcpopen', { level: l.name }), 'aria-label': t('model.pv.rcpopen', { level: l.name }), onClick: () => openRange(l.guid, 'rcp') }, icon('bi-sliders'), ' ' + t('model.pv.button')), dupButton('rcp:' + l.guid)));
     const openSet = () => A.root.querySelector('[data-res-sheetsopen]')?.click();
     const graphicButton=(key)=>el('button',{type:'button',className:'bc-pb-ic','data-pb-projected':key,title:t('proj.settings'),'aria-label':t('proj.settings'),onClick:()=>openProjected(key)},icon('bi-sliders'));
-    const elevs = ['north', 'east', 'south', 'west'].map((s) => row({ 'data-pb-elev': s }, t('res.sh.elev.' + s), openSet,graphicButton('elevation:'+s)));
+    const elevs = ['north', 'east', 'south', 'west'].map((s) => row({ 'data-pb-elev': s }, t('res.sh.elev.' + s), openSet,graphicButton('elevation:'+s), dupButton('elevation:' + s), A.ask('elevationEditButton', 'elevation:' + s)));
     let secs = [];
     try { const w = W(); secs = w ? readSectionLines(w) : []; } catch (e) { secs = []; }
-    const sections = secs.map((s) => row({ 'data-pb-section': s.guid }, t('res.sec.name', { name: s.name }), openSet,graphicButton('section:'+s.guid)));
+    const sections = secs.map((s) => row({ 'data-pb-section': s.guid }, t('res.sec.name', { name: s.name }), openSet,graphicButton('section:'+s.guid), dupButton('section:' + s.guid), A.ask('elevationEditButton', 'section:' + s.guid)));
     let views3d = [];
     try { const ed = A.ed(); views3d = ed ? readViews(ed.api, ed.mid).views : []; } catch (e) { views3d = []; }
     const v3 = views3d.map((v) => row({ 'data-pb-3d': v.name }, v.name, () => A.root.querySelector('[data-saved-views]')?.click()));
@@ -307,14 +403,24 @@ export function mountViewsBim(modelUi, o = {}) {
     // 0.6 DC.117 (c): callouts (under the view each is drawn on), and those whose parent is gone
     const coEdit = (c) => el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-coedit': c.id, title: t('model.co.edit', { name: c.name }), 'aria-label': t('model.co.edit', { name: c.name }), onClick: () => editCallout(c.id) }, icon('bi-sliders'));
     const live = R.callouts.filter((c) => rootOf(c.id)), gone = R.callouts.filter((c) => !rootOf(c.id));
-    const callouts = live.map((c) => row({ 'data-pb-callout': c.id, 'aria-current': A.S.on && A.S.callout === c.id ? 'true' : null, title: viewName(c.parent) }, c.name, () => openCallout(c.id), el('span', { className: 'bc-pb-tag' }, viewName(c.parent)), coEdit(c)));
+    const callouts = live.map((c) => row({ 'data-pb-callout': c.id, 'aria-current': A.S.on && A.S.callout === c.id ? 'true' : null, title: viewName(c.parent) }, c.name, () => openCallout(c.id), el('span', { className: 'bc-pb-tag' }, viewName(c.parent)), coEdit(c), dupButton('callout:' + c.id)));
+    // 0.9 D8.12-A: duplicated views (those whose source is gone are listed under Missing)
+    const secSet = new Set(secs.map((x) => x.guid));
+    const cpLive = R.copies.filter((c) => copyRoot(R.copies, R.callouts, c.id, { levels: levelGuids(), sections: secSet }));
+    const cpEdit = (c) => el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-cpedit': c.id, title: t('model.dup.edit', { name: c.name }), 'aria-label': t('model.dup.edit', { name: c.name }), onClick: () => editCopy(c.id) }, icon('bi-sliders'));
+    const copiesRows = cpLive.map((c) => row({ 'data-pb-copy': c.id, 'data-pb-copymode': c.mode, 'aria-current': A.S.on && A.S.callout === c.id ? 'true' : null, title: anyName(c.of) }, c.name, () => openCopy(c.id),
+      el('span', { className: 'bc-pb-tag' }, t(c.mode === 'own' ? 'model.dup.tag.own' : 'model.dup.tag.linked')), cpEdit(c), dupButton('callout:' + c.id)));
+    const cpGone = R.copies.filter((c) => !cpLive.includes(c)).map((c) => row({ 'data-pb-cpmissing': c.id }, c.name, () => editCopy(c.id), el('span', { className: 'bc-pb-tag' }, t('model.co.missingtag')),
+      el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-cpdel': c.id, title: t('model.co.delete'), 'aria-label': t('model.co.delete'), onClick: () => run(deleteCopy(c.id), { label: c.name, verb: t('model.verb.deleted') }) }, icon('bi-trash'))));
     const missing = gone.map((c) => row({ 'data-pb-comissing': c.id }, c.name, () => editCallout(c.id), el('span', { className: 'bc-pb-tag' }, t('model.co.missingtag')),
       el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-codel': c.id, title: t('model.co.delete'), 'aria-label': t('model.co.delete'), onClick: () => askDelete(c.id) }, icon('bi-trash'))));
+    missing.push(...cpGone);
     const links = A.root.querySelectorAll('[data-links] > li').length;
     tree.replaceChildren(
       group('plans', t('model.pb.plans'), plans.length, plans),
       group('rcp', t('model.pb.rcps'), rcps.length, rcps),
       group('callouts', t('model.pb.callouts'), callouts.length, callouts.length ? callouts : [el('li', { className: 'bc-pb-tag' }, t('model.pb.nocallouts'))], [small({ 'data-pb-newcallout': '' }, t('model.pb.newcallout'), () => startCallout(), 'bi-plus-lg')]),
+      group('copies', t('model.pb.copies'), copiesRows.length, copiesRows.length ? copiesRows : [el('li', { className: 'bc-pb-tag' }, t('model.pb.nocopies'))]),
       ...(missing.length ? [group('missing', t('model.pb.missing'), missing.length, missing)] : []),
       group('elev', t('model.pb.elevations'), elevs.length, elevs),
       group('sections', t('model.pb.sections'), sections.length, sections.length ? sections : [el('li', { className: 'bc-pb-tag' }, t('model.pb.nosections'))]),
@@ -381,13 +487,16 @@ export function mountViewsBim(modelUi, o = {}) {
     return dlg;
   }
   const btn = (value, label, attrs = {}, primary = false) => el('button', { type: 'submit', className: (primary ? 'btn-plot' : 'btn-line') + ' btn-sm-cc', value, ...attrs }, label);
+  /** 0.9: run an op; a refusal comes back as its message (through model-ui's onError) so the dialog stays open with it. */
+  function runIn(op, meta) { let why = null; try { A.commit(op, { ...meta, onError: (e, w) => { why = w; } }); } catch (e) { why = e.key ? t(e.key) : String(e.message || e); } return why; }
   /** Run an op; a refusal comes back as its message (the dialog stays open). */
   function run(op, meta) {
     try { A.commit(op, meta); return null; } catch (e) { return e.key ? t(e.key) : String(e.message || e); }
   }
 
-  function openProjected(key) {
-    const settings=readProjectedView(W(),key);
+  function openProjected(key, copyId = null) {
+    const cp = copyId ? copyOf(copyId) : null;   // 0.9 D8.12-A: an own copy of an elevation / section keeps its own graphics
+    const settings = cp?.range ? { ...cp.range } : readProjectedView(W(),key);
     const detail=el('select',{className:'select-cc','data-pj-detail':''},...PLAN_DETAILS.map(d=>el('option',{value:d},t('model.pv.detail.'+d))));detail.value=settings.detail;
     const scale=el('input',{type:'number',min:0,max:10000,step:'any',className:'bc-input',value:settings.scale,'data-pj-scale':''});
     const crop=el('input',{type:'text',className:'bc-input',value:settings.crop?.join(', ')||'','data-pj-crop':''});
@@ -398,16 +507,19 @@ export function mountViewsBim(modelUi, o = {}) {
       if(value!=='save')return null;
       const values=crop.value.trim()?crop.value.split(',').map(x=>Number(x.trim())):null;
       if(values&&(crop.value.split(',').some(x=>!x.trim())||values.length!==4||values.some(x=>!Number.isFinite(x))))return t('proj.crop_error');
+      if (cp) return runIn(saveCopy(cp.id, { range: { detail: detail.value, scale: Number(scale.value), crop: values } }), { label: cp.name, verb: t('model.verb.changed') });
       return run(setProjectedView(key,{detail:detail.value,scale:Number(scale.value),crop:values}),{label:t('proj.settings'),verb:t('model.verb.changed')});
     });
   }
 
   // ---------------------------------------------------------------------------------------------- a plan's view range
-  function openRange(levelGuid, kind = 'plan') {
+  function openRange(levelGuid, kind = 'plan', copyId = null) {
     const lv = levelByGuid(levelGuid);
     if (!lv) return;
     const rcp = kind === 'rcp';   // 0.6 DC.117: a ceiling plan's range (no template, no bottom or depth: it looks up)
-    const v = (rcp ? R.rcps : R.views).get(lv.id) || { ...(rcp ? RCP_DEFAULTS : { cut: 1200, top: 0, bottom: 0, depth: 50, scale: 0 }), hiddenClasses: [], hiddenGuids: [], template: '', crop: null, underlay: '' };
+    const cp = copyId ? copyOf(copyId) : null;   // 0.9 D8.12-A: an own copy's range is its own
+    if (copyId && cp?.mode !== 'own') return;
+    const v = cp ? { ...cp.range } : (rcp ? R.rcps : R.views).get(lv.id) || { ...(rcp ? RCP_DEFAULTS : { cut: 1200, top: 0, bottom: 0, depth: 50, scale: 0 }), hiddenClasses: [], hiddenGuids: [], template: '', crop: null, underlay: '' };
     const tpl = el('select', { className: 'select-cc', 'data-pv-template': '' }, el('option', { value: '' }, t('model.pv.notpl')), ...R.templates.map((x) => el('option', { value: x.name }, x.name)));
     tpl.value = v.template || '';
     const show = (name) => { const x = R.templates.find((q) => q.name === name); return x ? { cut: x.cut, top: x.top, bottom: x.bottom, depth: x.depth, hidden: x.hidden, scale: x.scale, detail: x.detail } : { cut: v.cut, top: v.top, bottom: v.bottom, depth: v.depth, hidden: v.hiddenClasses, scale: v.scale, detail: v.detail }; };
@@ -434,11 +546,11 @@ export function mountViewsBim(modelUi, o = {}) {
       ...(A.S.data?.levels || []).filter((l) => l.guid !== levelGuid).slice().reverse().map((l) => el('option', { value: l.guid }, l.name)));
     under.value = (A.S.data?.levels || []).some((l) => l.guid === v.underlay) ? v.underlay : '';
     showCrop();
-    dialog({ 'data-pv-dialog': '', 'data-pv-kind': kind }, t(rcp ? 'model.pv.rcptitle' : 'model.pv.title', { level: lv.name }),
+    dialog({ 'data-pv-dialog': '', 'data-pv-kind': kind, ...(cp ? { 'data-pv-copy': cp.id } : {}) }, cp ? t('model.dup.rangetitle', { name: cp.name }) : t(rcp ? 'model.pv.rcptitle' : 'model.pv.title', { level: lv.name }),
       [rcp ? null : field(t('model.pv.template'), tpl), rcp ? null : tplNote, holder, el('h3', { className: 'bc-pv-h' }, t('model.pv.elements')), el('p', { className: 'bc-sh-sel' }, hidCount, hideSel, showAll),
         el('h3', { className: 'bc-pv-h' }, t('model.pv.crop')), el('p', { className: 'bc-sh-sel' }, cropText, btn('crop', t('model.pv.crop.draw'), { 'data-pv-cropdraw': '' }), clearCrop),
         field(t('model.pv.underlay'), under), el('p', { className: 'bc-muted' }, t('model.pv.underlay.note'))],
-      [btn('ok', t('model.pv.ok'), { 'data-pv-ok': '' }, true), rcp ? null : btn('astpl', t('model.pv.astpl'), { 'data-pv-astpl': '' }), btn('cancel', t('model.gp.cancel'))].filter(Boolean),
+      [btn('ok', t('model.pv.ok'), { 'data-pv-ok': '' }, true), rcp || cp ? null : btn('astpl', t('model.pv.astpl'), { 'data-pv-astpl': '' }), btn('cancel', t('model.gp.cancel'))].filter(Boolean),
       (what) => {
         if (what === 'cancel' || !what) return null;
         const val = F.value();
@@ -449,6 +561,11 @@ export function mountViewsBim(modelUi, o = {}) {
         if (rcp) { ch.bottom = 0; ch.depth = 0; }
         const top = (tpl.value ? 0 : val.top) || lv.height;
         if (!tpl.value && !((rcp ? val.cut > 0 : val.bottom <= val.cut) && val.cut <= top && (rcp || val.depth >= 0))) return t('model.err.vr.order');
+        if (cp) {
+          const why = runIn(saveCopy(cp.id, { range: ch }), { label: cp.name, verb: t('model.verb.changed') });
+          if (!why && what === 'crop') setTimeout(() => startCrop(levelGuid, kind, cp.id), 0);
+          return why;
+        }
         const why = run(setPlanView(levelGuid, ch, kind), { label: t(rcp ? 'model.pv.rcpwhat' : 'model.pv.what', { level: lv.name }), verb: t('model.verb.changed') });
         if (!why && what === 'crop') setTimeout(() => startCrop(levelGuid, kind), 0);   // the settings saved, then two corners on the plan
         return why;
@@ -500,16 +617,49 @@ export function mountViewsBim(modelUi, o = {}) {
     const units = opts.units || A.units();
     const num = el('input', { type: 'text', className: 'bc-input', 'data-sh-number': '', value: D.number, maxLength: 20 });
     const title = el('input', { type: 'text', className: 'bc-input', 'data-sh-title': '', value: D.title, maxLength: 120 });
-    const paper = el('select', { className: 'select-cc', 'data-sh-paper': '' }, ...PAPER_KEYS.map((k) => el('option', { value: k }, /^a\d$/.test(k) ? k.toUpperCase() : t('res.sh.paper.' + k))));
-    labelPapers(paper, A.units());   // GH.3-A: names kept, sizes in the display unit
-    paper.value = D.paper;
+    // 0.9 SU.1123: sheet sizes and title blocks from the library (sheet-formats.js): the built-ins and the model's own
+    let FM = { formats: [], titleBlocks: [] };
+    const readFM = () => { try { FM = readFormats(W()); registerPapers(FM.formats, PAPERS); } catch (e) { FM = { formats: [], titleBlocks: [] }; } };
+    readFM();
+    const paper = el('select', { className: 'select-cc', 'data-sh-paper': '' });
+    const orient = el('select', { className: 'select-cc', 'data-sh-orient': '' }, el('option', { value: 'landscape' }, t('sh.orient.land')), el('option', { value: 'portrait' }, t('sh.orient.port')));   // 0.9 D8.14
+    const tbSel = el('select', { className: 'select-cc', 'data-sh-tb': '' });
+    const fieldsBox = el('div', { className: 'bc-sh-head', 'data-sh-fields': '' });
+    D.fields = { ...(D.fields || {}) };
+    const fillPapers = () => {
+      const own = FM.formats.filter((f) => !f.builtin);
+      paper.replaceChildren(...Object.keys(PAPERS).filter((k) => !k.startsWith('fmt:') && !isPortrait(k)).map((k) => el('option', { value: k }, /^a\d$/.test(k) ? k.toUpperCase() : t('res.sh.paper.' + k))), ...own.map((f) => el('option', { value: paperKey(f), 'data-sf-own': '' }, f.name)));
+      labelPapers(paper, A.units());   // GH.3-A: names kept, sizes in the display unit
+      for (const o of paper.querySelectorAll('[data-sf-own]')) { const f = own.find((x) => paperKey(x) === o.value); if (f) o.textContent = f.name + ' · ' + L(f.w) + ' × ' + L(f.h); }   // i18n-ignore: "w × h"
+      if (!PAPERS[D.paper]) D.paper = opts.paper;
+      paper.value = baseKey(D.paper); orient.value = isPortrait(D.paper) ? 'portrait' : 'landscape';
+      tbSel.replaceChildren(...FM.titleBlocks.map((b) => el('option', { value: b.id }, b.builtin ? t('sf.tb.' + b.id) : b.name)));
+      tbSel.value = FM.titleBlocks.some((b) => b.id === D.titleBlock) ? D.titleBlock : 'strip';
+      fillFields();
+    };
+    const tbOf = () => FM.titleBlocks.find((b) => b.id === (D.titleBlock || 'strip')) || null;
+    function fillFields() {
+      const tb = tbOf();
+      fieldsBox.replaceChildren(...(tb?.fields || []).map((f) => { const i = el('input', { type: 'text', className: 'bc-input', 'data-sh-field': f.key, value: D.fields[f.key] || '', maxLength: 120 }); i.addEventListener('input', () => { D.fields[f.key] = i.value; draw(); }); return field(f.label || t('sf.field.' + f.key), i); }));
+    }
+    tbSel.addEventListener('change', () => { D.titleBlock = tbSel.value === 'strip' ? '' : tbSel.value; fillFields(); draw(); });
+    const formatsBtn = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-formats': '', title: t('sf.manage.title') }, icon('bi-layout-text-window'), ' ' + t('sf.manage'));
+    formatsBtn.addEventListener('click', () => openFormats(() => { readFM(); fillPapers(); draw(); }));
+    fillPapers();
     num.addEventListener('input', () => { D.number = num.value; draw(); });
     title.addEventListener('input', () => { D.title = title.value; draw(); });
-    paper.addEventListener('change', () => { D.paper = paper.value; draw(); });
+    const setPaper = () => {   // 0.9 D8.14: the paper and its orientation; a turned sheet keeps each view at the same place on it
+      const [ow, oh] = PAPERS[D.paper] || [1, 1];
+      D.paper = orient.value === 'portrait' ? portraitKey(paper.value) : baseKey(paper.value);
+      const [nw, nh] = PAPERS[D.paper] || [ow, oh];
+      if (nw !== ow || nh !== oh) for (const v of D.views) { v.x = round1(v.x * nw / ow); v.y = round1(v.y * nh / oh); }
+      draw();
+    };
+    paper.addEventListener('change', setPaper); orient.addEventListener('change', setPaper);
     const arrange = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-arrange': '', title: t('model.sh.arrange.title') }, icon('bi-grid-1x2'), ' ' + t('model.sh.arrange'));
     arrange.addEventListener('click', () => {   // 0.8 EG.56: one scale that fits, shelf-packed; everything stays editable (drag, scale, remove)
       if (!D.views.length) { A.host.status(t('model.sh.empty'), true); return; }
-      const r = arrangeSheet(D, input, { paper: D.paper, units });
+      const r = arrangeSheet({ ...D, titleBlockSpec: tbOf() }, input, { paper: D.paper, units });
       D.views = r.views; sel = -1; draw();
       A.host.status(r.fits ? t('model.sh.arranged', { n: D.views.length, scale: r.label }) : t('model.sh.arranged.nofit', { scale: r.label }), !r.fits);
     });
@@ -553,7 +703,8 @@ export function mountViewsBim(modelUi, o = {}) {
       draw();
     }
     function draw() {
-      sheet = composeSheet(D, input, { ...opts, paper: D.paper, units });
+      const tb = tbOf(), fm = FM.formats.find((f) => paperKey(f) === D.paper);
+      sheet = composeSheet({ ...D, titleBlockSpec: tb && tb.id !== 'strip' ? tb : null, margin: fm?.margin ?? null }, input, { ...opts, paper: D.paper, units });
       const [pw, ph] = PAPERS[D.paper];
       stage.innerHTML = sheetSvg(sheet, { paper: D.paper });   // generated here: text in it is escaped
       stage.style.maxWidth = 'calc(56vh * ' + (pw / ph).toFixed(4) + ')';   // the whole dialog stays in the window
@@ -565,11 +716,32 @@ export function mountViewsBim(modelUi, o = {}) {
         const [x0, y0, x1, y1] = v.box;
         r.setAttribute('x', x0); r.setAttribute('y', ph - y1); r.setAttribute('width', Math.max(4, x1 - x0)); r.setAttribute('height', Math.max(4, y1 - y0));
         r.setAttribute('data-sh-view', String(v.i)); r.setAttribute('aria-selected', v.i === sel ? 'true' : 'false');
+        r.setAttribute('tabindex', '0'); r.setAttribute('role', 'button'); r.setAttribute('aria-label', String(viewName(D.views[v.i])));
         r.addEventListener('pointerdown', (e) => drag(e, v.i, r, ov));
+        r.addEventListener('keydown', (e) => nudge(e, v.i));   // 0.9 D8.16: arrow keys move it 1 mm (Shift 10, Alt 0.1)
         ov.append(r);
       }
       stage.append(ov);
+      if (refocus && sel >= 0) ov.querySelector(`[data-sh-view="${sel}"]`)?.focus();
+      refocus = false;
       renderSel();
+    }
+    let refocus = false, applying = false;
+    const viewName = (v) => (input[v.kind === 'plan' ? 'plans' : v.kind === 'rcp' ? 'rcps' : v.kind === 'callout' ? 'callouts' : v.kind === 'elevation' ? 'elevations' : v.kind === 'interior' ? 'interiors' : v.kind === 'section' ? 'sections' : 'schedules'] || []).find((x) => x.ref === v.ref)?.title || v.ref;
+    function nudge(e, i) {
+      const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      const k = e.shiftKey ? 10 : e.altKey ? 0.1 : 1, v = D.views[i];
+      sel = i; v.x = Math.round((v.x + d[0] * k) * 100) / 100; v.y = Math.round((v.y + d[1] * k) * 100) / 100;
+      refocus = true; draw();
+    }
+    /** 0.9 D8.16: while dragging, a view's edges and middle stick to the border and to the other views' edges within 2.5 mm (Alt = free). */
+    function snapTo(i, x, y, w, h, [pw, ph], margin) {
+      const tx = [margin, pw - margin, pw / 2], ty = [margin, ph - margin, ph / 2];
+      for (const o of sheet.views) if (o.i !== i) { tx.push(o.box[0], o.box[2], (o.box[0] + o.box[2]) / 2); ty.push(o.box[1], o.box[3], (o.box[1] + o.box[3]) / 2); }
+      const best = (edges, targets) => { let b = 0, bd = 2.5; for (const e of edges) for (const g of targets) if (Math.abs(g - e) < bd) { bd = Math.abs(g - e); b = g - e; } return b; };
+      return [x + best([x - w / 2, x, x + w / 2], tx), y + best([y - h / 2, y, y + h / 2], ty)];
     }
     function drag(e, i, r, ov) {
       e.preventDefault();
@@ -580,28 +752,55 @@ export function mountViewsBim(modelUi, o = {}) {
       const kx = pw / box.width, ky = ph / box.height, sx = e.clientX, sy = e.clientY, v = D.views[i], x0 = v.x, y0 = v.y;
       const rx = Number(r.getAttribute('x')), ry = Number(r.getAttribute('y'));
       r.setPointerCapture?.(e.pointerId);
-      const move = (ev) => { const dx = (ev.clientX - sx) * kx, dy = (ev.clientY - sy) * ky; r.setAttribute('x', rx + dx); r.setAttribute('y', ry + dy); v.x = round1(x0 + dx); v.y = round1(y0 - dy); };
-      const up = () => { r.removeEventListener('pointermove', move); r.removeEventListener('pointerup', up); r.removeEventListener('pointercancel', up); draw(); };
+      const me = sheet.views.find((o) => o.i === i), bw = me ? me.box[2] - me.box[0] : 0, bh = me ? me.box[3] - me.box[1] : 0, mg = FM.formats.find((f) => paperKey(f) === D.paper)?.margin ?? 10;
+      const move = (ev) => {
+        const dx = (ev.clientX - sx) * kx, dy = (ev.clientY - sy) * ky;
+        let nx = x0 + dx, ny = y0 - dy;
+        if (me && !ev.altKey) [nx, ny] = snapTo(i, nx, ny, bw, bh, [pw, ph], mg);
+        r.setAttribute('x', rx + (nx - x0)); r.setAttribute('y', ry - (ny - y0)); v.x = round1(nx); v.y = round1(ny);
+      };
+      const up = () => { r.removeEventListener('pointermove', move); r.removeEventListener('pointerup', up); r.removeEventListener('pointercancel', up); refocus = true; draw(); };
       r.addEventListener('pointermove', move); r.addEventListener('pointerup', up); r.addEventListener('pointercancel', up);
     }
     function renderSel() {
       const v = D.views[sel];
       const missing = sheet?.missing.length ? el('span', { className: 'bc-input-err', 'data-sh-missing': '' }, t('model.sh.missing', { n: sheet.missing.length })) : null;
       if (!v) { selBar.replaceChildren(el('span', { className: 'bc-muted' }, D.views.length ? t('model.sh.pick') : t('model.sh.empty')), missing || ''); return; }
-      const scale = el('select', { className: 'select-cc', 'data-sh-scale': '' }, el('option', { value: '0' }, t('model.sh.autoscale')), ...scalesFor(units).map((s) => el('option', { value: String(s.ratio) }, s.label)));
-      scale.value = String(v.ratio || 0);
+      const scale = el('select', { className: 'select-cc', 'data-sh-scale': '' }, el('option', { value: '0' }, t('model.sh.autoscale')), ...scalesFor(units).map((s) => el('option', { value: String(s.ratio) }, s.label)), el('option', { value: 'typed', hidden: true }, t('model.sh.scale.typed')));
+      const std = v.ratio === 0 || scalesFor(units).some((x) => x.ratio === v.ratio);
+      scale.value = std ? String(v.ratio || 0) : 'typed';
       scale.disabled = v.kind === 'schedule';
-      scale.addEventListener('change', () => { v.ratio = Number(scale.value); draw(); });
+      // 0.9 D8.15: any ratio typed (1:64, 1:256, 1:2.5, 1/4" = 1'); the list beside it fills the box with the usual ones
+      const me = sheet?.views.find((o) => o.i === sel);
+      const typed = el('input', { type: 'text', className: 'bc-input bc-num', 'data-sh-scale-typed': '', value: v.ratio ? (scalesFor(units).find((x) => x.ratio === v.ratio)?.label || '1:' + v.ratio) : '', placeholder: me?.label || t('model.sh.autoscale'), 'aria-label': t('model.sh.scale.type'), disabled: v.kind === 'schedule' });   // i18n-ignore: a scale ratio
+      const bad = el('span', { className: 'bc-input-err', 'data-sh-scale-bad': '', role: 'alert' });
+      scale.addEventListener('change', () => { if (scale.value === 'typed') return; v.ratio = Number(scale.value); draw(); });
+      const takeTyped = () => {
+        if (applying) return;   // redrawing removes the box that has the focus, and that blurs it and fires change again: once is enough
+        applying = true;
+        try { takeTypedNow(); } finally { applying = false; }
+      };
+      const takeTypedNow = () => {
+        const txt = typed.value.trim();
+        if (!txt || /^(fit|auto)/i.test(txt)) { v.ratio = 0; draw(); return; }
+        const r = parseScale(txt);
+        if (r === null) { bad.textContent = t('model.sh.scale.bad'); return; }
+        v.ratio = r; draw();
+      };
+      typed.addEventListener('change', takeTyped);
+      typed.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); takeTyped(); } });
+      // 0.9 D8.16: an exact place for it (the middle of the drawing, from the sheet's lower left corner)
+      const pos = (k) => { const i = el('input', { type: 'text', className: 'bc-input bc-num', 'data-sh-pos': k, value: L(v[k]) }); i.addEventListener('change', () => { if (applying) return; applying = true; try { try { v[k] = round1(parseLen(i.value, units)); } catch (e) { /* kept */ } refocus = false; draw(); } finally { applying = false; } }); return i; };
       const rm = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-remove': '' }, icon('bi-x-lg'), ' ' + t('model.sh.remove'));
       rm.addEventListener('click', () => { D.views.splice(sel, 1); sel = -1; draw(); });
-      const name = (input[v.kind === 'plan' ? 'plans' : v.kind === 'rcp' ? 'rcps' : v.kind === 'callout' ? 'callouts' : v.kind === 'elevation' ? 'elevations' : v.kind === 'interior' ? 'interiors' : v.kind === 'section' ? 'sections' : 'schedules'] || []).find((x) => x.ref === v.ref)?.title || v.ref;
-      selBar.replaceChildren(el('strong', {}, name), field(t('model.sh.scale'), scale), rm, missing || '');
+      const name = viewName(v);
+      selBar.replaceChildren(el('strong', {}, name), field(t('model.sh.scale'), scale), field(t('model.sh.scale.type'), typed), bad, field(t('model.sh.pos.x'), pos('x')), field(t('model.sh.pos.y'), pos('y')), rm, missing || '', el('span', { className: 'bc-muted' }, t('model.sh.pos.hint')));
     }
     const buttons = [btn('save', t('model.sh.save'), { 'data-sh-save': '' }, true), btn('pdf', t('model.sh.pdf'), { 'data-sh-pdf': '' })];
     if (have) buttons.push(btn('delete', t('model.sh.delete'), { 'data-sh-delete': '' }));
     buttons.push(btn('cancel', t('model.sh.close')));
     const dlg = dialog({ 'data-sh-dialog': '' }, have ? t('model.sh.edit') : t('model.sh.new'),
-      [el('div', { className: 'bc-sh-head' }, field(t('model.sh.number'), num), field(t('model.sh.titlef'), title), field(t('res.sh.paper'), paper), arrange, keynotesBtn, keyFileBtn, keyFile),
+      [el('div', { className: 'bc-sh-head' }, field(t('model.sh.number'), num), field(t('model.sh.titlef'), title), field(t('res.sh.paper'), paper), field(t('sh.orient'), orient), field(t('sf.tb'), tbSel), formatsBtn, arrange, keynotesBtn, keyFileBtn, keyFile), fieldsBox,
         el('div', { className: 'bc-sh-body' }, src, el('div', {}, stage, selBar, legendBox)), el('p', { className: 'bc-muted' }, t('model.sh.note'))],
       buttons,
       (what, e) => {
@@ -609,33 +808,92 @@ export function mountViewsBim(modelUi, o = {}) {
         if (what === 'pdf') {
           e.preventDefault();
           const base = String(A.host.fileName?.() || 'model').replace(/\.ifc$/i, '');
-          A.host.download(base + ' — ' + (D.number || t('model.sh.untitled')) + '.pdf', setPdf([sheet], { paper: D.paper, title: base }), 'application/pdf');   // i18n-ignore: a file name
+          A.host.download(base + ' — ' + (D.number || t('model.sh.untitled')) + '.pdf', setPdf(printSheets([sheet]), { paper: D.paper, title: base }), 'application/pdf');   // i18n-ignore: a file name
           return null;
         }
         if (what === 'delete') return run(deleteSheet(have.id), { label: D.number || D.title, verb: t('model.verb.deleted') });
         if (!D.number.trim() && !D.title.trim()) return t('model.err.sheet.name');
-        return run(saveSheet(D), { label: t('model.sh.what', { n: D.number || D.title }), verb: have ? t('model.verb.changed') : t('model.verb.made') });
+        const { titleBlockSpec, margin, ...keep } = D; void titleBlockSpec; void margin;
+        return run(saveSheet(keep), { label: t('model.sh.what', { n: D.number || D.title }), verb: have ? t('model.verb.changed') : t('model.verb.made') });
       });
     dlg.classList.add('bc-sh-dlg');
     showLegend();
     draw();
   }
+  // ------------------------------------------------------------ sheet formats and title blocks (0.9 SU.1123, sheet-formats.js)
+  function openFormats(after) {
+    let FM = readFormats(W());
+    const u = A.units();
+    const list = el('ul', { className: 'bc-sf-list', 'data-sf-list': '' });
+    const draw = () => {
+      FM = readFormats(W());
+      const own = [...FM.formats.filter((f) => !f.builtin).map((f) => ({ ...f, kind: 'format', text: f.name + ' — ' + L(f.w) + ' × ' + L(f.h) })), ...FM.titleBlocks.filter((b) => !b.builtin).map((b) => ({ ...b, kind: 'titleblock', text: b.name + ' — ' + t('sf.place.' + b.place) + ', ' + t('sf.nfields', { n: b.fields.length }) }))];   // i18n-ignore: "w × h"
+      list.replaceChildren(...(own.length ? own.map((x) => el('li', { 'data-sf-item': x.id }, el('span', {}, x.text), el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-delete': x.id, onClick: () => { const why = runIn(deleteFormat(x.id), { label: x.name, verb: t('model.verb.deleted') }); if (why) err.textContent = why; else draw(); } }, t('model.co.delete')))) : [el('li', { className: 'bc-muted' }, t('sf.none'))]));
+    };
+    const err = el('p', { className: 'bc-input-err', role: 'alert' });
+    const fname = el('input', { type: 'text', className: 'bc-input', 'data-sf-fname': '', maxLength: 60, placeholder: t('sf.fname.ph') });
+    const fw = el('input', { type: 'text', className: 'bc-input bc-num', 'data-sf-fw': '', value: L(841) }), fh = el('input', { type: 'text', className: 'bc-input bc-num', 'data-sf-fh': '', value: L(594) }), fm = el('input', { type: 'text', className: 'bc-input bc-num', 'data-sf-fmargin': '', value: L(10) });
+    const addF = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-addformat': '' }, t('sf.addformat'));
+    addF.addEventListener('click', () => { const why = runIn(saveFormat({ kind: 'format', name: fname.value, w: parseLen(fw.value, u), h: parseLen(fh.value, u), margin: parseLen(fm.value, u) }), { label: fname.value.trim(), verb: t('model.verb.made') }); err.textContent = why || ''; if (!why) { fname.value = ''; draw(); } });
+    const tname = el('input', { type: 'text', className: 'bc-input', 'data-sf-tname': '', maxLength: 60, placeholder: t('sf.tname.ph') });
+    const tplace = el('select', { className: 'select-cc', 'data-sf-tplace': '' }, el('option', { value: 'right' }, t('sf.place.right')), el('option', { value: 'bottom' }, t('sf.place.bottom')));
+    const tsize = el('input', { type: 'text', className: 'bc-input bc-num', 'data-sf-tsize': '', value: L(70) });
+    const tfields = el('textarea', { className: 'bc-input', rows: 4, 'data-sf-tfields': '', placeholder: t('sf.tfields.ph') });
+    const addT = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-addtb': '' }, t('sf.addtb'));
+    addT.addEventListener('click', () => {
+      const fields = tfields.value.split(/\n/).map((x) => x.trim()).filter(Boolean).map((x) => ({ key: x.replace(/\*$/, ''), label: x.replace(/\*$/, ''), size: /\*$/.test(x) ? 'large' : 'normal' }));
+      const why = runIn(saveFormat({ kind: 'titleblock', name: tname.value, place: tplace.value, size: parseLen(tsize.value, u), fields }), { label: tname.value.trim(), verb: t('model.verb.made') });
+      err.textContent = why || ''; if (!why) { tname.value = ''; tfields.value = ''; draw(); }
+    });
+    // 0.9 D8.17: a title block of your own: an SVG from a drawing program (its {{words}} become the fields) or one drawn here
+    const svgFile = el('input', { type: 'file', accept: '.svg,image/svg+xml', hidden: true, 'data-sf-svgfile': '' });
+    svgFile.addEventListener('change', async () => {
+      const f = svgFile.files[0]; if (!f) return;
+      const base = f.name.replace(/\.svg$/i, '').slice(0, 60);
+      const why = runIn(saveFormat({ kind: 'titleblock', name: tname.value.trim() || base, place: 'svg', svg: await f.text() }), { label: tname.value.trim() || base, verb: t('model.verb.made') });
+      err.textContent = why || ''; if (!why) { tname.value = ''; draw(); A.host.status(t('sf.svg.added', { name: base })); }
+      svgFile.value = '';
+    });
+    const importSvg = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-importsvg': '', onClick: () => svgFile.click() }, icon('bi-filetype-svg'), ' ' + t('sf.importsvg'));
+    const drawTb = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-drawtb': '', onClick: () => openTitleDesigner({
+      el, dialog, btn, field, t, papers: [['a4', 297, 210], ['a3', 420, 297], ['a2', 594, 420], ['a1', 841, 594], ['a0', 1189, 841], ['letter', 279.4, 215.9], ['tabloid', 431.8, 279.4]].map(([k, w, h]) => ({ label: (/^a\d$/.test(k) ? k.toUpperCase() : t('paper.name.' + k)) + ' · ' + w + ' × ' + h + ' mm', size: [w, h] })),   // i18n-ignore: "w × h mm"
+      save: (name, svg) => { const why = runIn(saveFormat({ kind: 'titleblock', name, place: 'svg', svg }), { label: String(name).trim(), verb: t('model.verb.made') }); if (!why) draw(); return why; } }) }, icon('bi-pencil-square'), ' ' + t('sf.draw'));
+    const file = el('input', { type: 'file', accept: '.json,application/json', hidden: true, 'data-sf-file': '' });
+    file.addEventListener('change', async () => {
+      const f = file.files[0]; if (!f) return;
+      const r = readLibrary(await f.text());
+      if (!r.ok) { err.textContent = t('sf.badfile', { why: r.error }); return; }
+      const why = runIn(importLibrary(r), { label: t('sf.manage'), verb: t('model.verb.added') });
+      err.textContent = why || ''; if (!why) { draw(); A.host.status(t('sf.imported', { n: r.formats.length + r.titleBlocks.length })); }
+    });
+    const imp = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-import': '', onClick: () => file.click() }, t('sf.import'));
+    const exp = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sf-export': '', onClick: () => A.host.download(t('sf.filename') + '.json', libraryText(readFormats(W())), 'application/json') }, t('sf.export'));
+    const dlg = dialog({ 'data-sf-dialog': '' }, t('sf.manage.title'),
+      [el('p', { className: 'bc-muted' }, t('sf.lede')), el('h3', { className: 'bc-pv-h' }, t('sf.own')), list,
+        el('h3', { className: 'bc-pv-h' }, t('sf.newformat')), el('div', { className: 'bc-sh-head' }, field(t('sf.name'), fname), field(t('sf.w'), fw), field(t('sf.h'), fh), field(t('sf.margin'), fm), addF),
+        el('h3', { className: 'bc-pv-h' }, t('sf.newtb')), el('div', { className: 'bc-sh-head' }, field(t('sf.name'), tname), field(t('sf.place'), tplace), field(t('sf.size'), tsize)), field(t('sf.fields'), tfields), el('p', {}, addT), el('p', { className: 'bc-lib-actions' }, drawTb, importSvg, svgFile), el('p', { className: 'bc-muted' }, t('sf.svg.hint')),
+        el('p', { className: 'bc-lib-actions' }, imp, exp, file), err],
+      [btn('cancel', t('model.sh.close'), { 'data-sf-close': '' }, true)], () => null);
+    dlg.addEventListener('close', () => after?.());
+    draw();
+  }
   const round1 = (v) => Math.round(v * 10) / 10;
   /** 0.6 DC.117 (c): what a sheet can show of each callout (one whose parent is gone is not offered: it is missing). */
   function calloutInput() {
-    return R.callouts.map((c) => {
+    return [...R.callouts, ...R.copies.filter((c) => !projectedKind(c.base))].map((c) => {
       const r = rootOf(c.id), lv = r ? levelByGuid(r.level) : null;
       return lv ? { ref: c.id, title: c.name, get scene() { return this._scene || (this._scene = A.sceneFor(lv.id, r.kind, c.id)); } } : null;
     }).filter(Boolean);
   }
 
   // --------------------------------------------------------------------------- the crop tool (0.6 DC.117): two corners
-  function startCrop(levelGuid, kind = 'plan') {
+  function startCrop(levelGuid, kind = 'plan', copyId = null) {
     const lv = levelByGuid(levelGuid);
     if (!lv) return;
     if (!A.S.on) modelUi.show(true);
-    if (A.S.level !== lv.id || A.S.kind !== kind) A.showKind(lv.id, kind);
-    R.crop = { level: levelGuid, kind, a: null, at: null };
+    if (copyId) { if (A.S.callout !== copyId) openCallout(copyId); }
+    else if (A.S.level !== lv.id || A.S.kind !== kind || A.S.callout) A.showKind(lv.id, kind);
+    R.crop = { level: levelGuid, kind, a: null, at: null, copy: copyId };
     A.setTool('crop');
   }
   function cropClick(p) {
@@ -647,6 +905,7 @@ export function mountViewsBim(modelUi, o = {}) {
     const lv = levelByGuid(c.level);
     R.crop = null;
     A.setTool('select');
+    if (c.copy) { const why = runIn(saveCopy(c.copy, { range: { crop: rect } }), { label: copyOf(c.copy)?.name || '', verb: t('model.verb.changed') }); if (why) A.host.status(why, true); return; }
     const why = run(setPlanView(c.level, { crop: rect }, c.kind), { label: t('model.pv.crop.what', { level: lv?.name || '' }), verb: t('model.verb.changed') });
     if (why) A.host.status(why, true);
   }
@@ -715,7 +974,7 @@ export function mountViewsBim(modelUi, o = {}) {
     scene: (scene) => { addUnderlay(scene); addCeilings(scene); addCallouts(scene); },
     viewRange: (levelId, kind, callout) => rangeOf(levelId, kind, callout),
     selectClick: (p) => tagClick(p),
-    viewTitle: () => { const c = A.S.callout ? R.callouts.find((x) => x.id === A.S.callout) : null; return c ? t('model.co.print', { name: c.name }) : null; },
+    viewTitle: () => { const c = A.S.callout ? R.callouts.find((x) => x.id === A.S.callout) || copyOf(A.S.callout) : null; return c ? t('model.co.print', { name: c.name }) : null; },
     refresh() { read(); render(); renderChip(); },
   });
   mountDrafting(modelUi, { viewKey, viewName });   // 0.6 DC.117 (d)
@@ -737,7 +996,8 @@ export function mountViewsBim(modelUi, o = {}) {
     if (patch.scale !== undefined) ch.scale = patch.scale;
     return run(setPlanView(lv.guid, ch), { label: t('model.pv.what', { level: lv.name }), verb: t('model.verb.changed') });
   }
-  const api = { openRange, openTemplate, openSheet, render, rangeOf, startCrop, startCallout, openCallout, editCallout, viewKey, backToParent, workspaceSettings, setWorkspaceSettings };
+  const api = { openRange, openTemplate, openSheet, render, rangeOf, startCrop, startCallout, openCallout, editCallout, viewKey, backToParent, workspaceSettings, setWorkspaceSettings,
+    askDuplicate, editCopy, openCopy, copies: () => R.copies, anyName, openFormats };   // 0.9 D8.12-A
   if (typeof window !== 'undefined') window.bimcraftViews = { state: R, api };   // for tests
   return api;
 }

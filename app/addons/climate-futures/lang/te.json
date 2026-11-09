@@ -1,0 +1,8 @@
+{
+  "@locale": "te",
+  "@name": "తెలుగు",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "డేటా మరియు మూలాలు",
+  "data.nex": "NASA NEX-GDDP-CMIP6, డౌన్‌స్కేల్ చేయబడిన CMIP6 మోడల్ అవుట్‌పుట్ (ప్రతి మోడల్‌కు CC BY 4.0); ప్రపంచ సముద్ర మట్టం: IPCC AR6",
+  "data.sample": "నమూనా ప్యాక్: మూడు ప్రదేశాలు, ఒక మోడల్, ప్రతి కాలవ్యవధికి ఐదు సంవత్సరాలు. డిజైన్ కోసం కాదు."
+}

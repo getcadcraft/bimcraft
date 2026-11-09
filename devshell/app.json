@@ -22,6 +22,7 @@
         "coolprop": "6.6.0",
         "delaunator": "5.1.0",
         "geotiff": "3.0.5",
+        "kiri-moto": "4.7.3",
         "laz-perf": "0.0.7",
         "manifold-3d": "3.5.4",
         "noble-ciphers": "2.4.0",
@@ -40,7 +41,7 @@
     },
     "origin": "https://getcadcraft.com",
     "packed": {
-        "at": "2026-11-02T15:12:09Z",
+        "at": "2026-11-09T08:48:03Z",
         "build": "dev"
     }
 }

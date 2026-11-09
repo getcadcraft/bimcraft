@@ -1,0 +1,12 @@
+{
+  "@locale": "hr",
+  "@name": "Hrvatski",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Redoslijed bajtova",
+  "opt.byteOrder.big": "Big-endian (uobičajeno izvješće)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolni zbroj",
+  "opt.checksum.negsum": "Negirani zbroj",
+  "opt.checksum.sum": "Obični zbroj"
+}

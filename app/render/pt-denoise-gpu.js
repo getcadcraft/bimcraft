@@ -63,7 +63,7 @@ export async function createGpuDenoiser(net, { adapter = null, device = null, co
   if (!device) {
     adapter = adapter || (await gpuAdapter());
     if (!adapter) throw Object.assign(new Error('no WebGPU'), { code: 'no_webgpu' });
-    device = await adapter.requestDevice();
+    device = await adapter.requestDevice().catch((e) => { throw Object.assign(new Error(String(e && e.message || e)), { code: 'gpu_setup' }); });
   }
   const own = [], U = GPUBufferUsage, T = net.tensors;
   const buf = (bytes, usage) => { const b = device.createBuffer({ size: Math.max(16, Math.ceil(bytes / 16) * 16), usage }); own.push(b); return b; };

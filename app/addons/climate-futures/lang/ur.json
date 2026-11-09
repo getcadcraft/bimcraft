@@ -1,0 +1,8 @@
+{
+  "@locale": "ur",
+  "@name": "اردو",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "ڈیٹا اور ماخذ",
+  "data.nex": "NASA NEX-GDDP-CMIP6، CMIP6 ماڈل کا ڈاؤن اسکیل شدہ آؤٹ پٹ (ہر ماڈل کے لیے CC BY 4.0)؛ عالمی سمندری سطح: IPCC AR6",
+  "data.sample": "نمونہ پیک: تین مقامات، ایک ماڈل، ہر مدت میں پانچ سال۔ ڈیزائن کے لیے نہیں۔"
+}

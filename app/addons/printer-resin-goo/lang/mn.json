@@ -1,0 +1,12 @@
+{
+  "@locale": "mn",
+  "@name": "Монгол",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Байтын дараалал",
+  "opt.byteOrder.big": "Их эндиан (ихэвчлэн стандарт)",
+  "opt.byteOrder.little": "Бага эндиан",
+  "opt.checksum": "Шалгах нийлбэр",
+  "opt.checksum.negsum": "Сөрөг нийлбэр",
+  "opt.checksum.sum": "Энгийн нийлбэр"
+}

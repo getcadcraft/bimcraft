@@ -34,7 +34,7 @@ export function mountModify(modelUi) {
     if (!keys.length) return [];
     const w = new ModelWriter(ed.W, ed.api, ed.mid), order = new Map(keys.map((k, i) => [k, i]));
     const mine = [];
-    for (const e of movables(w)) { const id = w.byGuid(e.guid); if (id != null && order.has(kb + id)) mine.push({ ...e, at: order.get(kb + id) }); }
+    for (const e of movables(w)) { const id = w.byGuid(e.guid), hit = (e.ids || [id]).find((i) => i != null && order.has(kb + i)); if (hit != null) mine.push({ ...e, at: order.get(kb + hit) }); }
     return mine.sort((a, b) => a.at - b.at);
   }
   const snap = (p, e) => A.snapAt(p, e).p;

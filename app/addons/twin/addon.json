@@ -1,0 +1,21 @@
+{
+  "id": "twin",
+  "name": "Digital twin",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.4",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "panel",
+    "files",
+    "storage"
+  ],
+  "description": "Run a Material flow layout inside your building: put a ready cell or a layout file on a level, see the equipment in the 3D view, check it against the walls, and run the flow and a soft PLC on it. The building gives the room and walls, not machine behaviour. Not a safety validation.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "off"
+}

@@ -1,0 +1,8 @@
+{
+  "@locale": "ru",
+  "@name": "Русский",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Данные и источники",
+  "data.nex": "NASA NEX-GDDP-CMIP6: детализированные выходные данные моделей CMIP6 (CC BY 4.0 для каждой модели); глобальный уровень моря: IPCC AR6",
+  "data.sample": "Пробный набор: три места, одна модель, пять лет на каждый период. Не для проектирования."
+}

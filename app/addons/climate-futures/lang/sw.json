@@ -1,0 +1,8 @@
+{
+  "@locale": "sw",
+  "@name": "Kiswahili",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data na vyanzo",
+  "data.nex": "NASA NEX-GDDP-CMIP6, matokeo ya modeli ya CMIP6 yaliyopunguzwa ukubwa (CC BY 4.0 kwa kila modeli); kiwango cha bahari duniani: IPCC AR6",
+  "data.sample": "Kifurushi cha sampuli: maeneo matatu, modeli moja, miaka mitano kwa kila kipindi. Si kwa usanifu."
+}

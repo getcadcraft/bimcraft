@@ -1,0 +1,21 @@
+{
+  "@locale": "ko",
+  "@name": "한국어",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect 경유)",
+  "step.orca": "이 컴퓨터에 OrcaSlicer를 설치합니다.",
+  "step.orca.link": "OrcaSlicer 받기",
+  "step.connect": "이 컴퓨터에 Bambu Connect를 설치합니다.",
+  "step.connect.link": "Bambu Connect 받기",
+  "step.bind": "Bambu Connect에서 P2S를 추가합니다. 이 작업은 한 번만 하면 됩니다.",
+  "step.send": "3D 프린터에 보내기 버튼을 누르십시오. 파일은 Bambu Connect에서 열리며, 거기서 확인한 뒤 출력을 시작하십시오.",
+  "note": "Bambu Connect는 Bambu Lab이 다른 소프트웨어에서 출력하기 위해 제공하는 프로그램이며, 출력은 이 프로그램에서 시작됩니다.",
+  "confirm": "OrcaSlicer가 P2S 프리셋으로 준비했습니다: {grams} g, {layers}층.",
+  "confirm.next": "Bambu Connect에서 여시겠습니까? 거기서 출력을 시작하기 전까지는 출력되지 않습니다.",
+  "done": "Bambu Connect에 보냈습니다. 거기서 확인한 뒤 출력을 시작하십시오.",
+  "fail.orca": "이 컴퓨터에서 OrcaSlicer를 찾을 수 없습니다. 설치한 뒤 다시 시도하십시오.",
+  "fail.slice": "OrcaSlicer가 이 출력을 준비하지 못했습니다. {why}",
+  "fail.nogcode": "OrcaSlicer 파일에 출력할 내용이 없습니다.",
+  "fail.bed": "이 모델은 P2S의 베드에 들어가지 않습니다.",
+  "fail.connect": "Bambu Connect가 열리지 않았습니다. 설치한 뒤 다시 시도하십시오."
+}

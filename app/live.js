@@ -24,6 +24,8 @@
 
 import { pack, unpack } from './live-client.js';
 import { t } from './i18n.js';
+import { attachPresence, threeView } from './live-presence.js';
+import { threeFollow } from './live-follow.js';   // 0.9 ED.1: follow a view (the camera)
 
 export const SCHEMA = 1;
 export const ID_BASE = 1e9, ID_BLOCK = 1e7;
@@ -170,7 +172,8 @@ export function createLive(opts) {
     // pointers of the people in VR; the client keeps the newest of each peer and hands them here
     others: new Map(),
     drawPresence(peers) { live.others = new Map(peers); },
-    setPresence(p) { client?.setPresence(p); },
+    // merged: the shared layer's pointer (sp, cur, sel) and the headset's `xr` travel in one presence (0.9 SU.1112)
+    setPresence(p) { client?.setPresence({ ...(client.lastPresence || {}), ...p }); },
     peers() { return live.others; },
     nameOf(c) { const p = client && client.peers && client.peers.get(c); return (p && p.name) || t('live.someone'); },
     apply(ops) { applyOps(ops); },
@@ -287,6 +290,7 @@ export function createLiveAdapter({ host } = {}) {
         a.bind(c); w = watchEditor(editor, a, c);
         app.live = a;
         offs = [
+          attachPresence(c, a, presenceView(app), { t }),
           c.on('refused', (r) => say(t(r.reason === 'locked' ? 'live.refused.locked' : r.reason === 'role' ? 'live.refused.role' : 'live.refused', { what: r.label || '', name: r.byName || t('live.someone') }))),
           c.on('undo-skipped', (r) => say(t('live.undo_skipped', { what: r.label || '', name: r.byName || t('live.someone') }))),
           c.on('ended', () => say(t('live.ended'))),
@@ -301,6 +305,39 @@ export function createLiveAdapter({ host } = {}) {
     });
   }
   return a;
+}
+
+/**
+ * Where BimCraft's pointer is and where others' go (0.9 SU.1112, live-presence.js): the 3D viewer's world, the point on
+ * the element under the pointer (else the plane through the view's centre); each selected element as its own box.
+ * `app.viewer` is the Viewer3D (bimcraft.js hands it to window.bimcraftLive); no viewer yet = nothing to draw on.
+ */
+export function presenceView(app) {
+  const v = () => app.viewer;
+  let cache = { k: '', boxes: [] };
+  const tv = threeView({
+    camera: () => v() && v().camera,
+    target: () => { const c = v() && v().controls && v().controls.target; return c ? [c.x, c.y, c.z] : null; },
+    hit: (x, y) => {
+      const view = v();
+      if (!view || !view.hitAt || !view.canvas) return null;
+      const r = view.canvas.getBoundingClientRect(), h = view.hitAt(r.left + x, r.top + y);
+      return h && Array.isArray(h.point) ? h.point : null;
+    },
+  });
+  return {
+    get el() { return v() && v().canvas; },
+    toModel: tv.toModel, toScreen: tv.toScreen,
+    ...threeFollow({ camera: () => v() && v().camera, controls: () => v() && v().controls, scale: 1, render: () => { const x = v(); if (x && x.render) x.render(); } }),   // 0.9 ED.1
+    selection: () => {
+      const view = v();
+      if (!view || !view.selection || !view.selection.size || !view.keyBoundsMap) return [];
+      const keys = [...view.selection].slice(0, 64), k = keys.join() + '|' + (view.meshes ? view.meshes.length : 0) + '|' + ((app.live && app.live.client && app.live.client.q) || 0);
+      if (k !== cache.k) cache = { k, boxes: [...view.keyBoundsMap(keys).values()].map((b) => [...b.min, ...b.max]) };   // one pass over the batches per change
+      return cache.boxes;
+    },
+    hidden: () => { const c = v() && v().canvas; return !c || !c.isConnected || c.offsetParent === null; },
+  };
 }
 
 /** A browser opening a link with #live=<code> (a page a host serves on the LAN) or ?live=<ROOM>#<secret> joins. */

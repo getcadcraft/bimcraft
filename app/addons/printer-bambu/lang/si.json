@@ -1,0 +1,21 @@
+{
+  "@locale": "si",
+  "@name": "සිංහල",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connect හරහා)",
+  "step.orca": "මෙම පරිගණකයේ OrcaSlicer ස්ථාපනය කරන්න.",
+  "step.orca.link": "OrcaSlicer ලබාගන්න",
+  "step.connect": "මෙම පරිගණකයේ Bambu Connect ස්ථාපනය කරන්න.",
+  "step.connect.link": "Bambu Connect ලබාගන්න",
+  "step.bind": "Bambu Connect හි ඔබේ P2S එකතු කරන්න. මෙය එක් වරක් කරන්න.",
+  "step.send": "3D මුද්‍රකයට යවන්න ඔබන්න. ගොනුව Bambu Connect හි විවෘත වේ: එහි පරීක්ෂා කර මුද්‍රණය ආරම්භ කරන්න.",
+  "note": "Bambu Connect යනු වෙනත් මෘදුකාංග වලින් මුද්‍රණය කිරීම සඳහා Bambu Lab හි අනන්‍ය වැඩසටහන වන අතර, මුද්‍රණය එහිදී ආරම්භ වේ.",
+  "confirm": "OrcaSlicer මෙය ඔවුන්ගේ P2S පෙරසැකසුම් සමඟ සූදානම් කළේය: {grams} g, ස්ථර {layers}.",
+  "confirm.next": "එය Bambu Connect හි විවෘත කරන්නද? එහි ඔබ ආරම්භ කරන තුරු කිසිවක් මුද්‍රණය නොවේ.",
+  "done": "Bambu Connect වෙත යවන ලදී. එහි පරීක්ෂා කර මුද්‍රණය ආරම්භ කරන්න.",
+  "fail.orca": "මෙම පරිගණකයේ OrcaSlicer හමු නොවීය. එය ස්ථාපනය කර නැවත උත්සාහ කරන්න.",
+  "fail.slice": "OrcaSlicer ට මෙම මුද්‍රණය සූදානම් කළ නොහැකි විය. {why}",
+  "fail.nogcode": "OrcaSlicer ගොනුවේ මුද්‍රණ දත්ත කිසිවක් නොතිබුණි.",
+  "fail.bed": "මෙය P2S හි මුද්‍රණ මේසයට ගැළපෙන්නේ නැත.",
+  "fail.connect": "Bambu Connect විවෘත නොවීය. එය ස්ථාපනය කර නැවත උත්සාහ කරන්න."
+}

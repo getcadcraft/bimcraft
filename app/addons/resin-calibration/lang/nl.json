@@ -1,0 +1,14 @@
+{
+  "@locale": "nl",
+  "@name": "Nederlands",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Belichtingstest",
+  "note": "Harsen en printers verschillen. Druk het testonderdeel één keer af bij elke belichting in de reeks en houd de belichting aan met de scherpste dunne pilaren en open gaten.",
+  "part": "Plaats het testonderdeel op het bed",
+  "part.name": "Belichtingstest-onderdeel",
+  "ladder": "Belichtingsreeks opslaan ({n} bestanden)",
+  "ladder.made": "{n} bestanden opgeslagen voor {list} s. Druk elk af met dezelfde hars en vergelijk ze.",
+  "ladder.nopart": "Plaats eerst het testonderdeel op het bed.",
+  "ladder.failed": "De belichtingsreeks kon niet worden gemaakt. {why}",
+  "ladder.busy": "Bezig met {i} van {n}…"
+}

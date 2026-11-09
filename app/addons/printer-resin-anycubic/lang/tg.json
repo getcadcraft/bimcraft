@@ -1,0 +1,21 @@
+{
+  "@locale": "tg",
+  "@name": "Тоҷикӣ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX ва PWS",
+  "opt.flip": "Тасвирро оина кардан",
+  "opt.flip.off": "Не",
+  "opt.flip.on": "Ҳа, аз чап ба рост",
+  "opt.version": "Версияи файл",
+  "opt.version.v1": "Версияи 1 (маъмулӣ)",
+  "opt.version.v516": "Версияи 516",
+  "opt.aa": "Сатҳҳои ҳамворкунии канорҳо",
+  "opt.aa.1": "1 (бе)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Аломати танзимоти ҳар қабат",
+  "opt.perLayer.off": "Хомӯш",
+  "opt.perLayer.on": "Фаъол"
+}

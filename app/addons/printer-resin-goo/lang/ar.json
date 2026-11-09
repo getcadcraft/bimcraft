@@ -1,0 +1,12 @@
+{
+  "@locale": "ar",
+  "@name": "العربية",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ترتيب البايتات",
+  "opt.byteOrder.big": "Big-endian (المعتاد في التقرير)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "مجموع التحقق",
+  "opt.checksum.negsum": "المجموع المعكوس",
+  "opt.checksum.sum": "المجموع العادي"
+}

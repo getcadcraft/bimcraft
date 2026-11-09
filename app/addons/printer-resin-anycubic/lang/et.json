@@ -1,0 +1,21 @@
+{
+  "@locale": "et",
+  "@name": "Eesti",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "Peegelda pilt",
+  "opt.flip.off": "Ei",
+  "opt.flip.on": "Jah, vasakult paremale",
+  "opt.version": "Failiversioon",
+  "opt.version.v1": "Versioon 1 (tavaline)",
+  "opt.version.v516": "Versioon 516",
+  "opt.aa": "Servasilumise tasemed",
+  "opt.aa.1": "1 (puudub)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Kihi kaupa sätete lipp",
+  "opt.perLayer.off": "Väljas",
+  "opt.perLayer.on": "Sees"
+}

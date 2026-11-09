@@ -1,0 +1,21 @@
+{
+  "@locale": "dv",
+  "@name": "ދިވެހި",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX އަދި PWS",
+  "opt.flip": "ފޮޓޯ މިރާރުކުރޭ",
+  "opt.flip.off": "ނޫން",
+  "opt.flip.on": "ހާ، ކަނޑުން ޖަނަބަށް",
+  "opt.version": "ފައިލްގެ ވަރުޝަން",
+  "opt.version.v1": "ވަރުޝަން 1 (ޢާންމު)",
+  "opt.version.v516": "ވަރުޝަން 516",
+  "opt.aa": "ކަނޑު ސްމޫތިންގ ލެވެލްތައް",
+  "opt.aa.1": "1 (އެއްވެސް ނޫން)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ލޭޔަރުތަކުގެ ސެޓިންގްސް ފްލެގް",
+  "opt.perLayer.off": "އޮފް",
+  "opt.perLayer.on": "އޮން"
+}

@@ -42,6 +42,7 @@
   "teamwork": true,
   "totals": true,
   "lessons": true,
+  "docinfo": true,
   "ai-suggest": true,
   "ai-activity": true,
   "ai-ask": true,
@@ -56,7 +57,7 @@
     "site"
   ],
   "input": "input-bimcraft.js",
-  "workspaces": { "layouts": ["docked", "toolbox", "autorev"], "adapter": "workspace-bimcraft.js" },
+  "workspaces": { "layouts": ["docked", "toolbox", "autorev", "duncan", "vector", "sketch"], "adapter": "workspace-bimcraft.js" },
   "problems": true,
   "propgrid": true,
   "access": true,

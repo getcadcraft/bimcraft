@@ -1,0 +1,8 @@
+{
+  "@locale": "lt",
+  "@name": "Lietuvių",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Duomenys ir šaltiniai",
+  "data.nex": "NASA NEX-GDDP-CMIP6, suskaitytas CMIP6 modelių išvestis (CC BY 4.0 kiekvienam modeliui); globalus jūros lygis: IPCC AR6",
+  "data.sample": "Pavyzdinis rinkinys: trys vietos, vienas modelis, penkeri metai kiekvienam laikotarpiui. Neskirta projektavimui."
+}

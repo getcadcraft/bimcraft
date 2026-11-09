@@ -1,0 +1,21 @@
+{
+  "@locale": "sw",
+  "@name": "Kiswahili",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (kupitia Bambu Connect)",
+  "step.orca": "Sakinisha OrcaSlicer kwenye kompyuta hii.",
+  "step.orca.link": "Pata OrcaSlicer",
+  "step.connect": "Sakinisha Bambu Connect kwenye kompyuta hii.",
+  "step.connect.link": "Pata Bambu Connect",
+  "step.bind": "Katika Bambu Connect, ongeza P2S yako. Fanya hili mara moja tu.",
+  "step.send": "Bonyeza Tuma kwa kichapishi cha 3D. Faili itafunguka katika Bambu Connect: ikague hapo kisha uanze uchapishaji.",
+  "note": "Bambu Connect ni programu ya Bambu Lab yenyewe ya kuchapisha kutoka programu nyingine, na uchapishaji unaanzia hapo.",
+  "confirm": "OrcaSlicer kimeandaa hili kwa mipangilio yake ya P2S: {grams} g, tabaka {layers}.",
+  "confirm.next": "Ifungue katika Bambu Connect? Hakuna kitakachochapishwa hadi uanze hapo.",
+  "done": "Imetumwa kwa Bambu Connect. Ikague hapo kisha uanze uchapishaji.",
+  "fail.orca": "OrcaSlicer haikupatikana kwenye kompyuta hii. Isakinishe, kisha ujaribu tena.",
+  "fail.slice": "OrcaSlicer haikuweza kuandaa uchapishaji huu. {why}",
+  "fail.nogcode": "Faili ya OrcaSlicer haina uchapishaji.",
+  "fail.bed": "Hiki hakitoshi kwenye sahani ya uchapishaji ya P2S.",
+  "fail.connect": "Bambu Connect haikufunguka. Isakinishe, kisha ujaribu tena."
+}

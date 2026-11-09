@@ -1,0 +1,14 @@
+{
+  "@locale": "fi",
+  "@name": "Suomi",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Valotustesti",
+  "note": "Hartsit ja tulostimet eroavat toisistaan. Tulosta testikappale kerran jokaisella tikkaiden valotusarvolla ja säilytä se valotus, jolla ohuet pylväät ja avoimet reiät ovat terävimmät.",
+  "part": "Aseta testikappale alustalle",
+  "part.name": "Valotustestin kappale",
+  "ladder": "Tallenna valotustikkaat ({n} tiedostoa)",
+  "ladder.made": "Tallennettu {n} tiedostoa valotusajoille {list} s. Tulosta jokainen samalla hartsilla ja vertaa.",
+  "ladder.nopart": "Aseta ensin testikappale alustalle.",
+  "ladder.failed": "Valotustikkaita ei voitu tehdä. {why}",
+  "ladder.busy": "Tehdään {i}/{n}…"
+}

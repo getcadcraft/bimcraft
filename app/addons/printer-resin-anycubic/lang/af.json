@@ -1,0 +1,21 @@
+{
+  "@locale": "af",
+  "@name": "Afrikaans",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX en PWS",
+  "opt.flip": "Spieël die prent",
+  "opt.flip.off": "Nee",
+  "opt.flip.on": "Ja, links na regs",
+  "opt.version": "Lêerweergawe",
+  "opt.version.v1": "Weergawe 1 (die gewone)",
+  "opt.version.v516": "Weergawe 516",
+  "opt.aa": "Randgladmaakvlakke",
+  "opt.aa.1": "1 (geen)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Instellingsvlag per laag",
+  "opt.perLayer.off": "Af",
+  "opt.perLayer.on": "Aan"
+}

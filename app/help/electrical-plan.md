@@ -29,6 +29,12 @@ Prefer to browse by picture? Open the **Symbol palette** from {{ui:Build}} to fi
 
 The plan draws a dashed curve from the switch to each of its lights. A light's **Properties** shows which switches turn it on.
 
+## Let your assistant place them
+
+With an assistant connected (Settings › Assistants, with edits allowed), you can ask for devices in words: "put a double socket every 2 m along the living room walls, 300 mm up, on circuit 3", or "add a ceiling light with its switch by the door". The assistant uses five tools: `devices_add`, `device_change`, `lights_set`, `devices_delete` and `devices_list`. They make the same devices the Electrical tool makes, on the same walls and with the same tags, circuits, loads and heights, and each call is one undo step.
+
+A device never gets a kind the Electrical tool does not have: an unknown kind is refused and the assistant is given the list. A socket or switch must sit within 600 mm of a wall face, like a click, or the call is refused and nothing is placed. Default heights are millimetres: 300 for sockets, 1100 for switches; a ceiling device hangs from the ceiling.
+
 ## Change and list them
 
 Pick a device to change its tag, circuit, load (watts) and mounting height. Pick several to put them all on one circuit at once. Press {{key:Delete}} to remove one; a deleted light is taken off its switches.

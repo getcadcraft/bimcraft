@@ -1,0 +1,21 @@
+{
+  "@locale": "ar",
+  "@name": "العربية",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "‏Bambu Lab P2S (عبر Bambu Connect)",
+  "step.orca": "ثبّت OrcaSlicer على هذا الكمبيوتر.",
+  "step.orca.link": "الحصول على OrcaSlicer",
+  "step.connect": "ثبّت Bambu Connect على هذا الكمبيوتر.",
+  "step.connect.link": "الحصول على Bambu Connect",
+  "step.bind": "في Bambu Connect، أضف الطابعة P2S الخاصة بك. يكفي فعل ذلك مرة واحدة.",
+  "step.send": "اضغط Send to 3D printer. يُفتح الملف في Bambu Connect: تحقّق منه هناك وابدأ الطباعة.",
+  "note": "برنامج Bambu Connect الخاص بشركة Bambu Lab للطباعة من البرامج الأخرى، وتبدأ الطباعة منه.",
+  "confirm": "أعدّ OrcaSlicer هذه الطباعة باستخدام إعدادات P2S المسبقة: {grams} g، {layers} طبقة.",
+  "confirm.next": "أتفتحه في Bambu Connect؟ لا تُطبع أي شيء حتى تبدأ الطباعة هناك.",
+  "done": "أُرسل إلى Bambu Connect. تحقّق منه هناك وابدأ الطباعة.",
+  "fail.orca": "لم يُعثر على OrcaSlicer على هذا الكمبيوتر. ثبّته، ثم حاول مرة أخرى.",
+  "fail.slice": "تعذّر على OrcaSlicer تجهيز هذه الطباعة. {why}",
+  "fail.nogcode": "لا يتضمن ملف OrcaSlicer أي طباعة.",
+  "fail.bed": "هذا لا يتسع على سرير الطباعة في P2S.",
+  "fail.connect": "لم يُفتح Bambu Connect. ثبّته، ثم حاول مرة أخرى."
+}

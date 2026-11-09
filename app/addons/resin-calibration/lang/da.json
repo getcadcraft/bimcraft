@@ -1,0 +1,14 @@
+{
+  "@locale": "da",
+  "@name": "Dansk",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Eksponeringstest",
+  "note": "Harpiks og printere er forskellige. Print testdelen én gang ved hver eksponering i stigen, og behold den eksponering med de skarpeste tynde søjler og åbne huller.",
+  "part": "Læg testdelen på pladen",
+  "part.name": "Eksponeringstestdel",
+  "ladder": "Gem eksponeringsstigen ({n} filer)",
+  "ladder.made": "Gemte {n} filer for {list} s. Print hver med samme harpiks og sammenlign.",
+  "ladder.nopart": "Læg testdelen på pladen først.",
+  "ladder.failed": "Stigen kunne ikke laves. {why}",
+  "ladder.busy": "Laver {i} af {n}…"
+}

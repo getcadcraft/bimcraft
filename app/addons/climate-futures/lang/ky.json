@@ -1,0 +1,8 @@
+{
+  "@locale": "ky",
+  "@name": "Кыргызча",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Маалыматтар жана булактар",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 моделдеринин ылдыйлатылган чыгарылышы (ар бир модель үчүн CC BY 4.0); дүйнөлүк деңиз деңгээли: IPCC AR6",
+  "data.sample": "Үлгү топтому: үч жер, бир модель, ар бир мезгил үчүн беш жыл. Долбоорлоо үчүн эмес."
+}

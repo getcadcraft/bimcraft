@@ -1,0 +1,8 @@
+{
+  "@locale": "af",
+  "@name": "Afrikaans",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data en bronne",
+  "data.nex": "NASA NEX-GDDP-CMIP6, afwaarts-geskaalde CMIP6-modeluitset (CC BY 4.0 per model); wêreldwye seevlakstyging: IPCC AR6",
+  "data.sample": "Monsterpakket: drie plekke, een model, vyf jaar per tydperk. Nie vir ontwerp nie."
+}

@@ -1,0 +1,12 @@
+{
+  "@locale": "it",
+  "@name": "Italiano",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Ordine dei byte",
+  "opt.byteOrder.big": "Big-endian (il formato abituale)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Checksum",
+  "opt.checksum.negsum": "Somma negata",
+  "opt.checksum.sum": "Somma semplice"
+}

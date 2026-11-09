@@ -1,0 +1,8 @@
+{
+  "@locale": "lv",
+  "@name": "Latviešu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Dati un avoti",
+  "data.nex": "NASA NEX-GDDP-CMIP6, mērogā samazināti CMIP6 modeļu izvades dati (CC BY 4.0 katram modelim); globālais jūras līmenis: IPCC AR6",
+  "data.sample": "Paraugs: trīs vietas, viens modelis, pieci gadi katrā periodā. Nav paredzēts projektēšanai."
+}

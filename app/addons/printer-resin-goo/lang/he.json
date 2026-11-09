@@ -1,0 +1,12 @@
+{
+  "@locale": "he",
+  "@name": "עברית",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "סדר בתים",
+  "opt.byteOrder.big": "Big-endian (הדיווח הרגיל)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "סכום בקרה",
+  "opt.checksum.negsum": "סכום שלילי",
+  "opt.checksum.sum": "סכום פשוט"
+}

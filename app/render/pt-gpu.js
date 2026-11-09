@@ -46,7 +46,8 @@ export async function createGpuTracer(pk, { adapter, mask }) {
   const limits = {};
   if (need > 134217728) limits.maxStorageBufferBindingSize = Math.min(adapter.limits.maxStorageBufferBindingSize, need);
   if (need > 268435456) limits.maxBufferSize = Math.min(adapter.limits.maxBufferSize, need);
-  const device = await adapter.requestDevice({ requiredLimits: limits });
+  // a driver that cannot start the device (Windows: dxcompiler.dll error 87) rejects here: tagged so the caller falls back to WebGL
+  const device = await adapter.requestDevice({ requiredLimits: limits }).catch((e) => { throw Object.assign(new Error(String(e && e.message || e)), { code: 'gpu_setup' }); });
   let lost = null;
   device.lost.then((info) => { lost = info; });
   const U = GPUBufferUsage;

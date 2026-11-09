@@ -4,14 +4,15 @@
  *   Grid    [data-mtool="grid"]    click two points: a grid line (labelled the next number or letter of the lines it runs
  *                                  along); click a line to pick it (label, delete); "Place a grid…" [data-grid-place] opens
  *                                  a dialog (numbered and lettered lines: how many, spacing, first label, how far past, turn),
- *                                  then a click puts its first crossing (1 / A); Bubbles [data-grid-bubbles] for the grid
+ *                                  then a click puts its first crossing (1 / A); Bubbles [data-grid-bubbles] for the grid;
+ *                                  Dimensions [data-grid-dims] (0.9 D9.2): the spacings and overall size on every plan
  *   Column  [data-mtool="column"]  click: a column there (snaps to grid crossings, walls); "At every grid crossing"
  *                                  [data-col-grid]; shape, width, depth, top (the level above / a fixed height)
  * Every level's plan draws the building's grid (scene.grids, model-planview.js) and the Draw tools snap to its lines and
  * crossings (snapCtx). A picked column shows its shape, size and top in Properties; Delete removes it.
  * IFC: model-grids.js, model-columns.js. Test hook: window.bimcraftGrids = { state, api }.
  */
-import { gridLayout, gridSnap, readGrids, toPlan, placeGrid, changeGridAxis, removeGridAxes, changeGrid, BUBBLES } from './model-grids.js';
+import { gridLayout, gridSnap, gridDims, readGrids, toPlan, placeGrid, changeGridAxis, removeGridAxes, changeGrid, BUBBLES } from './model-grids.js';
 import { COLUMN_DEFAULTS, readColumns, placeColumns, changeColumn, removeColumns } from './model-columns.js';
 import { ModelWriter } from './model-write.js';
 import { fmtLen, parseLen } from './model-units.js';
@@ -67,13 +68,25 @@ export function mountGrids(modelUi) {
       place.dataset.bound = '1';
       place.addEventListener('click', () => openPlace());
       root.querySelector('[data-grid-bubbles]')?.addEventListener('change', (e) => { if (own()) A.commit(changeGrid({ bubbles: e.target.value }), { label: t('model.grid'), verb: t('model.verb.changed') }); });
+      root.querySelector('[data-grid-dims]')?.addEventListener('change', (e) => { if (own()) A.commit(changeGrid({ dims: e.target.checked }), { label: t('model.grid'), verb: t('model.verb.changed') }); else { e.target.checked = false; A.host.status(t('model.err.grid.none'), true); } });
       const tag = root.querySelector('[data-grid-tag]');
       tag?.addEventListener('change', () => { const v = tag.value.trim(); if (R.pick && v && v !== R.pick) { const old = R.pick; R.pick = v; A.commit(changeGridAxis(old, { tag: v }), { label: t('model.grid'), verb: t('model.verb.renamed') }); } });
       root.querySelector('[data-grid-del]')?.addEventListener('click', () => deletePicked());
+      // 0.9 WT.7: move the picked line by a typed distance, square to itself (+ = to its left); walls locked to it follow (wall-tools.js)
+      const mv = root.querySelector('[data-grid-move]');
+      mv?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); mv.blur(); } });
+      mv?.addEventListener('change', () => {
+        const raw = mv.value.trim(), mm = parseLen(raw, A.units()), ax = R.grids.flatMap((g) => g.axes).find((x) => x.tag === R.pick);
+        mv.value = '';
+        if (!ax || !Number.isFinite(mm) || !mm) { if (raw) A.host.status(t('model.err.length'), true); return; }
+        const L0 = Math.hypot(ax.b[0] - ax.a[0], ax.b[1] - ax.a[1]) || 1, n = [-(ax.b[1] - ax.a[1]) / L0 * mm, (ax.b[0] - ax.a[0]) / L0 * mm];
+        A.commit(changeGridAxis(R.pick, { a: [ax.a[0] + n[0], ax.a[1] + n[1]], b: [ax.b[0] + n[0], ax.b[1] + n[1]], storey: A.level().guid }), { label: t('model.grid'), verb: t('model.verb.moved') });
+      });
     }
     const bub = root.querySelector('[data-grid-bubbles]');
     if (bub && !bub.options.length) bub.replaceChildren(...BUBBLES.map((b) => el('option', { value: b }, t('model.grid.bub.' + b))));
     if (bub) bub.value = own()?.bubbles || 'both';
+    const gd = root.querySelector('[data-grid-dims]'); if (gd) { gd.checked = !!own()?.dims; gd.disabled = !own(); }
     const pickRow = root.querySelector('[data-grid-picked]');
     if (pickRow) { pickRow.hidden = !R.pick; const tg = root.querySelector('[data-grid-tag]'); if (tg && document.activeElement !== tg) tg.value = R.pick || ''; }
     // columns
@@ -190,7 +203,12 @@ export function mountGrids(modelUi) {
     },
     toolChanged() { R.a = null; R.pick = null; R.placing = null; R.hover = null; bindRows(); const m = A.root.querySelector('[data-res-tools]'); if (m?.open) m.open = false; },
     refresh() { read(); bindRows(); },
-    scene(scene) { scene.grids = allAxes().map((x) => ({ tag: x.tag, a: x.a, b: x.b, bubbles: x.bubbles, sel: x.own && x.tag === R.pick })); },
+    scene(scene) {
+      scene.grids = allAxes().map((x) => ({ tag: x.tag, a: x.a, b: x.b, bubbles: x.bubbles, sel: x.own && x.tag === R.pick }));
+      // 0.9 D9.2: the grid's dimensions (spacings + overall), when its Dimensions box is ticked
+      const g = own();
+      if (g?.dims && A.S.kind !== 'rcp') scene.dims = [...(scene.dims || []), ...gridDims(g.axes, L)];
+    },
     overlay(o) {
       if (A.S.tool === 'grid') {
         if (R.hover) o.snap = { p: R.hover, kind: 'grid' };
@@ -222,12 +240,21 @@ export function mountGrids(modelUi) {
       if (!cs.length) return null;
       const one = cs.length === 1, c0 = cs[0];
       const run = (ch) => { const ops = cs.map((c) => changeColumn(c.guid, ch)); A.commit((ed) => { let r = null; for (const o of ops) { const r2 = o(ed); r = r ? { ...r2, journal: A.mergeJournals(r.journal, r2.journal) } : r2; } return r; }, kit.one(t('model.col'))); };
-      kit.field(t('model.col.shape'), kit.select([['rect', t('model.col.rect')], ['round', t('model.col.round')]], cs.every((c) => c.shape === c0.shape) ? c0.shape : '', 'data-mp-colshape', (v) => run({ shape: v })));
-      kit.field(t(c0.shape === 'round' ? 'model.col.diameter' : 'model.col.width'), kit.lenInput(cs.every((c) => Math.abs(c.width - c0.width) < 0.5) ? c0.width : NaN, 'data-mp-colwidth', (mm) => run({ width: mm }), { min: 50 }));
-      if (c0.shape !== 'round') kit.field(t('model.col.depth'), kit.lenInput(cs.every((c) => Math.abs(c.depth - c0.depth) < 0.5) ? c0.depth : NaN, 'data-mp-coldepth', (mm) => run({ depth: mm }), { min: 50 }));
+      // 0.9 D9.1: several columns that differ show an empty field ("Mixed"), never the first one's value
+      const sameShape = cs.every((c) => c.shape === c0.shape), same = (f) => cs.every((c) => Math.abs(f(c) - f(c0)) < 0.5);
+      const shapeOpts = [['rect', t('model.col.rect')], ['round', t('model.col.round')]];
+      kit.field(t('model.col.shape'), kit.select(sameShape ? shapeOpts : [['', t('model.prop.mixed')], ...shapeOpts], sameShape ? c0.shape : '', 'data-mp-colshape', (v) => { if (v) run({ shape: v }); }));
+      kit.field(t(!sameShape ? 'model.col.size' : c0.shape === 'round' ? 'model.col.diameter' : 'model.col.width'), kit.lenInput(cs.every((c) => Math.abs(c.width - c0.width) < 0.5) ? c0.width : NaN, 'data-mp-colwidth', (mm) => run({ width: mm }), { min: 50 }));
+      if (sameShape && c0.shape !== 'round') kit.field(t('model.col.depth'), kit.lenInput(cs.every((c) => Math.abs(c.depth - c0.depth) < 0.5) ? c0.depth : NaN, 'data-mp-coldepth', (mm) => run({ depth: mm }), { min: 50 }));
       const above = A.S.data.levels[A.S.data.levels.findIndex((l) => l.id === c0.storey) + 1];
-      kit.field(t('model.col.top'), kit.select([['level', t('model.col.top.level')], ['fixed', t('model.col.top.fixed')]], c0.topLevel ? 'level' : 'fixed', 'data-mp-coltop', (v) => run(v === 'level' && above ? { topLevel: above.guid, topOffset: 0 } : { topLevel: '', height: c0.h })));
-      kit.field(t('model.col.height'), kit.lenInput(c0.h, 'data-mp-colheight', (mm) => run(c0.topLevel ? { topOffset: c0.topOffset + mm - c0.h } : { height: mm }), { min: 300 }));
+      const sameTop = cs.every((c) => !!c.topLevel === !!c0.topLevel);
+      const topOpts = [['level', t('model.col.top.level')], ['fixed', t('model.col.top.fixed')]];
+      // each column keeps its own level: "to the level above" means the level above ITS level; a fixed height keeps its own height
+      const topOf = (c) => { const i = A.S.data.levels.findIndex((l) => l.id === c.storey); return A.S.data.levels[i + 1] || null; };
+      const runEach = (chOf) => { const ops = cs.map((c) => changeColumn(c.guid, chOf(c))); A.commit((ed) => { let r = null; for (const o of ops) { const r2 = o(ed); r = r ? { ...r2, journal: A.mergeJournals(r.journal, r2.journal) } : r2; } return r; }, kit.one(t('model.col'))); };
+      kit.field(t('model.col.top'), kit.select(sameTop ? topOpts : [['', t('model.prop.mixed')], ...topOpts], sameTop ? (c0.topLevel ? 'level' : 'fixed') : '', 'data-mp-coltop', (v) => { if (v) runEach((c) => (v === 'level' && topOf(c) ? { topLevel: topOf(c).guid, topOffset: 0 } : { topLevel: '', height: c.h })); }));
+      // Height: typed once, every picked column ends up that tall (one following its level gets the offset that makes it so)
+      kit.field(t('model.col.height'), kit.lenInput(same((c) => c.h) ? c0.h : NaN, 'data-mp-colheight', (mm) => runEach((c) => (c.topLevel ? { topOffset: c.topOffset + mm - c.h } : { height: mm })), { min: 300 }));
       if (one) kit.rows.push(el('dt', {}, t('model.col.at')), el('dd', {}, L(c0.at[0]) + ', ' + L(c0.at[1])));
       return { title: one ? t('model.col') : t('model.elements', { n: cs.length }) };
     },

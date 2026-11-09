@@ -12,16 +12,17 @@
  *   mountBimShell({ ifc, editor, model, mode, ... accessors }) → { host, changed }   changed(): call after any edit, undo, redo, open or save
  */
 import { ModelWriter } from './model-write.js';
-import { ids as idsOfType, val, deleteLine } from './ifc-util.js';
+import { ids as idsOfType, val, deleteLine, lengthUnitMm } from './ifc-util.js';
 import { assistantPrefs, ASSIST_KEY } from './host.js';
 import { t as tr } from './i18n.js';
 
 export const SHELL_PSET = 'CadCraft_Shell';
-const KEYS = { calcs: 'Calcs', reasons: 'Reasons' };
+const KEYS = { calcs: 'Calcs', reasons: 'Reasons', docinfo: 'DocInfo' };   // DocInfo: 0.9 DI.1, the written drawing details
 const MAX_JSON = 2_000_000;
 
 /** The doc's block (shell-modules.md § Mounting 2), as the doc has it. */
 export function mountShellModules(host) {
+  { const f = () => window.ccDocTitleFollow && window.ccDocTitleFollow(host); if (window.ccDocTitleFollow) f(); else window.addEventListener('load', f); }   // 2026-11-09: tab title = document name (one pattern, app-shell.js)
   const when = (api, name, go) => (window[api] ? go() : document.addEventListener('cc-' + name + '-ready', go, { once: true }));
   // EG.18 calc sheets — parameters in, drives out, saved inside the app's own file
   when('ccCalc', 'calc', () => {
@@ -48,6 +49,11 @@ export function mountShellModules(host) {
     ccLessons.registerTools(host.control);
     host.emit = (event, data) => ccLessons.emit(event, data);           // the app calls host.emit('tool', { name: 'line' }) where it runs a command
   });
+  // DI.1 drawing details — what the app counts, and where the written details are kept in its file
+  when('ccDocInfo', 'docinfo', () => {
+    ccDocInfo.attach({ read: host.docinfo?.read, persist: (json) => host.file.set('docinfo', json), step: host.step, onChange: host.docinfo?.onChange });   // read() → { units, extents, counts, extra, bytes, path }
+    ccDocInfo.registerTools(host.control);
+  });
   // AC.12 Suggest, AC.13 activity log, AC.8 Ask box — they ride on host.control, so the app hands over very little
   when('ccSuggest', 'suggest', () => {
     ccSuggest.attach({ control: host.control, rev: host.rev, step: host.step, document: host.document, perms: host.perms, ghost: host.ghost });
@@ -70,7 +76,7 @@ const projectId = (api, mid) => idsOfType(api, mid, 'IFCPROJECT')[0] ?? null;
 
 /** Reads the stored JSON texts: { calcs, reasons } (each a parsed object or null). A file is untrusted: bad JSON reads as nothing. */
 export function readShell(api, mid) {
-  const out = { calcs: null, reasons: null };
+  const out = { calcs: null, reasons: null, docinfo: null };
   const pid = projectId(api, mid);
   if (pid === null) return out;
   for (const rid of idsOfType(api, mid, 'IFCRELDEFINESBYPROPERTIES')) {
@@ -91,10 +97,11 @@ export function readShell(api, mid) {
 }
 
 /** The op for IfcEditor.modelChange: the set replaced by these two (null = none). One undo step. */
-export function writeShellOp({ calcs = null, reasons = null }) {
+export function writeShellOp({ calcs = null, reasons = null, docinfo = null }) {
   const rows = [];
   if (calcs) rows.push([KEYS.calcs, 'IFCTEXT', JSON.stringify(calcs)]);
   if (reasons) rows.push([KEYS.reasons, 'IFCTEXT', JSON.stringify(reasons)]);
+  if (docinfo) rows.push([KEYS.docinfo, 'IFCTEXT', JSON.stringify(docinfo)]);
   return (ed) => {
     const w = new ModelWriter(ed.W, ed.api, ed.mid);
     return w.run(() => {
@@ -156,7 +163,7 @@ export function lessonsOf(s) {
  */
 export function mountBimShell(a) {
   const ASSIST = () => assistantPrefs({ app: 'bimcraft', win: window });
-  let stored = { calcs: null, reasons: null };   // what the file holds, as last read or written (JSON text, to compare)
+  let stored = { calcs: null, reasons: null, docinfo: null };   // what the file holds, as last read or written (JSON text, to compare)
   let seenModel = null;
   const text = (j) => (j ? JSON.stringify(j) : '');
   const ready = () => !!(a.model() && a.editor() && a.mode() === 'ifc');
@@ -165,19 +172,30 @@ export function mountBimShell(a) {
     if (text(json) === text(stored[key])) return;
     const next = { ...stored, [key]: json || null };
     stored = next;
-    try { a.editor().modelChange(writeShellOp(next), { label: key === 'calcs' ? 'Calc sheets' : 'Design reasons', verb: tr('energy.verb') }); a.after?.(); } catch (e) { console.warn('shell sheets', e); }
+    try { a.editor().modelChange(writeShellOp(next), { label: key === 'calcs' ? 'Calc sheets' : key === 'docinfo' ? 'Drawing details' : 'Design reasons', verb: tr('energy.verb') }); a.after?.(); } catch (e) { console.warn('shell sheets', e); }
   };
   const host = {
     control: a.control,
     step: (label, fn) => fn(),
-    file: { set: (key, json) => { if (key === 'calcs' || key === 'reasons') write(key, json); } },
+    file: { set: (key, json) => { if (key === 'calcs' || key === 'reasons' || key === 'docinfo') write(key, json); } },
     selection: () => { const k = a.selection(); return k.length ? { kind: 'element', id: String(k[0]), label: a.describe ? a.describe(k[0]) + (k.length > 1 ? ' +' + (k.length - 1) : '') : String(k[0]) } : null; },
     onSelection: (fn) => a.onSelection(fn),
     select: (el) => { if (el?.id != null) a.select([String(el.id)]); },
     totals: [],   // fed in bimcraft.js (bim.carbon, bim.cost)
+    docinfo: {   // DI.1: real counts only; no extents, triangles or file size (none is cheap to know, so none is shown)
+      read: () => {
+        if (!ready()) return null;
+        const api = a.ifc().api, mid = a.model().modelID, mm = lengthUnitMm(api, mid);
+        const n = (type, inherited) => { try { return idsOfType(api, mid, type, inherited).length; } catch { return null; } };
+        const counts = {}, put = (id, v) => { if (v !== null) counts[id] = v; };
+        put('elements', n('IFCELEMENT', true)); put('levels', n('IFCBUILDINGSTOREY')); put('materials', n('IFCMATERIAL'));
+        return { units: { 1: 'mm', 10: 'cm', 1000: 'm', 25.4: 'in', 304.8: 'ft' }[mm] || '', path: a.name(), counts };
+      },
+    },
     ...lessonsOf({ ifc: a.ifc, model: a.model, mode: a.mode, saved: a.saved }),
     rev: () => (a.editor() ? a.editor().changes.length + ':' + a.editor().undone.length : 0),
     document: () => ({ docId: a.name(), path: '', name: a.name() }),
+    dirty: () => !a.saved(),   // 2026-11-09: the tab title's unsaved mark (assets/js/app-doc-title.js)
     perms: { get: () => ASSIST(), set: (rec) => { try { localStorage.setItem(ASSIST_KEY + 'bimcraft', JSON.stringify(rec)); } catch { /* private mode */ } } },
     version: () => String(a.editor() ? a.editor().changes.length : 0),
     askContext: () => ({ file: a.name(), selection: host.selection() }),
@@ -191,15 +209,19 @@ export function mountBimShell(a) {
     seenModel = a.model();
     let now;
     try { now = readShell(a.ifc().api, a.model().modelID); } catch { return; }
-    if (!first && text(now.calcs) === text(stored.calcs) && text(now.reasons) === text(stored.reasons)) return;
+    if (!first && text(now.calcs) === text(stored.calcs) && text(now.reasons) === text(stored.reasons) && text(now.docinfo) === text(stored.docinfo)) return;
     stored = now;
     if (window.ccCalc) ccCalc.load(now.calcs);
     if (window.ccReasons) ccReasons.load(now.reasons);
+    if (window.ccDocInfo) ccDocInfo.load(now.docinfo);
     if (first) host.fileOpened?.('A file was opened.');
     if (window.ccTotals) { if (first) ccTotals.reset(); else ccTotals.invalidate(); }
   };
   document.addEventListener('cc-calc-ready', changed, { once: true });
   document.addEventListener('cc-reasons-ready', changed, { once: true });
+  document.addEventListener('cc-docinfo-ready', changed, { once: true });
   changed();
-  return { host, changed };
+  /** DI.1: call just before the file's bytes are written. A file whose details were never written stays byte-identical; otherwise the save time goes in (one undo step). */
+  const stampSave = () => { if (ready() && stored.docinfo && window.ccDocInfo) write('docinfo', ccDocInfo.save()); };
+  return { host, changed, stampSave };
 }

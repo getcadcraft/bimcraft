@@ -1,0 +1,8 @@
+{
+  "@locale": "sl",
+  "@name": "Slovenščina",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Podatki in viri",
+  "data.nex": "NASA NEX-GDDP-CMIP6, izhodni podatki modelov CMIP6 z zmanjšanim merilom (CC BY 4.0 za posamezen model); globalna morska gladina: IPCC AR6",
+  "data.sample": "Vzorčni paket: trije kraji, en model, pet let na obdobje. Ni namenjeno projektiranju."
+}

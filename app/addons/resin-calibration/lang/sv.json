@@ -1,0 +1,14 @@
+{
+  "@locale": "sv",
+  "@name": "Svenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Exponeringstest",
+  "note": "Hartser och skrivare skiljer sig åt. Skriv ut testdetaljen en gång vid varje exponering i stegen och behåll den exponering som ger de skarpaste tunna pelarna och öppna hålen.",
+  "part": "Lägg testdetaljen på bädden",
+  "part.name": "Exponeringstestdetalj",
+  "ladder": "Spara exponeringsstegen ({n} filer)",
+  "ladder.made": "Sparade {n} filer för {list} s. Skriv ut varje med samma harts och jämför.",
+  "ladder.nopart": "Lägg testdetaljen på bädden först.",
+  "ladder.failed": "Exponeringsstegen kunde inte skapas. {why}",
+  "ladder.busy": "Skapar {i} av {n}…"
+}

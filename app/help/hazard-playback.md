@@ -14,7 +14,7 @@ These are **simple models to see what a hazard does to this layout**, not a floo
 
 ## Flood
 
-Set the highest water level above the lowest floor and the minutes to rise, hold and fall. Water enters a room through an opening whose sill it has passed, and rooms joined to wet rooms by openings below the water stand at the same level (quasi-static). The table gives when each room first gets wet and how deep; the plan plays it. Type the most water a room may take and rooms over it are warnings. **Climate futures:** load your own scenario file (JSON or CSV with a year, a sea level rise and a flood factor) and choose a year; the app ships no climate data.
+Set the highest water level above the lowest floor and the minutes to rise, hold and fall. Water enters a room through an opening whose sill it has passed, and rooms joined to wet rooms by openings below the water stand at the same level (quasi-static). The table gives when each room first gets wet and how deep; the plan plays it. Type the most water a room may take and rooms over it are warnings. **Climate futures:** load your own scenario file (JSON or CSV with a year, a sea level rise and a flood factor) and choose a year. Or switch on the Climate futures add-on and pick a scenario and a year: the flood runs twice, present beside future (see "Climate futures: 2050 and 2080 flood, heat and wildfire"). The kinds Wildfire exposure and Heat: future weather file live in the same list.
 
 ## Wind
 

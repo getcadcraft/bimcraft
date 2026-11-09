@@ -1,0 +1,21 @@
+{
+  "@locale": "te",
+  "@name": "తెలుగు",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX మరియు PWS",
+  "opt.flip": "చిత్రాన్ని ప్రతిబింబించు",
+  "opt.flip.off": "లేదు",
+  "opt.flip.on": "అవును, ఎడమ నుండి కుడికి",
+  "opt.version": "ఫైల్ వెర్షన్",
+  "opt.version.v1": "వెర్షన్ 1 (సాధారణం)",
+  "opt.version.v516": "వెర్షన్ 516",
+  "opt.aa": "అంచు స్మూతింగ్ స్థాయిలు",
+  "opt.aa.1": "1 (ఏదీ లేదు)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "ప్రతి-లేయర్ సెట్టింగ్‌ల ఫ్లాగ్",
+  "opt.perLayer.off": "ఆఫ్",
+  "opt.perLayer.on": "ఆన్"
+}

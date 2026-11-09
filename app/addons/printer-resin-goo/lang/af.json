@@ -1,0 +1,12 @@
+{
+  "@locale": "af",
+  "@name": "Afrikaans",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Greepvolgorde",
+  "opt.byteOrder.big": "Big-endian (die gewone verslag)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolesom",
+  "opt.checksum.negsum": "Geneegde som",
+  "opt.checksum.sum": "Gewone som"
+}

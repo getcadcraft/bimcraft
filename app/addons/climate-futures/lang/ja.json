@@ -1,0 +1,8 @@
+{
+  "@locale": "ja",
+  "@name": "日本語",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "データと出典",
+  "data.nex": "NASA NEX-GDDP-CMIP6、CMIP6モデルのダウンスケール出力(モデルごとにCC BY 4.0)。全球海面水位: IPCC AR6",
+  "data.sample": "サンプルパック: 3地点、1モデル、期間ごとに5年分。設計には使用しないでください。"
+}

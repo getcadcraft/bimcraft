@@ -1,0 +1,14 @@
+{
+  "@locale": "sq",
+  "@name": "Shqip",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Testi i ekspozimit",
+  "note": "Rrëshirat dhe printerat ndryshojnë. Printo pjesën e testit një herë me çdo ekspozim të shkallës së ekspozimit dhe mbaj ekspozimin me shtyllat e holla më të mprehta dhe vrimat e hapura.",
+  "part": "Vendos pjesën e testit në platformë",
+  "part.name": "Pjesa e testit të ekspozimit",
+  "ladder": "Ruaj shkallën e ekspozimit ({n} skedarë)",
+  "ladder.made": "U ruajtën {n} skedarë për {list} s. Printoji secilin me të njëjtën rrëshirë dhe krahasoji.",
+  "ladder.nopart": "Vendos së pari pjesën e testit në platformë.",
+  "ladder.failed": "Shkallën e ekspozimit nuk mund ta bëjë. {why}",
+  "ladder.busy": "Duke bërë {i} nga {n}…"
+}

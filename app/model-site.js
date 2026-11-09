@@ -15,7 +15,7 @@
  *   setSiteOutline({ storey, points }) → op       the outline drawn on a level's plan (made the site's, in its axes)
  *   placeBuilding({ at, angle }) → op             the building's placement on the site: its origin at `at` (site mm), turned
  *                                                 `angle` degrees; everything in the building moves with it
- *   addLevels({ elevations, height }) → op        levels at these elevations (mm above the building's base; ones already
+ *   addLevels({ elevations, height }) → op        levels at these elevations (mm above the building's base, negative = below the lowest level; ones already
  *                                                 there skipped), named on from the last "Level n"; walls and what follows
  *                                                 them are made again (model-ops.js regenAll)
  *   splitLevels({ total, count }) → op            the building's height `total` split into `count` equal levels from its lowest
@@ -149,6 +149,13 @@ const levelName = (levels, n) => {
   return tr('new.level', { n: k });
 };
 
+const belowName = (levels) => {
+  let n = levels.filter((l) => l.elevation < -0.5).length + 1;
+  const used = new Set(levels.map((l) => l.name));
+  while (used.has(tr('new.level.below', { n }))) n++;
+  return tr('new.level.below', { n });
+};
+
 export function addLevels({ elevations, height }) {
   const want = [...new Set(elevations.map((e) => Math.round(e * 1000) / 1000))].sort((a, b) => a - b);
   const guids = [];
@@ -157,13 +164,17 @@ export function addLevels({ elevations, height }) {
     let levels = readLevels(w);
     const base = levels.length ? levels[0].elevation : 0;
     const made = new Map(), out = [];
-    want.forEach((e, i) => {
-      const z = base + e;
+    // below the lowest level the one nearest it is made first, so it is the one named Level -1
+    const order = want.map((e, i) => i).sort((a, b) => (want[a] < 0 && want[b] < 0 ? want[b] - want[a] : want[a] - want[b]));
+    order.forEach((i) => {
+      const e = want[i], z = base + e;
       if (readLevels(w).some((l) => Math.abs(l.elevation - z) < 1)) return;
       levels = readLevels(w);
-      const next = want[i + 1] !== undefined ? want[i + 1] - e : (height > 0 ? height : (levels[levels.length - 1]?.height || 3000));
+      // below the lowest level (a negative height) the new level reaches up to the next level there is, new or old
+      const above = e < 0 ? [...want.slice(i + 1).map((x) => base + x), ...levels.map((l) => l.elevation)].filter((x) => x > z + 0.5) : [];
+      const next = above.length ? Math.min(...above) - z : want[i + 1] !== undefined ? want[i + 1] - e : (height > 0 ? height : (levels[levels.length - 1]?.height || 3000));
       if (!guids[i]) guids[i] = val(w.guid());
-      const r = addLevel(w, { name: levelName(levels, levels.length + 1), elevation: z, height: Math.max(1000, next), guid: guids[i] });
+      const r = addLevel(w, { name: e < 0 ? belowName(levels) : levelName(levels, levels.length + 1), elevation: z, height: Math.max(1000, next), guid: guids[i] });
       made.set(r.guid, r.id); out.push(r.id);
     });
     if (!out.length) refuse('model.err.lv.none');

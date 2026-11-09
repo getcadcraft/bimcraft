@@ -28,18 +28,21 @@ import { materialBackground } from './project-materials.js';
 import { schedules, scheduleCsv } from './model-schedule.js';
 import { rules, onRules } from './rules-hook.js';   // 0.8 REG.1: one more schedule when a regulations add-on is on
 import { planPdf, sheetFor } from './model-pdf.js';
+import { readStyle } from './work-style.js';   // 0.9 D8.12: the working style's defaults
 import { wallOutlines, wallTypes, wallType, typeThickness, typeName, typeAt, JUSTIFICATIONS, locationLine, wallsThrough, wallLevelsPassed, topLevelChoices } from './model-walls.js';
 import { wallGeom, wallMap, arcMid, arcLength, bulgeThrough, bulgeFromHeight, arcHeight, flatPoly, BULGE_MAX } from './model-arcs.js';   // 0.6 round 2 (bim-comforts_PART_2): curved walls
 import { snapPoint, closesChain, loopSide, wallPath } from './model-tools.js';
 import { fmtLen, parseLen, parseTyped, fmtAngle, fmtArea, parsePitch, fmtPitch, getDisplayUnits, setDisplayUnits, isMetric, fillUnitSelect, unitMark, lenMark } from './model-units.js';
 import { onUnitsChange } from './unit-prefs.js';   // 0.7 UNITS: Settings › General › Units
-import { copyLevel, drawWallPath, drawWalls, changeWall, changeWalls, removeWalls, newLevel, changeLevel, snapshotModel, placeOpening, changeOpening, changeOpenings, removeElements, placeFloor, placeCeiling, placeRoof, changeDerived, loopsOf } from './model-ops.js';
+import { squareMove, squareDistance, squareUp, squareSnap, setAngle, angleOf, setLength, lengthFrom, roomSize, setRoomSize, moveOutward, MEASURE_FROM, setLengthGrow, fixedPoint, GROW } from './wall-square.js';   // 0.9 FX.22; FX.67 grow from
+import { newLevelBelow, copyLevel, drawWallPath, drawWalls, changeWall, changeWalls, changeWallsBy, removeWalls, newLevel, changeLevel, snapshotModel, placeOpening, placeLibraryOpening, changeOpening, changeOpenings, removeElements, placeFloor, placeCeiling, placeRoof, changeDerived, loopsOf } from './model-ops.js';
 import { loopAt, labelPoint, planLoops } from './model-rooms.js';
 import { inPoly } from './model-plan.js';
 import { inv4 } from './ifc-util.js';
 import { edgeKinds, roofGeometry, presetEdges, formatEdges, parseEdges, edgeWalls, ROOF_DEFAULTS } from './res-roof.js';   // 0.5 part 4 RC.1 (bim-residential)
 import { FLOOR_KINDS, CEILING_PATTERNS } from './model-slabs.js';
-import { DOOR_TYPES, WINDOW_TYPES, openingType, openingTypeName, openingSymbol, fitOffset, handKind } from './model-openings.js';
+import { DOOR_TYPES, WINDOW_TYPES, openingType, openingTypeName, openingSymbol, fitOffset, handKind, libraryBase } from './model-openings.js';
+import { libraryFrame } from './ifc-place.js';
 import { el } from './ui-util.js';
 import { ModelWriter } from './model-write.js';
 import { openingFamilies, readFamilies, setFamilySize, familyWriter } from './family-ops.js';   // 0.6 DC.114: families and their sizes
@@ -100,7 +103,7 @@ export function mountModel(host) {
     applyLayout();
     if (!S.on) { endChain(); setTool('select'); return; }
     if (!pv) {
-      pv = new PlanView(ui.canvas, { move: onMove, click: onClick, dblclick: onDbl, down: onDown, up: onUp, leave: () => { S.last = null; S.hover = null; host.coords?.()?.plan(null, level(), S.planM); drawOverlay(); }, contextmenu: () => endChain() });
+      pv = new PlanView(ui.canvas, { move: onMove, click: onClick, dblclick: onDbl, down: onDown, up: onUp, leave: () => { S.last = null; S.hover = null; host.coords?.()?.plan(null, level(), S.planM); host.coords?.()?.dodge?.(null); drawOverlay(); }, contextmenu: () => endChain() });
       pv.padBottom = 40;   // the status line
       // the Draw bar changes height with the tool; content it now covers is brought back into view (only a plan you have not moved)
       pv.barBoxFn = () => { const c = ui.canvas.getBoundingClientRect(), b = ui.bar.getBoundingClientRect(); return b.width > 0 ? { w: b.right - c.left + 12, h: b.bottom - c.top + 12 } : null; };
@@ -119,19 +122,28 @@ export function mountModel(host) {
     return true;
   }
   if (ui.stageEl) new ResizeObserver(() => { if (stackSplit()) requestAnimationFrame(() => { host.viewer()?.resize?.(); pv?.resize(); }); }).observe(ui.stageEl);
+  /** The Plan / Split / 3D switches belong to the View group: they show whenever a model is open, whatever Draw is doing
+   *  (they were only drawn once Draw had been on, so a model opened with Draw off had no Plan, Split or 3D). */
+  function syncLayoutGroup() { if (ui.layoutGroup) ui.layoutGroup.hidden = !canDraw(); }
   function applyLayout() {
     const st = ui.stageEl;
     st.classList.toggle('is-plan-split', S.on && S.layout === 'split');
     st.classList.toggle('is-plan-only', S.on && S.layout === 'plan');
     stackSplit();
     st.style.setProperty('--bc-split', S.split + '%');
-    ui.layoutGroup.hidden = !canDraw();
+    syncLayoutGroup();
     ui.splitter.hidden = !(S.on && S.layout === 'split');
     ui.splitter.setAttribute('aria-valuenow', String(S.split));
     ui.splitter.setAttribute('aria-orientation', st.classList.contains('is-plan-stacked') ? 'horizontal' : 'vertical');
     for (const b of ui.layout) b.setAttribute('aria-pressed', b.dataset.modelLayout === (S.on ? S.layout : '3d') ? 'true' : 'false');
     requestAnimationFrame(() => { host.viewer()?.resize?.(); pv?.resize(); });
+    announceView();
   }
+  /** 0.9 (owner 2026-11-09): the one place the view mode is read — 'plan' | 'split' | 'model' (3D alone). Every change goes through
+   *  applyLayout(), which tells the host (host.viewModeChanged) when it really changed, so the Library's Place button follows it. */
+  const viewMode = () => (S.on ? S.layout : 'model');
+  let announced = null;
+  function announceView() { const m = viewMode(); if (m === announced) return; announced = m; host.viewModeChanged?.(m); }
   ui.toggle.addEventListener('click', () => {
     if (!canDraw()) { host.status(t('model.needs.ifc')); return; }
     show(!S.on);
@@ -272,7 +284,7 @@ export function mountModel(host) {
   function makeScene() {
     const vr = viewRange();
     const walls = wallsHere().filter((w) => !hiddenOwn(vr, 'IfcWall', w.guid));
-    S.outlines = wallOutlines(walls.map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge })));
+    S.outlines = wallOutlines(walls.map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge, off: w.joinOff })));
     const k = kb(), own = ownKeys(), allOps = openingsHere(), ops = allOps.filter((o) => !hiddenOwn(vr, o.kind === 'window' ? 'IfcWindow' : 'IfcDoor', o.guid));
     const through = throughScene(vr, k);
     const byWall = new Map([...walls, ...throughHere(vr.cut)].map((w) => [w.id, w]));
@@ -298,7 +310,7 @@ export function mountModel(host) {
     // the walls' outline as one: their joins (mitres, T ends) are not drawn, as on a drafted plan
     const pieces = scene.walls.flatMap((w) => w.pieces || []);
     if (pieces.length) scene.wallEdges = wallPlanEdges(scene.walls);
-    if (S.dims && S.kind !== 'rcp') scene.dims = wallDims(walls, S.outlines, ops, (mm) => fmtLen(mm, S.units), { exteriorOf: (w) => (w.assembly || projectWallType(w.typeKey))?.exterior ?? true });
+    if (S.dims && S.kind !== 'rcp') scene.dims = wallDims(walls, S.outlines, ops, (mm) => fmtLen(mm, S.units), { exteriorOf: (w) => (w.assembly || projectWallType(w.typeKey))?.exterior ?? true, from: MEASURE_FROM.includes(S.wallFrom) ? S.wallFrom : 'center' });   // 0.9 D3: what the Length field reads
     for (const x of exts) x.scene?.(scene);
     return scene;
   }
@@ -313,7 +325,7 @@ export function mountModel(host) {
     const list = wallsThrough(D.walls, D.levels, S.level, vr.cut).filter((w) => !hiddenOwn(vr, 'IfcWall', w.guid));
     if (!list.length) return [];
     const lvl = new Map(D.levels.map((l) => [l.id, l])), here = lvl.get(S.level), outlines = new Map();
-    for (const st of new Set(list.map((w) => w.storey))) for (const [g, poly] of wallOutlines(D.walls.filter((w) => w.storey === st).map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge })))) { outlines.set(g, poly); S.outlines.set(g, poly); }   // S.outlines too: the opening tools measure the face ends from it
+    for (const st of new Set(list.map((w) => w.storey))) for (const [g, poly] of wallOutlines(D.walls.filter((w) => w.storey === st).map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge, off: w.joinOff })))) { outlines.set(g, poly); S.outlines.set(g, poly); }   // S.outlines too: the opening tools measure the face ends from it
     return list.map((w) => {
       const poly = outlines.get(w.guid) || [], rel = here.elevation + vr.cut - lvl.get(w.storey).elevation;
       return { key: k + w.id, guid: w.guid, poly, from: lvl.get(w.storey).name, pieces: poly.length ? wallPieces(w, poly, (D.openings || []).filter((o) => o.wall === w.id), rel) : [] };
@@ -392,7 +404,7 @@ export function mountModel(host) {
   function scheduleData() {
     const loops = new Map();
     for (const l of S.data?.levels || []) if ((S.data.derived?.spaces || []).some((x) => x.storey === l.id)) loops.set(l.id, l.id === S.level && S.loops ? S.loops : loopsOf(ed(), l.id));
-    const all = schedules(S.data, loops, { fmtLen: (mm) => fmtLen(mm, S.units), fmtArea: (mm2) => fmtArea(mm2, S.units), t, unit: unitMark(S.units) });
+    const all = schedules(S.data, loops, { fmtLen: (mm) => fmtLen(mm, S.units), fmtArea: (mm2) => fmtArea(mm2, S.units), t, unit: unitMark(S.units), countBy: readStyle().count });   // 0.9 D8.12-C
     if (ed()) Object.assign(all, assemblySchedules(new ModelWriter(ed().W, ed().api, ed().mid)));
     // 0.8 REG.1: the model against the building regulations a regulations add-on says are in force (core knows none)
     {
@@ -455,7 +467,9 @@ export function mountModel(host) {
     // 0.8 D8.8 (round 3): this level's pictures go under the drawing as image objects, brought down to 200 dpi on the sheet (picture-ui.js)
     let images = [], picFail = false;
     try { if (window.bimcraftPicture?.pdfImages) images = await window.bimcraftPicture.pdfImages(S.level, sheetFor(sc, pdfOpts).sc[0]); } catch (e) { picFail = true; }
-    const r = planPdf(sc, { ...pdfOpts, images });
+    // 0.9 D8.12-B: a model that prints through a pen table prints the plan as a sheet through it (pens-ui.js printPlan)
+    const own = api.ask('printPlan', sc, pdfOpts);
+    const r = own || planPdf(sc, { ...pdfOpts, images });
     host.download(base + ' — ' + (lv?.name || '') + (S.kind === 'rcp' ? ' ' + t('model.rcp.file') : '') + '.pdf', r.bytes, 'application/pdf');   // i18n-ignore: a file name
     host.status(t('model.print.done', { scale: r.scale.label }) + (r.missing ? ' ' + t('model.print.missing', { n: r.missing }) : '') + (r.images ? ' ' + t('pic.pdf.done', { n: r.images }) : '') + (picFail ? ' ' + t('pic.pdf.failed') : ''), picFail);
   });
@@ -521,12 +535,18 @@ export function mountModel(host) {
       const top = L[L.length - 1];
       commit(newLevel({ name: t('new.level', { n: L.length + 1 }), elevation: top ? top.elevation + top.height : 0, height: top ? top.height : 3000 }), { label: t('new.level', { n: L.length + 1 }), verb: t('model.verb.added') });
     });
+    // 0.9 DC.119: a level below the lowest (a basement): negative elevation, nothing else moves
+    const below = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lv-below': '' }, el('i', { className: 'bi bi-plus-lg', 'aria-hidden': 'true' }), ' ' + t('model.lv.below'));
+    below.addEventListener('click', () => {
+      const low = L[0];
+      commit(newLevelBelow({ height: low ? low.height : 3000 }), { label: t('model.lv.below'), verb: t('model.verb.added') });
+    });
     // 0.7 SU.461: the floor plan of this level drawn again on another (or a new one on top)
     const copy = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lv-copy': '' }, el('i', { className: 'bi bi-files', 'aria-hidden': 'true' }), ' ' + t('model.lv.copy'));
     copy.addEventListener('click', () => openCopyLevel());
     ui.levels.replaceChildren(
       el('div', { className: 'bc-level bc-level-head', 'aria-hidden': 'true' }, el('span', { className: 'bc-lv-e' }, t('model.lv.elev')), el('span', { className: 'bc-lv-h' }, t('model.lv.height'))),
-      el('ul', { className: 'bc-levels' }, ...L.slice().reverse().map(row)), add, copy, ...exts.flatMap((x) => x.levelButtons?.() || []));   // 0.6 DF.20: Add levels…
+      el('ul', { className: 'bc-levels' }, ...L.slice().reverse().map(row)), add, below, copy, ...exts.flatMap((x) => x.levelButtons?.() || []));   // 0.6 DF.20: Add levels…
   }
 
   /** Copy level…: what is drawn on the level shown, to another level or a new one on top. */
@@ -574,9 +594,12 @@ export function mountModel(host) {
 
   // ---- tools ----
   function setTool(name) {
+    if (S.libFor && name !== S.libFor) { delete S.open[S.libFor]?.lib; S.libFor = null; try { fillOpeningOpts(); } catch (e) { /* the options row is not up yet */ } }   // 2026-11-02: another tool puts a Library door / window down
     S.tool = name;
     for (const b of ui.tools) b.setAttribute('aria-pressed', b.dataset.mtool === name ? 'true' : 'false');
-    if (ui.wallOpts) ui.wallOpts.hidden = name !== 'wall';
+    const xw = extTool(name);   // 0.9 WT.2 (wall-tools-ui.js): the wall recipes (rectangle, polygon, arcs, pick, trace) use the Wall row too
+    if (ui.wallOpts) ui.wallOpts.hidden = name !== 'wall' && !(typeof xw?.wallRow === 'function' ? xw.wallRow(name) : xw?.wallRow);
+    if (ui.wallShape) ui.wallShape.value = xw?.wallShape?.(name) || S.wall.shape;
     for (const [k, row] of Object.entries(ui.oOpts)) if (row) row.hidden = name !== k;
     for (const k of ['floor', 'ceiling', 'roof']) { const row = root.querySelector(`[data-mopts="${k}"]`); if (row) row.hidden = name !== k; }
     for (const row of root.querySelectorAll('[data-mopts]')) if (!['wall', 'door', 'window', 'floor', 'ceiling', 'roof'].includes(row.dataset.mopts)) row.hidden = row.dataset.mopts !== name;
@@ -624,6 +647,9 @@ export function mountModel(host) {
     ui.wallType.addEventListener('change', () => { endChain(); S.wall.typeKey = ui.wallType.value; drawOverlay(); });
     for (const [input, key] of [[ui.wallRef, 'reference'], [ui.wallSide, 'side'], [ui.wallShape, 'shape']]) input?.addEventListener('change', () => {
       if ((key === 'shape' && input.value === 'arc' && S.wall.reference.startsWith('core')) || (key === 'reference' && input.value.startsWith('core') && S.wall.shape === 'arc')) { input.value = S.wall[key]; host.status(t('wall.err.core_arc'), true); return; }
+      // 0.9 WT.2: the other shapes are recipes (wall-tools-ui.js), each its own tool behind this one list
+      if (key === 'shape' && !['straight', 'arc'].includes(input.value)) { const xs = exts.find((x) => x.shapeTool?.(input.value)); if (xs) { endChain(); setTool(xs.shapeTool(input.value)); } return; }
+      if (key === 'shape' && S.tool !== 'wall') { S.wall.shape = input.value; setTool('wall'); return; }
       endChain(); S.wall[key] = input.value; if (ui.hint && S.tool === 'wall') ui.hint.textContent = t(S.wall.shape === 'arc' ? 'comforts.hint.arcwall' : 'model.hint.wall'); drawOverlay(); });
     ui.wallTop.addEventListener('change', () => { S.wall.top = ui.wallTop.value; ui.wallH.hidden = S.wall.top !== 'fixed'; });   // 'level' | 'level:<guid>' | 'fixed'
     ui.wallH.addEventListener('change', () => { const mm = parseLen(ui.wallH.value, S.units); if (mm > 100) { S.wall.height = mm; host.status(t('model.wall.height') + ': ' + fmtLen(mm, S.units)); } else host.status(t('model.err.length'), true); ui.wallH.value = fmtLen(S.wall.height, S.units); });
@@ -642,6 +668,17 @@ export function mountModel(host) {
         // 0.6 BIM-F2: a type with no hand (fixed, hung, picture, double doors) has nothing to flip
         const hk = handKind(openingType(o.typeKey));
         if (flipBtn) { flipBtn.hidden = !hk; flipBtn.title = t(hk === 'hinges' ? 'model.ot.flip.title' : 'model.ot.flip.slide.title'); }
+        // 2026-11-02: holding a Library door / window, the list names it and its size can't be typed (it is the size it was made)
+        let libOpt = sel.querySelector('option[value="__lib"]');
+        if (o.lib) {
+          if (!libOpt) { libOpt = el('option', { value: '__lib' }); sel.prepend(libOpt); }
+          libOpt.textContent = t('model.lib.option', { name: o.lib.item.name });
+          sel.value = '__lib';
+        } else if (libOpt) { libOpt.remove(); sel.value = o.family || o.typeKey; }
+        const lst = o.lib?.stretch || [];
+        if (wIn) wIn.disabled = !!o.lib && !lst.includes('x');
+        if (hIn) hIn.disabled = !!o.lib && !lst.includes('z');
+        const zs = root.querySelector(`[data-model-osize="${kind}"]`); if (zs) zs.disabled = !!o.lib;
       };
       // 0.6 DC.114: the list is the families of that kind (the starter kinds, then the file's own), and beside it their sizes
       const fams = openingFamilies(famW(), kind), sig = fams.map((f) => f.key + '=' + f.name).join('|');
@@ -663,6 +700,9 @@ export function mountModel(host) {
         sel.dataset.bound = '1';
         sel.addEventListener('change', () => {
           const key = sel.value, ty = openingType(key);
+          if (key === '__lib') return;
+          delete o.lib;   // a type of ours: the Library door the tool held is put down
+          if (S.libFor === kind) S.libFor = null;
           if (ty) { Object.assign(o, { typeKey: ty.key, family: ty.key, values: {}, width: ty.width, height: ty.height }); if (kind === 'window') o.sill = ty.sill; }
           else {
             const fam = familyFor(famW(), key);
@@ -672,7 +712,10 @@ export function mountModel(host) {
           }
           show(); drawOverlay();
         });
-        const len = (input, key, min) => input.addEventListener('change', () => { const mm = parseLen(input.value, S.units); if (mm >= min) o[key] = mm; else host.status(t('model.err.length'), true); show(); drawOverlay(); });
+        const len = (input, key, min) => input.addEventListener('change', () => {
+          if (o.lib && key !== 'sill' && !o.lib.stretch.includes(key === 'width' ? 'x' : 'z')) { host.status(t('model.lib.fixed', { name: o.lib.item.name }), true); show(); return; }   // a Library door / window is the size it was made, unless the Library lets that size be stretched
+          const mm = parseLen(input.value, S.units); if (mm >= min) o[key] = mm; else host.status(t('model.err.length'), true); show(); drawOverlay();
+        });
         len(wIn, 'width', 100); len(hIn, 'height', 100); if (sill) len(sill, 'sill', 0);
       }
       const sizes = toolSizes(kind), cur = sizes.find((z) => near(z.values.Width, o.width) && near(z.values.Height, o.height) && Object.entries(z.values).every(([k, v]) => k === 'Width' || k === 'Height' || o.values?.[k] === undefined || near(o.values[k], v)));
@@ -768,6 +811,46 @@ export function mountModel(host) {
       commit(placeRoof({ storey: st, seed: h.seed, pitch: rf.pitch, overhang: rf.overhang, edges: g, ...roofOpts(rf) }), { label: t('model.roof'), verb: t('model.verb.placed') });
     }
   }
+  /**
+   * 2026-11-02: a Library door / window put down away from any wall stands on its own (an IfcDoor / IfcWindow on the level), its
+   * width along X and its middle at the click; a wall drawn through it later takes it in (model-openings.js adoptLibraryOpenings).
+   */
+  function placeFree(p, kind) {
+    const o = S.open[kind], item = o.lib.item, f = libraryFrame(item.body);
+    if (!f) { host.status(t('model.err.libopening'), true); return; }
+    const rot = f.turn;   // a door drawn along Y is turned so its width runs along X
+    const c = f.turn ? [f.dy, f.width / 2 - f.dx] : [f.width / 2 - f.dx, -f.dy];   // its middle in its own axes (the frame turned back)
+    const a = rot * Math.PI / 180, cr = [c[0] * Math.cos(a) - c[1] * Math.sin(a), c[0] * Math.sin(a) + c[1] * Math.cos(a)];
+    const z = kind === 'window' ? o.sill : 0;
+    commit((editor) => {
+      const r = editor.placer().place(item, { storey: S.level, x: p[0] - cr[0], y: p[1] - cr[1], rot, z, itemNumber: editor.placer().nextItemNumber(), ...o.lib.opts });
+      editor.reindex();
+      return { journal: r.journal, id: r.id, ids: [r.id] };
+    }, { label: item.name, verb: t('model.verb.placed') });
+    libraryPlaced(item.name, 'model.lib.free');
+  }
+  /** 2026-11-02 (BIMBro: "delete doesn't work"): one Library item per Place — back to Select, so the next click picks it (it used to place a
+   *  second one on top of the first, and Delete then had nothing picked). */
+  function libraryPlaced(name, key = 'model.lib.placed') {
+    setTool('select');
+    host.status(t(key, { name }));
+  }
+  /** 2026-11-02: the Library's Place on a door or window item: the plan's Door / Window tool takes it (its size is the item's). */
+  function placeLibrary(entry) {
+    const item = entry?.item, kind = item?.kind;
+    if (kind !== 'door' && kind !== 'window') return false;
+    const f = libraryFrame(item.body);
+    if (!f) { host.status(t('model.err.libopening'), true); return true; }
+    if (!S.on) show(true);
+    const o = S.open[kind];
+    const stretch = Array.isArray(entry.meta?.stretch) ? entry.meta.stretch : [];   // 2026-11-02: the axes the Library lets it be stretched along
+    Object.assign(o, { lib: { item, stretch, opts: { library: entry.meta?.library || 'librarycraft', sha256: entry.meta?.sha256 || '', sourceFile: entry.meta?.sourceFile || '', stretch } }, typeKey: libraryBase(kind, f.width), family: '', values: {}, width: f.width, height: f.height, hand: 'a' });
+    S.libFor = kind;
+    setTool(kind);
+    fillOpeningOpts();
+    host.status(t('model.lib.start', { name: item.name, size: fmtLen(f.width, S.units) + ' × ' + fmtLen(f.height, S.units) }));
+    return true;
+  }
   function flipHand() {
     const o = S.open[S.tool];
     if (!o || !handKind(openingType(o.typeKey))) return;
@@ -821,11 +904,19 @@ export function mountModel(host) {
     const [e0, e1] = h.ends;
     if (h.offset - e0 > 0.5) o.dims.push({ a: P(e0), b: P(h.offset), off, text: fmtLen(h.offset - e0, S.units) });
     if (e1 - h.offset - op.width > 0.5) o.dims.push({ a: P(h.offset + op.width), b: P(e1), off, text: fmtLen(e1 - h.offset - op.width, S.units) });
-    o.hud = { p: P(h.offset + op.width / 2), text: h.ok ? (familyFor(famW(), spec.family || spec.typeKey)?.name || openingTypeName(openingType(spec.typeKey))) + '  ' + fmtLen(op.width, S.units) + ' × ' + fmtLen(op.height, S.units) : t('model.err.nofit') };
+    o.hud = { p: P(h.offset + op.width / 2), text: h.ok ? (spec.lib?.item.name || familyFor(famW(), spec.family || spec.typeKey)?.name || openingTypeName(openingType(spec.typeKey))) + '  ' + fmtLen(op.width, S.units) + ' × ' + fmtLen(op.height, S.units) : t('model.err.nofit') };
   }
   function placeHere(h, kind) {
     const o = S.open[kind];
     if (!h.ok) { host.status(t('model.err.nofit'), true); return; }
+    if (o.lib) {   // 2026-11-02: a Library door / window, its own size and mesh
+      const sill = (kind === 'window' ? o.sill : 0) + (h.wall.storey === S.level ? 0 : riseOver(h.wall.storey));
+      const name = o.lib.item.name;
+      commit(placeLibraryOpening(o.lib.item, { wall: h.wall.guid, typeKey: o.typeKey, offset: h.offset, sill, hand: o.hand, face: h.face, width: o.width, height: o.height }, o.lib.opts),
+        { label: name, verb: t('model.verb.placed') });
+      libraryPlaced(name);
+      return;
+    }
     const type = openingType(o.typeKey);
     const fam = familyFor(famW(), o.family || o.typeKey);
     commit(placeOpening({ wall: h.wall.guid, typeKey: o.typeKey, family: o.family || o.typeKey, values: o.values || {}, sizeName: sizeName({ Width: o.width, Height: o.height }), offset: h.offset, width: o.width, height: o.height, sill: (kind === 'window' ? o.sill : 0) + (h.wall.storey === S.level ? 0 : riseOver(h.wall.storey)), hand: o.hand, face: h.face }),
@@ -847,7 +938,7 @@ export function mountModel(host) {
     if (gw) {
       const tol = pv.pxToMm(9);
       const g = gripsOf(gw).find((x) => Math.hypot(p[0] - x.p[0], p[1] - x.p[1]) <= tol);
-      if (g) { S.drag = { kind: 'grip', wall: gw, end: g.end, from: p, key: kb() + gw.id }; return true; }
+      if (g) { S.drag = { kind: 'grip', wall: gw, end: g.end, from: p, key: kb() + gw.id, typed: '' }; if (g.end !== 'bend') host.status(t(g.end === 'mid' ? 'model.grip.mid' : 'model.grip.end')); return true; }
     }
     const k = pv.hit(e.clientX, e.clientY);
     const o = k !== null ? (S.data?.openings || []).find((x) => kb() + x.id === k) : null;
@@ -865,13 +956,53 @@ export function mountModel(host) {
       return { a: w.a, b: w.b, bulge: Math.abs(bg) < 1e-6 ? 0 : bg, snap: s0 };
     }
     if (d.end === 'mid') {
+      if (e?.altKey) { const s0 = snapPoint(p, others, { tol: pv.pxToMm(SNAP_PX), from: d.from, ortho: !!e?.shiftKey, step: 90, round: round() }); const dx = s0.p[0] - d.from[0], dy = s0.p[1] - d.from[1]; return { a: [w.a[0] + dx, w.a[1] + dy], b: [w.b[0] + dx, w.b[1] + dy], snap: s0, disjoin: true }; }   // 0.9 FX.67: Alt breaks its joins
+      if (!e?.ctrlKey && !e?.metaKey) return gripSquare(d, p);   // 0.9 FX.22: square to itself; Ctrl for a free move
       const s0 = snapPoint(p, others, { tol: pv.pxToMm(SNAP_PX), from: d.from, ortho: !!e?.shiftKey, step: 90, round: round() });
       const dx = s0.p[0] - d.from[0], dy = s0.p[1] - d.from[1];
       return { a: [w.a[0] + dx, w.a[1] + dy], b: [w.b[0] + dx, w.b[1] + dy], snap: s0 };
     }
     const fixed = d.end === 'a' ? w.b : w.a;
-    const s1 = snapPoint(p, others, { tol: pv.pxToMm(SNAP_PX), from: fixed, ortho: !!e?.shiftKey, step: 15, round: round() });
+    let s1 = snapPoint(p, others, { tol: pv.pxToMm(SNAP_PX), from: fixed, ortho: !!e?.shiftKey, step: 15, round: round() });
+    if (!e?.shiftKey && (s1.kind === 'free' || s1.kind === 'angle')) s1 = squareSnap(S.data.walls, w, fixed, p, { round: round() }) || s1;   // 0.9 FX.22: square to the wall it is joined to, whatever way the building turns
     return d.end === 'a' ? { a: s1.p, b: w.b, snap: s1 } : { a: w.a, b: s1.p, snap: s1 };
+  }
+  /** 0.9 FX.22: the middle grip's move, square to the wall: other walls' points and parallel faces still catch it, else round steps. */
+  function gripSquare(d, p) {
+    const w = d.wall, ends = [w.a, w.b], joined = (x) => [x.a, x.b].some((q) => ends.some((r) => Math.hypot(q[0] - r[0], q[1] - r[1]) <= 1));
+    const s0 = snapPoint(p, snapWalls(wallsHere().filter((x) => x.guid !== w.guid && !joined(x)), []), { tol: pv.pxToMm(SNAP_PX) });
+    const inLine = s0.kind === 'on' && s0.wall && Math.abs(squareDistance(w, [s0.wall.b[0] - s0.wall.a[0], s0.wall.b[1] - s0.wall.a[1]])) < 1;
+    const caught = s0.kind === 'end' || s0.kind === 'mid' || s0.kind === 'grid' || inLine;
+    const raw = squareDistance(w, [(caught ? s0.p : p)[0] - d.from[0], (caught ? s0.p : p)[1] - d.from[1]]);
+    return gripSquareBy(d, caught ? raw : Math.round(raw / round()) * round(), caught ? s0 : null, raw);
+  }
+  function gripSquareBy(d, by, snap = null, raw = by) {
+    try { const plan = squareMove(S.data.walls, d.wall.guid, by), m = plan.get(d.wall.guid); return { a: m.a, b: m.b, snap, plan, by, raw }; }
+    catch { return d.at || null; }   // past a joined wall's far end: it stays at the last place that worked
+  }
+  /** 0.9 FX.22: a distance typed while a grip is held, along the way it is being dragged. → the move, or null (said why). */
+  function gripTyped(d) {
+    const mm = parseLen(d.typed, S.units), w = d.wall, at = d.at;
+    if (!Number.isFinite(mm)) { host.status(t('model.err.length'), true); return null; }
+    if (!at) { host.status(t('model.grip.nodir'), true); return null; }
+    if (d.end === 'mid' && at.plan) {
+      if (!at.raw) { host.status(t('model.grip.nodir'), true); return null; }
+      return gripSquareBy({ ...d, at: null }, Math.sign(at.raw) * mm);
+    }
+    const from = d.end === 'mid' ? w.a : d.end === 'a' ? w.b : w.a, to = d.end === 'mid' ? at.a : d.end === 'a' ? at.a : at.b;
+    const v = [to[0] - from[0], to[1] - from[1]], len = Math.hypot(v[0], v[1]);
+    if (!len) { host.status(t('model.grip.nodir'), true); return null; }
+    const q = [from[0] + v[0] / len * mm, from[1] + v[1] / len * mm];
+    if (d.end === 'mid') { const dx = q[0] - w.a[0], dy = q[1] - w.a[1]; return { a: q, b: [w.b[0] + dx, w.b[1] + dy] }; }
+    return d.end === 'a' ? { a: q, b: w.b } : { a: w.a, b: q };
+  }
+  function gripCommit(d, m) {
+    if (Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) < 10) { host.status(t('model.err.short'), true); drawOverlay(); return; }
+    if (d.end === 'bend') { commit(changeWall(d.wall.guid, { bulge: m.bulge }), { label: t('model.wall'), verb: t('model.verb.changed'), select: [d.key] }); return; }
+    const meta = { label: t('model.wall'), verb: t('model.verb.moved'), select: [d.key] };
+    if (m.plan) { const by = m.by; commit(changeWallsBy(d.wall.guid, (walls) => squareMove(walls, d.wall.guid, by)), meta); return; }
+    if (m.disjoin) { commit(changeWall(d.wall.guid, { a: m.a, b: m.b }, { carryJoined: false }), { ...meta, verb: t('walls.verb.disjoined') }); return; }   // 0.9 FX.67: joins broken, the wall keeps its id
+    commit(changeWall(d.wall.guid, d.end === 'a' ? { a: m.a } : d.end === 'b' ? { b: m.b } : { a: m.a, b: m.b }), meta);
   }
   function onUp(p, e, { moved, cancel }) {
     const d = S.drag;
@@ -879,11 +1010,9 @@ export function mountModel(host) {
     if (!d) return;
     if (d.kind === 'ext') { d.x.up?.(p, e, { moved, cancel }); drawOverlay(); return; }
     if (d.kind === 'grip') {
-      const m = d.at;
-      if (cancel || moved <= 4 || !m) { drawOverlay(); return; }
-      if (Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) < 10) { host.status(t('model.err.short'), true); drawOverlay(); return; }
-      if (d.end === 'bend') { commit(changeWall(d.wall.guid, { bulge: m.bulge }), { label: t('model.wall'), verb: t('model.verb.changed'), select: [d.key] }); return; }
-      commit(changeWall(d.wall.guid, d.end === 'a' ? { a: m.a } : d.end === 'b' ? { b: m.b } : { a: m.a, b: m.b }), { label: t('model.wall'), verb: t('model.verb.moved'), select: [d.key] });
+      const m = !cancel && d.typed ? gripTyped(d) : d.at;
+      if (cancel || (moved <= 4 && !d.typed) || !m) { drawOverlay(); return; }
+      gripCommit(d, m);
       return;
     }
     if (cancel || moved <= 4 || !S.hover) { S.hover = null; buildScene(); return; }
@@ -913,8 +1042,19 @@ export function mountModel(host) {
     const from = S.chain?.points[S.chain.points.length - 1] || null;
     return snapPoint(p, snapCtx(), { tol: pv.pxToMm(SNAP_PX), from, ortho: !!e?.shiftKey, step: 15, round: from ? round() : 0, align: S.tool === 'wall' });
   }
+  // FX.81: the readout box steps aside when the wall being drawn (or the pointer) runs under it
+  function dodgeCoords(p, e) {
+    const c = host.coords?.(); if (!c?.dodge) return;
+    if (S.tool !== 'wall' || !S.chain || e?.clientX == null) { c.dodge(null); return; }
+    const r = ui.canvas.getBoundingClientRect(), path = [];
+    const last = S.chain.points[S.chain.points.length - 1];
+    if (last) { const q = pv.toScreen(last); path.push({ x: r.left + q.x, y: r.top + q.y }); }
+    path.push({ x: e.clientX, y: e.clientY });
+    c.dodge(path, ui.bar ? [ui.bar.getBoundingClientRect()] : []);
+  }
   function onMove(p, e) {
     host.coords?.()?.plan(p, level(), S.planM);   // 0.6 DF.15: where the pointer is
+    dodgeCoords(p, e);
     if (S.drag?.kind === 'grip') { S.drag.at = gripMove(S.drag, p, e); drawOverlay(); return; }
     if (S.drag?.kind === 'ext') { S.drag.x.drag?.(p, e); drawOverlay(); return; }
     if (S.drag) {
@@ -925,6 +1065,7 @@ export function mountModel(host) {
       drawOverlay();
       return;
     }
+    if (S.placeHook) { S.placeHook.move(p, e); drawOverlay(); return; }   // a Library item being placed in the plan (bimcraft.js startPlacing, where: 'plan')
     if (extTool(S.tool)) { extTool(S.tool).move?.(p, e); drawOverlay(); return; }
     if (S.tool === 'door' || S.tool === 'window') { S.last = { raw: p }; S.hover = hoverOpening(p, S.tool, S.open[S.tool].width); drawOverlay(); return; }
     if (S.tool === 'floor' || S.tool === 'ceiling' || S.tool === 'roof') { S.hover = hoverSlab(p, S.tool); drawOverlay(); return; }
@@ -934,6 +1075,7 @@ export function mountModel(host) {
   }
   function onClick(p, e) {
     if (!canDraw()) return;
+    if (S.placeHook) { S.placeHook.click(p, e); drawOverlay(); return; }
     if (S.tool === 'select') {
       if (exts.some((x) => x.selectClick?.(p, e))) return;   // 0.6 DC.117 (c): a callout's tag opens it (views-ui.js)
       const k = e && e.clientX !== undefined ? pv.hit(e.clientX, e.clientY) : null;
@@ -952,6 +1094,7 @@ export function mountModel(host) {
     }
     if (S.tool === 'door' || S.tool === 'window') {
       const h = hoverOpening(p, S.tool, S.open[S.tool].width);
+      if (!h && S.open[S.tool].lib) { placeFree(p, S.tool); return; }   // a Library door / window may stand on its own until a wall comes
       if (!h) { host.status(t('model.hint.' + S.tool)); return; }
       placeHere(h, S.tool);
       return;
@@ -1010,10 +1153,11 @@ export function mountModel(host) {
       const above = levelAbove();
       if (S.wall.top === 'level' && !above) { host.status(t('model.err.notop'), true); return; }
       const top = S.wall.top === 'level' ? { topLevel: above.guid } : { height: S.wall.height };
-      const segs = placementPath([...pts, b], type, S.wall.reference, side);
+      const set = drawSet();   // 0.9 WT.3: placement offset, join on / off (wall-tools-ui.js)
+      const segs = placementPath(set.shift([...pts, b]), type, S.wall.reference, side);
       pts.push(b);
-      commit(drawWallPath({ storey: level().guid, points: pts.slice(), guids: S.chain.guids, typeKey: S.wall.typeKey,
-        thickness: spec.thickness, reference: S.wall.reference, extSide: side, axisOffset: spec.axisOffset, justification: spec.justification, ...top }),
+      commit(drawWallPath({ storey: level().guid, points: set.shift(pts.slice()), guids: S.chain.guids, typeKey: S.wall.typeKey,
+        thickness: spec.thickness, reference: S.wall.reference, extSide: side, axisOffset: spec.axisOffset, justification: spec.justification, ...top, ...set.join }),
         { label: typeName(type), verb: t('model.verb.drew'), preview: [segs.at(-1)], chain: S.chain });
       if (closing) endChain();
       drawOverlay(); return;
@@ -1030,8 +1174,11 @@ export function mountModel(host) {
     const run = S.wall.reference === 'center'
       ? drawWalls({ storey: level().guid, segs: [{ a, b }], typeKey: S.wall.typeKey, extSide: side, ...top })
       : drawWallPath({ storey: level().guid, points: pts.slice(), guids: S.chain.guids, typeKey: S.wall.typeKey, thickness: seg.t, reference: S.wall.reference, extSide: side, justification: justOf(S.wall.reference), ...top });   // 0.6 round 2: the face drawn on stays the wall's location line
-    const op = closing && flips.length && S.wall.reference === 'center' ? chainClose(run, flips, side) : run;
-    commit(op, { label: typeName(type), verb: t('model.verb.drew'), preview: S.wall.reference === 'center' ? [seg] : wallPath([a, b], seg.t, S.wall.reference, side), chain: S.chain });
+    // 0.9 WT.3: a placement offset or Join off: the chain goes through drawWallPath (it re-solves the chain's corners on the offset line)
+    const set = drawSet(), offAxis = set.offset ? set.offset + (S.wall.reference === 'center' ? 0 : seg.t / 2 * (S.wall.reference === 'outside' ? -1 : 1) * (side === 'left' ? 1 : -1)) : undefined;
+    const run2 = !set.offset && !set.join.joinOff ? run : drawWallPath({ storey: level().guid, points: pts.slice(), guids: S.chain.guids, typeKey: S.wall.typeKey, thickness: seg.t, reference: S.wall.reference, extSide: side, axisOffset: offAxis, justification: justOf(S.wall.reference), ...top, ...set.join });
+    const op = closing && flips.length && S.wall.reference === 'center' ? chainClose(run2, flips, side) : run2;
+    commit(op, { label: typeName(type), verb: t('model.verb.drew'), preview: S.wall.reference === 'center' && !set.offset ? [seg] : wallPath([a, b], seg.t, S.wall.reference, side, offAxis), chain: S.chain });
     if (closing) { endChain(); host.status(t('model.room.closed', { n: flips.length + 1 })); }
     drawOverlay();
   }
@@ -1044,6 +1191,12 @@ export function mountModel(host) {
     };
   }
   function endChain() { S.arcEnd = null; if (S.chain) { S.chain = null; drawOverlay(); } }
+  /** 0.9 WT.3 Set: what the Wall row's placement offset and Join on / off ask of the walls drawn (wall-tools-ui.js answers drawSet()). */
+  function drawSet() {
+    const x = exts.find((e) => e.drawSet), d = x?.drawSet?.() || {};
+    const offset = Number.isFinite(d.offset) ? d.offset : 0;
+    return { offset, join: d.joinOff ? { joinOff: { a: true, b: true } } : {}, shift: (pts) => (offset && x?.shiftPoints ? x.shiftPoints(pts, offset) : pts) };
+  }
 
   function applyTyped(text) {
     if (S.tool === 'select') return false;
@@ -1137,19 +1290,27 @@ export function mountModel(host) {
       const m = S.drag.at, w = S.drag.wall;
       const walls = wallsHere().filter((x) => x.guid !== w.guid).map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge }));
       walls.push({ key: '*', a: m.a, b: m.b, t: w.t, bulge: m.bulge ?? w.bulge });
-      const poly = wallOutlines(walls).get('*');
+      // 0.9 FX.22: a square move shows the joined walls going with it
+      if (m.plan) for (const x of walls) { const q = m.plan.get(x.key); if (q) { x.a = q.a; x.b = q.b; } }
+      const outlines = wallOutlines(walls), poly = outlines.get('*');
+      if (m.plan) for (const g of m.plan.keys()) { const q = outlines.get(g); if (q) o.walls.push(q); }
       if (poly) o.walls.push(poly);
       const L = arcLength(m.a, m.b, m.bulge ?? w.bulge);
       o.dims.push({ a: m.a, b: m.b, off: w.t / 2 + pv.pxToMm(18), text: fmtLen(L, S.units) });
+      if (S.drag.typed) o.hud = { p: [(m.a[0] + m.b[0]) / 2, (m.a[1] + m.b[1]) / 2], text: S.drag.typed };
+      else if (S.drag.end === 'mid') o.hud = { p: [(m.a[0] + m.b[0]) / 2, (m.a[1] + m.b[1]) / 2], text: fmtLen(m.plan ? Math.abs(m.by) : Math.hypot(m.a[0] - w.a[0], m.a[1] - w.a[1]), S.units) };
       if (m.snap && m.snap.kind !== 'free') o.snap = { p: S.drag.end === 'mid' || S.drag.end === 'bend' ? m.snap.p : (S.drag.end === 'a' ? m.a : m.b), kind: m.snap.kind };
     }
     for (const x of exts) x.overlay?.(o);
+    S.placeHook?.overlay?.(o);
+    if (S.dropGhost?.poly) { o.walls.push(S.dropGhost.poly); if (S.dropGhost.text) o.hud = { p: S.dropGhost.at, text: S.dropGhost.text }; }
+    if (S.fixedMark && pv) { const q = S.fixedMark, r = pv.pxToMm(7); o.symbols.push({ lines: [[q[0] - r, q[1] - r, q[0] + r, q[1] + r], [q[0] - r, q[1] + r, q[0] + r, q[1] - r]], arcs: [{ c: q, r, a0: 0, a1: 2 * Math.PI }] }); }   // 0.9 FX.67: the side that holds
     if (S.hiEdge) o.lines.push(S.hiEdge);   // a roof's wall row hovered in Properties (RC.1)
     pv.setOverlay(o);
   }
   /** The preview wall joined to the walls already there (so a corner looks as it will). */
   function previewOutline(seg) {
-    const walls = wallsHere().map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge }));
+    const walls = wallsHere().map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge, off: w.joinOff }));
     S.queuedSegs().forEach((q, i) => walls.push({ key: 'q' + i, a: q.a, b: q.b, t: q.t, bulge: q.bulge }));
     walls.push({ key: '*', ...seg });
     return wallOutlines(walls).get('*') || outlineOf(seg);
@@ -1205,7 +1366,7 @@ export function mountModel(host) {
    *  asked (meta.onError, 0.6 DC.114) shows it itself, also when the change waited for a reload. */
   function refused(e, meta) {
     const k = e.key || e.message;
-    const ours = !!(k && /^(model|fam|comforts|pic|tji|res\.err)\./.test(k));
+    const ours = !!(k && /^(model|fam|comforts|pic|tji|res\.err|walls\.err|wshape\.err)\./.test(k));   // 0.9 walls-09: the wall tool's refusals
     if (!ours) console.error(e);
     const why = ours ? t(k, e.fill || {}) : t('model.err.failed', { why: e.message || e });
     if (meta.onError) meta.onError(e, why); else host.status(why, true);
@@ -1220,6 +1381,17 @@ export function mountModel(host) {
     const inField = tgt.closest?.('input, textarea, select, [contenteditable="true"]');
     if (inField) return;
     const k = e.key;
+    // 0.9 FX.22: while a wall's grip is held the keys are a distance: Enter (or letting go) uses it, Esc drops the move
+    if (S.drag?.kind === 'grip' && S.drag.end !== 'bend') {
+      const d = S.drag;
+      if (k === 'Escape') { S.drag = null; drawOverlay(); }
+      else if (k === 'Enter') { if (d.typed) { const m = gripTyped(d); if (m) { S.drag = null; gripCommit(d, m); return e.preventDefault(), e.stopImmediatePropagation(); } } }
+      else if (k === 'Backspace') { d.typed = d.typed.slice(0, -1); drawOverlay(); }
+      else if (k.length === 1) { d.typed += k; drawOverlay(); }
+      else return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      return;
+    }
     if (k === 'Escape') {
       if (exts.some((x) => x.escape?.())) { e.preventDefault(); e.stopImmediatePropagation(); drawOverlay(); return; }
       if (S.chain) { e.preventDefault(); e.stopImmediatePropagation(); endChain(); host.status(t('model.chain.ended')); return; }
@@ -1346,13 +1518,46 @@ export function mountModel(host) {
       const above = (w) => { const i = levels.findIndex((l) => l.id === w.storey); return i >= 0 ? levels[i + 1] || null : null; };
       if (!many) {
         field(t('model.prop.thickness'), w0.assembly?.custom ? el('span', {}, fmtLen(w0.t, S.units)) : lenInput(w0.t, 'data-mp-thick', (mm) => { const key = typeAt(w0.typeKey, mm); if (!key) { host.status(t('model.err.thin'), true); return; } commit(changeWall(w0.guid, { typeKey: key }), one(title)); }, { min: 10 }));
-        field(t('model.prop.length'), lenInput(w0.len, 'data-mp-len', (mm) => { const u = [(w0.b[0] - w0.a[0]) / w0.len, (w0.b[1] - w0.a[1]) / w0.len]; commit(changeWall(w0.guid, { b: [w0.a[0] + u[0] * mm, w0.a[1] + u[1] * mm] }), one(title)); }, { min: 10 }));
+        if (w0.bulge) field(t('model.prop.length'), lenInput(w0.len, 'data-mp-len', (mm) => { const u = [(w0.b[0] - w0.a[0]) / w0.len, (w0.b[1] - w0.a[1]) / w0.len]; commit(changeWall(w0.guid, { b: [w0.a[0] + u[0] * mm, w0.a[1] + u[1] * mm] }), one(title)); }, { min: 10 }));
+        else {
+          // 0.9 FX.22: read and set from the centre line or a face; the joined walls follow and keep their angle
+          const from = MEASURE_FROM.includes(S.wallFrom) ? S.wallFrom : 'center', all = data.walls, go = (plan) => commit(changeWallsBy(w0.guid, plan), one(title));
+          field(t('model.prop.from'), select(MEASURE_FROM.map((m) => [m, t('model.from.' + m)]), from, 'data-mp-from', (v) => { S.wallFrom = v; renderProps(); }));
+          // 0.9 FX.67: which side holds when the Length changes (start | end | centre); the fixed side is marked on the plan while the field is in use
+          const grow = GROW.includes(S.wallGrow) ? S.wallGrow : 'start';
+          const lenIn = lenInput(lengthFrom(all, w0, from), 'data-mp-len', (mm) => go((walls) => setLengthGrow(walls, w0.guid, mm, from, grow)), { min: 10 });
+          lenIn.addEventListener('focus', () => { S.fixedMark = fixedPoint(w0, grow); drawOverlay(); });
+          lenIn.addEventListener('blur', () => { S.fixedMark = null; drawOverlay(); });
+          field(t('model.prop.length'), lenIn);
+          field(t('walls.grow'), select(GROW.map((g) => [g, t('walls.grow.' + g)]), grow, 'data-mp-grow', (v) => { S.wallGrow = v; renderProps(); }));
+          const room = roomSize(all, w0, from);
+          if (room) field(t('model.prop.room'), lenInput(room.value, 'data-mp-room', (mm) => go((walls) => setRoomSize(walls, w0.guid, mm, from)), { min: 10 }));
+          const mv = lenInput(NaN, 'data-mp-move', (mm) => { if (mm) go((walls) => moveOutward(walls, w0.guid, mm)); }, { any: true });
+          mv.placeholder = t('model.prop.move.hint');
+          field(t('model.prop.move'), mv);
+          const ang = angleOf(all, w0.guid), ai = el('input', { type: 'text', className: 'bc-input bc-num', value: fmtAngle(ang.deg), 'data-mp-angle': '' });
+          ai.addEventListener('change', () => {
+            const deg = parseFloat(ai.value);
+            if (!Number.isFinite(deg) || (ang.to && !(deg > 0 && deg < 180))) { host.status(t('model.err.angle'), true); ai.value = ai.defaultValue; return; }
+            go((walls) => setAngle(walls, w0.guid, deg));
+          });
+          ai.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ai.blur(); } if (e.key === 'Escape') { ai.value = ai.defaultValue; ai.blur(); } });
+          field(t(ang.to ? 'model.prop.angle' : 'model.prop.direction'), ai);
+          field('', button(t('model.prop.squareup'), 'data-mp-square', () => {
+            if (!squareUp(all, w0.guid).size) { host.status(t('model.square.none')); return; }
+            go((walls) => squareUp(walls, w0.guid));
+          }));
+        }
       }
       // 0.6 round 2: the location line (what stays put when the wall gets thicker or its outside flips)
       const sameJ = walls.every((w) => (w.justification || 'center') === (w0.justification || 'center'));
       const jOpts = JUSTIFICATIONS.map((j) => [j, t('comforts.just.' + j.toLowerCase())]);
       if (!sameJ) jOpts.unshift(['', t('model.prop.mixed')]);
       field(t('comforts.prop.just'), select(jOpts, sameJ ? (w0.justification || 'center') : '', 'data-mp-just', (v) => { if (v) commit(many ? changeWalls(guids, { justification: v }) : changeWall(w0.guid, { justification: v }), one(title)); }));
+      // 0.9 FX.60 (wall tool spec: Disallow join, per end): a free end stays free where the wall goes, until it is allowed again
+      if (!many) for (const [end, key, attr] of [['a', 'model.prop.joinstart', 'data-mp-join-a'], ['b', 'model.prop.joinend', 'data-mp-join-b']]) {
+        field(t(key), select([['on', t('model.join.on')], ['off', t('model.join.off')]], w0.joinOff?.[end] ? 'off' : 'on', attr, (v) => { if (v) commit(changeWall(w0.guid, { joinAllowed: { [end]: v === 'on' } }), one(title)); }));
+      }
       const ab = !many ? levels.find((l) => l.guid === w0.topLevel) || null : null, toLevel = walls.every((w) => w.topLevel), fixed = walls.every((w) => !w.topLevel);
       // 0.7 BIM-MLWALL: one wall can go up to any level above it (the nearest is "the level above")
       const choices = !many ? topLevelChoices(levels, w0.storey) : [];
@@ -1386,6 +1591,8 @@ export function mountModel(host) {
         rows.push(el('dt', {}, t('model.level')), el('dd', {}, levels.find((l) => l.id === w0.storey)?.name || ''));
         const passed = wallLevelsPassed(w0, levels);
         if (passed.length) rows.push(el('dt', {}, t('model.wall.passes')), el('dd', {}, passed.map((l) => l.name).join(', ')));   // 0.7 BIM-MLWALL
+        // 0.9 WT.3 / WT.6 / WT.7: rows other modules add for one wall (locks, grid locks, shape): wall-tools-ui.js, wall-shape-ui.js
+        for (const x of exts) { try { x.wallProps?.(w0, { rows, field, lenInput, select, button, one, el, data, title }); } catch (e) { console.error(e); } }
       }
     } else if (ops.length && !walls.length && ops.every((o) => o.kind === ops[0].kind)) {
       const o0 = ops[0], many = ops.length > 1, guids = ops.map((o) => o.guid), door = o0.kind === 'door';
@@ -1526,7 +1733,7 @@ export function mountModel(host) {
   function faceEndsOf(wall, face) {
     if (!S.outlines.has(wall.guid) || wall.storey !== S.level) {
       const here = (S.data?.walls || snapshotModel(ed()).walls).filter((w) => w.storey === wall.storey);
-      const o = wallOutlines(here.map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge })));
+      const o = wallOutlines(here.map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge, off: w.joinOff })));
       const keep = S.outlines; S.outlines = o; const r = faceEnds(wall, face); S.outlines = keep; return r;
     }
     return faceEnds(wall, face);
@@ -1548,6 +1755,7 @@ export function mountModel(host) {
   /** What an extension (extend()) may use. */
   const api = {
     S, root, host, t, ed, kb, commit, refresh, buildScene, drawOverlay, setTool, level, levelAbove, wallsHere, wallsOn, snapAt,
+    drawTop, projectWallType, snapCtx: () => snapCtx(), extTool, gripWall: () => gripWall(),   // 0.9 WT.2-WT.7 (wall-tools-ui.js)
     workspaceWallControls: () => ({ row: ui.wallOpts, type: ui.wallType, reference: ui.wallRef, side: ui.wallSide, shape: ui.wallShape, top: ui.wallTop, height: ui.wallH, typedRow: ui.typedRow, typed: ui.typed, units: ui.units }),
     workspaceCancel(finishOnly = false) { if (S.chain) { endChain(); host.status(t('model.chain.ended')); } else if (!finishOnly) setTool('select'); for (const x of exts) x.toolChanged?.(S.tool); },
     workspaceTyped(key) { ui.typed.focus(); ui.typed.value += key; },
@@ -1596,10 +1804,11 @@ export function mountModel(host) {
     /** 0.7.1 → 0.8: the plan's keys of a stair or room the regulations check named by GlobalId ([] when not drawn). */
     problemKeys: (guid) => PR.keys.get(guid) || [],
     // another file: its 3D view first (Draw off); New building turns Draw on again right after
-    opened() { S.cutFor = null; S.level = null; S.autoFit3d = false; endChain(); S.queue = []; S.empty3d = !(host.viewer()?.allKeys?.().size); if (S.on) show(false); },
-    stage(which) { if (which !== 'ifc' && S.on) show(false); },
+    opened() { syncLayoutGroup(); S.cutFor = null; S.level = null; S.autoFit3d = false; endChain(); S.queue = []; S.empty3d = !(host.viewer()?.allKeys?.().size); if (S.on) show(false); },
+    stage(which) { if (which !== 'ifc' && S.on) show(false); syncLayoutGroup(); },
     rebuilding() { S.reloading = true; S.reloadT = Date.now(); },
     rebuilt() {
+      syncLayoutGroup();
       S.reloading = false; S.cutFor = null;
       // a new building's first walls: frame the 3D view once (it had nothing to look at)
       const v = host.viewer(), n = v?.allKeys?.().size || 0;
@@ -1622,7 +1831,24 @@ export function mountModel(host) {
     coordsChanged() { if (pv && S.on) { pv.markers = host.coords?.()?.planMarkers(S.planM) || []; pv.render(); } },
     /** A tool that works in the 3D view (Paint, Views, Render) is starting: the plan-only layout goes to Split (0.6 BIM-F5). */
     need3d() { if (!S.on || S.layout !== 'plan') return false; S.layout = 'split'; applyLayout(); return true; },
+    /** 0.9 D9.3: only the plan is shown (no 3D view): M opens the plan's Measure instead of the 3D one. */
+    planOnly() { return !!(S.on && S.layout === 'plan'); },
+    useTool(name) { if (S.on) setTool(name); },
     show,
+    placeLibrary,
+    /** The view mode ('plan' | 'split' | 'model') and the plan-side hooks of placing a Library item (bimcraft.js startPlacing). */
+    viewMode,
+    /** Bring the plan up (from 3D alone: Split, or the plan alone on a small stage) and show `level` in it. True when it is showing. */
+    ensurePlan(levelId) { if (!S.on) show(true); if (!S.on) return false; if (levelId !== undefined && levelId !== null && levelId !== S.level && S.data?.levels.some((l) => l.id === levelId)) api.goLevel(levelId); return true; },
+    /** Bring the 3D view up: the plan alone goes to Split; Split and 3D stay. */
+    ensure3d() { if (!S.on || S.layout !== 'plan') return false; S.layout = 'split'; applyLayout(); return true; },
+    setPlaceHook(h) { S.placeHook = h || null; if (pv && S.on) drawOverlay(); },
+    /** The plan point (model mm) under a screen point, or null when the plan is not showing. */
+    planPoint(clientX, clientY) { return pv && S.on && !ui.wrap.hidden ? pv.toPlan(clientX, clientY) : null; },
+    /** The plan pane's box on screen (null when not showing) and the drop-target highlight / ghost footprint while a Library card is dragged over it. */
+    planRect() { return pv && S.on && !ui.wrap.hidden ? ui.canvas.getBoundingClientRect() : null; },
+    setDropGhost(g) { S.dropGhost = g || null; ui.wrap.classList.toggle('is-drop-target', !!g); if (pv && S.on) drawOverlay(); },
+    redrawOverlay() { if (pv && S.on) drawOverlay(); },
     get on() { return S.on; },
     /** 0.6 DC.117: which view of the level is shown ('plan' | 'rcp'), its level, and the ceiling over a point (placing). */
     get kind() { return S.on ? S.kind : null; }, get level() { return S.level; }, get callout() { return S.on ? S.callout : null; }, ceilingZ,

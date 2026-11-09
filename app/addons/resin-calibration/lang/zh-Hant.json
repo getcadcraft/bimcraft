@@ -1,0 +1,14 @@
+{
+  "@locale": "zh-Hant",
+  "@name": "繁體中文",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "曝光測試",
+  "note": "樹脂與印表機各不相同。請在曝光階梯的每個曝光值下各列印一次測試件，並保留細薄柱與通孔最清晰的曝光值。",
+  "part": "將測試件放到列印平台上",
+  "part.name": "曝光測試件",
+  "ladder": "儲存曝光階梯（{n}個檔案）",
+  "ladder.made": "已為{list}秒儲存{n}個檔案。請使用相同樹脂分別列印並比較。",
+  "ladder.nopart": "請先將測試件放到列印平台上。",
+  "ladder.failed": "無法製作曝光階梯。{why}",
+  "ladder.busy": "正在製作第{i}個，共{n}個…"
+}

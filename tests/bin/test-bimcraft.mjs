@@ -52,6 +52,7 @@
  *                                                   #   original), never more; no complete file is reported partial. Also runs
  *                                                   #   after the default (no folder) run. A cut-off file found in the folder
  *                                                   #   passes only as a correct partial open (checkPartialOpen).
+ *   node bin/test-bimcraft.mjs --views09 [--only a,b,c,d,e,s]  # 0.9 D8.12 A–D + working style, SU.1123 (tools/bimcraft-test/views09-test.mjs)
  *   node bin/test-bimcraft.mjs --walls             # 0.7 contributions (Doc, achartt): wall assemblies, the project material library and
  *                                                   #   reference dimensions: tools/bimcraft-test/{wall-precision,material-library}.test.mjs (node:test)
  *
@@ -160,6 +161,8 @@ if (args.includes('--bundle-open')) process.exit(await (await import(path.join(R
 // 0.7 DC.116 (session trace): walls from a set of plans (vector PDF, raster PDF, scan) — tools/bimcraft-test/plans-test.mjs
 if (args.includes('--variants')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/variants-test.mjs'))).variantsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.7 W3.19 (configurator)
 if (args.includes('--plans')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/plans-test.mjs'))).plansMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+// 0.9 DC.119 (session bim-fix-09): Add a level below — tools/bimcraft-test/levelbelow-test.mjs
+if (args.includes('--levelbelow')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/levelbelow-test.mjs'))).levelBelowMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.7 SU.461 (session bim-07): copy a level's drawing — tools/bimcraft-test/copylevel-test.mjs
 if (args.includes('--copylevel')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/copylevel-test.mjs'))).copyLevelMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.7 BIM-FAM-SOLID (session bim-07): families used hard, broken, round-tripped, timed — tools/bimcraft-test/families-solid-test.mjs
@@ -187,6 +190,8 @@ if (args.includes('--ifcsolids')) process.exit(await (await import(path.join(ROO
 if (args.includes('--schedule')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/schedule-test.mjs'))).scheduleMode({ APP, ROOT, quiet }));   // 0.8 SU.931 (session ifc-08)
 // 0.5 part 3 track BM (session bim-model): the building tools — tools/bimcraft-test/model-test.mjs
 if (args.includes('--gh3ui')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/gh3ui-test.mjs'))).gh3uiMode({ APP, ROOT, quiet }));   // 0.8 GH.3 A/C (gh3ui_PART_3)
+if (args.includes('--units09')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/units-gh3a-09-test.mjs'))).units09Mode({ APP, ROOT, quiet }));   // 0.9 GH.3-A frame tab, Problems, Points (units-gh3a-09)
+if (args.includes('--lib-openings')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/library-openings-test.mjs'))).libOpeningsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 if (args.includes('--model')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/model-test.mjs'))).modelMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.5 part 4 track RC (session bim-residential): the residential tools — tools/bimcraft-test/res-test.mjs
 if (args.includes('--res')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/res-test.mjs'))).resMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
@@ -231,12 +236,16 @@ if (args.includes('--fixes2')) process.exit(await (await import(path.join(ROOT, 
 if (args.includes('--views2')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/views2-test.mjs'))).views2Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.6 DC.117 (bim-views_PART_2)
 // 0.6 round 2 (session bim-comforts_PART_2): curved walls, justification, moving items, dormers, spiral stairs, interior elevations — tools/bimcraft-test/comforts-test.mjs
 if (args.includes('--comforts')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/comforts-test.mjs'))).comfortsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.9 SU.882 (session bim-ifcx-09): IFC5 alpha (IFCX) adapter — tools/bimcraft-test/ifcx-test.mjs
+if (args.includes('--ifcx')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ifcx-test.mjs'))).ifcxMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 SU.1055 (session bim-08): OBJ import — tools/bimcraft-test/obj-test.mjs
 if (args.includes('--obj')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/obj-test.mjs'))).objMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 SU.1055 (session bim-08): Trace Reference geometry — tools/bimcraft-test/traceref-test.mjs
 if (args.includes('--traceref')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/traceref-test.mjs'))).traceRefMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 D8.8 (session d88_PART_3): pictures as backgrounds — tools/bimcraft-test/picture-test.mjs
 if (args.includes('--picture')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/picture-test.mjs'))).pictureMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.9 D8.12 + SU.1123 (session bim-views-09): duplicate views, pens in the file, Report as, templates, working style, sheet formats, edit in elevation — tools/bimcraft-test/views09-test.mjs
+if (args.includes('--views09')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/views09-test.mjs'))).views09Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 SU.1055 (session bim-08): pen overrides — tools/bimcraft-test/pens-test.mjs
 if (args.includes('--pens')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/pens-test.mjs'))).pensMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 SU.1055 (session bim-08): a stair from a sketch — tools/bimcraft-test/stairsketch-test.mjs
@@ -248,6 +257,10 @@ if (args.includes('--famlib')) process.exit(await (await import(path.join(ROOT, 
 if (args.includes('--gh3')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/gh3-test.mjs'))).gh3Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 GH.3-F/G (session gh3sym_PART_3): the symbol-set registry, electrical + plumbing sets, plan symbols — tools/bimcraft-test/symbols-test.mjs
 if (args.includes('--symbols')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/symbols-test.mjs'))).symbolsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+if (args.includes('--elecagents')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/elec-agents-test.mjs'))).elecAgentsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.9 GH.10 (bim-hosts-09): electrical devices for the assistant
+if (args.includes('--walltools')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-tools-test.mjs'))).wallToolsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.9 WT.2-WT.7, FX.65-67 (walls-09): the wall tool + the spec's nine tests
+if (args.includes('--joins')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-joins-test.mjs'))).joinsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.9 FX.60: the stored join record
+if (args.includes('--wallshape')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-shape-test.mjs'))).wallShapeMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.9 WT.6: attach, profile, slant, wall openings
 if (args.includes('--modify')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/modify-test.mjs'))).modifyMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 if (args.includes('--ops')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ops-test.mjs'))).opsMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.7 LC.12 / LC.20 (bim-ops)
 if (args.includes('--extra2')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/extra2-test.mjs'))).extra2Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.6 DC.22 / LC.12 / LC.20 (bim-extra_PART_2)
@@ -1064,6 +1077,24 @@ async function libraryMode() {
       const front = [Math.sin(s.rot * Math.PI / 180), -Math.cos(s.rot * Math.PI / 180)];   // item −Y rotated
       ok(s && onFace && front[0] * sf.n[0] + front[1] * sf.n[1] > 0.99, `wall snap: ${faces.length} wall faces; back on the face, front facing the room (rot ${s.rot}°)`);
     } else ok(false, 'wall faces found');
+    // Library doors and windows (2026-11-02): an item of kind door is written as an IfcDoor typed by IfcDoorType (IFC2X3: IfcDoorStyle),
+    // OverallWidth / OverallHeight from the item; a copy keeps the class; BimCraft's own door tools leave it alone (no CadCraft_Door).
+    const door = { ...items[0], uuid: '55555555-5555-4555-8555-555555555555', name: 'Libtest arched double door', kind: 'door', category: 'openings/doors',
+      ifc: { class: 'IfcDoor', predefined: 'NOTDEFINED' }, params: { width: 1701.8, depth: 184.15, height: 2895.6 } };
+    const dd = ed.placeItem(door, { storey: storey.id, x: 6000, y: 1000, rot: 0, itemNumber: ed.placer().nextItemNumber() });
+    const dc = ed.placeLike(dd.id, { storey: storey.id, x: 8000, y: 1000, rot: 0, itemNumber: ed.placer().nextItemNumber() });
+    const dBytes = ed.save(), dSrc = new TextDecoder().decode(dBytes);
+    const dType = inf.schema === 'IFC2X3' ? 'IFCDOORSTYLE' : 'IFCDOORTYPE';
+    const dre = await quiet((b) => engine2.load(b))(dBytes);
+    const dGeom = new Set(); for (const b of dre.batches) for (const t of b.triIds) dGeom.add(t);
+    const dl = engine2.api.GetLine(engine2.modelID, dd.id, false), dl2 = engine2.api.GetLine(engine2.modelID, dc.id, false);
+    const { readOpenings } = await import(path.join(APP, 'model-openings.js'));
+    const { val } = await import(path.join(APP, 'ifc-util.js'));
+    const { ModelWriter } = await import(path.join(APP, 'model-write.js'));
+    let ours = null; try { ours = readOpenings(new ModelWriter(WebIFC, engine2.api, engine2.modelID)).some((o) => o.id === dd.id); } catch (e) { ours = 'error: ' + e.message; }
+    ok(String(dl.constructor?.name).toUpperCase() === 'IFCDOOR' && String(dl2.constructor?.name).toUpperCase() === 'IFCDOOR' && new RegExp(dType + "\\('[^']+',#\\d+,'Libtest arched double door'").test(dSrc)
+       && near(Number(val(dl.OverallWidth)) * pl2.unitMm, 1701.8, 1) && near(Number(val(dl2.OverallHeight)) * pl2.unitMm, 2895.6, 1) && dGeom.has(dd.id) && dGeom.has(dc.id) && ours === false,
+       'a Library door is an IfcDoor (' + dType + '), 1702 × 2896 mm, copied as one, drawn after reopening, not taken for a BimCraft door (' + ours + ')');
     void C;
   }
 

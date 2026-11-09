@@ -1,0 +1,21 @@
+{
+  "@locale": "ms",
+  "@name": "Bahasa Melayu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (melalui Bambu Connect)",
+  "step.orca": "Pasang OrcaSlicer pada komputer ini.",
+  "step.orca.link": "Dapatkan OrcaSlicer",
+  "step.connect": "Pasang Bambu Connect pada komputer ini.",
+  "step.connect.link": "Dapatkan Bambu Connect",
+  "step.bind": "Dalam Bambu Connect, tambah P2S anda. Lakukan ini sekali sahaja.",
+  "step.send": "Tekan Hantar ke pencetak 3D. Fail dibuka dalam Bambu Connect: semak di sana dan mulakan cetakan.",
+  "note": "Bambu Connect ialah program Bambu Lab sendiri untuk mencetak daripada perisian lain, dan cetakan dimulakan dari sana.",
+  "confirm": "OrcaSlicer menyediakan ini dengan pratetap P2Snya: {grams} g, {layers} lapisan.",
+  "confirm.next": "Buka dalam Bambu Connect? Tiada apa-apa dicetak sehingga anda memulakannya di sana.",
+  "done": "Dihantar ke Bambu Connect. Semak di sana dan mulakan cetakan.",
+  "fail.orca": "OrcaSlicer tidak dijumpai pada komputer ini. Pasangnya, kemudian cuba lagi.",
+  "fail.slice": "OrcaSlicer tidak dapat menyediakan cetakan ini. {why}",
+  "fail.nogcode": "Fail OrcaSlicer tidak mengandungi cetakan.",
+  "fail.bed": "Ini tidak muat pada katil P2S.",
+  "fail.connect": "Bambu Connect tidak dibuka. Pasangnya, kemudian cuba lagi."
+}

@@ -1,0 +1,19 @@
+{
+  "@locale": "gn",
+  "label": "Bambu Lab P2S (a través de Bambu Connect)",
+  "step.orca": "Instalá OrcaSlicer ko computadora pe.",
+  "step.orca.link": "Obtené OrcaSlicer",
+  "step.connect": "Instalá Bambu Connect ko computadora pe.",
+  "step.connect.link": "Obtené Bambu Connect",
+  "step.bind": "Bambu Connect-pe, agregá tu P2S. Peteĩ vez rejapo.",
+  "step.send": "Apretá Send to 3D printer. El archivo ojeabre Bambu Connect-pe: hecha upépe ha upéi eñepyrũ la impresión.",
+  "note": "Bambu Connect ha'e Bambu Lab-pe programa, ambue software-gui impresión oñepyrũ haguã. Impresión oñepyrũ upépe.",
+  "confirm": "OrcaSlicer-pe ojapo ko impresión P2S preset-nduápe: {grams} g, {layers} capa.",
+  "confirm.next": "¿Abrí Bambu Connect-pe? Ndaipóri impresión peteĩ ndaha'éi upépe eñepyrũvo.",
+  "done": "Ohasa Bambu Connect-pe. Hecha upépe ha eñepyrũ la impresión.",
+  "fail.orca": "OrcaSlicer ko computadora pe ndojuhúi. Instalá, upéi emoñe'ẽ jey.",
+  "fail.slice": "OrcaSlicer ndoikuaái ko impresión ojapo haguã. {why}",
+  "fail.nogcode": "OrcaSlicer-pe archivo ndaipóri impresión.",
+  "fail.bed": "Ko ndorekói P2S bed-pe.",
+  "fail.connect": "Bambu Connect ndojeporu. Instalá, upéi emoñe'ẽ jey."
+}

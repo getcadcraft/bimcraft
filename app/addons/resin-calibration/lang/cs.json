@@ -1,0 +1,14 @@
+{
+  "@locale": "cs",
+  "@name": "Čeština",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Zkouška expozice",
+  "note": "Pryskyřice a tiskárny se liší. Vytiskněte zkušební díl jednou při každé expozici v řadě a zvolte expozici, při které jsou nejostřejší tenké sloupky a otevřené otvory.",
+  "part": "Položte zkušební díl na tiskovou plochu",
+  "part.name": "Zkušební díl expozice",
+  "ladder": "Uložit žebříček expozic ({n})",
+  "ladder.made": "Uloženy soubory ({n}) pro {list} s. Vytiskněte každý se stejnou pryskyřicí a porovnejte.",
+  "ladder.nopart": "Nejprve položte zkušební díl na tiskovou plochu.",
+  "ladder.failed": "Žebříček expozic nelze vytvořit. {why}",
+  "ladder.busy": "Vytvářím {i} z {n}…"
+}

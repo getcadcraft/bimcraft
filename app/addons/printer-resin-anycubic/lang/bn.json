@@ -1,0 +1,21 @@
+{
+  "@locale": "bn",
+  "@name": "বাংলা",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX and PWS",
+  "opt.flip": "ছবি উল্টে দিন (মিরর)",
+  "opt.flip.off": "না",
+  "opt.flip.on": "হ্যাঁ, বাম থেকে ডানে",
+  "opt.version": "ফাইল সংস্করণ",
+  "opt.version.v1": "সংস্করণ 1 (সাধারণত ব্যবহৃত)",
+  "opt.version.v516": "সংস্করণ 516",
+  "opt.aa": "প্রান্ত মসৃণকরণের স্তর",
+  "opt.aa.1": "1 (কোনোটিই নয়)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "প্রতি-লেয়ার সেটিংস ফ্ল্যাগ",
+  "opt.perLayer.off": "বন্ধ",
+  "opt.perLayer.on": "চালু"
+}

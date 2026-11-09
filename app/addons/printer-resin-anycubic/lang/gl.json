@@ -1,0 +1,19 @@
+{
+  "@locale": "gl",
+  "label": "Anycubic PWMX e PWS",
+  "opt.flip": "Espellar a imaxe",
+  "opt.flip.off": "Non",
+  "opt.flip.on": "Sí, de esquerda a dereita",
+  "opt.version": "Versión do ficheiro",
+  "opt.version.v1": "Versión 1 (a habitual)",
+  "opt.version.v516": "Versión 516",
+  "opt.aa": "Niveis de suavizado de bordos",
+  "opt.aa.1": "1 (ningún)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Marca de axustes por capa",
+  "opt.perLayer.off": "Desactivado",
+  "opt.perLayer.on": "Activado"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "sv",
+  "@name": "Svenska",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX och PWS",
+  "opt.flip": "Spegla bilden",
+  "opt.flip.off": "Nej",
+  "opt.flip.on": "Ja, vänster till höger",
+  "opt.version": "Filversion",
+  "opt.version.v1": "Version 1 (vanligast)",
+  "opt.version.v516": "Version 516",
+  "opt.aa": "Nivåer för kantutjämning",
+  "opt.aa.1": "1 (ingen)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Flagga för inställningar per lager",
+  "opt.perLayer.off": "Av",
+  "opt.perLayer.on": "På"
+}

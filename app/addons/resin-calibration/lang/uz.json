@@ -1,0 +1,14 @@
+{
+  "@locale": "uz",
+  "@name": "Oʻzbekcha",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Ekspozitsiya sinovi",
+  "note": "Smolalar va printerlar bir-biridan farq qiladi. Sinov detalini ekspozitsiya zinasidagi har bir qiymatda bir marta chop eting va eng oʻtkir ingichka ustunchalar hamda ochiq teshiklar bor ekspozitsiyani saqlab qoʻying.",
+  "part": "Sinov detalini stolga qoʻying",
+  "part.name": "Ekspozitsiya sinov detali",
+  "ladder": "Ekspozitsiya zinasini saqlash ({n} ta fayl)",
+  "ladder.made": "{n} ta fayl saqlandi. Ekspozitsiya vaqtlari (s): {list}. Har birini bir xil smola bilan chop etib, solishtiring.",
+  "ladder.nopart": "Avval sinov detalini stolga qoʻying.",
+  "ladder.failed": "Zinani yaratib boʻlmadi. {why}",
+  "ladder.busy": "Yaratilmoqda: {i} / {n}…"
+}

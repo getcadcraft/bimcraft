@@ -15,7 +15,7 @@ import { validateItem, convexHull, suggestCategory, LIMITS, CATEGORIES } from '.
 import { ids, val, lengthUnitMm, productTriangles, inv4, apply4 } from './ifc-util.js';
 
 const LOOSE = ['IFCFURNISHINGELEMENT', 'IFCFURNITURE', 'IFCBUILDINGELEMENTPROXY', 'IFCFLOWTERMINAL', 'IFCSANITARYTERMINAL',
-  'IFCELECTRICAPPLIANCE', 'IFCSYSTEMFURNITUREELEMENT', 'IFCDISTRIBUTIONELEMENT', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWCONTROLLER'];
+  'IFCELECTRICAPPLIANCE', 'IFCSYSTEMFURNITUREELEMENT', 'IFCDISTRIBUTIONELEMENT', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWCONTROLLER', 'IFCDOOR', 'IFCWINDOW'];
 const r4 = (v) => Math.round(v * 10000) / 10000;
 const clip = (s, n = LIMITS.text) => { const t = String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim(); return t.length > n ? t.slice(0, n) : t; };
 
@@ -141,7 +141,9 @@ function itemFrom(api, mid, c, mm, notes) {
   if (Object.keys(elec).length) it.params.elec = elec;
   const rem = get('Remarks', 'Notes'); if (rem) it.params.remarks = s(rem);
 
-  if (/FURNITURE|FURNISHING|SYSTEMFURNITURE/i.test(c.cls)) { it.kind = 'furniture'; it.category = suggestFurniture(it.name); }
+  if (/^IfcDoor/i.test(c.cls)) { it.kind = 'door'; it.category = 'openings/doors'; }
+  else if (/^IfcWindow/i.test(c.cls)) { it.kind = 'window'; it.category = 'openings/windows'; }
+  else if (/FURNITURE|FURNISHING|SYSTEMFURNITURE/i.test(c.cls)) { it.kind = 'furniture'; it.category = suggestFurniture(it.name); }
   else if (/SANITARY|FLOWTERMINAL/i.test(c.cls)) { it.kind = 'fixture'; it.category = 'plumbing/fixtures'; }
   else { const sg = suggestCategory(it.name); if (sg) it.category = sg; }
   // i18n-ignore: tools/library/convert.mjs prints this without a language file (log: For the owner)
@@ -166,6 +168,8 @@ function occurrenceClass(c) {
   if (/^IfcFurnitureType$/.test(c.cls) || /^IfcFurniture$/.test(n)) return 'IfcFurniture';
   if (/Furnishing/.test(n)) return 'IfcFurnishingElement';
   if (/^IfcSanitaryTerminal/.test(n)) return 'IfcSanitaryTerminal';
+  if (/^IfcDoor(Style)?$/i.test(n)) return 'IfcDoor';
+  if (/^IfcWindow(Style)?$/i.test(n)) return 'IfcWindow';
   if (/^IfcElectricAppliance/.test(n)) return 'IfcElectricAppliance';
   if (/^IfcFlowTerminal/.test(n)) return 'IfcFlowTerminal';
   return /^Ifc[A-Za-z]+$/.test(n) && /Proxy/.test(n) ? 'IfcBuildingElementProxy' : /^Ifc[A-Za-z]+$/.test(n) ? n : 'IfcBuildingElementProxy';

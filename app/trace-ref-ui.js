@@ -30,7 +30,7 @@ export function mountTraceRef(modelUi) {
     if (R.cache.has(levelId)) return R.cache.get(levelId);
     const walls = A.wallsOn(levelId).map((w) => ({ a: w.a, b: w.b, t: w.t }));
     let boxes = [];
-    try { const ed = A.ed(); boxes = movables(new ModelWriter(ed.W, ed.api, ed.mid), levelId).filter((e) => e.kind !== 'wall' && e.kind !== 'item').map((e) => e.box); } catch { boxes = []; }
+    try { const ed = A.ed(); boxes = movables(new ModelWriter(ed.W, ed.api, ed.mid), levelId).filter((e) => e.kind === 'floor' || e.kind === 'column').map((e) => e.box); } catch { boxes = []; }
     const p = { walls, boxes };
     R.cache.set(levelId, p);
     return p;

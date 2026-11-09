@@ -1,0 +1,12 @@
+{
+  "@locale": "uk",
+  "@name": "Українська",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Порядок байтів",
+  "opt.byteOrder.big": "Big-endian (зазвичай використовується)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Контрольна сума",
+  "opt.checksum.negsum": "Заперечена сума",
+  "opt.checksum.sum": "Проста сума"
+}

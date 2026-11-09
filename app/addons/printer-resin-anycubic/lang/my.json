@@ -1,0 +1,21 @@
+{
+  "@locale": "my",
+  "@name": "မြန်မာ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX နှင့် PWS",
+  "opt.flip": "ပုံကို ထင်ပြန်ပြောင်းရန်",
+  "opt.flip.off": "မဟုတ်ပါ",
+  "opt.flip.on": "ဟုတ်ပါသည်၊ ဘယ်မှ ညာသို့",
+  "opt.version": "ဖိုင်ဗားရှင်း",
+  "opt.version.v1": "ဗားရှင်း 1 (အများဆုံး သုံးသည်)",
+  "opt.version.v516": "ဗားရှင်း 516",
+  "opt.aa": "အနားသတ် ချောမွေ့စေသည့် အဆင့်များ",
+  "opt.aa.1": "1 (မရှိ)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "လေယာအလိုက် ဆက်တင် အမှတ်အသား",
+  "opt.perLayer.off": "ပိတ်",
+  "opt.perLayer.on": "ဖွင့်"
+}

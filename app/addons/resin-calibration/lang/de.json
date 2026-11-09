@@ -1,0 +1,14 @@
+{
+  "@locale": "de",
+  "@name": "Deutsch",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Belichtungstest",
+  "note": "Harze und Drucker unterscheiden sich. Drucken Sie das Testteil einmal mit jeder Belichtung der Reihe und behalten Sie die Belichtung mit den schärfsten dünnen Stegen und offenen Löchern.",
+  "part": "Testteil auf das Druckbett legen",
+  "part.name": "Belichtungstest-Teil",
+  "ladder": "Belichtungsreihe speichern ({n} Dateien)",
+  "ladder.made": "{n} Dateien für {list} s gespeichert. Jede mit demselben Harz drucken und vergleichen.",
+  "ladder.nopart": "Testteil zuerst auf das Druckbett legen.",
+  "ladder.failed": "Die Belichtungsreihe konnte nicht erstellt werden. {why}",
+  "ladder.busy": "{i} von {n} wird erstellt…"
+}

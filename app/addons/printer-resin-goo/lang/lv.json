@@ -1,0 +1,12 @@
+{
+  "@locale": "lv",
+  "@name": "Latviešu",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "Baitu secība",
+  "opt.byteOrder.big": "Big-endian (parasti izmantotā)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "Kontrolsumma",
+  "opt.checksum.negsum": "Negētā summa",
+  "opt.checksum.sum": "Vienkāršā summa"
+}

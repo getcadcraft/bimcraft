@@ -1,0 +1,21 @@
+{
+  "@locale": "hu",
+  "@name": "Magyar",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX és PWS",
+  "opt.flip": "Kép tükrözése",
+  "opt.flip.off": "Nem",
+  "opt.flip.on": "Igen, balról jobbra",
+  "opt.version": "Fájlverzió",
+  "opt.version.v1": "1-es verzió (a szokásos)",
+  "opt.version.v516": "516-os verzió",
+  "opt.aa": "Élsimítási szintek",
+  "opt.aa.1": "1 (nincs)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Rétegenkénti beállítások jelölő",
+  "opt.perLayer.off": "Ki",
+  "opt.perLayer.on": "Be"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "hu",
+  "@name": "Magyar",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connecten keresztül)",
+  "step.orca": "Telepítse az OrcaSlicert erre a számítógépre.",
+  "step.orca.link": "OrcaSlicer letöltése",
+  "step.connect": "Telepítse a Bambu Connectet erre a számítógépre.",
+  "step.connect.link": "Bambu Connect letöltése",
+  "step.bind": "A Bambu Connectben adja hozzá a P2S-t. Ezt egyszer kell elvégezni.",
+  "step.send": "Nyomja meg a „Küldés 3D-nyomtatóra” gombot. A fájl a Bambu Connectben nyílik meg: ellenőrizze ott, és indítsa el a nyomtatást.",
+  "note": "A Bambu Connect a Bambu Lab saját programja más szoftverekből való nyomtatáshoz, a nyomtatás onnan indul.",
+  "confirm": "Az OrcaSlicer ezt a P2S-beállításaival készítette elő: {grams} g, {layers} réteg.",
+  "confirm.next": "Megnyitja a Bambu Connectben? Addig nem nyomtat semmit, amíg ott el nem indítja.",
+  "done": "Elküldve a Bambu Connectnek. Ellenőrizze ott, és indítsa el a nyomtatást.",
+  "fail.orca": "Az OrcaSlicer nem található ezen a számítógépen. Telepítse, majd próbálja újra.",
+  "fail.slice": "Az OrcaSlicer nem tudta előkészíteni ezt a nyomtatást. {why}",
+  "fail.nogcode": "Az OrcaSlicer fájlja nem tartalmazott nyomtatást.",
+  "fail.bed": "Ez nem fér el a P2S nyomtatóágyán.",
+  "fail.connect": "A Bambu Connect nem nyílt meg. Telepítse, majd próbálja újra."
+}

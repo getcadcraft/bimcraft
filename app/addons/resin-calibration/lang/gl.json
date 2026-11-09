@@ -1,0 +1,12 @@
+{
+  "@locale": "gl",
+  "h": "Proba de exposición",
+  "note": "As resinas e as impresoras difiren. Imprima a peza de proba unha vez en cada exposición da escaleira e quede coa exposición que conserve os piares finos e os buratos abertos máis nítidos.",
+  "part": "Coloque a peza de proba na mesa",
+  "part.name": "Peza de proba de exposición",
+  "ladder": "Gardar a escaleira de exposicións ({n} ficheiros)",
+  "ladder.made": "Gardáronse {n} ficheiros para {list} s. Imprima cada un coa mesma resina e compare.",
+  "ladder.nopart": "Coloque primeiro a peza de proba na mesa.",
+  "ladder.failed": "Non se puido crear a escaleira. {why}",
+  "ladder.busy": "Creando {i} de {n}…"
+}

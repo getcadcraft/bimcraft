@@ -26,10 +26,14 @@
  *                              it), at x = along the view's right ([dir.y, −dir.x], res-views.js), for the sheets
  *   ops (IfcEditor.modelChange, one undo step each): placeGrid({ storey, axes: [{ tag?, a, b, fam? }] }) (added to the
  *   building's grid, made when it has none; a tag that is taken or missing gets the next free one of its family),
- *   changeGridAxis(tag, { tag, a, b, storey }), removeGridAxes(tags), changeGrid({ bubbles })
+ *   changeGridAxis(tag, { tag, a, b, storey }), removeGridAxes(tags), changeGrid({ bubbles, dims })
+ *   gridDims(axes, fmt) → [{ a, b, offPx, text, grid: true }]   0.9 D9.2 (Discord ask, 2026-11-03): the spacing between
+ *                              neighbouring parallel lines of each family and the overall size, as two rows of dimensions
+ *                              past the bubbles at the lines' start ends; shown when the grid's CadCraft_Grid Dims is true
  *   Errors: model.err.grid.tag (a label already used), model.err.grid.short (a line under 100 mm), model.err.grid.none.
  */
 import { op } from './model-ops.js';
+import { afterGridMove, afterGridRemove } from './wall-tools.js';   // 0.9 WT.7: walls locked to grid lines
 import { scaleT } from './model-write.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 
@@ -110,7 +114,7 @@ export function readGrids(w) {
       }
     };
     take(g.UAxes, 'u'); take(g.VAxes, 'v'); take(g.WAxes, 'w');
-    out.push({ id, guid: val(g.GlobalId), own: !!ps, bubbles: BUBBLES.includes(ps?.Bubbles) ? ps.Bubbles : 'both', axes });
+    out.push({ id, guid: val(g.GlobalId), own: !!ps, bubbles: BUBBLES.includes(ps?.Bubbles) ? ps.Bubbles : 'both', dims: !!ps && String(ps.Dims) === 'true', axes });
   }
   return out;
 }
@@ -157,7 +161,7 @@ function gridFrame(w, g) {
   return worldMm(w, lp);
 }
 /** Write (or rewrite) the building's grid with these axes (world mm): its lines, lists, footprint and set. */
-function writeGrid(w, g, axes, bubbles) {
+function writeGrid(w, g, axes, bubbles, dims = g?.dims || false) {
   const bid = building(w);
   let id = g?.id, line;
   if (!id) {
@@ -191,6 +195,7 @@ function writeGrid(w, g, axes, bubbles) {
     ['Families', 'IFCTEXT', axes.map((x) => x.tag + '=' + (x.fam === 'v' ? 'v' : 'u')).join(';')],
     ['Bubbles', 'IFCLABEL', bubbles || 'both'],
     ['Twin', 'IFCBOOLEAN', twin],
+    ['Dims', 'IFCBOOLEAN', !!dims],
   ]);
   return id;
 }
@@ -263,6 +268,7 @@ export function changeGridAxis(tag, ch) {
     if (c.b) me.b = st ? planToWorld(w, st, c.b) : c.b;
     if (short(me)) refuse('model.err.grid.short');
     const id = writeGrid(w, g, axes, g.bubbles);
+    afterGridMove(w, tag, me.tag);   // 0.9 WT.7: the walls locked to this line follow it (the lock is stored, never guessed)
     return { id, ids: [id] };
   });
 }
@@ -273,6 +279,7 @@ export function removeGridAxes(tags) {
     const g = ownGrid(w);
     if (!g) refuse('model.err.grid.none');
     const axes = g.axes.filter((x) => !gone.has(x.tag)).map((x) => ({ tag: x.tag, a: x.a, b: x.b, fam: x.fam }));
+    afterGridRemove(w, [...gone]);   // 0.9 WT.7: their locks go with them
     if (!axes.length) {   // the last line: the grid goes, its axes first (they hang off the grid, not a relationship)
       const line = w.api.GetLine(w.mid, g.id, false);
       for (const h of [...(line.UAxes || []), ...(line.VAxes || []), ...(line.WAxes || [])]) w.dropTree(h.value);
@@ -284,11 +291,44 @@ export function removeGridAxes(tags) {
   });
 }
 
-export function changeGrid({ bubbles }) {
+export function changeGrid({ bubbles, dims }) {
   return op((w) => {
     const g = ownGrid(w);
     if (!g) refuse('model.err.grid.none');
-    const id = writeGrid(w, g, g.axes.map((x) => ({ tag: x.tag, a: x.a, b: x.b, fam: x.fam })), BUBBLES.includes(bubbles) ? bubbles : g.bubbles);
+    const id = writeGrid(w, g, g.axes.map((x) => ({ tag: x.tag, a: x.a, b: x.b, fam: x.fam })), BUBBLES.includes(bubbles) ? bubbles : g.bubbles, dims === undefined ? g.dims : !!dims);
     return { id, ids: [id] };
   });
+}
+
+/**
+ * Dimensions of a grid (0.9 D9.2): per family, the lines parallel to its first line (within ~0.6°), sorted across; a row of
+ * spacings between neighbours and, with three lines or more, a row with the overall size. Both rows sit OUTSIDE the lines'
+ * start ends, past the bubbles (a set distance on screen: `offPx`, as drawn sheets do), so they never meet the walls' own
+ * dimensions inside the grid. Plan mm in, plan mm out; `fmt(mm)` writes the text.
+ */
+export const GRID_DIM_PX = { spacing: 38, overall: 60 };   // past an 11 px bubble beyond the line's end
+export function gridDims(axes, fmt) {
+  const out = [];
+  for (const fam of ['u', 'v']) {
+    const mine = axes.filter((x) => (fam === 'v' ? x.fam === 'v' : x.fam !== 'v'));
+    if (mine.length < 2) continue;
+    const d0 = [mine[0].b[0] - mine[0].a[0], mine[0].b[1] - mine[0].a[1]], l0 = Math.hypot(d0[0], d0[1]);
+    if (l0 < 1) continue;
+    const d = [d0[0] / l0, d0[1] / l0], n = [-d[1], d[0]];
+    const dot = (p, v) => p[0] * v[0] + p[1] * v[1];
+    const par = mine.filter((x) => { const e = [x.b[0] - x.a[0], x.b[1] - x.a[1]], l = Math.hypot(e[0], e[1]); return l >= 1 && Math.abs((e[0] * d[1] - e[1] * d[0]) / l) < 0.01; });
+    if (par.length < 2) continue;
+    // each line's place across (s); the row runs along the family's start ends (t0)
+    const rows = par.map((x) => ({ s: dot(x.a, n) })).sort((p, q) => p.s - q.s);
+    const t0 = Math.min(...par.map((x) => Math.min(dot(x.a, d), dot(x.b, d))));
+    const at = (s) => [n[0] * s + d[0] * t0, n[1] * s + d[1] * t0];
+    // a → b along +n puts drawDim's offset (to the left of ab) along −d: outward, past the start ends
+    for (let i = 0; i + 1 < rows.length; i++) {
+      const gap = rows[i + 1].s - rows[i].s;
+      if (gap < 1) continue;
+      out.push({ a: at(rows[i].s), b: at(rows[i + 1].s), offPx: GRID_DIM_PX.spacing, text: fmt(gap), grid: true });
+    }
+    if (rows.length > 2) out.push({ a: at(rows[0].s), b: at(rows[rows.length - 1].s), offPx: GRID_DIM_PX.overall, text: fmt(rows[rows.length - 1].s - rows[0].s), grid: true });
+  }
+  return out;
 }

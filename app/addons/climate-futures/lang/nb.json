@@ -1,0 +1,8 @@
+{
+  "@locale": "nb",
+  "@name": "Norsk bokmål",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "Data og kilder",
+  "data.nex": "NASA NEX-GDDP-CMIP6, nedskalerte CMIP6-modellutdata (CC BY 4.0 per modell); globalt havnivå: IPCC AR6",
+  "data.sample": "Eksempelpakke: tre steder, én modell, fem år per periode. Ikke til prosjektering."
+}

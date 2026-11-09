@@ -1,0 +1,21 @@
+{
+  "@locale": "et",
+  "@name": "Eesti",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Bambu Lab P2S (Bambu Connecti kaudu)",
+  "step.orca": "Paigalda sellesse arvutisse OrcaSlicer.",
+  "step.orca.link": "Hangi OrcaSlicer",
+  "step.connect": "Paigalda sellesse arvutisse Bambu Connect.",
+  "step.connect.link": "Hangi Bambu Connect",
+  "step.bind": "Lisa Bambu Connectis oma P2S. Tee see üks kord.",
+  "step.send": "Vajuta „Saada 3D-printerisse“. Fail avaneb Bambu Connectis: kontrolli seda seal ja alusta printimist.",
+  "note": "Bambu Connect on Bambu Labi enda programm printimiseks teisest tarkvarast ning printimine algab sealt.",
+  "confirm": "OrcaSlicer valmistas selle ette oma P2S-eelseadistustega: {grams} g, {layers} kihti.",
+  "confirm.next": "Avada Bambu Connectis? Enne seal alustamist ei prindita midagi.",
+  "done": "Saadetud Bambu Connectile. Kontrolli seda seal ja alusta printimist.",
+  "fail.orca": "OrcaSlicerit ei leitud sellest arvutist. Paigalda see ja proovi uuesti.",
+  "fail.slice": "OrcaSlicer ei saanud seda printimist ette valmistada. {why}",
+  "fail.nogcode": "OrcaSliceri failis polnud printimist.",
+  "fail.bed": "See ei mahu P2S-i printimisalusele.",
+  "fail.connect": "Bambu Connect ei avanenud. Paigalda see ja proovi uuesti."
+}

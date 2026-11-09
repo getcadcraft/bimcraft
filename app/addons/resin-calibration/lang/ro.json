@@ -1,0 +1,14 @@
+{
+  "@locale": "ro",
+  "@name": "Română",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "h": "Test de expunere",
+  "note": "Rășinile și imprimantele diferă. Imprimați piesa de test o dată la fiecare expunere din scară și păstrați expunerea cu cei mai clari stâlpi subțiri și cele mai curate găuri deschise.",
+  "part": "Puneți piesa de test pe platformă",
+  "part.name": "Piesă de test pentru expunere",
+  "ladder": "Salvare scară de expuneri ({n} fișiere)",
+  "ladder.made": "Salvate {n} fișiere pentru {list} s. Imprimați fiecare cu aceeași rășină și comparați.",
+  "ladder.nopart": "Puneți mai întâi piesa de test pe platformă.",
+  "ladder.failed": "Scara de expuneri nu a putut fi creată. {why}",
+  "ladder.busy": "Se creează {i} din {n}…"
+}

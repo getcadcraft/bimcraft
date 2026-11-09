@@ -1,0 +1,8 @@
+{
+  "@locale": "ka",
+  "@name": "ქართული",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "მონაცემები და წყაროები",
+  "data.nex": "NASA NEX-GDDP-CMIP6, CMIP6 მოდელების დაკონკრეტებული გამოთვლები (CC BY 4.0 თითოეულ მოდელზე); გლობალური ზღვის დონე: IPCC AR6",
+  "data.sample": "ნიმუშის პაკეტი: სამი ადგილი, ერთი მოდელი, ხუთი წელი თითო პერიოდში. არ არის საპროექტო გამოყენებისთვის."
+}

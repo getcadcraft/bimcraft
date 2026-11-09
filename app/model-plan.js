@@ -205,7 +205,9 @@ export function segDist(x, y, a, b) {
  * nearer the wall. → [{ a, b, text, offPx, offMm, key }] (a, b on the face; offPx / offMm how far out to draw it on screen
  * and on paper; the sign puts it on the face's side). fmt(mm) gives the text.
  */
-export function wallDims(walls, outlines, openings, fmt, { exteriorOf = () => true } = {}) {
+export function wallDims(walls, outlines, openings, fmt, { exteriorOf = () => true, from = 'outside' } = {}) {
+  // 0.9 D3 / spec test 9 (walls-09): `from` is the Measure from setting the Length field reads too (center | inside | outside), so the
+  // two agree; each dimension carries it (`from`) and the plan names it. 'outside' = the face these dimensions always measured.
   const out = [];
   for (const w of walls) {
     const poly = outlines.get(w.guid);
@@ -215,7 +217,8 @@ export function wallDims(walls, outlines, openings, fmt, { exteriorOf = () => tr
     const u = [(w.b[0] - w.a[0]) / L, (w.b[1] - w.a[1]) / L], n = [-u[1], u[0]];
     const side = exteriorOf(w) ? (w.extSide === 'right' ? -1 : 1) : 1;
     const local = poly.map(([x, y]) => [(x - w.a[0]) * u[0] + (y - w.a[1]) * u[1], (x - w.a[0]) * n[0] + (y - w.a[1]) * n[1]]);
-    const xs = local.filter(([, y]) => Math.abs(y - side * w.t / 2) < 0.5).map(([x]) => x);
+    const face = from === 'inside' ? -side : side;   // the face whose length is read (drawn on the outside face's side either way)
+    const xs = from === 'center' ? [0, L] : local.filter(([, y]) => Math.abs(y - face * w.t / 2) < 0.5).map(([x]) => x);
     if (xs.length < 2) continue;
     const e0 = Math.min(...xs), e1 = Math.max(...xs);
     const P = (x) => [w.a[0] + u[0] * x + n[0] * side * w.t / 2, w.a[1] + u[1] * x + n[1] * side * w.t / 2];
@@ -224,8 +227,8 @@ export function wallDims(walls, outlines, openings, fmt, { exteriorOf = () => tr
     for (const o of mine) stops.push(Math.max(e0, o.offset), Math.min(e1, o.offset + o.width));
     stops.push(e1);
     const s = [...new Set(stops.map((x) => Math.round(x * 100) / 100))].sort((a, b) => a - b);
-    if (mine.length) for (let i = 0; i + 1 < s.length; i++) if (s[i + 1] - s[i] > 0.5) out.push({ a: P(s[i]), b: P(s[i + 1]), text: fmt(s[i + 1] - s[i]), offPx: side * 22, offMm: side * 5, key: w.id });
-    out.push({ a: P(e0), b: P(e1), text: fmt(e1 - e0), offPx: side * (mine.length ? 44 : 22), offMm: side * (mine.length ? 10 : 5), key: w.id });
+    if (mine.length) for (let i = 0; i + 1 < s.length; i++) if (s[i + 1] - s[i] > 0.5) out.push({ a: P(s[i]), b: P(s[i + 1]), text: fmt(s[i + 1] - s[i]), offPx: side * 22, offMm: side * 5, key: w.id, wall: w.guid, from });
+    out.push({ a: P(e0), b: P(e1), text: fmt(e1 - e0), offPx: side * (mine.length ? 44 : 22), offMm: side * (mine.length ? 10 : 5), key: w.id, wall: w.guid, from, overall: true });
   }
   return out;
 }

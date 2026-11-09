@@ -1,0 +1,22 @@
+{
+  "id": "printer-bambu",
+  "name": "Bambu Lab printers",
+  "version": "0.9.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": ["engine.run"],
+  "needs": [
+    {
+      "id": "print3d",
+      "range": "*"
+    }
+  ],
+  "description": "Send from 3D Print to a Bambu Lab P2S through Bambu Connect. Slices with your own OrcaSlicer and its P2S presets, then opens the file in Bambu Connect for you to start. Needs CadCraft Studio on a computer, with OrcaSlicer and Bambu Connect installed.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

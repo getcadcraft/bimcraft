@@ -289,7 +289,7 @@ export function padShape(w, pd, levels = readLevels(w)) {
   const lv = levels.find((l) => l.guid === pd.level);
   if (!lv) return null;
   const walls = readWalls(w, lv.id);
-  const L = planLoops([...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge }))).values()]);
+  const L = planLoops([...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, off: x.joinOff }))).values()]);
   const o = loopAt(L.outlines, pd.seed);
   if (!o) return null;
   const M = w.storeyWorld(lv.id);
@@ -516,6 +516,15 @@ export function changeHardscape(guid, ch) {
     writeHardscape(w, h, finishedSurface(w, readTerrain(w)), readLevels(w));
     return { id: h.id, ids: [h.id] };
   });
+}
+/** Move a path / driveway / patio by (dx, dy) inside a running writer (model-modify.js). */
+export function moveHardscapeIn(w, guid, dx, dy) {
+  const h = readHardscape(w).find((x) => x.guid === guid);
+  if (!h) fail('model.err.gone');
+  const points = h.points.map(([x, y]) => [x + dx, y + dy]);
+  w.upsertPset(h.id, HARD_PSET, [['Points', 'IFCTEXT', points.map((p) => round(w.u(p[0]), 3) + ',' + round(w.u(p[1]), 3)).join(';')]]);
+  writeHardscape(w, { ...h, points }, finishedSurface(w, readTerrain(w)), readLevels(w));
+  return h.id;
 }
 export function removeHardscape(guids) {
   return op((w) => {

@@ -1,0 +1,12 @@
+{
+  "@locale": "lo",
+  "@name": "ລາວ",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "ລຳດັບໄບຕ໌",
+  "opt.byteOrder.big": "Big-endian (ແບບທົ່ວໄປ)",
+  "opt.byteOrder.little": "Little-endian",
+  "opt.checksum": "ຜົນລວມກວດສອບ",
+  "opt.checksum.negsum": "ຜົນລວມເປັນລົບ",
+  "opt.checksum.sum": "ຜົນລວມປົກກະຕິ"
+}

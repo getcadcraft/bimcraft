@@ -1,0 +1,21 @@
+{
+  "@locale": "hy",
+  "@name": "Հայերեն",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX և PWS",
+  "opt.flip": "Արտացոլել պատկերը",
+  "opt.flip.off": "Ոչ",
+  "opt.flip.on": "Այո, ձախից աջ",
+  "opt.version": "Ֆայլի տարբերակ",
+  "opt.version.v1": "Տարբերակ 1 (սովորական)",
+  "opt.version.v516": "Տարբերակ 516",
+  "opt.aa": "Եզրերի հարթեցման մակարդակներ",
+  "opt.aa.1": "1 (չկա)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Շերտերի կարգավորումների դրոշակ",
+  "opt.perLayer.off": "Անջատված",
+  "opt.perLayer.on": "Միացված"
+}

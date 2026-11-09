@@ -1,0 +1,8 @@
+{
+  "@locale": "th",
+  "@name": "ไทย",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "data.sources": "ข้อมูลและแหล่งที่มา",
+  "data.nex": "NASA NEX-GDDP-CMIP6 ผลลัพธ์ของโมเดล CMIP6 ที่ปรับขนาดลง (CC BY 4.0 ต่อโมเดล); ระดับน้ำทะเลทั่วโลก: IPCC AR6",
+  "data.sample": "แพ็กตัวอย่าง: สามสถานที่ หนึ่งโมเดล ห้าปีต่อช่วง ไม่ใช่สำหรับงานออกแบบ"
+}

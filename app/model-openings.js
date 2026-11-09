@@ -39,7 +39,8 @@ import { readLevels } from './model-levels.js';
 import { t as tr } from './i18n.js';
 import { DOOR_TYPES, WINDOW_TYPES, openingType, openingTypeName, handKind } from './opening-types.js';
 import { familyFor, familyIndex, sizeTypeFor, evaluateFamily, bodyItems, sizeValues, evalCtx, readInstance, writeInstance, instanceValues } from './family-model.js';
-import { hostFrame, hostOffset, openingCut, wallGeom } from './model-arcs.js';   // 0.6 round 2 (bim-comforts_PART_2): openings in curved walls
+import { hostFrame, hostOffset, openingCut, wallGeom } from './model-arcs.js';
+import { typeFrame } from './ifc-place.js';   // 0.6 round 2 (bim-comforts_PART_2): openings in curved walls
 
 const IN = 25.4;
 export const DOOR_PSET = 'CadCraft_Door';
@@ -74,14 +75,15 @@ export function readOpenings(w, storey = null, walls = readWalls(w)) {
       if (!wall || (storey !== null && wall.storey !== storey)) continue;
       const line = w.api.GetLine(w.mid, id, false), op = w.api.GetLine(w.mid, openingId, false);
       const M = w.relMatrix(wall.lp, op.ObjectPlacement.value);
-      const typeId = typeOf(w, id), size = typeId ? familyIndex(w).sizes.get(typeId) : null;
+      const typeId = typeOf(w, id), library = ps.Library ? libraryOf(w, typeId) : null, size = typeId && !library ? familyIndex(w).sizes.get(typeId) : null;
       out.push({
         id, guid: val(line.GlobalId), kind: cls === 'IFCDOOR' ? 'door' : 'window', typeKey: ps.TypeKey || '', typeName: val(line.ObjectType) || val(line.Name) || '',
         openingId, opening: val(op.GlobalId), wall: wallId, wallGuid: wall.guid, storey: wall.storey,
         offset: hostOffset(wall, M, Number(ps.Width) * w.unitMm), width: Number(ps.Width) * w.unitMm, height: Number(ps.Height) * w.unitMm, sill: M[14] + wall.baseOffset,
         hand: ps.Hand === 'b' ? 'b' : 'a', face: ps.Face === 'right' ? 'right' : 'left', name: val(line.Name) || '', mark: val(line.Tag) || '',
         family: String(ps.Family || size?.family || ps.TypeKey || ''), typeId, sizeName: size?.name || '', values: size?.values || {},
-        instance: (() => { const f0 = familyFor(w, String(ps.Family || size?.family || '')); return f0 ? readInstance(w, id, f0) : {}; })(),   // 0.7 BIM-FAM-MORE (7): what this element sets itself
+        instance: (() => { if (library) return {}; const f0 = familyFor(w, String(ps.Family || size?.family || '')); return f0 ? readInstance(w, id, f0) : {}; })(),   // 0.7 BIM-FAM-MORE (7): what this element sets itself
+        library,   // 2026-11-02: a Library door / window (its type and frame), else null
       });
     }
   }
@@ -128,7 +130,16 @@ function retype(w, id, typeId) {
   w._famIndex = null;
 }
 
-export function addOpening(w, { wall, typeKey, family = '', values = {}, instance = {}, sizeName = null, offset, width, height, sill, hand = 'a', face = 'left', guid, openingGuid } = {}) {
+export function addOpening(w, { wall, typeKey, family = '', values = {}, instance = {}, sizeName = null, offset, width, height, sill, hand = 'a', face = 'left', guid, openingGuid, library = null } = {}) {
+  // 2026-11-02: a Library door / window (library = { typeId }: its type, made by IfcPlacer.typeFor) — fixed size, its own mesh
+  const lib = library ? libraryOf(w, library.typeId) : null;
+  if (library && !lib) throw Object.assign(new Error('model.err.libopening'), { key: 'model.err.libopening' });
+  if (lib) {   // its own size, unless the Library lets that axis be stretched (then the asked size)
+    width = lib.frame.stretch.includes('x') && width >= 100 ? width : lib.frame.width;
+    height = lib.frame.stretch.includes('z') && height >= 100 ? height : lib.frame.height;
+    if (openingType(typeKey)?.kind !== lib.kind) typeKey = libraryBase(lib.kind, width);
+    family = '';
+  }
   const fam0 = family ? familyFor(w, family) : null;
   if (fam0 && fam0.host === 'wall' && openingType(fam0.base)) typeKey = fam0.base;
   const type = openingType(typeKey);
@@ -150,22 +161,119 @@ export function addOpening(w, { wall, typeKey, family = '', values = {}, instanc
   // the door or window, in the opening
   const g = w.gid(guid);
   const lp = w.placeAt(olp, 0, 0, 0, 0);
-  const fam = openingFamily(w, family || typeKey, type);
-  const name = w.L(fam.name);
+  const fam = lib ? null : openingFamily(w, family || typeKey, type);
+  const name = w.L(lib ? lib.name : fam.name);
   const tail = door ? (w.v4 ? [round(w.u(H)), round(w.u(W)), 'DOOR', type.op[hand === 'b' ? 1 : 0], null] : [round(w.u(H)), round(w.u(W))])
     : (w.v4 ? [round(w.u(H)), round(w.u(W)), 'WINDOW', type.part, null] : [round(w.u(H)), round(w.u(W))]);
   const id = w.make(door ? 'IFCDOOR' : 'IFCWINDOW', g, w.ownerHistory(), name, null, name, w.H(lp), null, w.T('IFCIDENTIFIER', nextMark(w, door)), ...tail);
   w.noteGuid(g, id);
   w.make('IFCRELFILLSELEMENT', w.guid(), w.ownerHistory(), null, null, w.H(opening), w.H(id));
   w.contain(id, host.storey);
-  const vals = sizeValues(fam, { ...values, Width: W, Height: H });
-  w.relateType(id, sizeTypeFor(w, fam, vals, { name: sizeName }));
+  const vals = lib ? {} : sizeValues(fam, { ...values, Width: W, Height: H });
+  w.relateType(id, lib ? library.typeId : sizeTypeFor(w, fam, vals, { name: sizeName }));
   if (w._typeOf) w._typeOf = null;
-  const op = { kind: type.kind, typeKey, family: fam.key, values: vals, width: W, height: H, sill: S, hand: hand === 'b' ? 'b' : 'a', face: face === 'right' ? 'right' : 'left', offset: off };
-  op.instance = instanceValues(fam, instance);
+  const op = { kind: type.kind, typeKey, family: lib ? '' : fam.key, values: vals, width: W, height: H, sill: S, hand: hand === 'b' ? 'b' : 'a', face: face === 'right' ? 'right' : 'left', offset: off, library: lib };
+  op.instance = lib ? {} : instanceValues(fam, instance);
   writeOpening(w, { id, opening }, op, host);
-  writeInstance(w, id, fam, op.instance);
+  if (!lib) writeInstance(w, id, fam, op.instance);
   return { id, guid: g, opening: og };
+}
+
+/**
+ * A Library door / window type → { typeId, kind, name, key (uuid@version), frame (ifc-place.js libraryFrame, mm) } | null.
+ * Only a door or window type that carries its frame (CadCraft_OpeningFrame) can go in a wall.
+ */
+export function libraryOf(w, typeId) {
+  if (!typeId) return null;
+  let line;
+  try { line = w.api.GetLine(w.mid, typeId, false); } catch (e) { return null; }
+  const cls = String(line?.constructor?.name || '').toUpperCase();
+  const kind = /^IFCDOOR(TYPE|STYLE)$/.test(cls) ? 'door' : /^IFCWINDOW(TYPE|STYLE)$/.test(cls) ? 'window' : null;
+  const frame = kind ? typeFrame(w, typeId) : null;
+  if (!frame) return null;
+  const lp = w.typePsets(typeId)['CadCraft_LibraryItem']?.props || {};
+  const key = lp.ItemUuid?.value ? lp.ItemUuid.value + '@' + (lp.ItemVersion?.value ?? '') : (lp.ItemSha256?.value ? 'sha:' + lp.ItemSha256.value : 'library');
+  return { typeId, kind, name: val(line.Name) || (kind === 'door' ? 'Door' : 'Window'), key, frame };   // i18n-ignore: fallback names written into the file
+}
+/**
+ * 2026-11-02: Library doors / windows standing on their own (placed before the wall, or the wall drawn or moved later) that now
+ * sit in a straight wall of their level — their middle inside the wall's thickness, their width along it — are set into it: the
+ * free element goes and a hosted one with the same GlobalId takes its place (addOpening). One that would not fit stays free.
+ * → [GlobalIds of the walls that took one].
+ */
+export function adoptLibraryOpenings(w) {
+  const R = w.hostIndex(), cands = [];
+  for (const cls of ['IFCDOOR', 'IFCWINDOW']) {
+    let list = [];
+    try { list = ids(w.api, w.mid, cls); } catch (e) { continue; }
+    for (const id of list) {
+      if (R.filledBy.has(id)) continue;
+      const lib = libraryOf(w, typeOf(w, id));
+      if (lib) cands.push({ id, lib });
+    }
+  }
+  if (!cands.length) return [];
+  const walls = readWalls(w).filter((x) => !x.bulge), took = new Set();
+  for (const { id, lib } of cands) {
+    const line = w.api.GetLine(w.mid, id, false), elp = line.ObjectPlacement?.value;
+    if (!elp) continue;
+    const f = lib.frame;
+    // the door's middle and its width / thickness axes in its own axes (mm): the frame turned back
+    const back = (x, y) => (f.turn ? [-y, x] : [x, y]);   // inverse of (x, y) → (y, −x)
+    const c = back(f.width / 2 - f.dx, -f.dy), cz = f.height / 2 - f.dz;
+    const ux = back(1, 0), uy = back(0, 1);
+    for (const wall of walls) {
+      const M = w.relMatrix(wall.lp, elp);
+      const P = (x, y, z) => [M[0] * x + M[4] * y + M[8] * z + M[12], M[1] * x + M[5] * y + M[9] * z + M[13], M[2] * x + M[6] * y + M[10] * z + M[14]];
+      const D = (x, y) => [M[0] * x + M[4] * y, M[1] * x + M[5] * y];
+      const m = P(c[0], c[1], cz), along = D(...ux), across = D(...uy);
+      if (Math.abs(along[1]) > 0.02 || Math.abs(m[1]) > wall.t / 2 + 1 || m[0] < 0 || m[0] > wall.len) continue;   // across the wall, beside it or past its ends
+      const hand = along[0] < 0 ? 'b' : 'a', face = across[1] < 0 ? 'right' : 'left';   // the same mirrors libraryBody makes
+      const offset = m[0] - f.width / 2, sill = m[2] - f.height / 2 + wall.baseOffset;
+      if (fitOffset(wall, f.width, offset) === null || Math.abs(fitOffset(wall, f.width, offset) - offset) > 1) continue;
+      if ((lib.kind === 'door' ? 0 : sill) + f.height > wall.height + 1) continue;
+      const guid = val(line.GlobalId), typeKey = libraryBase(lib.kind, f.width);
+      w.dropProduct([id]);
+      w._typeOf = null;
+      addOpening(w, { wall: wall.guid, typeKey, offset, sill: lib.kind === 'door' ? 0 : sill, hand, face, guid, library: { typeId: lib.typeId } });
+      took.add(wall.guid);
+      break;
+    }
+  }
+  return [...took];
+}
+
+/** The starter kind whose plan symbol a Library door / window takes: double doors from 48 in wide, else single; a fixed window. */
+export function libraryBase(kind, width) {
+  if (kind === 'window') return 'win-fixed';
+  return width >= 48 * IN ? 'door-double' : 'door-single';
+}
+/**
+ * The mapped body of a Library door / window in its opening: turned and moved by its frame, stretched where the Library allows it
+ * (x: to the opening's width, z: to its height, y: to the wall's thickness), mirrored for its hand and face.
+ */
+function libraryBody(w, op, host) {
+  const f = op.library.frame, hb = op.hand === 'b', fr = op.face === 'right', st = f.stretch || [];
+  const sx = hb ? -1 : 1, sy = fr ? -1 : 1;
+  const kx = st.includes('x') ? op.width / f.width : 1, kz = st.includes('z') ? op.height / f.height : 1;
+  const ky = st.includes('y') && f.depth > 0 && host?.t > 0 ? host.t / f.depth : 1;
+  const e1 = f.turn ? [0, -1] : [1, 0], e2 = f.turn ? [1, 0] : [0, 1];   // the turn (x, y) → (y, −x)
+  const z0 = (v) => (Object.is(v, -0) ? 0 : v);
+  const a1 = w.dir(z0(sx * e1[0]), z0(sy * e1[1]), 0), a2 = w.dir(z0(sx * e2[0]), z0(sy * e2[1]), 0), a3 = w.dir(0, 0, 1);
+  const o = w.point3(round(w.u(sx * kx * f.dx + (hb ? op.width : 0))), round(w.u(sy * ky * f.dy)), round(w.u(kz * f.dz)));
+  // the scales go with the type's own axes: its X becomes the opening's width unless the frame turned it (then its Y does)
+  const s1 = f.turn ? ky : kx, s2 = f.turn ? kx : ky, r6 = (v) => Math.round(v * 1e6) / 1e6;
+  const opr = kx === 1 && ky === 1 && kz === 1
+    ? w.make('IFCCARTESIANTRANSFORMATIONOPERATOR3D', w.H(a1), w.H(a2), w.H(o), null, w.H(a3))
+    : w.make('IFCCARTESIANTRANSFORMATIONOPERATOR3DNONUNIFORM', w.H(a1), w.H(a2), w.H(o), r6(s1), w.H(a3), r6(s2), r6(kz));
+  const items = [];
+  const t = w.api.GetLine(w.mid, op.library.typeId, false);
+  for (const h of t.RepresentationMaps || []) {
+    const m = w.api.GetLine(w.mid, h.value, false), rep = m?.MappedRepresentation ? w.api.GetLine(w.mid, m.MappedRepresentation.value, false) : null;
+    if (val(rep?.RepresentationIdentifier) === 'Body') items.push(w.make('IFCMAPPEDITEM', w.H(h.value), w.H(opr)));
+  }
+  if (!items.length) throw Object.assign(new Error('model.err.libopening'), { key: 'model.err.libopening' });
+  return items;
 }
 
 /** The next free mark for a door ("D1", "D2" …) or a window ("W1" …): one more than the highest of that letter in the file. */
@@ -185,17 +293,21 @@ function writeOpening(w, { id, opening }, op, host) {
   const t = host.t;
   const cut = openingCut(host, op, PROUD);   // a curved wall: jambs along the radius
   w.setShape(opening, [w.rep('body', 'Body', 'SweptSolid', [cut ? w.extrude(w.profile(cut), 0, op.height) : w.box(0, -t / 2 - PROUD, 0, op.width, t / 2 + PROUD, op.height)])]);
-  // the family's solids for this size and this wall (a starter kind's recipe is doorParts / windowParts, box for box)
-  const fam = openingFamily(w, op.family || op.typeKey, type);
-  const ev = evaluateFamily(fam, { ...(op.values || {}), ...(op.instance || {}), Width: op.width, Height: op.height }, { wallThickness: t, face: op.face === 'right' ? -1 : 1, ...evalCtx(w) });
-  if (!ev.ok) throw Object.assign(new Error(ev.error.key), { key: ev.error.key, fill: ev.error.fill });
-  const body = bodyItems(w, ev);
-  w.setShape(id, [w.rep('body', 'Body', body.type, body.items)]);
+  // the family's solids for this size and this wall (a starter kind's recipe is doorParts / windowParts, box for box);
+  // a Library door / window: its own mesh, mapped from its type (2026-11-02)
+  const fam = op.library ? null : openingFamily(w, op.family || op.typeKey, type);
+  if (op.library) w.setShape(id, [w.rep('body', 'Body', 'MappedRepresentation', libraryBody(w, op, host))]);
+  else {
+    const ev = evaluateFamily(fam, { ...(op.values || {}), ...(op.instance || {}), Width: op.width, Height: op.height }, { wallThickness: t, face: op.face === 'right' ? -1 : 1, ...evalCtx(w) });
+    if (!ev.ok) throw Object.assign(new Error(ev.error.key), { key: ev.error.key, fill: ev.error.fill });
+    const body = bodyItems(w, ev);
+    w.setShape(id, [w.rep('body', 'Body', body.type, body.items)]);
+  }
   const door = op.kind === 'door';
   const external = !!w.readPset(host.id, 'Pset_WallCommon')?.IsExternal;
-  w.upsertPset(id, door ? DOOR_PSET : WINDOW_PSET, [['TypeKey', 'IFCIDENTIFIER', op.typeKey], ['Family', 'IFCIDENTIFIER', fam.key], ['Width', 'IFCPOSITIVELENGTHMEASURE', round(w.u(op.width))], ['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(op.height))],
+  w.upsertPset(id, door ? DOOR_PSET : WINDOW_PSET, [['TypeKey', 'IFCIDENTIFIER', op.typeKey], ['Family', 'IFCIDENTIFIER', fam ? fam.key : ''], ...(op.library ? [['Library', 'IFCIDENTIFIER', op.library.key]] : []), ['Width', 'IFCPOSITIVELENGTHMEASURE', round(w.u(op.width))], ['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(op.height))],
     ['Sill', 'IFCLENGTHMEASURE', round(w.u(op.sill))], ['Hand', 'IFCLABEL', op.hand], ['Face', 'IFCLABEL', op.face]]);
-  w.upsertPset(id, door ? 'Pset_DoorCommon' : 'Pset_WindowCommon', [['Reference', 'IFCIDENTIFIER', fam.name], ['IsExternal', 'IFCBOOLEAN', external]]);
+  w.upsertPset(id, door ? 'Pset_DoorCommon' : 'Pset_WindowCommon', [['Reference', 'IFCIDENTIFIER', fam ? fam.name : op.library.name], ['IsExternal', 'IFCBOOLEAN', external]]);
   w.upsertQto(id, door ? 'Qto_DoorBaseQuantities' : 'Qto_WindowBaseQuantities', [['Width', 'length', op.width], ['Height', 'length', op.height], ['Area', 'area', op.width * op.height]]);
   w.upsertPset(opening, OPENING_PSET, [['Width', 'IFCPOSITIVELENGTHMEASURE', round(w.u(op.width))], ['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(op.height))]]);
   // the element's own size attributes follow
@@ -281,8 +393,14 @@ export function updateOpening(w, guid, ch = {}) {
   const touched = new Set([host.guid]);
   const op = { ...cur };
   for (const k of ['width', 'height', 'sill']) if (Number.isFinite(ch[k]) && ch[k] >= 0) op[k] = ch[k];
+  if (cur.library) {   // a Library door / window keeps its own size along any axis the Library does not let it be stretched
+    const st = cur.library.frame.stretch || [];
+    if (!st.includes('x')) op.width = cur.width;
+    if (!st.includes('z')) op.height = cur.height;
+    ch = { ...ch, family: undefined, values: undefined };
+  }
   if (op.kind === 'door') op.sill = cur.sill;   // a door keeps its floor (0, or an upper level's on a through wall)
-  if (ch.typeKey && openingType(ch.typeKey)?.kind === op.kind) { op.typeKey = ch.typeKey; op.family = ch.typeKey; op.values = {}; }
+  if (ch.typeKey && openingType(ch.typeKey)?.kind === op.kind) { op.typeKey = ch.typeKey; if (!cur.library) { op.family = ch.typeKey; op.values = {}; } }
   if (ch.family) {
     const f = familyFor(w, ch.family);
     if (f && f.host === 'wall' && openingType(f.base)?.kind === op.kind) { op.family = f.key; op.typeKey = f.base; if (!ch.values) op.values = {}; if (!(ch.width > 0)) op.width = sizeValues(f, ch.values || {}).Width; if (!(ch.height > 0)) op.height = sizeValues(f, ch.values || {}).Height; }
@@ -313,6 +431,7 @@ export function updateOpening(w, guid, ch = {}) {
   const olp = w.api.GetLine(w.mid, cur.openingId, false).ObjectPlacement.value;
   const hf = hostFrame(host, off, op.width);
   w.movePlacement(olp, hf.x, hf.y, op.sill - host.baseOffset, hf.ang);
+  if (cur.library) { writeOpening(w, { id: cur.id, opening: cur.openingId }, op, host); return { walls: [...touched] }; }   // its own type and name stay
   // its size: the family's type for these values (found, else made); the element moves to it when it is another one
   const fam = openingFamily(w, op.family || op.typeKey, openingType(op.typeKey));
   op.family = fam.key;

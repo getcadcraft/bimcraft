@@ -1,0 +1,12 @@
+{
+  "@locale": "bn",
+  "@name": "বাংলা",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Elegoo GOO",
+  "opt.byteOrder": "বাইট ক্রম",
+  "opt.byteOrder.big": "বিগ-এন্ডিয়ান (সাধারণ প্রতিবেদন)",
+  "opt.byteOrder.little": "লিটল-এন্ডিয়ান",
+  "opt.checksum": "চেকসাম",
+  "opt.checksum.negsum": "ঋণাত্মক যোগফল",
+  "opt.checksum.sum": "সাধারণ যোগফল"
+}

@@ -1,0 +1,21 @@
+{
+  "@locale": "hi",
+  "@name": "हिन्दी",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX और PWS",
+  "opt.flip": "चित्र को मिरर करें",
+  "opt.flip.off": "नहीं",
+  "opt.flip.on": "हाँ, बाएँ से दाएँ",
+  "opt.version": "फ़ाइल संस्करण",
+  "opt.version.v1": "संस्करण 1 (सामान्य)",
+  "opt.version.v516": "संस्करण 516",
+  "opt.aa": "किनारा स्मूथ करने के स्तर",
+  "opt.aa.1": "1 (कोई नहीं)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "प्रति-लेयर सेटिंग्स फ़्लैग",
+  "opt.perLayer.off": "बंद",
+  "opt.perLayer.on": "चालू"
+}

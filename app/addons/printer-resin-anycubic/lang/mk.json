@@ -1,0 +1,21 @@
+{
+  "@locale": "mk",
+  "@name": "Македонски",
+  "@note": "Draft translation, not yet reviewed by a native speaker",
+  "label": "Anycubic PWMX и PWS",
+  "opt.flip": "Пресликај ја сликата",
+  "opt.flip.off": "Не",
+  "opt.flip.on": "Да, од лево кон десно",
+  "opt.version": "Верзија на датотеката",
+  "opt.version.v1": "Верзија 1 (најчеста)",
+  "opt.version.v516": "Верзија 516",
+  "opt.aa": "Нивоа на израмнување на рабовите",
+  "opt.aa.1": "1 (без)",
+  "opt.aa.2": "2",
+  "opt.aa.4": "4",
+  "opt.aa.8": "8",
+  "opt.aa.16": "16",
+  "opt.perLayer": "Ознака за поставки по слој",
+  "opt.perLayer.off": "Исклучено",
+  "opt.perLayer.on": "Вклучено"
+}
