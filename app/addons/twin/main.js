@@ -132,7 +132,7 @@ export function activate(api) {
     if (!f) return;
     const raw = parse(f.text), r = raw ? cleanLayout(raw) : { dropped: -1 };
     if (r.dropped < 0) { msg = t('bt.file.bad', { name: f.name }); redraw(); return; }
-    if (layout && layout.items.length && !host.confirm(t('twin.cell.ask'))) return;
+    if (layout && layout.items.length && !host.confirm(t('bt.file.ask'))) return;
     host.setLayout(r.layout);
     msg = t('bt.file.done', { name: f.name, n: r.layout.items.length, dropped: r.dropped });
     redraw();
