@@ -20,6 +20,7 @@ import { op } from './model-ops.js';
 import { readLevels, levelAbove } from './model-levels.js';
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
+import { FLOOR, columnAdvice, advise } from './draw-advice.js';   // 0.10 BK.73
 
 export const COLUMN_PSET = 'CadCraft_Column';
 const IN = 25.4;
@@ -59,9 +60,11 @@ function heightOf(levels, c) {
 
 /** Write a column's placement, shape, quantities and sets (a new one when c.id is null). */
 function writeColumn(w, c) {
-  if (!(c.width >= 50) || (c.shape !== 'round' && !(c.depth >= 50))) refuse('model.err.col.size');
+  // 0.10 BK.73: refused only under 10 mm (nothing to build); a column thinner than 50 mm or shorter than 300 mm is made, with a warning
+  if (!(c.width >= FLOOR) || (c.shape !== 'round' && !(c.depth >= FLOOR))) refuse('model.err.col.size');
   const levels = readLevels(w), h = heightOf(levels, c);
-  if (!(h >= 300)) refuse('model.err.col.height');
+  if (!(h >= FLOOR)) refuse('model.err.col.height');
+  advise('column', columnAdvice(c, h), c.guid ? { id: c.guid, label: 'Column' } : null);   // i18n-ignore: an IFC name
   const st = w.api.GetLine(w.mid, c.storey, false);
   let id = c.id;
   if (!id) {

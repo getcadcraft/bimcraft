@@ -24,6 +24,7 @@
  *
  *   gatherFacility(W, api, mid) → facts for cobieWorkbook (storeys, spaces, systems, types, where each element is)
  *   cobieWorkbook(assets, facts, { createdBy, createdOn }) → [{ name, rows, cols, freeze }]   (assets-bim-xlsx writeXlsx)
+ *       documents: more Document rows (objects keyed by the sheet's columns), or a function ({ by, on, facility }) → rows (BK.114)
  *   cobieChanges(sheets, assets, others) → { changes: [{ guid, name, data, docs, diff }], unmatched: [name], skipped: [{ name,
  *       why: 'warranty' | 'doc', what }], rows, jobs }
  *       sheets = readXlsx's; assets = readAssets'; others = Map(guid → { name }) for elements that are not assets yet.
@@ -117,6 +118,8 @@ export function gatherFacility(W, api, mid) {
 }
 
 // ---------------------------------------------------------------- out
+/** The Facility row's Name: what a Document row about the facility names in RowName. */
+export const facilityName = (facts) => facts.building?.name || facts.project?.name || NA;
 const yearsBetween = (a, b) => { if (!isDay(a) || !isDay(b)) return null; const y = (Date.parse(b) - Date.parse(a)) / (365.25 * 86400000); return y > 0 ? Math.round(y * 10) / 10 : null; };
 /** Names COBie wants unique within a sheet: the second "Desk" becomes "Desk (F-102)" or "Desk 2". */
 function uniqueNamer() {
@@ -131,7 +134,7 @@ function uniqueNamer() {
   };
 }
 
-export function cobieWorkbook(assets, facts, { createdBy = '', createdOn = new Date().toISOString().slice(0, 19) } = {}) {
+export function cobieWorkbook(assets, facts, { createdBy = '', createdOn = new Date().toISOString().slice(0, 19), documents = null } = {}) {
   const by = String(createdBy || '').trim() || NA, on = createdOn;
   const sheets = Object.fromEntries(Object.entries(SHEETS).map(([name, head]) => [name, [head.map((h) => ({ v: h, s: 'head' }))]]));
   const put = (sheet, obj) => sheets[sheet].push(SHEETS[sheet].map((h) => (obj[h] === undefined || obj[h] === null || obj[h] === '' ? NA : obj[h])));
@@ -187,6 +190,8 @@ export function cobieWorkbook(assets, facts, { createdBy = '', createdOn = new D
     const names = s.members.map((m) => compName.get(m)).filter(Boolean);
     put('System', { Name: s.name, CreatedBy: by, CreatedOn: on, Category: ifcName(s.cls), ComponentNames: names.join(','), ExtSystem: EXT, ExtObject: ifcName(s.cls), ExtIdentifier: s.guid, Description: s.desc });
   }
+  // BK.114: documents of the facility as a whole (handover-docs.js handoverRows: completion and occupancy certificates, warranties, manuals, as-built drawings)
+  for (const d of (typeof documents === 'function' ? documents({ by, on, facility: facilityName(facts) }) : documents) || []) put('Document', d);
   const widths = (head) => head.map((h) => Math.max(10, Math.min(36, h.length + 4)));
   return Object.entries(sheets).map(([name, rows]) => ({ name, rows, cols: widths(SHEETS[name]), freeze: 1 }));
 }

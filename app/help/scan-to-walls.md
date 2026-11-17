@@ -16,6 +16,10 @@ Nothing is drawn until you accept it. The walls and doors come as a list of prop
 
 Walls that do not close, wall runs shorter than a wall is thick, and a door-sized gap with no wall around it are reported as Problems with a position, so you can look at the scan there.
 
+## Unverified until checked
+
+The walls, doors and rooms you accept from a scan are marked unverified: a dashed box and a "?" in the plan until you mark them as checked. See [Mark elements as checked or field-verified](topic:verification).
+
 ## What it cannot do
 
 - It finds walls that run in two perpendicular directions. A diagonal or curved wall is not found.

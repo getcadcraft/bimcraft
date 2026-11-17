@@ -2,7 +2,7 @@
 title: Anza jengo jipya
 summary: Tengeneza modeli tupu ya jengo pamoja na viwango vyake, chora kuta zake, weka vitu kutoka maktaba, kisha uihifadhi kama IFC.
 keywords: mpya, jengo jipya, tupu, anza upya, kiolezo, viwango, ghorofa, sakafu, unda, modeli
-from: 546b8ae8
+from: 68786865
 ---
 
 ## Utakachofanya

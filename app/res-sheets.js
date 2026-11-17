@@ -1,4 +1,5 @@
-import { legendItems } from './keynotes.js';
+import { legendItems, legendHeight } from './keynotes.js';
+import { notesItems } from './sheet-notes.js';   // 0.10 BK.157: standard notes from a regulation pack
 import { documentItems } from './assembly-schedule-layout.js';
 /* SPDX-License-Identifier: Apache-2.0 */
 import { layerPrimitives, colorRgb } from './wall-plan-graphics.js';
@@ -33,6 +34,12 @@ import { titleBlockItems } from './title-block.js';   // 0.9 SU.1123: title bloc
  *
  * A section line is an IfcAnnotation (no geometry; ObjectType "Section line") in its level with CadCraft_SectionLine
  * (AX, AY, BX, BY in the level's plan, Look left | right of A→B, Name "A", Depth — how far behind it to look, 0 = all).
+ *
+ * An elevation marker (0.10 BT.10: the ribbon's Elevation) is the same record with Kind "elevation" (ObjectType "Elevation marker",
+ * Name "1", "2", …): it stands at a point and looks one way, and its view is what is in front of it. It is kept as a short line
+ * across that point (so every reader of section lines — sheets, copies, view settings, the elevation editor, key `section:<guid>` —
+ * has it at once); only its name, its plan symbol and where the Project Browser lists it differ.
+ *   placeElevationMarker({ level, at, toward, name }) → op · elevationMarkerOf(line) → { at, dir } · sectionTitle(line) → words
  */
 import { ModelWriter, round } from './model-write.js';
 import { ids, val } from './ifc-util.js';
@@ -40,6 +47,7 @@ import { t as tr } from './i18n.js';
 import { isMetric } from './model-units.js';
 import * as PDFI from './picture-pdf.js';   // 0.8 D8.8 round 5: pictures in section / elevation views
 import { noteItems } from './comforts-views.js';   // 0.6 round 2 (bim-comforts_PART_2): dimensions, level marks and tags on views
+import { annoPt, annoK } from './anno-scale-bim.js';   // 0.10 BK.10: text, dimensions, tags, room names, grid bubbles and view titles sized from paper heights (the one rule: annoscale.js)
 
 export const SECTION_PSET = 'CadCraft_SectionLine';
 export const PAPERS = { letter: [279.4, 215.9], tabloid: [431.8, 279.4], archd: [914.4, 609.6], a3: [420, 297], a1: [841, 594], a4: [297, 210], a2: [594, 420], a0: [1189, 841], archc: [609.6, 457.2], arche: [1219.2, 914.4] };   // 0.9: A4 (the plan Print's paper); SU.1123 adds the library's formats at run time (sheet-formats.js)
@@ -111,6 +119,8 @@ function planItems(scene, P, k) {
     if (d.segs?.length) { if (col) segPen(d.segs, { color: d.pen.color }, 0.13); else seg(d.segs, 0.13, 0); }
     for (const l of d.lines || []) if (l.length > 1) out.push({ t: 'line', pts: [...l.map(P), ...(d.closed ? [P(l[0])] : [])], w: d.pen?.w ? penMm(d.pen.w) : d.kind === 'hatch' ? 0.18 : 0.25, g: 0, color: col, dash: penDash(d.pen?.dash) || undefined });
   }
+  // BK.104: labels along lines (scene.labels [{ p, rot (degrees), text }]: building lines and servitudes)
+  for (const lb of scene.labels || []) { const q = P(lb.p); out.push({ t: 'text', s: String(lb.text || ''), x: q[0], y: q[1], size: annoPt('text'), rot: (lb.rot || 0) * Math.PI / 180 }); }
   for (const d of scene.dims || []) {
     const L = Math.hypot(d.b[0] - d.a[0], d.b[1] - d.a[1]);
     if (L < 1) continue;
@@ -123,31 +133,34 @@ function planItems(scene, P, k) {
     let rot = Math.atan2(u[1], u[0]);
     if (rot > Math.PI / 2 + 1e-9 || rot <= -Math.PI / 2) rot += Math.PI;
     const mid = P([(A[0] + B[0]) / 2, (A[1] + B[1]) / 2]);
-    out.push({ t: 'text', s: d.text, x: mid[0] - Math.sin(rot) * 0.8, y: mid[1] + Math.cos(rot) * 0.8, size: 6, rot });
+    const dg = 0.8 * annoK('dimension');   // 0.10 BK.10: the text's gap above the line grows with its paper height
+    out.push({ t: 'text', s: d.text, x: mid[0] - Math.sin(rot) * dg, y: mid[1] + Math.cos(rot) * dg, size: annoPt('dimension'), rot });
   }
   for (const r of scene.rooms || []) {
     if (!r.at || !r.label) continue;
     const q = P(r.at);
-    r.label.forEach((s, i) => out.push({ t: 'text', s, x: q[0], y: q[1] - (i - (r.label.length - 1) / 2) * 3.4, size: i ? 6.5 : 7.5, bold: !i }));
+    r.label.forEach((s, i) => out.push({ t: 'text', s, x: q[0], y: q[1] - (i - (r.label.length - 1) / 2) * 3.4 * annoK('room'), size: i ? annoPt('tag') : annoPt('room'), bold: !i }));   // 0.10 BK.10
   }
   // grid lines (0.6 DF.16): thin dash-dot, a 7 mm bubble beyond each end the grid shows them at
   for (const x of scene.grids || []) {
     const a = P(x.a), b = P(x.b), L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L];
     out.unshift({ t: 'line', pts: [a, b], w: 0.13, g: 0.35, dash: [5, 1, 0.6, 1] });
     if (x.bubbles === 'none') continue;
-    if (x.bubbles !== 'end') out.push(...bubble([a[0] - u[0] * 3.5, a[1] - u[1] * 3.5], x.tag));
-    if (x.bubbles !== 'start') out.push(...bubble([b[0] + u[0] * 3.5, b[1] + u[1] * 3.5], x.tag));
+    const br = 3.5 * annoK('grid');   // 0.10 BK.10: the bubble grows with its letter
+    if (x.bubbles !== 'end') out.push(...bubble([a[0] - u[0] * br, a[1] - u[1] * br], x.tag, br));
+    if (x.bubbles !== 'start') out.push(...bubble([b[0] + u[0] * br, b[1] + u[1] * br], x.tag, br));
   }
   // 0.6 DC.117: a crop region clips the whole view
   if (scene.crop) { const a = P([scene.crop[0], scene.crop[1]]), b = P([scene.crop[2], scene.crop[3]]); return [{ t: 'clip', rect: [a[0], a[1], b[0], b[1]] }, ...out, { t: 'unclip' }]; }
   return out;
 }
 /** A grid bubble (sheet mm): a white circle, its outline, the label. */
-function bubble(c, tag, r = 3.5) {
+function bubble(c, tag, r = 3.5 * annoK('grid')) {
   const pts = [];
   for (let i = 0; i <= 24; i++) { const a = i / 24 * Math.PI * 2; pts.push([c[0] + r * Math.cos(a), c[1] + r * Math.sin(a)]); }
-  return [{ t: 'fill', polys: [pts], g: 1 }, { t: 'line', pts, w: 0.25, g: 0 }, { t: 'text', s: tag, x: c[0], y: c[1] - 1.1, size: tag.length > 2 ? 5 : 6.5, bold: true }];
+  return [{ t: 'fill', polys: [pts], g: 1 }, { t: 'line', pts, w: 0.25, g: 0 }, { t: 'text', s: tag, x: c[0], y: c[1] - 1.1 * annoK('grid'), size: annoPt('grid') * (tag.length > 2 ? 5 / 6.5 : 1), bold: true }];
 }
+const LAYER_REASONS = ['unsupported-cut', 'unavailable-layers', 'end-cut'];   // wall-section-graphics.js: layered cut faces that fell back to the envelope
 export function viewItems(view, P, k = 0) {
   const out = [];
   // 0.8 D8.8 round 5: pictures standing on a plane square to this view (res-ui.js attaches them as view.images), under all the lines
@@ -167,14 +180,17 @@ export function viewItems(view, P, k = 0) {
   if (b) for (const g of view.grids || []) {
     if (g.x < b.x0 - 1 || g.x > b.x1 + 1) continue;
     const lo = P([g.x, b.y0 - 300]), hi = P([g.x, b.y1 + 600]);
-    out.push({ t: 'line', pts: [lo, hi], w: 0.13, g: 0.35, dash: [5, 1, 0.6, 1] }, ...bubble([hi[0], hi[1] + 3.5], g.tag));
+    out.push({ t: 'line', pts: [lo, hi], w: 0.13, g: 0.35, dash: [5, 1, 0.6, 1] }, ...bubble([hi[0], hi[1] + 3.5 * annoK('grid')], g.tag));
   }
   // the ground line under it all, past both ends — unless the model has its ground (terrain draws itself)
   const groundY=view.groundY??b?.y0;
   if (b && !view.ground && groundY>=b.y0 && groundY<=b.y1) out.push({ t: 'line', pts: [P([b.x0 - 450, groundY]), P([b.x1 + 450, groundY])], w: 0.6, g: 0 });
   // 0.6 round 2 (bim-comforts_PART_2): the view's notes — level marks, dimensions, door / window / item tags (comforts-views.js)
   if (view.notes?.length && k > 0) out.push(...noteItems(view.notes, P, k));
-  if(b && view.warnings?.length)out.push({t:'text',s:tr('proj.diagnostic')+' '+[...new Set(view.warnings.map(w=>w.reason))].join(', '),x:P([b.x0,b.y1])[0],y:P([b.x0,b.y1])[1]+4,size:6,align:'left'});
+  // 0.10 BK.4 (the small-house run): at coarse detail the cut is the plain envelope by design, so a wall whose LAYERS could not be
+  // drawn (joined walls, a cut at a wall's end) is not a fault of the drawing: the line is printed only when layers were asked for.
+  const said = (view.warnings || []).filter((w) => (view.detail && view.detail !== 'coarse') || !LAYER_REASONS.includes(w.reason));
+  if(b && said.length)out.push({t:'text',s:tr('proj.diagnostic')+' '+[...new Set(said.map(w=>w.reason))].join(', '),x:P([b.x0,b.y1])[0],y:P([b.x0,b.y1])[1]+4,size:annoPt('text'),align:'left'});
   return out;
 }
 function framingItems(fr, P) {
@@ -187,11 +203,13 @@ function framingItems(fr, P) {
   }
   return out;
 }
+/** 0.10 BK.10: a schedule row's height on paper (5 mm for the app's own text size; it grows with the office's). */
+const ROW_H = () => 5 * annoK('schedule');
 function tableItems(sc, x, yTop, width) {
-  const out = [], rowH = 5, cols = sc.head.length;
+  const out = [], rowH = ROW_H(), cols = sc.head.length;
   // sc.widths: each column's share of the width (a schedule with long text); the default is equal columns
   const shares = sc.widths || sc.head.map(() => 1 / cols), at = shares.map((_, i) => shares.slice(0, i).reduce((a, b) => a + b, 0) * width);
-  const row = (cells, y, bold) => cells.forEach((c, i) => out.push({ t: 'text', s: String(c ?? ''), x: x + at[i] + 1.5, y: y - rowH + 1.6, size: 7, align: 'left', bold }));
+  const row = (cells, y, bold) => cells.forEach((c, i) => out.push({ t: 'text', s: String(c ?? ''), x: x + at[i] + 1.5, y: y - rowH + 1.6 * annoK('schedule'), size: annoPt('schedule'), align: 'left', bold }));
   out.push({ t: 'line', pts: [[x, yTop], [x + width, yTop]], w: 0.35, g: 0 });
   row(sc.head, yTop, true);
   out.push({ t: 'line', pts: [[x, yTop - rowH], [x + width, yTop - rowH]], w: 0.25, g: 0 });
@@ -218,7 +236,7 @@ function boundsOfScene(scene) {
   return { x0: b.x0 - pad, y0: b.y0 - pad, x1: b.x1 + pad, y1: b.y1 + pad };
 }
 /** A sheet: its frame, the title block along the bottom, its cells laid out left to right. */
-function sheet(number, title, cells, { paper, project, date, titleBlock = null, fields = {}, margin = null }) {
+function sheet(number, title, cells, { paper, project, date, titleBlock = null, fields = {}, margin = null, strip: more = [] }) {   // strip: more texts for the built-in strip (client, drawn by, revision: SC.7)
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
   const m = margin ?? 10, strip = 18;
   let items = [];
@@ -231,7 +249,7 @@ function sheet(number, title, cells, { paper, project, date, titleBlock = null, 
   items.push({ t: 'line', pts: [[PW - m - 40, m], [PW - m - 40, m + strip]], w: 0.35, g: 0 });
   items.push({ t: 'text', s: number, x: PW - m - 20, y: m + 6, size: 18, bold: true });
   items.push({ t: 'text', s: title, x: m + 4, y: m + 10, size: 12, align: 'left', bold: true });
-  items.push({ t: 'text', s: [project, date, tr('res.sh.madewith')].filter(Boolean).join('    '), x: m + 4, y: m + 4, size: 7, align: 'left', g: 0.25 });   // i18n-ignore: spacing between the strip's items
+  items.push({ t: 'text', s: [project, ...more, date, tr('res.sh.madewith')].filter(Boolean).join('    '), x: m + 4, y: m + 4, size: 7, align: 'left', g: 0.25 });   // i18n-ignore: spacing between the strip's items
   }
   const room = [PW - 2 * m, PH - 2 * m - strip], cw = room[0] / Math.max(1, cells.length);
   const views = [];
@@ -240,8 +258,8 @@ function sheet(number, title, cells, { paper, project, date, titleBlock = null, 
     items.push(...c.draw(x + 6, y + 14, cw - 12, room[1] - 22));
     views.push({ title: c.title, scale: c.scale, bb: c.bb || null, place: c.place || null });
     if (c.title) {
-      items.push({ t: 'text', s: c.title, x: x + 6, y: y + 7, size: 9, align: 'left', bold: true });
-      if (c.scale) items.push({ t: 'text', s: c.scale, x: x + 6, y: y + 3, size: 7, align: 'left', g: 0.25 });
+      items.push({ t: 'text', s: c.title, x: x + 6, y: y + 7, size: annoPt('title'), align: 'left', bold: true });   // 0.10 BK.10
+      if (c.scale) items.push({ t: 'text', s: c.scale, x: x + 6, y: y + 3, size: annoPt('title') * 7 / 9, align: 'left', g: 0.25 });
       items.push({ t: 'line', pts: [[x + 6, y + 6], [x + Math.min(cw - 12, 90), y + 6]], w: 0.35, g: 0 });
     }
   });
@@ -261,17 +279,18 @@ function drawCell(title, bb, units, drawWith, forced = null, minRatio = 0) {
   return cell;
 }
 
-export function buildSet(input, { paper = 'tabloid', units = 'ftin', project = '', date = '' } = {}) {
+export function buildSet(input, { paper = 'tabloid', units = 'ftin', project = '', date = '', strip = [] } = {}) {
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
   const roomFor = (n) => [(PW - 20) / n - 12, PH - 20 - 18 - 22];
-  const opts = { paper, project, date };
+  const opts = { paper, project, date, strip };
   const BUILDING = isMetric(units) ? 50 : 48;   // plans, elevations and sections no larger than 1:50 or a quarter inch to the foot
   const sheets = [];
   // plans: one level a sheet
   (input.plans || []).forEach((p, i) => {
     const bb = boundsOfScene(p.scene);
     if (!bb) return;
-    const c = drawCell(p.title, bb, units, (P, k) => planItems(p.scene, P, k), null, BUILDING);
+    // 0.10 BK.4 / BK.10 (the small-house run): a plan with a scale of its own (its view range) is drawn at it, as the elevations and sections are
+    const c = drawCell(p.title, bb, units, (P, k) => planItems(p.scene, P, k), p.scene.scale > 0 ? p.scene.scale : null, BUILDING);
     const s = sheet('A-1' + String(i + 1).padStart(2, '0'), p.title, [c], opts);
     s.scale = c.scale;
     sheets.push(s);
@@ -294,7 +313,7 @@ export function buildSet(input, { paper = 'tabloid', units = 'ftin', project = '
   // schedules: side by side, as many columns as the paper's width takes; a table taller than the sheet goes on in the next
   // column ("continued"), its total under its last piece
   const perSheet = Math.max(1, Math.min(4, Math.floor((PW - 20) / 130)));
-  const fit = Math.max(4, Math.floor((PH - 20 - 18 - 22) / 5) - 3);
+  const fit = Math.max(4, Math.floor((PH - 20 - 18 - 22) / ROW_H()) - 3);
   const pieces = [];
   for (const sc of (input.schedules || []).filter((x) => x.document)) {
     sheets.push(sheet('A-6'+String(sheets.length+1).padStart(2,'0'),sc.title,[{title:sc.title,draw:(x,y,w,h)=>documentItems(sc,x+(w-sc.document.width)/2,y+h)}],opts));
@@ -339,7 +358,7 @@ export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', p
     if (!src) { s.missing.push(i); return; }
     let w, h, draw, ratio = 0;
     if (v.kind === 'schedule') {
-      w = src.document?.width || 130; h = src.document?.height || 5 * (src.rows.length + 1 + (src.total ? 1 : 0));
+      w = src.document?.width || 130; h = src.document?.height || ROW_H() * (src.rows.length + 1 + (src.total ? 1 : 0));
       draw = (x0, y0) => src.document ? documentItems(src,x0,y0+h) : tableItems(src, x0, y0 + h, w).items;
     } else {
       const bb = planLike(v.kind) ? boundsOfScene(src.scene) : src.view?.bounds ? pad(src.view.bounds, src.view.crop?0:500) : null;
@@ -358,12 +377,16 @@ export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', p
       if(omitted.length)s.items.push({t:'text',s:tr('asched.omitted',{n:omitted.length}),x:x0,y:y0-12,size:8,align:'left'});
     }
     // its title under it, underlined, the scale under that (as the set's cells)
-    s.items.push({ t: 'text', s: src.title, x: x0, y: y0 - 6, size: 9, align: 'left', bold: true });
+    s.items.push({ t: 'text', s: src.title, x: x0, y: y0 - 6, size: annoPt('title'), align: 'left', bold: true });   // 0.10 BK.10
     s.items.push({ t: 'line', pts: [[x0, y0 - 7], [x0 + Math.min(w, 90), y0 - 7]], w: 0.35, g: 0 });
-    if (ratio) s.items.push({ t: 'text', s: label(ratio), x: x0, y: y0 - 10, size: 7, align: 'left', g: 0.25 });
+    if (ratio) s.items.push({ t: 'text', s: label(ratio), x: x0, y: y0 - 10, size: annoPt('title') * 7 / 9, align: 'left', g: 0.25 });
     s.views.push({ i, kind: v.kind, ref: v.ref, box: [x0, y0, x0 + w, y0 + h], ratio, label: ratio ? label(ratio) : '' });
   });
   if (spec.legend?.length) { const at = legendBlock(paper); s.items.push(...legendItems(spec.legend, { ...at, title: spec.legendTitle || 'Keynotes' })); }   // i18n-ignore: the default heading; the editor passes the translated one
+  if (spec.notes?.items?.length) {   // 0.10 BK.157: the standard notes go in the same column, under the legend
+    const at = legendBlock(paper);
+    s.items.push(...notesItems(spec.notes, { x: at.x, y: at.y - (spec.legend?.length ? legendHeight(spec.legend, { title: spec.legendTitle || 'Keynotes' }) + 8 : 0), width: LEGEND_W, size: annoPt('text'), words: { title: tr('sheet.notes.title'), from: (v) => tr(v.unverified ? 'sheet.notes.from.unverified' : 'sheet.notes.from', v) } }));
+  }
   return s;
 }
 /** 0.8 EG.56: "Arrange for me". Picks ONE standard scale for the sheet's drawn views (the largest from the list, but never larger than 1:48 / 1:50, at which every
@@ -372,11 +395,11 @@ export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', p
  *  does not fit, `fits` is false and the views run past the top (the person changes the paper). */
 export function arrangeSheet(spec, input, { paper = 'tabloid', units = 'ftin', gap = 8 } = {}) {
   const [PW, PH] = PAPERS[paper] || PAPERS.tabloid;
-  let left = 16, right = PW - 16 - (spec.legend?.length ? LEGEND_W : 0), bottom = 10 + 18 + 6, top = PH - 14;
+  let left = 16, right = PW - 16 - (spec.legend?.length || spec.notes?.items?.length ? LEGEND_W : 0), bottom = 10 + 18 + 6, top = PH - 14;
   const strip = 14;
   if (spec.titleBlockSpec?.place === 'svg') {   // 0.9 D8.17: the person's own design says where the views go (its drawing-area rectangle, else inside the border)
     const p = parseTitleSvg(spec.titleBlockSpec.svg);
-    if (p.ok) { const r = svgTitleItems(p, { PW, PH }).room; left = r[0] + 6; right = r[2] - 6 - (spec.legend?.length ? LEGEND_W : 0); bottom = r[1] + 6; top = r[3] - 4; }
+    if (p.ok) { const r = svgTitleItems(p, { PW, PH }).room; left = r[0] + 6; right = r[2] - 6 - (spec.legend?.length || spec.notes?.items?.length ? LEGEND_W : 0); bottom = r[1] + 6; top = r[3] - 4; }
   }
   const list = SCALES[isMetric(units) ? 'mm' : 'ftin'].map(([r, l]) => ({ ratio: r, label: l })).filter((x) => x.ratio >= (isMetric(units) ? 50 : 48)).sort((a, b) => a.ratio - b.ratio);
   const attempt = (ratio) => {
@@ -530,7 +553,7 @@ export function readSectionLines(w) {
     const ps = w.readPset(id, SECTION_PSET);
     if (!ps) continue;
     const l = w.api.GetLine(w.mid, id, false);
-    out.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, level: ps.Level || '', name: ps.Name || 'A', a: [Number(ps.AX) * w.unitMm, Number(ps.AY) * w.unitMm], b: [Number(ps.BX) * w.unitMm, Number(ps.BY) * w.unitMm], look: ps.Look === 'right' ? 'right' : 'left', depth: Number(ps.Depth || 0) * w.unitMm });
+    out.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, level: ps.Level || '', name: ps.Name || 'A', a: [Number(ps.AX) * w.unitMm, Number(ps.AY) * w.unitMm], b: [Number(ps.BX) * w.unitMm, Number(ps.BY) * w.unitMm], look: ps.Look === 'right' ? 'right' : 'left', depth: Number(ps.Depth || 0) * w.unitMm, kind: ps.Kind === 'elevation' ? 'elevation' : 'section' });
   }
   return out;
 }
@@ -539,31 +562,48 @@ export function sectionDir(sl) {
   const d = [sl.b[0] - sl.a[0], sl.b[1] - sl.a[1]], L = Math.hypot(...d) || 1, u = [d[0] / L, d[1] / L];
   return { o: sl.a, dir: sl.look === 'right' ? [u[1], -u[0]] : [-u[1], u[0]], u };
 }
+/** What a section line or an elevation marker is called: "Section A", "Elevation 1". */
+export const sectionTitle = (sl) => tr(sl?.kind === 'elevation' ? 'res.elv.name' : 'res.sec.name', { name: sl?.name || '' });
+/** An elevation marker's point and the way it looks (unit), from its record. */
+export function elevationMarkerOf(sl) {
+  return { at: [(sl.a[0] + sl.b[0]) / 2, (sl.a[1] + sl.b[1]) / 2], dir: sectionDir(sl).dir };
+}
+export const ELEVATION_MARK = 500;   // half the length of the line an elevation marker is kept as (mm)
 const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run(fn);
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
 export function placeSectionLine(spec) {
-  const s = { look: 'left', depth: 0, ...spec };
+  const s = { look: 'left', depth: 0, kind: 'section', ...spec };
+  const elev = s.kind === 'elevation';
   return op((w) => {
     if (Math.hypot(s.b[0] - s.a[0], s.b[1] - s.a[1]) < 100) fail('res.err.sectionshort');
     if (!s.guid) s.guid = val(w.guid());
     const storey = w.byGuid(s.level);
     if (!storey) fail('model.err.nolevel');
+    if (!s.name && elev) { const have = new Set(readSectionLines(w).filter((x) => x.kind === 'elevation').map((x) => x.name)); let n = 1; while (have.has(String(n))) n++; s.name = String(n); }
     if (!s.name) { const have = new Set(readSectionLines(w).map((x) => x.name)); s.name = 'ABCDEFGHJKLMNPQRSTUVWXYZ'.split('').find((c) => !have.has(c)) || 'S'; }
     const st = w.api.GetLine(w.mid, storey, false);
-    const nm = w.L(tr('res.sec.name', { name: s.name }));
-    const id = w.make('IFCANNOTATION', s.guid, w.ownerHistory(), nm, null, w.L('Section line'), w.H(w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0)), null, ...(/^IFC4X3/i.test(w.schema || '') ? ['USERDEFINED'] : []));   // i18n-ignore: IFC ObjectType (IFC4X3 adds PredefinedType)
+    const nm = w.L(sectionTitle(s));
+    const id = w.make('IFCANNOTATION', s.guid, w.ownerHistory(), nm, null, w.L(elev ? 'Elevation marker' : 'Section line'), w.H(w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0)), null, ...(/^IFC4X3/i.test(w.schema || '') ? ['USERDEFINED'] : []));   // i18n-ignore: IFC ObjectType (IFC4X3 adds PredefinedType)
     w.noteGuid(s.guid, id);
     w.contain(id, storey);
-    w.upsertPset(id, SECTION_PSET, [['Level', 'IFCIDENTIFIER', s.level], ['Name', 'IFCLABEL', s.name], ['AX', 'IFCLENGTHMEASURE', round(w.u(s.a[0]))], ['AY', 'IFCLENGTHMEASURE', round(w.u(s.a[1]))], ['BX', 'IFCLENGTHMEASURE', round(w.u(s.b[0]))], ['BY', 'IFCLENGTHMEASURE', round(w.u(s.b[1]))], ['Look', 'IFCLABEL', s.look], ['Depth', 'IFCLENGTHMEASURE', round(w.u(s.depth))]]);
+    w.upsertPset(id, SECTION_PSET, [['Level', 'IFCIDENTIFIER', s.level], ['Name', 'IFCLABEL', s.name], ['AX', 'IFCLENGTHMEASURE', round(w.u(s.a[0]))], ['AY', 'IFCLENGTHMEASURE', round(w.u(s.a[1]))], ['BX', 'IFCLENGTHMEASURE', round(w.u(s.b[0]))], ['BY', 'IFCLENGTHMEASURE', round(w.u(s.b[1]))], ['Look', 'IFCLABEL', s.look], ['Depth', 'IFCLENGTHMEASURE', round(w.u(s.depth))], ...(elev ? [['Kind', 'IFCLABEL', 'elevation']] : [])]);
     return { id, ids: [id], made: new Map([[s.guid, id]]) };
   });
+}
+/** An elevation marker at `at` looking towards `toward` (both in the level's plan, mm): the view is what is in front of it. */
+export function placeElevationMarker(spec) {
+  const d = [spec.toward[0] - spec.at[0], spec.toward[1] - spec.at[1]], L = Math.hypot(...d);
+  if (!(L >= 100)) return op(() => fail('res.err.elevationshort'));
+  const u = [d[1] / L, -d[0] / L];   // the marker's line runs across the way it looks; "left" of a → b is then that way
+  const { at, toward, ...rest } = spec;
+  return placeSectionLine({ ...rest, kind: 'elevation', look: 'left', a: [at[0] - u[0] * ELEVATION_MARK, at[1] - u[1] * ELEVATION_MARK], b: [at[0] + u[0] * ELEVATION_MARK, at[1] + u[1] * ELEVATION_MARK] });
 }
 export function changeSectionLine(guid, ch) {
   return op((w) => {
     const sl = readSectionLines(w).find((x) => x.guid === guid);
     if (!sl) fail('model.err.gone');
     const rows = [];
-    if (ch.name && String(ch.name).trim()) { rows.push(['Name', 'IFCLABEL', String(ch.name).trim().slice(0, 8)]); const l = w.touch(sl.id); l.Name = w.L(tr('res.sec.name', { name: String(ch.name).trim().slice(0, 8) })); w.write(l); }
+    if (ch.name && String(ch.name).trim()) { rows.push(['Name', 'IFCLABEL', String(ch.name).trim().slice(0, 8)]); const l = w.touch(sl.id); l.Name = w.L(sectionTitle({ kind: sl.kind, name: String(ch.name).trim().slice(0, 8) })); w.write(l); }
     if (ch.look === 'left' || ch.look === 'right') rows.push(['Look', 'IFCLABEL', ch.look]);
     if (Number.isFinite(ch.depth) && ch.depth >= 0) rows.push(['Depth', 'IFCLENGTHMEASURE', round(w.u(ch.depth))]);
     if (Array.isArray(ch.a)) rows.push(['AX', 'IFCLENGTHMEASURE', round(w.u(ch.a[0]))], ['AY', 'IFCLENGTHMEASURE', round(w.u(ch.a[1]))]);

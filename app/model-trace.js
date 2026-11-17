@@ -17,7 +17,8 @@
  *   openingsFromInserts(inserts, map, walls) → [{ wall (index), typeKey, kind, offset, width, face }]   a reference of a block
  *       mapped to a door or window type → the wall nearest its box's middle (within the wall's thickness + 300 mm), centred where
  *       the box's middle falls along it, as wide as the box along the wall; a door swings to the side its box lies on
- *   traceDrawing({ storey, walls, openings, typeKey, topLevel, height, underlay }) → op (one undo step)
+ *   traceDrawing({ storey, walls, openings, typeKey, topLevel, height, underlay, source, roomNames }) → op (one undo step); 0.10 BK.64: what it
+ *       makes (walls, doors, windows, the rooms they close) is marked unverified (verify-model.js; source 'drawing' | 'pdf' | 'scan')
  *   readUnderlays(w) · removeUnderlays(guids) → op    the underlay: IfcAnnotation ("Underlay", Name = the file) in its level,
  *       its linework an 'Annotation' 'GeometricCurveSet' of 2D polylines, CadCraft_Underlay (Source, Units, Lines)
  */
@@ -29,6 +30,8 @@ import { axisMeet } from './model-trim.js';
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
 import { t as tr } from './i18n.js';
+import { markRecognised, markNewRooms, spaceIds } from './verify-model.js';   // 0.10 BK.64 (bk-r3-checks-10): what a program recognised is unverified until a person checks it
+import { storeyLoops } from './model-slabs.js';
 
 export const UNDERLAY_PSET = 'CadCraft_Underlay';
 const INS_MM = { 1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000, 10: 914.4 };
@@ -229,14 +232,15 @@ export function openingsFromInserts(inserts, map, walls) {
 
 // ------------------------------------------------------------------------------------------------------------- the op
 const pts2 = (w, flat) => { const out = []; for (let i = 0; i + 1 < flat.length; i += 2) out.push([w.u(flat[i]), w.u(flat[i + 1])]); return out; };
-export function traceDrawing({ storey, walls, openings = [], typeKey = 'ext-2x6', topLevel = '', height = 0, underlay = null }) {
+export function traceDrawing({ storey, walls, openings = [], typeKey = 'ext-2x6', topLevel = '', height = 0, underlay = null, source = 'drawing', roomNames = [] }) {
   const state = pageState();
-  return op((w) => traceInto(w, { storey, walls, openings, typeKey, topLevel, height, underlay }, state));
+  return op((w) => traceInto(w, { storey, walls, openings, typeKey, topLevel, height, underlay, source, roomNames }, state));
 }
 const pageState = () => ({ guids: [], oguids: [], ug: null });
 
 /** One page of walls, openings and an underlay written into a level (a storey GlobalId); the state keeps the GlobalIds so a redo makes the same elements. */
-function traceInto(w, { storey, walls, openings = [], typeKey = 'ext-2x6', topLevel = '', height = 0, underlay = null }, state) {
+function traceInto(w, { storey, walls, openings = [], typeKey = 'ext-2x6', topLevel = '', height = 0, underlay = null, source = 'drawing', roomNames = [] }, state) {
+  const roomsBefore = spaceIds(w), oids = [];   // BK.64
   const W = walls.map((x) => ({ a: [...x.a], b: [...x.b], t: x.t })), O = openings.map((x) => ({ ...x })), U = underlay;
   const { guids, oguids } = state;
   const st = w.byGuid(storey);
@@ -255,7 +259,7 @@ function traceInto(w, { storey, walls, openings = [], typeKey = 'ext-2x6', topLe
   O.forEach((o, i) => {
     if (!guids[o.wall]) { skipped++; return; }
     if (!oguids[i]) oguids[i] = [val(w.guid()), val(w.guid())];
-    try { addOpening(w, { wall: guids[o.wall], typeKey: o.typeKey, offset: o.offset, width: o.width, face: o.face, guid: oguids[i][0], openingGuid: oguids[i][1] }); }
+    try { oids.push(addOpening(w, { wall: guids[o.wall], typeKey: o.typeKey, offset: o.offset, width: o.width, face: o.face, guid: oguids[i][0], openingGuid: oguids[i][1] }).id); }
     catch (e) { if (/^model\.err\./.test(e.key || '')) skipped++; else throw e; }
   });
   if (O.length) settleFor(w, [st], null);
@@ -270,7 +274,12 @@ function traceInto(w, { storey, walls, openings = [], typeKey = 'ext-2x6', topLe
     w.upsertPset(id, UNDERLAY_PSET, [['Source', 'IFCLABEL', String(U.name || '').slice(0, 255)], ['Units', 'IFCLABEL', String(U.units || '')], ['Lines', 'IFCINTEGER', U.lines.length]]);
     out.push(id);
   }
-  return { id: out[0] ?? null, ids: out, made, skipped };
+  // BK.64: the walls, doors, windows and rooms a program read from a drawing, a PDF or a scan are UNVERIFIED until a person checks them;
+  // a room takes its name from text found inside it (roomNames: [{ name, at: [x, y] }], plan mm) when the page has text
+  const note = String(U?.name || '').slice(0, 120);
+  markRecognised(w, [...made.values(), ...oids], source, note);
+  const rooms = W.length ? markNewRooms(w, roomsBefore, source, { names: roomNames.map((n) => ({ ...n, storey: st })), loopsFor: (sid) => storeyLoops(w, sid).rooms, note }) : { rooms: [], named: 0 };
+  return { id: out[0] ?? null, ids: out, made, skipped, rooms: rooms.rooms.length, roomsNamed: rooms.named };
 }
 
 /**
@@ -282,7 +291,7 @@ export function tracePages(pages) {
   const states = pages.map(() => pageState());
   return op((w) => {
     const ids = [], made = new Map(), levels = [];
-    let skipped = 0;
+    let skipped = 0, rooms = 0, roomsNamed = 0;
     pages.forEach((p, i) => {
       if (!p.walls.length && !p.underlay) { levels.push(null); return; }
       let storey = p.level;
@@ -295,9 +304,9 @@ export function tracePages(pages) {
       const r = traceInto(w, { ...p, storey }, states[i]);
       for (const x of r.ids) ids.push(x);
       for (const [g, id] of r.made) made.set(g, id);
-      skipped += r.skipped;
+      skipped += r.skipped; rooms += r.rooms; roomsNamed += r.roomsNamed;
     });
-    return { id: ids[0] ?? null, ids, made, skipped, levels };
+    return { id: ids[0] ?? null, ids, made, skipped, levels, rooms, roomsNamed };
   });
 }
 

@@ -2,7 +2,7 @@
 title: Bắt đầu một công trình mới
 summary: Tạo mô hình công trình trống với các tầng, vẽ tường, đặt các mục từ thư viện và lưu thành IFC.
 keywords: mới, công trình mới, trống, rỗng, bắt đầu từ đầu, mẫu, tầng, cốt, sàn, tạo, mô hình
-from: 546b8ae8
+from: 68786865
 ---
 
 ## Bạn sẽ làm gì

@@ -12,7 +12,7 @@
  */
 import { el } from './ui-util.js';
 import { t } from './i18n.js';
-import { scanProgress, progressCsv, STATE_COLORS } from './scan-progress.js';
+import { matchedKeys, scanProgress, progressCsv, STATE_COLORS } from './scan-progress.js';
 
 const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
 const STATES = ['built', 'partly', 'missing', 'unseen'];
@@ -87,6 +87,9 @@ export function mountScanProgress(host) {
           el('td', {}, host.name(x.key)), el('td', {}, t('sp.state.' + x.state)), el('td', {}, Math.round(x.coverage * 100) + ' %'),
           el('td', {}, x.dev ? t('sp.dev.' + x.dev) + (x.mean === null ? '' : ' (' + (x.mean >= 0 ? '+' : '') + Math.round(x.mean * 1000) + ' mm)') : '–'),
           el('td', {}, x.plan ? t('sp.plan.' + x.plan) + (x.flag ? ' · ' + t('sp.flag.' + x.flag) : '') : '–')))))));
+      // 0.10 BK.49 (bk-r3-checks-10): what the scan matched within the tolerance can be marked field-verified (LOD 500, method scan) in one step
+      if (host.verify) { const ok = matchedKeys(r); kids.push(el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sp-verify': '', 'data-count': String(ok.length), disabled: !ok.length,
+        onClick: () => host.verify(ok, { note: t('sp.verify.note', { tol: S.tolMm }) }) }, t('sp.verify', { n: ok.length })))); }
       kids.push(el('p', { className: 'bc-muted' }, t('sp.limits')));
     }
     host.pane.replaceChildren(...kids);

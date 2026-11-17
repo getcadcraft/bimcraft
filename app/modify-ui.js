@@ -13,6 +13,7 @@
  */
 import { ModelWriter } from './model-write.js';
 import { movables, alignMoves, distributeMoves, moveElements } from './model-modify.js';
+import { withShapeCopies } from './wall-shape.js';
 import { fmtLen, parseTyped } from './model-units.js';
 
 export function mountModify(modelUi) {
@@ -42,7 +43,7 @@ export function mountModify(modelUi) {
 
   function run(moves, copy, verb) {
     if (!moves.length) { A.host.status(t('model.move.nothing'), true); return false; }
-    A.commit(moveElements(moves, { copy }), { label: label(moves.length), verb: t(verb) });
+    A.commit(copy ? withShapeCopies(moveElements(moves, { copy }), moves) : moveElements(moves, { copy }), { label: label(moves.length), verb: t(verb) });   // walls-shape-10 (WT.6): a copied wall keeps its shape and wall openings
     return true;
   }
   function moveBy(d) {

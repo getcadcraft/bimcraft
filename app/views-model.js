@@ -43,6 +43,7 @@ import { PLAN_DETAILS } from './wall-plan-graphics.js';
  *       model.err.vr.crop (a crop under 100 mm a side), model.err.vr.underlay (not another level), model.err.vr.scale
  */
 import { op } from './model-ops.js';
+import { cleanSheetNotes } from './sheet-notes.js';   // 0.10 BK.157
 import { readLevels } from './model-levels.js';
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
@@ -105,7 +106,7 @@ export function readSheets(w) {
       // 0.9 SU.1123: the sheet's title block (sheet-formats.js: 'strip', 'side' or a model's own 'titleblock-<n>') and its field words
       titleBlock: /^(strip|side|titleblock-\d+)$/.test(String(s.titleBlock || '')) ? s.titleBlock : '',
       fields: Object.fromEntries(Object.entries(s.fields && typeof s.fields === 'object' ? s.fields : {}).slice(0, 30).map(([k, v]) => [String(k).slice(0, 30), String(v ?? '').slice(0, 120)]).filter(([k, v]) => /^[a-z0-9-]+$/.test(k) && v)),
-      legend: (Array.isArray(s.legend) ? s.legend : []).slice(0, 60).map((e, i) => ({ n: i + 1, kind: e.kind === 'classification' ? 'classification' : 'layer', key: String(e.key || '').slice(0, 80), text: String(e.text || e.key || '').slice(0, 160), count: Math.max(0, Math.round(fin(e.count, 0))) })).filter((e) => e.key) });
+      legend: (Array.isArray(s.legend) ? s.legend : []).slice(0, 60).map((e, i) => ({ n: i + 1, kind: e.kind === 'classification' ? 'classification' : 'layer', key: String(e.key || '').slice(0, 80), text: String(e.text || e.key || '').slice(0, 160), count: Math.max(0, Math.round(fin(e.count, 0))) })).filter((e) => e.key), notes: cleanSheetNotes(s.notes) });   // 0.10 BK.157: standard notes from a regulation pack
   }
   return out.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }) || a.id.localeCompare(b.id));
 }
@@ -194,7 +195,7 @@ export function saveSheet(sheet) {
     const pj = project(w);
     if (!fixed) { const have = readSheets(w); let n = 1; while (have.some((x) => x.id === 'sheet-' + n)) n++; fixed = 'sheet-' + n; }
     const views = (S.views || []).filter((x) => SHEET_KINDS.includes(x.kind)).map((x) => ({ kind: x.kind, ref: String(x.ref), x: round(fin(x.x, 0), 2), y: round(fin(x.y, 0), 2), ratio: ratioOf(x.ratio) }));
-    w.upsertPset(pj, SHEETS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ number: String(S.number || '').slice(0, 20), title: String(S.title || '').slice(0, 120), paper: String(S.paper || ''), views, ...(S.titleBlock ? { titleBlock: String(S.titleBlock) } : {}), ...(S.fields && Object.values(S.fields).some(Boolean) ? { fields: Object.fromEntries(Object.entries(S.fields).filter(([, v]) => v).map(([k, v]) => [k, String(v).slice(0, 120)])) } : {}), ...(S.legend?.length ? { legend: S.legend.slice(0, 60).map((e) => ({ kind: e.kind, key: String(e.key).slice(0, 80), text: String(e.text || '').slice(0, 160), count: Math.round(fin(e.count, 0)) })) } : {}) })]]);
+    w.upsertPset(pj, SHEETS_PSET, [[fixed, 'IFCTEXT', JSON.stringify({ number: String(S.number || '').slice(0, 20), title: String(S.title || '').slice(0, 120), paper: String(S.paper || ''), views, ...(S.titleBlock ? { titleBlock: String(S.titleBlock) } : {}), ...(S.fields && Object.values(S.fields).some(Boolean) ? { fields: Object.fromEntries(Object.entries(S.fields).filter(([, v]) => v).map(([k, v]) => [k, String(v).slice(0, 120)])) } : {}), ...(S.legend?.length ? { legend: S.legend.slice(0, 60).map((e) => ({ kind: e.kind, key: String(e.key).slice(0, 80), text: String(e.text || '').slice(0, 160), count: Math.round(fin(e.count, 0)) })) } : {}), ...(cleanSheetNotes(S.notes) ? { notes: cleanSheetNotes(S.notes) } : {}) })]]);
     return { id: pj, ids: [], sheet: fixed };
   });
 }

@@ -25,13 +25,17 @@ export class Visibility {
     this.isolated = null;        // null = no isolation; else the only elements shown solid
     this.ghost = false;          // with isolation: the others are drawn see-through instead of hidden
     this.version = 0;            // bumps on every change (callers cache by it)
+    this.off = new Set();        // switched off by a host's model layers (Super, BK.128): apart from the person's own Hide, untouched by showAll and isolate
   }
 
+  /** The elements a host's switched-off layers hide (replaces the last set). → true when it changed. */
+  setOff(keys) { const next = new Set(keys); if (next.size === this.off.size && [...next].every((k) => this.off.has(k))) return false; this.off = next; this.version++; return true; }
+
   /** Nothing hidden, nothing isolated. */
-  get plain() { return this.hidden.size === 0 && this.isolated === null; }
+  get plain() { return this.hidden.size === 0 && this.isolated === null && this.off.size === 0; }
 
   state(key) {
-    if (this.hidden.has(key)) return HIDDEN;
+    if (this.hidden.has(key) || this.off.has(key)) return HIDDEN;
     if (this.isolated === null || this.isolated.has(key)) return SOLID;
     return this.ghost ? GHOST : HIDDEN;
   }
@@ -103,6 +107,25 @@ export function batchEdges(batch, angle = 30) {
     runEdges(P, I, E.t0[r], E.tn[r], angle, out);
     const count = out.length / 6 - start;
     if (count) { ids.push(E.ids[r]); s0.push(start); sn.push(count); }
+  }
+  return { positions: Float32Array.from(out), ids: Uint32Array.from(ids), s0: Uint32Array.from(s0), sn: Uint32Array.from(sn) };
+}
+
+/**
+ * batchEdges in slices (0.10 PERF.8): the same edges, but the page gets its thread back between elements every `sliceMs` (the model's edges
+ * used to be one 1.5 s task at 683k triangles). `yieldFn` is async; `alive()` false stops early (the model was replaced) → null.
+ */
+export async function batchEdgesAsync(batch, angle = 30, { sliceMs = 12, yieldFn = null, alive = () => true } = {}) {
+  const P = batch.positions, I = batch.indices, E = batch.elems;
+  const out = [], ids = [], s0 = [], sn = [];
+  const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  let t0 = now();
+  for (let r = 0; r < E.ids.length; r++) {
+    const start = out.length / 6;
+    runEdges(P, I, E.t0[r], E.tn[r], angle, out);
+    const count = out.length / 6 - start;
+    if (count) { ids.push(E.ids[r]); s0.push(start); sn.push(count); }
+    if (yieldFn && now() - t0 >= sliceMs) { await yieldFn(); if (!alive()) return null; t0 = now(); }
   }
   return { positions: Float32Array.from(out), ids: Uint32Array.from(ids), s0: Uint32Array.from(s0), sn: Uint32Array.from(sn) };
 }

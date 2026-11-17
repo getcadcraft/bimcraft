@@ -11,6 +11,7 @@
 import { templateBytes, newFromTemplate } from './project-template.js';
 import { listTemplates, getTemplate, putTemplate, removeTemplate } from './template-store.js';
 import { readStyle, setOne, CHOICES } from './work-style.js';
+import { kitItem } from './libitem.js';   // 0.10 BK.98: a template as a Library item file
 
 export function mountTemplates({ el, t, status, WebIFC, IfcModel, currentBytes, fileName, download }) {
   async function saveDialog() {
@@ -20,11 +21,19 @@ export function mountTemplates({ el, t, status, WebIFC, IfcModel, currentBytes, 
     const nm = el('input', { type: 'text', className: 'bc-input', 'data-tpl-name': '', value: base, maxLength: 80, required: true });
     const dl = el('input', { type: 'checkbox', 'data-tpl-download': '' });
     const def = el('input', { type: 'checkbox', 'data-tpl-default': '' });
+    // 0.10 BK.98: share it: a format-1 Library item file (kind kit), uploaded at /library/upload like any item (review, licence, attestation)
+    const share = el('input', { type: 'checkbox', 'data-tpl-share': '' });
+    const shVer = el('input', { type: 'text', className: 'bc-input', value: '0.1.0', maxLength: 20, 'data-tpl-version': '' });
+    const shSum = el('input', { type: 'text', className: 'bc-input', maxLength: 300, 'data-tpl-summary': '' });
+    const shBox = el('div', { 'data-tpl-sharebox': '', hidden: true }, el('label', { className: 'bc-dlg-field' }, el('span', {}, t('tpl.share.summary')), shSum),
+      el('label', { className: 'bc-dlg-field' }, el('span', {}, t('tpl.share.version')), shVer), el('p', { className: 'bc-muted' }, t('tpl.share.note')));
+    share.addEventListener('change', () => { shBox.hidden = !share.checked; });
     const err = el('p', { className: 'bc-input-err', role: 'alert' });
     const dlg = el('dialog', { className: 'bc-dialog', 'data-tpl-dialog': '', 'aria-labelledby': 'bc-tpl-h' },
       el('form', { method: 'dialog' }, el('h2', { className: 'bc-h', id: 'bc-tpl-h' }, t('tpl.save.title')), el('p', {}, t('tpl.save.lede')),
         el('label', { className: 'bc-dlg-field' }, el('span', {}, t('tpl.name')), nm),
         el('p', {}, el('label', {}, dl, ' ', t('tpl.download'))), el('p', {}, el('label', {}, def, ' ', t('tpl.default'))),
+        el('p', {}, el('label', {}, share, ' ', t('tpl.share'))), shBox,
         el('p', { className: 'bc-muted' }, t('tpl.keeps')), err,
         el('p', { className: 'bc-lib-actions' }, el('button', { type: 'submit', className: 'btn-plot btn-sm-cc', value: 'ok', 'data-tpl-ok': '' }, t('tpl.save')), el('button', { type: 'submit', className: 'btn-line btn-sm-cc', value: 'cancel' }, t('dialog.cancel')))));
     const done = new Promise((ok) => dlg.addEventListener('close', () => { dlg.remove(); ok(dlg.returnValue); }));
@@ -38,6 +47,11 @@ export function mountTemplates({ el, t, status, WebIFC, IfcModel, currentBytes, 
       const tb = await templateBytes(bytes, { WebIFC, IfcModel, name, style: readStyle() });
       const id = await putTemplate({ name, bytes: tb });
       if (def.checked) { setOne('template', id); setOne('start', 'template'); }
+      if (share.checked) {
+        const r = kitItem({ type: 'project-template', name, app: 'bimcraft', summary: shSum.value.trim(), ifcText: new TextDecoder().decode(tb), version: shVer.value.trim() || '0.1.0' });
+        if (!r.ok) status(t('tpl.share.err', { why: r.errors[0] }), true);
+        else { const f = name.replace(/[\\/:*?"<>|]+/g, '-') + ' (Library template).json'; download(f, new TextEncoder().encode(JSON.stringify(r.item, null, 1) + '\n'), 'application/json'); status(t('tpl.share.saved', { file: f })); return; }   // i18n-ignore: a file name
+      }
       if (dl.checked) download(name.replace(/[\\/:*?"<>|]+/g, '-') + ' (template).ifc', tb, 'application/x-step');   // i18n-ignore: a file name
       status(t('tpl.saved', { name, kb: Math.max(1, Math.round(tb.length / 1024)) }));
     } catch (e) { status(e.key ? t(e.key) : String(e.message || e), true); }

@@ -35,6 +35,18 @@ export const ENGINE = {
   level: { sel: '[data-lv-addmany]', draw: true },     // Add levels… (the Levels panel's dialog)
   phases: { open: '[data-eg59-details]' },             // EG.59 renovation phases (left panel)
   materials: { sel: '[data-materials-menu]' },         // the material library
+  // 0.10 (bk-tools-a-10, owner 2026-11-11 "build the missing tools"): the Room & Area, Opening and Model panels' planned tools are real now
+  room: { tool: 'room' }, roomseparator: { tool: 'roomsep' }, tagroom: { tool: 'tagroom' },
+  area: { tool: 'area' }, areaboundary: { tool: 'areabound' }, tagarea: { tool: 'tagarea' },
+  shaft: { tool: 'shaft' }, vertical: { tool: 'vopening' }, modelgroup: { tool: 'mgroup' },
+  wallopening: { tool: 'wsopen' },                     // 0.9 WT.6: a rectangular opening in a wall (wall-shape-view-ui.js)
+  // 0.10 (bk-tools-b-10): curtain systems (curtain-ui.js) and the work plane with what is drawn on it (workplane-ui.js)
+  curtain: { tool: 'curtain' }, curtaingrid: { tool: 'curtaingrid' }, mullion: { tool: 'mullion' },
+  byface: { sel: '[data-mtool="byface"]' }, workplane: { sel: '[data-mtool="workplane"]' },   // these two also work in the 3D view (a click on a face): the view shown stays as it is
+  showplane: { sel: '[data-wp-show]', draw: true }, referenceplane: { tool: 'refplane' }, viewer: { sel: '[data-wp-viewer]', draw: true },
+  modeltext: { tool: 'modeltext' }, modelline: { tool: 'modelline' },
+  // 0.10 BT.10 / BT.11 (owner 2026-11-12): the View tab's Elevation (an elevation marker, res-ui.js) and Tile Views (the plan and the 3D view side by side)
+  elevation: { tool: 'elevation' }, tile: { sel: '[data-model-layout="split"]', draw: true },
   rcp: { kind: 'rcp' },   // the level's reflected ceiling plan: the Draw bar's plan-kind choice ([data-model-viewkind])
 };
 

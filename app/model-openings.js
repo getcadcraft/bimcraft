@@ -37,6 +37,7 @@ import { round } from './model-write.js';
 import { readWalls, WALL_PSET, wallLevelsPassed } from './model-walls.js';
 import { readLevels } from './model-levels.js';
 import { t as tr } from './i18n.js';
+import { FLOOR, openingAdvice, advise } from './draw-advice.js';   // 0.10 BK.73
 import { DOOR_TYPES, WINDOW_TYPES, openingType, openingTypeName, handKind } from './opening-types.js';
 import { familyFor, familyIndex, sizeTypeFor, evaluateFamily, bodyItems, sizeValues, evalCtx, readInstance, writeInstance, instanceValues } from './family-model.js';
 import { hostFrame, hostOffset, openingCut, wallGeom } from './model-arcs.js';
@@ -408,7 +409,8 @@ export function updateOpening(w, guid, ch = {}) {
   if (ch.values && typeof ch.values === 'object') { op.values = { ...op.values, ...ch.values }; if (Number.isFinite(ch.values.Width) && !(ch.width > 0)) op.width = ch.values.Width; if (Number.isFinite(ch.values.Height) && !(ch.height > 0)) op.height = ch.values.Height; }
   if (ch.hand === 'a' || ch.hand === 'b') op.hand = ch.hand;
   if (ch.face === 'left' || ch.face === 'right') op.face = ch.face;
-  if (!(op.width >= 100 && op.height >= 100)) throw Object.assign(new Error('model.err.small'), { key: 'model.err.small' });
+  if (!(op.width >= FLOOR && op.height >= FLOOR)) throw Object.assign(new Error('model.err.small'), { key: 'model.err.small' });   // 0.10 BK.73: under 100 mm is unusual, not impossible
+  advise('opening', openingAdvice(op), op.guid ? { id: op.guid, label: op.kind === 'window' ? 'Window' : 'Door' } : null);   // i18n-ignore: IFC names
   // another wall: the opening is related to it, placed relative to it
   if (ch.wall && ch.wall !== host.guid) {
     const to = walls.find((x) => x.guid === ch.wall);

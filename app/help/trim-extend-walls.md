@@ -27,7 +27,7 @@ Tidy the walls you drew: cut back a wall that runs past another, lengthen one th
 ## Good to know
 
 - Walls are drawn on their center line, so they are trimmed and extended along it: a wall meets the other wall's center line, and the joint is cleaned into a T or an L.
-- BimCraft says why when it cannot do it: the two walls are parallel, the wall's line passes beside the other wall, a door or window is in the way (move or delete it first), or what is left would be shorter than 50 mm.
+- BimCraft says why when it cannot do it: the two walls are parallel, the wall's line passes beside the other wall, a door or window is in the way (move or delete it first), or nothing would be left of the wall (under 1 mm). A wall left shorter than 50 mm is made, with a warning in Problems: see [Drawing advice](topic:drawing-advice).
 - Only walls drawn in BimCraft can be trimmed or extended.
 
 See also [Draw walls](topic:draw-walls) and [Change a wall, door or window](topic:change-a-wall-or-door).

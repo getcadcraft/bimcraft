@@ -19,6 +19,8 @@
  */
 import { readIfcx, writeIfcx, parseIfcx, globalIdToUuid, uuidToGlobalId, uuidFromText, isUuid, isRigid, A } from './ifcx/index.js';
 import { lengthUnitMm } from './ifc-util.js';
+import { effectiveCodes } from './classify-model.js';   // 0.10 BK.94: the codes of drawn elements too, not only imported ones
+import { SYSTEM_IDS } from './classify/classify.js';
 
 const IFCX_SET = 'IFCX';
 const IFC_SET = 'Pset_IFCX';
@@ -225,6 +227,8 @@ export async function bimIfcx(entries, { name = 'model', matrixOf = () => null, 
       st.placement = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, st.elevation, 1]];
       bld.storeys.push(st); storeyOf.set(s.id, st); report.storeys++;
     }
+    // 0.10 BK.94: each element's Uniclass / OmniClass / UniFormat code (its own, else its type's, else the project default), under the system's short name
+    const codes = SYSTEM_IDS.map((s) => { try { return [s, effectiveCodes({ api, mid }, s)]; } catch { return [s, new Map()]; } });
     const runs = new Map();
     for (const bt of M.batches) {
       const E = bt.elems;
@@ -240,6 +244,7 @@ export async function bimIfcx(entries, { name = 'model', matrixOf = () => null, 
       const gid = sv(ln.GlobalId);
       const el = { id: gid ? globalIdToUuid(gid) : null, key: '', name: sv(ln.Name) || cls, nameSource: 'key', ifcClass: cls, host: null, placement: null, props: {}, quantities: {}, classifications: [], material: null, color: null, opacity: null, description: sv(ln.Description) || '', extra: {}, raw: [], meshes: [] };
       el.key = el.name;
+      for (const [s, m] of codes) { const c = m.get(id); if (c) el.classifications.push({ system: s, code: c.code, uri: '' }); }
       await readSets(api, mid, id, el, mm);
       // one mesh per colour, points in scene metres, Z up
       const groups = new Map();

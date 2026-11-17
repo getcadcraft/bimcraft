@@ -25,7 +25,7 @@ Change what is in an IFC model: take out elements you do not want, copy a wall o
 ## What goes with an element
 
 - **Parts:** a stair takes its flights, a curtain wall its panels, anything made of parts takes them all.
-- **Openings:** a wall takes the openings cut in it. Deleting a door or window also takes the opening it filled, so the wall closes, as it does in an authoring program. Deleting a wall leaves its doors and windows where they were.
+- **Openings:** a wall takes the openings cut in it. Deleting a door or window also takes the opening it filled, so the wall closes, as it does in an authoring program. Deleting a wall drawn in BimCraft also deletes its doors and windows and re-joins the walls left. Deleting a wall from a file made elsewhere leaves its doors and windows where they were.
 - **Data:** a copy has the same type, materials, property sets and quantities as the original, and a new GlobalId. Changing a value on the copy later leaves the original alone.
 - **Library items** keep their library data; a copy gets the next free item number, and a cut item pasted back keeps its own.
 
@@ -39,7 +39,8 @@ Change what is in an IFC model: take out elements you do not want, copy a wall o
 
 - Copies use the same geometry as the original (IFC lets elements share it), so the file grows very little.
 - Building elements paste into the model they were copied from, in the same tab. To use placed library items in another model, copy one item at a time: see [Copy, paste and duplicate library items](topic:copy-paste).
-- Storeys, spaces, buildings and the site cannot be deleted or copied. Pick the elements in them instead.
+- Storeys, spaces, buildings and the site cannot be deleted or copied. Pick the elements in them instead. A room drawn in BimCraft comes from the walls round it: delete a wall to join two rooms.
+- Walls, doors and windows drawn with BimCraft's own wall, door and window tools cannot be copied, cut or duplicated yet; the status line says so. Draw them again. Delete works.
 - Copy also puts the names and properties of what you copied on your clipboard as text, to paste into a spreadsheet or an e-mail.
 
 ## Common mistakes

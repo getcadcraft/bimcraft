@@ -3,7 +3,8 @@
 /**
  * doc-templates.js — the example trade templates for Documents from the model (0.8 SU.889, session sx-tags).
  * Each: { id, name (lang key), trade (lang key), tags (definitions it reads: "Add this template's tags" adds the missing ones), text }.
- * Templates per trade in the Library (the plan's step) are not built yet: these two ship with BimCraft, and a person loads
+ * Templates per trade in the Library (the plan's step) are not built yet: these four ship with BimCraft (the last two are 0.10 BK.47:
+ * the working-drawing schedules and the specification), and a person loads
  * their own .md file or keeps an edited one in this browser.
  */
 export const TEMPLATE_TAGS = {
@@ -95,9 +96,97 @@ Every wall has a finish.
 Areas are net of openings as the model's quantity sets state them. Allow for waste and laps when ordering.
 `;
 
+// 0.10 BK.47 (bk-r3-schedules-10): Stage 5 working drawings. The schedules come from the model in the office layout
+// ({{schedule <key or the name of a saved set-up>}}), the specification from the types in use ({{specification}}).
+const WORKING = `# Working drawing schedules: {{project}}
+
+File {{file}}, {{date}}.
+
+## Doors
+
+{{schedule doors}}
+
+## Windows
+
+{{schedule windows}}
+
+## Finishes by room
+
+{{schedule roomfinishes}}
+
+## Finish quantities
+
+{{schedule finishtotals}}
+`;
+const SPECIFICATION = `# Specification: {{project}}
+
+File {{file}}, {{date}}.
+
+{{specification}}
+`;
+
+// 0.10 BK.63 / BK.170 (bk-r3-stages-10): a client pack and a stage report. Their fields come from pack-ui.js: the stage, the massing
+// options compared on area and cost, areas by level, the sheets with their revisions, the issue history, what changed since the last issue.
+const CLIENT_PACK = `# Client pack: {{project}}
+
+Stage: {{stage}}. File {{file}}, {{date}}.
+
+## The options compared
+
+{{options}}
+
+## Floor areas
+
+{{areas}}
+
+## Rooms
+
+{{schedule rooms}}
+
+## Drawings
+
+{{sheets}}
+`;
+const STAGE_REPORT = `# Stage report: {{project}}
+
+Stage: {{stage}}. File {{file}}, {{date}}.
+
+## Floor areas
+
+{{areas}}
+
+## Options
+
+{{options}}
+
+## Drawings and their revisions
+
+{{sheets}}
+
+## Issue history
+
+{{issues}}
+
+## Changed since the last issue
+
+{{changes}}
+
+## Doors
+
+{{schedule doors}}
+
+## Windows
+
+{{schedule windows}}
+`;
+
 export const TEMPLATES = [
   { id: 'doors', name: 'sx.su889.tpl.doors', trade: 'sx.su889.trade.joinery', tags: [TEMPLATE_TAGS.doorFinish, TEMPLATE_TAGS.fire, TEMPLATE_TAGS.hardware], text: DOORS },
   { id: 'walls', name: 'sx.su889.tpl.walls', trade: 'sx.su889.trade.finishes', tags: [TEMPLATE_TAGS.wallFinish, TEMPLATE_TAGS.lining, TEMPLATE_TAGS.fire], text: WALLS },
+  { id: 'working', name: 'sx.su889.tpl.working', trade: 'sx.su889.trade.working', tags: [], text: WORKING },
+  { id: 'spec', name: 'sx.su889.tpl.spec', trade: 'sx.su889.trade.working', tags: [], text: SPECIFICATION },
+  { id: 'clientpack', name: 'sx.su889.tpl.clientpack', trade: 'sx.su889.trade.presentation', tags: [], text: CLIENT_PACK },
+  { id: 'stagereport', name: 'sx.su889.tpl.stagereport', trade: 'sx.su889.trade.presentation', tags: [], text: STAGE_REPORT },
 ];
 
 /** The definitions a template reads that the project does not have yet (by name, case-blind). */

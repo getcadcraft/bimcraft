@@ -147,6 +147,8 @@ export function scanProgress(o) {
 }
 
 /** The colour of a state for the model: [r, g, b] 0–255 (built green, partly amber, missing red, unseen grey). */
+/** 0.10 BK.49 (bk-r3-checks-10): the elements a scan MATCHES within tolerance: seen as built and their mean offset within tol ('ok'). → [key] */
+export const matchedKeys = (res) => (res?.ok ? res.rows.filter((r) => r.state === 'built' && r.dev === 'ok').map((r) => r.key) : []);
 export const STATE_COLORS = { built: [76, 160, 90], partly: [226, 168, 52], missing: [208, 70, 62], unseen: [150, 150, 150] };
 
 /** A CSV of the rows (key → name through names). Cells starting with = + - @ get a leading apostrophe. */

@@ -91,6 +91,9 @@ import { t, has } from './i18n.js';
 import { IfcModel, keyOf, KEY_SPAN } from './ifc-model.js';
 import { IfcEditor } from './ifc-edit.js';
 import { newBuilding, stackLevels, levelsProblem } from './new-model.js';   // 0.5 part 3: File › New building
+import { firstSheet } from './new-defaults.js';   // 0.10 BK.74: what a new building starts with
+import { startBlock, startFor, startSheet, policyMark } from './new-defaults-ui.js';   // 0.10 DP.1 (bk-defaults-10): + the person's Default Policies, asked through defaults-hook.js
+import { onDefaults } from './defaults-hook.js';
 import { mountModel } from './model-ui.js';
 import { mountWorkspaces } from 'cc-workspace';   // the shell's layout engine (assets/js/app-workspace.js; 0.7 WS.6)
 import { createBimcraftWorkspace } from './workspace-bimcraft.js';
@@ -99,12 +102,23 @@ import { mountRes } from './res-ui.js';   // 0.5 part 4, track RC: the residenti
 import { isCloudFile, cloudSignature, CLOUD_ACCEPT } from './cloud-types.js';   // 0.6 PF (session pointcloud): which files are point clouds
 import { mountCoords } from './coords-ui.js';   // 0.6 DF.15 (bim-draw): coordinate readouts, project origin and survey point
 import { mountTrim } from './model-trim-ui.js';   // 0.6 DF.17 (bim-draw): Modify › Trim / extend, Corner
+import { mountStages } from './stages/stages-ui.js';   // 0.10 BK.176 / BK.105 / BK.110 / BK.111 / BK.113 / BK.178 (stages-10): the project stages panel (landed by bim-core-10)
+import { listTemplates, getTemplate } from './template-store.js';
+import { mountPartLinks } from './part-link-ui.js';   // 0.10 BK.179 / SU.1814 (bim-part-link-10): Send to PartCraft and back
+import { mountWallFinishes } from './finishes/finishes-ui.js';   // 0.10 BK.25-28, BK.130 (bim-finishes-10): wall finishes, substrates, tile set-out (landed by bim-core-10)
 import { mountWallTools } from './wall-tools-ui.js';   // 0.9 WT.2-WT.7 (walls-09): the wall tool's recipes on lib/walls
 import { mountWallShape } from './wall-shape-ui.js';   // 0.9 WT.6 (walls-09): the wall Shape tools in Properties
 import { mountStairSketch } from './stair-sketch-ui.js';   // 0.8 SU.1055 (bim-08): a stair from a sketch
 import { mountPens } from './pens-ui.js';
 import { mountReportAs } from './report-as.js';
+import { mountClassify } from './classify-ui.js';   // 0.10 BK.94 (bk-content-10): classification codes
+import { mountVerify } from './verify-ui.js';   // 0.10 BK.64 / BK.49 (bk-r3-checks-10): unverified → checked → field-verified
+import { mountAudit } from './audit-ui.js';
+import { mountLod } from './lod/lod-ui.js';   // 0.10 BK.13-BK.101 (bim-lod-10): Level of development, milestones, advice (landed by bim-core-10)   // 0.10 BK.65 / BK.20 (bk-r3-checks-10): the audit rule sets as advisory Problems
+import { mountTypePacks } from './type-pack-ui.js';   // 0.10 BK.97 (bk-content-10): type packs
+import { mountLibraryKinds } from './library-kinds-bim.js';   // 0.10 BK.21 / BK.98 (bk-r3-library-10): a Library Type, project template, Quick Kit
 import { mountTemplates } from './template-ui.js';
+import { mountWallShapeViews } from './wall-shape-view-ui.js';   // 0.9 WT.6 (walls-shape-10): the Shape tools in elevation, section and 3D
 import { mountElevEdit } from './elev-edit-ui.js';   // 0.9 SU.1123 (bim-views-09)   
 import { bindWorkStyle } from './work-style-ui.js';   // 0.9 D8.12 (bim-views-09): the working style in Settings   // 0.9 D8.12-D (bim-views-09): project templates   // 0.9 D8.12-C (bim-views-09): Report as another IFC class   // 0.8 SU.1055 (bim-08): pen overrides per view
 import { mountPicture } from './picture-ui.js';
@@ -114,13 +128,24 @@ import { mountModify } from './modify-ui.js';   // 0.8 D8.3 (bim-08): Move, Alig
 import { mountSymbols } from './symbols-ui.js';   // 0.8 GH.3-F/G (gh3sym_PART_3): the symbol palette (electrical, plumbing), lib/symbols
 import { mountGrids } from './model-grids-ui.js';   // 0.6 DF.16 (bim-draw): Build › Grid, Column
 import { mountPlanMeasure } from './model-measure-ui.js';   // 0.9 D9.3: Measure on the plan
+import { mountRollover } from './rollover-bim.js';   // 0.10 BK.33: rollover information on the plan
 import { mountFloors } from './model-floors-ui.js';   // 0.6 DF.18 (bim-draw): Build › Floor by outline, Ramp
 import { mountPanelFocus } from './panel-focus.js';   // 0.9 FX.55: panel sections close each other; a lock keeps one open
 import { mountSite } from './model-site-ui.js';   // 0.6 DF.20 (bim-draw): Build › Site, Add levels…
+import { mountSiteConstraints } from './model-site-constraints-ui.js';   // 0.10 BK.104 (bk-stages-10): building lines, servitudes, the wall-crossing warning
 import { mountSiteMass } from './model-site-mass-ui.js';   // 0.7 LC.1 B2 (massing): a CivilCraft building mass in Properties; Develop this mass
 import { mountMep } from './mep-ui.js';   // 0.6 DF.29 (bim-draw): Build › Pipe, Duct, Valve
+import { mountAnnoScale } from './anno-scale-ui.js';   // 0.10 BK.10: annotation sizes from paper heights (the building's standard)
 import { mountViewsBim } from './views-ui.js';   // 0.6 DF.19 (bim-draw): project browser, view ranges, templates, your own sheets
 import { mountWallAssemblies } from './wall-assemblies-ui.js';
+import { mountQuantities } from './quantities-ui.js';
+import { mountScheduleLayouts } from './schedule-layouts-ui.js';   // 0.10 BK.39 / BK.29 / BK.149 / BK.142 / BK.47 (bk-r3-schedules-10)
+import { mountElementTypes } from './element-types-ui.js';   // 0.10 BK.24 / BK.15 (bk-r3-types-10)
+import { mountAssetSymbols } from './asset-symbol-ui.js';   // 0.10 BK.23 / BK.22 (bk-r3-types-10)
+import { bimcraftSymbolSets } from './symbols-ui.js';   // 0.10 BK.84 / BK.11 / BK.40 (bk-quantities-10)
+import { mountWorkPlane } from './workplane-ui.js';   // 0.10 bk-tools-b-10: Set / Show Work Plane, Reference Plane, Work Plane Viewer, Model Line, Model Text
+import { mountCurtain } from './curtain-ui.js';   // 0.10 bk-tools-b-10: Curtain System, Curtain Grid, Mullion, By Face
+import { mountSpaces } from './spaces-ui.js';   // 0.10 (bk-tools-a-10): Room, Room Separator, Tag Room, Area, Area Boundary, Tag Area, Shaft, Vertical Opening, Model Group
 import { mountWallDimensions } from './wall-dimensions-ui.js';
 import { mountFamilies } from './family-ui.js';   // 0.6 DC.114 (bim-families_PART_2): families on IFC types, their sizes, the editor
 import { mountComforts } from './comforts-ui.js';   // 0.6 round 2 (bim-comforts_PART_2): move / turn placed library items, dormers
@@ -164,7 +189,7 @@ import { CLIP_KEY, placementClip, elementsClip, pasteMove, readClip, writeClip, 
 import { boundsOf, HIDDEN } from './ifc-vis.js';
 import { cleanVolume, FACE_AXES, MAX_CELLS, MAX_PLANES, MAX_TILT, planeFromPoint, boxGrips, dragDelta, dragBox } from './section-volume.js';
 import { inv4, placementMatrix } from './ifc-util.js';
-import { ids as idsOfType } from './ifc-util.js';   // 0.7.1 → 0.8: IfcProject, for the accepted problems' property set
+import { ids as idsOfType, lengthUnitOf } from './ifc-util.js';   // 0.7.1 → 0.8: IfcProject, for the accepted problems' property set
 import { distance, ifcDelta, fmtLength, fmtArea, axisSnap, orthoPoint } from './measure.js';
 import { readGeoref, fileToMap, siteLonLat, datumOf, dms, viewerToFile } from './ifc-geo.js';
 import { writeBcf, readBcf, newGuid, toIfcPoint, toIfcDir, fromIfcPoint, fromIfcDir } from './bcf.js';
@@ -176,10 +201,13 @@ import { parseTasks, matchTasks, statusAt, span, templateCsv, dayText, groupsOf,
 import { find, cleanSets, suggestions, OPS, SETS_KEY } from './ifc-find.js';
 import { elementsOf, clashes } from './clash.js';
 import { mountStructure } from './mep/structure-ui.js';   // 0.7 LC.9 (mep-07): MEP against the structure in the Clash check
+import { mountAutoroute } from './mep/autoroute-ui.js';   // 0.10 MEP.1 (#1556): route ducts from an outlet to its terminals, under the MEP × structure section
 import { mountClashFix } from './clashfix-bim.js';   // 0.9 EG.42 (clash-assistants-09): one assistant per discipline to settle clashes
 import { mountHvac } from './mep/hvac-ui.js';   // 0.8 SU.888 (sx-mep): split / VRF / fan-coil pack (mep/hvac.js adds the kinds to Build › Equipment), Line set, Line set sizes
 import { runChecks, cleanRules } from './ifc-checks.js';
 import { checkProblems, bimMarkers } from './problems-bimcraft.js';   // 0.7.1 → 0.8: the shell's Problems (docs/0.8-PROBLEMS-SPEC.md)
+import { onAdvice, adviceProblems } from './draw-advice.js';
+import { readAdvice } from './draw-advice-model.js';   // 0.10 BK.73: unusual sizes are advice in Problems, never a refusal
 import { mountIds } from './ids-ui.js';   // 0.7.1 71.25: Model › Check against IDS… (cc-ids in ./ids/)
 import { rules as rulesProvider } from './rules-hook.js';
 import { read43, summary as summary43, quantitiesFile as quantities43 } from './ifc/ifc43.js';   // 0.8 SU.882 (ifc_PART_4)
@@ -190,6 +218,7 @@ import { archicadVerdict } from './bundle-open.js';   // 0.6 DF.12 (session bim-
 import { mountBundle } from './bundle-view.js';   // 0.6 DF.12 (b): project bundles (session bim-interop)
 import { mountAnalysisBim } from './analysis-bim-ui.js';   // 0.6 LC.4: frame analysis (session lc-structure)
 import { mountFieldPoints } from './layout-bim-ui.js';     // 0.6 LC.22: field points + as-built (session lc-structure)
+import { handoverBundleFiles } from './handover-docs.js';   // 0.10 BK.114: attached handover files go into the project bundle
 import { mountAssets } from './assets-bim-ui.js';     // 0.6 LC.12: assets + maintenance record (session bim-extra_PART_2)
 import { mountEnergyEp } from './energy-ep-ui.js';   // 0.8 EG.13 (energy_PART_2 mount line 1)
 import { carbonTotal } from './carbon-calc.js';   // EG.30 running totals
@@ -198,8 +227,11 @@ import { mountCarbon } from './carbon-ui.js';   // EG.14
 import { mountCost5d } from './cost5d-ui.js';   // EG.17
 import { mountPv } from './pv-ui.js';   // EG.15
 import { mountMepCalc } from './mep-calc-ui.js';   // 0.8 EG.1–EG.4 Calculations tab (mep_PART_2's line 2)
+import { mountMassOptions } from './mass-options-ui.js';   // 0.10 BK.44 (bk-r3-stages-10): massing options kept side by side in the model, one current
 import { mountFurnish, mountProgram } from './design-ui.js';   // 0.8 EG.60 furnish a room, EG.58 room program (session bim_PART_2)
 import { mountPermit } from './permit-ui.js';   // 0.8 EG.44 permit package (session bim_PART_2)
+import { mountIssues } from './issue-ui.js';   // 0.10 BK.46 / BK.48 (bk-r3-stages-10): issued sets, what changed since, the drawing changelog, records against an issue
+import { mountPack } from './pack-ui.js';   // 0.10 BK.63 / BK.170 (bk-r3-stages-10): client pack and stage report, the option comparison table
 import { mountLifecycle } from './lifecycle-ui.js';   // 0.8 EG.45 life-cycle view (session bim-sim_PART_2)
 import { mountHazard } from './hazard-ui.js';   // 0.8 EG.47 hazard playback (session bim-sim_PART_2)
 import { mountAcoustics } from './acoustics-ui.js';   // 0.8 EG.49 room acoustics (session bim-sim_PART_2)
@@ -215,6 +247,8 @@ import { wireOffer as addonsOffer } from './addons-file.js';   // 0.8 AL.6
 import { mountUndoHook } from './undo-hook.js';   // 0.8 EG.77: tells Studio each finished step (round 5)
 import { startAddons } from './addons/bimcraft-api.js';   // 0.5 AO.7 (session addons' module; manifest "addons": "own")
 import { mountMachineCard } from './compute-bim.js';   // 0.7 CU.1: Settings › Rendering › Your machine (compute/probe.js)
+import { mountSidePanels } from './side-panels-ui.js';
+import { mountXrPaint } from './xr-paint-ui.js';
 
 /** The library needs getcadcraft.com's API: off in the self-hosted browser edition (devshell `#cc-edition` {library: false}). */
 const libraryOn = (() => { try { const ed = JSON.parse(document.getElementById('cc-edition')?.textContent || 'null'); return !ed || ed.library !== false; } catch { return true; } })();
@@ -284,6 +318,9 @@ function init(root) {
   }
   let swapTarget = null;   // { id, name, uuid, version, variant, library } after "Swap item…" (the library item it is, for its other variants)
   let modelTag = '';       // this open IFC's session tag: a clip copied from it can be pasted "like" its source
+  let classifyUi = null;   // 0.10 BK.94: classify-ui.js
+  let verifyUi = null, auditUi = null, lodUi = null;   // 0.10 BK.64 / BK.49 / BK.65 / BK.20: verify-ui.js, audit-ui.js
+  let annoUi = null;   // 0.10 BK.10 (anno-scale-ui.js)
   let workspace = null, planViews = null, coreCommands = null, toolbox = null, reportAsUi = null;   // 0.9: reportAsUi = report-as.js
   let modelUi = null;      // Draw (0.5 track BM, model-ui.js): mounted at the end of init
   let coordsUi = null;     // where am I working (0.6 DF.15, coords-ui.js): mounted with the 3D view
@@ -484,6 +521,16 @@ function init(root) {
 
   // ---- Choosing files and folders ----
   root.querySelectorAll('[data-pick]').forEach((b) => b.addEventListener('click', () => ui.file.click()));
+  // 2026-11-12: "Try a sample file" on the empty page opens a small real IFC house through the normal open path (also in the command palette, Ctrl+K)
+  const openSampleHouse = async () => {
+    try {
+      const r = await fetch(new URL('./samples/sample-house.ifc', import.meta.url));
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      await open(new File([await r.blob()], 'sample-house.ifc', { type: 'application/octet-stream' }), 'sample-house.ifc');
+    } catch (err) { status(t('ui.hint.trysample.fail', { why: err.message }), true); }
+  };
+  root.querySelectorAll('[data-sample-open]').forEach((b) => b.addEventListener('click', openSampleHouse));
+  { const regSample = () => window.ccPalette?.register?.([{ id: 'bim-sample', label: t('ui.hint.trysample'), group: 'file', keywords: 'sample example demo try house ifc', run: openSampleHouse }]); if (window.ccPalette) regSample(); else window.addEventListener('load', regSample); }
   root.querySelectorAll('[data-pick-folder]').forEach((b) => b.addEventListener('click', () => {
     if (!canPickFolder()) { ui.folderInput.click(); return; }
     guard(async () => {
@@ -503,15 +550,19 @@ function init(root) {
   const metricNow = () => { const u = getDisplayUnits(); return ['mm', 'cm', 'm'].includes(u) || (!['ftin', 'ftdec', 'in'].includes(u) && !/^en-(US|LR|MM)$/i.test(navigator.language || 'en-US')); };
   async function askNewBuilding() {
     if (await keepEdits()) return;
-    const metricDefault = metricNow();
-    const field = (label, input, hint) => el('label', { className: 'bc-new-field' }, el('span', {}, label), input, hint ? el('span', { className: 'bc-sub' }, hint) : null);
+    // 0.10 DP.1: what the person's Default Policies set (levels, height, names, wall type, sheet, tool, units); with none set `start` is new-defaults.js as before
+    const start = startFor({ metricOwn: metricNow(), unitsNow: getDisplayUnits() });
+    const metricDefault = start.metric;
+    const field = (label, input, hint, mark) => el('label', { className: 'bc-new-field' }, el('span', {}, label), input, hint ? el('span', { className: 'bc-sub' }, hint) : null, mark || null);
     const name = el('input', { type: 'text', value: t('new.default.name'), maxLength: 120, required: true, 'data-new-name': '' });
-    const count = el('input', { type: 'number', value: '2', min: '1', max: '200', step: '1', required: true, 'data-new-levels': '' });
-    const height = el('input', { type: 'text', value: metricDefault ? '3000 mm' : "10'-0\"", required: true, 'data-new-height': '' });   // i18n-ignore: a length
+    const count = el('input', { type: 'number', value: String(start.levels), min: '1', max: '200', step: '1', required: true, 'data-new-levels': '' });
+    const height = el('input', { type: 'text', value: start.heightText, required: true, 'data-new-height': '' });   // i18n-ignore: a length
     const err = el('p', { className: 'bc-new-err', role: 'alert' });
     // 0.9 D8.12-D: start from a blank building or one of your templates (template-ui.js); a template brings its own levels
-    const levelFields = [field(t('new.levels'), count), field(t('new.height'), height, t('new.height.hint'))];
-    const from = await templates.startField((on) => { for (const f of levelFields) { f.hidden = on; f.style.display = on ? 'none' : ''; } });
+    const levelFields = [field(t('new.levels'), count, null, policyMark(el, start, 'levels') || policyMark(el, start, 'levelName')), field(t('new.height'), height, t('new.height.hint'), policyMark(el, start, 'height'))];
+    // 0.10 BK.74: what it starts with, said before Create: the units, the Wall tool's type (a list to change it), the first sheet
+    const starts = startBlock({ el, t, metric: metricDefault, units: start.units || getDisplayUnits(), wallKey: modelUi?.wallDefault?.(), start });
+    const from = await templates.startField((on) => { for (const f of levelFields) { f.hidden = on; f.style.display = on ? 'none' : ''; } starts.show(!on); });
     const result = await new Promise((done) => {
       const dlg = el('dialog', { className: 'bc-dialog bc-new', 'aria-labelledby': 'bc-new-h' },
         el('form', { method: 'dialog', noValidate: true },
@@ -520,17 +571,18 @@ function init(root) {
           field(t('new.name'), name),
           from.row,
           ...levelFields,
+          ...starts.rows,
           err,
           el('p', { className: 'bc-lib-actions' },
             el('button', { type: 'submit', className: 'btn-plot btn-sm-cc', value: 'ok', 'data-new-ok': '' }, t('new.create')),
             el('button', { type: 'submit', className: 'btn-line btn-sm-cc', value: 'cancel', formNoValidate: true }, t('dialog.cancel')))));
       const read = () => {
         const choice = from.choice();
-        if (choice) return { bad: !name.value.trim() ? 'new.err.name' : choice.missing ? 'new.from.pick' : null, levels: [], name: name.value.trim(), choice };
-        const n = Math.round(Number(count.value)), h = parseLength(height.value, metricDefault ? 1 : 304.8);
-        const levels = Number.isFinite(n) && n >= 1 ? stackLevels(n, h, (i) => t('new.level', { n: i + 1 })) : [];
+        if (choice) return { bad: !name.value.trim() ? 'new.err.name' : choice.missing ? 'new.from.pick' : null, levels: [], name: name.value.trim(), choice, wallType: starts.wallType() };
+        const n = Math.round(Number(count.value)), h = start.from.height && height.value === start.heightText ? start.height : parseLength(height.value, metricDefault ? 1 : 304.8);   // an untouched policy height is used exactly (no trip through text)
+        const levels = Number.isFinite(n) && n >= 1 ? stackLevels(n, h, (i) => (start.levelName ? start.levelName(i) : t('new.level', { n: i + 1 }))) : [];
         const bad = !name.value.trim() ? 'new.err.name' : levelsProblem(levels);
-        return { bad, levels, name: name.value.trim() };
+        return { bad, levels, name: name.value.trim(), wallType: starts.wallType() };
       };
       dlg.querySelector('form').addEventListener('submit', (e) => {
         if (e.submitter?.value !== 'ok') return;
@@ -544,6 +596,8 @@ function init(root) {
       name.select();
     });
     if (!result) return;
+    modelUi?.setWallDefault?.(result.wallType);   // the Wall tool starts on the type the dialog showed
+    if (start.units) { const us = root.querySelector('[data-model-units]'); if (us && us.value !== start.units && [...us.options].some((o) => o.value === start.units)) { us.value = start.units; us.dispatchEvent(new Event('change')); } }   // 0.10 DP.1: the units policy of a new project
     const fileName = result.name.replace(/[\\/:*?"<>|]+/g, '-') + '.ifc';   // i18n-ignore: a file name
     if (result.choice) {   // 0.9 D8.12-D
       const made = await templates.build(result.choice, result.name);
@@ -556,14 +610,18 @@ function init(root) {
       modelUi?.show(true);
       return;
     }
-    const text = newBuilding({ name: result.name, siteName: t('new.site'), levels: result.levels, fileName, version: document.querySelector('[data-bimcraft]')?.dataset.version || '' });
+    const text = newBuilding({ name: result.name, siteName: t('new.site'), levels: result.levels, fileName, version: document.querySelector('[data-bimcraft]')?.dataset.version || '',
+      sheet: startSheet(start, { titleOf: (level) => t('res.sh.plan', { level }), levelName: result.levels.slice().sort((a, b) => a.elevation - b.elevation)[0].name }) });   // 0.10 BK.74: sheet A-101 with the lowest level's plan; DP.1: or what the sheet policies say, or none
     const data = new TextEncoder().encode(text);
     await openIfc(data, new File([data], fileName, { type: 'application/x-step' }), null);
     editor.isNew = true;   // unsaved until Save as IFC writes it (keepEdits, autosave and Save treat it like edits)
     renderChanges();
     status(t('new.done', { name: result.name, n: result.levels.length }));
     modelUi?.show(true);   // a new building opens with its plan, ready to draw
+    try { if (annoUi?.startFromOffice()) status(t('new.done', { name: result.name, n: result.levels.length })); } catch (e) { /* the building keeps BimCraft's own sizes */ }   // 0.10 BK.10: the office's paper heights (Default Policies), when set
+    if (start.tool === 'wall') modelUi?.useTool?.('wall');   // 0.10 DP.1: the "tool after Create" policy (not set: Select, as before)
   }
+  onDefaults(() => { try { modelUi?.refreshTypes?.(); } catch (e) { /* the plan is not up yet */ } });   // 0.10 DP.1: a starter-type LOD policy changed: the type lists show it
   root.querySelectorAll('[data-new]').forEach((b) => b.addEventListener('click', () => guard(askNewBuilding)));
   // 0.9 D8.12-D: Save as template (template-ui.js)
   const templates = mountTemplates({ el, t, status, WebIFC, IfcModel, currentBytes: () => (mode === 'ifc' && editor ? editor.save() : null), fileName: () => ifcName, download: (n, d, ty) => download(n, d, ty) });
@@ -594,7 +652,7 @@ function init(root) {
       if (unsavedIn(m.editor)) m.asDoc.changed(); else m.asDoc.clean();
     }
   }
-  offerRecovery({ autosave, status, t, onRecover: async (rec) => {
+  offerRecovery({ autosave, status, t, statusText: () => ui.status.textContent, onRecover: async (rec) => {
     const base = String(rec.meta?.name || 'model.ifc').replace(/\.ifc$/i, '');
     const data = rec.data instanceof Blob ? rec.data : new Blob([rec.data], { type: 'application/x-step' });
     await guard(() => open(new File([data], base + '.ifc', { type: 'application/x-step' }), null));
@@ -801,7 +859,9 @@ function init(root) {
     } else if (ext === 'obj') {
       await openObj(file, path);   // 0.8 SU.1055 (session bim-08): a Wavefront OBJ, opened as mesh elements of a small IFC
     } else if (ext === 'ifc' || startsWith(head, 'ISO-10303-21')) {
-      await openIfc(new Uint8Array(await file.arrayBuffer()), file, path);
+      const data = await ifcWithUnits(new Uint8Array(await file.arrayBuffer()), file);
+      if (!data) return;
+      await openIfc(data, file, path, { transfer: true });
     } else if (archicadVerdict(file.name, head)) {
       // 0.6 DF.12 (a): "ROF FDB " at offset 0 = an Archicad project for certain; the extension without it = renamed?
       throw Object.assign(new Error(t(archicadVerdict(file.name, head) === 'project' ? 'open.pln.project' : 'open.pln.renamed', { name: file.name })), { userFacing: true });
@@ -931,14 +991,17 @@ function init(root) {
   /** A Wavefront OBJ (0.8 SU.1055): obj-ifc.js reads it (metres, Y up), each OBJ object becomes a mesh element of a small IFC4
    *  model on one storey, and that model opens like any IFC. */
   async function openObj(file, path) {
+    // 0.10 BK.8 (units on import): an OBJ states no units. Ask before anything is built (the shell's one dialog, remembered per file); it was read as meters, unasked
+    const iu = window.ccImportUnits ? await window.ccImportUnits.resolve({ file, format: 'OBJ', stated: null, choices: ['mm', 'cm', 'm', 'in', 'ft'], suggest: 'm' }) : { unit: 'm', text: '' };
+    if (!iu) { status(t('obj.open.nounits', { name: file.name })); return; }
     status(t('obj.open.reading', { name: file.name }));
     await frame();
     let r;
-    try { r = (await import('./obj-ifc.js')).objToIfc(await file.text(), { name: file.name.replace(/\.obj$/i, '') }); }
+    try { r = (await import('./obj-ifc.js')).objToIfc(await file.text(), { name: file.name.replace(/\.obj$/i, ''), unit: iu.unit }); }
     catch (err) { throw Object.assign(new Error(t('obj.open.failed', { name: file.name, why: err && err.code ? t(err.code, err.vars) : String(err && err.message || err) })), { userFacing: true }); }
     await openIfc(new TextEncoder().encode(r.text), new File([r.text], file.name.replace(/\.obj$/i, '') + '.ifc', { type: 'application/x-step' }), path);   // i18n-ignore: a file name
     const left = Object.keys(r.read.skipped).map((k) => t('obj.skip.' + k));
-    status(t('obj.open.facts', { n: r.read.objects, tris: num(r.read.triangles) }) + (left.length ? ' ' + t('obj.open.skipped', { what: left.join(', ') }) : '') + (r.prisms ? ' ' + t('ifcsolids.kept', { n: r.prisms }) : ''));
+    status((iu.text ? iu.text + ' ' : '') + t('obj.open.facts', { n: r.read.objects, tris: num(r.read.triangles) }) + (left.length ? ' ' + t('obj.open.skipped', { what: left.join(', ') }) : '') + (r.prisms ? ' ' + t('ifcsolids.kept', { n: r.prisms }) : ''));
   }
 
   // ---- Folders ----
@@ -1023,7 +1086,31 @@ function init(root) {
     return viewer;
   }
   // ---- IFC ----
-  async function openIfc(data, file, path) {
+  /** 0.10 BK.8 (units on import): what the opened IFC says about its length unit, in words after "Opened …". A file that states none is
+   *  read in meters (the IFC standard's rule) and that is said: never a silent guess. */
+  function ifcUnitsSaid(file) {
+    if (ifcAnswered) { const s = ifcAnswered; ifcAnswered = ''; return s; }   // the person's answer, not the file's own statement
+    try {
+      const u = lengthUnitOf(ifc.api, model.modelID);
+      if (!u.stated) return ' ' + t('ifc.units.none', { file: file.name });
+      const id = { 1: 'mm', 10: 'cm', 1000: 'm', 25.4: 'in', 304.8: 'ft' }[Math.round(u.mm * 1e6) / 1e6];
+      return ' ' + t('ifc.units.stated', { unit: id ? window.ccImportUnits?.unitName(id) || id : t('ifc.units.mm', { mm: +u.mm.toPrecision(8) }) });
+    } catch (e) { return ''; }
+  }
+  /** 0.10 BK.8: an IFC that states no length unit is asked about before it is opened (the shell's one dialog, remembered per file) and the
+   *  answer is written into the model text (ifc-length-unit.js), so the reader and a later Save agree. → the bytes to load, or null (not answered). */
+  let ifcAnswered = '';
+  async function ifcWithUnits(data, file) {
+    ifcAnswered = '';
+    const U = await import('./ifc-length-unit.js');
+    if (!window.ccImportUnits || U.hasLengthUnit(data)) return data;
+    const a = await window.ccImportUnits.resolve({ file, format: 'IFC', stated: null, choices: ['mm', 'cm', 'm', 'in', 'ft'], suggest: 'm' });
+    if (!a) { status(t('ifc.units.notgiven', { file: file.name }), true); return null; }
+    try { data = U.stateLengthUnit(data, a.unit); ifcAnswered = ' ' + a.text; }
+    catch (e) { ifcAnswered = ' ' + t('ifc.units.none', { file: file.name }); }   // a file with no project to hold a unit: read as the standard says, and said
+    return data;
+  }
+  async function openIfc(data, file, path, { transfer = false } = {}) {   // transfer (0.10 PERF.23): `data` was just read from the file and nothing else holds it: no copy for the worker
     if (!ifc) {
       status(t('ifc.starting'));
       await frame();
@@ -1039,7 +1126,7 @@ function init(root) {
     models.length = 0;
     const lv = window.bimcraftLive?.live;   // Studio Live: another file opened here ends the session for this window; a joiner's snapshot doesn't
     if (lv && !window.bimcraftLive.joining) lv.client?.leave(); else lv?.reloading();
-    model = await ifc.load(data, (done, total) => { status(t('ifc.building', { done, total })); });
+    model = await ifc.load(data, (done, total) => { status(t('ifc.building', { done, total })); }, { transfer });
     refC = [...ifc.api.GetCoordinationMatrix(model.modelID)];
     await frame();
     showStage('ifc');
@@ -1071,6 +1158,7 @@ function init(root) {
     if (window.bimcraftLive?.joining) { window.bimcraftLive.joining = false; window.bimcraftLive.live?.loaded(); }
     renderChanges();
     picturesUi?.attach();   // 0.8 D8.8: the 3D planes of this model's pictures
+    { const api = ifc.api, mid = model.modelID; setTimeout(() => { try { api.PrepareInverses?.(mid)?.catch?.(() => {}); } catch (e) { /* closed */ } }, 1200); }   // 0.10 PERF.37: the property indexes, built in slices after the open, not on the first click
     fillIfcInfo(model, file);
     ui.back.hidden = !fromFolder(path);
     fillStoreys(model);
@@ -1082,8 +1170,10 @@ function init(root) {
     findRules = [{ field: 'cls', op: 'is', value: '' }];
     renderFind();
     clashRun?.stop?.(); clashRes = null; clashAt = -1; clashMsg = '';
+    auditUi?.changed();   // 0.10 BK.65: another model: the last audit's findings go
+    lodUi?.changed();   // 0.10 bim-lod-10
     checkRes = null;
-    checksArmed = false; checksSrc?.clear(); syncAccepted();   // 0.7.1 → 0.8: another model, its own problems and accepted list (from its IFC)
+    checksArmed = false; checksSrc?.clear(); adviceSrc?.invalidate(); syncAccepted();   // 0.7.1 → 0.8: another model, its own problems and accepted list (from its IFC)
     idsUi?.reset();   // 0.7.1 71.25: and the IDS it remembers
     if (ui.checksSec) ui.checksSec.hidden = false;
     renderChecks();
@@ -1104,7 +1194,7 @@ function init(root) {
     toolButton('edges').disabled = !viewer.edgesAvailable;
     toolButton('edges').title = viewer.edgesAvailable ? t('edges.title') : t('edges.title.off');
     syncEdit();
-    status(t('ifc.opened', { file: file.name, n: model.elements, count: num(model.elements), s: ((performance.now() - t0) / 1000).toFixed(1) }), false, true);
+    status(t('ifc.opened', { file: file.name, n: model.elements, count: num(model.elements), s: ((performance.now() - t0) / 1000).toFixed(1) }) + ifcUnitsSaid(file), false, true);
     modelUi?.opened();
     workspace?.opened();
     coordsUi?.modelChanged();   // 0.6 DF.15
@@ -1231,73 +1321,26 @@ function init(root) {
 
   // ---- Find (0.4 B14) ----
   let findRules = [{ field: 'cls', op: 'is', value: '' }], findMode = 'all', findSaving = false;
-  const readSets = () => { try { return cleanSets(localStorage.getItem(SETS_KEY) || '[]'); } catch (e) { return []; } };
-  const writeSets = (sets) => { try { localStorage.setItem(SETS_KEY, JSON.stringify(sets)); } catch (e) { /* this tab only */ } };
-  function renderFind() {
-    if (!ui.find) return;
-    ui.findSec.hidden = mode !== 'ifc' || !model;
-    if (ui.findSec.hidden || !ui.findDetails.open) return;   // built when opened: the index reads every element
-    const ix = index();
-    const fieldSel = (r) => {
-      const sel = el('select', { className: 'select-cc', 'aria-label': t('find.field'), 'data-find-field': '' });
-      const groups = new Map();
-      for (const f of ix.fields) { const g = f.group || t('color.group.element'); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(f); }
-      for (const [g, fs] of groups) sel.append(el('optgroup', { label: g }, fs.map((f) => el('option', { value: f.id }, f.group ? f.label : t('color.field.' + f.id)))));
-      if (!ix.fields.some((f) => f.id === r.field)) sel.append(el('option', { value: r.field }, r.field));
-      sel.value = r.field;
-      return sel;
-    };
-    const rows = findRules.map((r, i) => {
-      const fs = fieldSel(r);
-      const op = el('select', { className: 'select-cc', 'aria-label': t('find.op'), 'data-find-op': '' }, OPS.map((o) => el('option', { value: o }, t('find.op.' + o))));
-      op.value = r.op;
-      const listId = 'bc-find-vals-' + i;
-      const val = el('input', { type: 'text', className: 'bc-input', 'aria-label': t('find.value'), value: r.value, list: listId, 'data-find-value': '', hidden: r.op === 'has' || r.op === 'hasnot' });
-      const dl = el('datalist', { id: listId }, suggestions(ix, r.field, 100).map((v) => el('option', { value: v })));
-      fs.addEventListener('change', () => { r.field = fs.value; r.value = ''; renderFind(); });
-      op.addEventListener('change', () => { r.op = op.value; renderFind(); });
-      val.addEventListener('input', () => { r.value = val.value; });
-      val.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runFind(); } });
-      return el('div', { className: 'bc-find-rule', 'data-find-rule': String(i) }, fs, op, val, dl,
-        findRules.length > 1 ? el('button', { type: 'button', className: 'bc-forget', title: t('find.remove'), 'aria-label': t('find.remove'), onClick: () => { findRules.splice(i, 1); renderFind(); } }, el('i', { className: 'bi bi-x', 'aria-hidden': 'true' })) : null);
-    });
-    const modeSel = el('select', { className: 'select-cc', 'aria-label': t('find.mode'), 'data-find-mode': '' }, el('option', { value: 'all' }, t('find.mode.all')), el('option', { value: 'any' }, t('find.mode.any')));
-    modeSel.value = findMode;
-    modeSel.addEventListener('change', () => { findMode = modeSel.value; });
-    const sets = readSets();
-    const saveName = el('input', { type: 'text', className: 'bc-input', 'aria-label': t('find.save.name'), placeholder: t('find.save.name'), maxLength: 80, 'data-find-setname': '', hidden: !findSaving });
-    ui.find.replaceChildren(el('div', { className: 'bc-find' },
-      ...rows,
-      el('div', { className: 'bc-find-row' },
-        el('button', { type: 'button', className: 'bc-linkbtn', 'data-find-add': '', onClick: () => { findRules.push({ field: findRules[findRules.length - 1]?.field || 'cls', op: 'is', value: '' }); renderFind(); } }, t('find.add')),
-        findRules.length > 1 ? modeSel : null),
-      el('div', { className: 'bc-find-row' },
-        el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-find-go': '', onClick: () => runFind() }, el('i', { className: 'bi bi-search', 'aria-hidden': 'true' }), ' ', t('find.go')),
-        el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-find-save': '', onClick: () => {
-          if (!findSaving) { findSaving = true; renderFind(); ui.find.querySelector('[data-find-setname]')?.focus(); return; }
-          const name = ui.find.querySelector('[data-find-setname]').value.trim();
-          if (!name) return;
-          const rest = readSets().filter((x) => x.name !== name);
-          writeSets(cleanSets([...rest, { name, mode: findMode, rules: findRules }]));
-          findSaving = false; renderFind();
-          status(t('find.saved', { name }));
-        } }, t('find.save')),
-        saveName),
-      el('p', { className: 'bc-h' }, t('find.sets')),
-      sets.length ? el('ul', { className: 'bc-find-sets', 'data-find-sets': '' }, sets.map((x) => el('li', {},
-        el('button', { type: 'button', className: 'bc-linkbtn', title: t('find.apply', { name: x.name }), 'data-find-set': x.name, onClick: () => { findRules = x.rules.map((r) => ({ ...r })); findMode = x.mode; renderFind(); runFind(); } }, x.name),
-        el('button', { type: 'button', className: 'bc-forget', title: t('find.delete', { name: x.name }), 'aria-label': t('find.delete', { name: x.name }), onClick: () => { writeSets(readSets().filter((y) => y.name !== x.name)); renderFind(); } }, el('i', { className: 'bi bi-x', 'aria-hidden': 'true' })))))
-        : el('p', { className: 'bc-muted' }, t('find.none'))));
-  }
-  function runFind() {
-    const needs = findRules.filter((r) => r.op !== 'has' && r.op !== 'hasnot');
-    if (needs.some((r) => !String(r.value).trim())) { status(t('find.incomplete'), true); return; }
-    const keys = find(index(), { rules: findRules, mode: findMode });
-    viewer.select(keys);
-    afterPick();
-    if (keys.length > 1) showMany(); else if (keys.length) showProps(keys[0]); else clearProps();
-    status(t('find.found', { n: keys.length }));
-  }
+  const { readSets, renderFind, runFind, spacesIndex, spaceRes, qtoResult, renderQto, readRules, renderChecks } = mountSidePanels({
+    ui, status, afterPick, editableBox, runModelChecks, pickKeys, clearProps, showProps, showMany,
+    get mode() { return mode; },
+    get model() { return model; },
+    get index() { return index; },
+    get findRules() { return findRules; }, set findRules(v) { findRules = v; },
+    get findMode() { return findMode; }, set findMode(v) { findMode = v; },
+    get findSaving() { return findSaving; }, set findSaving(v) { findSaving = v; },
+    get viewer() { return viewer; },
+    get ifc() { return ifc; },
+    get qtoScope() { return qtoScope; }, set qtoScope(v) { qtoScope = v; },
+    get qtoGroups() { return qtoGroups; },
+    get qtoSums() { return qtoSums; }, set qtoSums(v) { qtoSums = v; },
+    get fieldLabel() { return fieldLabel; },
+    get qtoView() { return qtoView; }, set qtoView(v) { qtoView = v; },
+    get ifcName() { return ifcName; },
+    get download() { return download; },
+    get nameOfKey() { return nameOfKey; },
+    get checkRes() { return checkRes; },
+  });
   window.addEventListener('storage', (e) => { if (e.key === SETS_KEY && model) renderFind(); });   // another tab saved a set
   ui.findDetails?.addEventListener('toggle', () => { if (ui.findDetails.open) renderFind(); });
   window.bimcraftFind = { run: (rules, m = 'all') => { findRules = rules; findMode = m; ui.findDetails.open = true; renderFind(); runFind(); return [...viewer.selection]; } };   // for tests
@@ -1460,201 +1503,12 @@ function init(root) {
 
   // ---- Quantity totals (0.4 B20) ----
   let qtoScope = 'all', qtoGroups = ['cls'], qtoSums = null, qtoView = 'totals';   // qtoSums null = the quantity sets' fields, first time
-  let spaceIx = null;   // { model, ix }: the spaces' own index (they are rooms, not in the element index)
-  const spacesIndex = () => { if (spaceIx?.model !== model) spaceIx = { model, ix: propertyIndex(WebIFC, ifc.api, model.modelID, model, { spaces: true }) }; return spaceIx.ix; };
-  const qtoKeys = () => (qtoScope === 'pick' ? [...viewer.selection] : null);
-  const spaceRes = () => spaceSchedule(spacesIndex(), model, { keys: qtoKeys() });
-  const rowsRes = () => elementRows(index(), { keys: qtoKeys(), columns: [...qtoGroups, ...(qtoSums || [])] });
-  const QTO_SHOWN = 200;
-  const fmtNum = (n) => (Number.isInteger(n) ? String(n) : String(Number(n.toFixed(4))));
-  function qtoResult() {
-    const ix = index();
-    const keys = qtoScope === 'pick' ? [...viewer.selection] : null;
-    return totals(ix, { keys, groupBy: qtoGroups, sum: qtoSums || [] });
-  }
-  function renderQto() {
-    if (!ui.qto) return;
-    ui.qtoSec.hidden = mode !== 'ifc' || !model;
-    if (ui.qtoSec.hidden || !ui.qtoDetails.open) return;
-    const ix = index(), qf = quantityFields(ix);
-    if (qtoSums === null) qtoSums = qf.filter((f) => /^Qto_|BaseQuantities/i.test(f.group)).slice(0, 3).map((f) => f.id);
-    qtoSums = qtoSums.filter((id) => qf.some((f) => f.id === id));
-    const fieldName = (id) => { const f = ix.fields.find((x) => x.id === id); return f ? fieldLabel(f) : id; };
-    const scope = el('select', { className: 'select-cc', 'data-qto-scope': '' }, el('option', { value: 'all' }, t('qto.scope.all')), el('option', { value: 'pick' }, t('qto.scope.pick', { n: viewer.selection.size })));
-    scope.value = qtoScope;
-    scope.addEventListener('change', () => { qtoScope = scope.value; renderQto(); });
-    const viewSel = el('select', { className: 'select-cc', 'data-qto-view': '' }, ['totals', 'rows', 'spaces', 'infra'].map((v) => el('option', { value: v }, t('qto.view.' + v))));
-    viewSel.value = qtoView;
-    viewSel.addEventListener('change', () => { qtoView = viewSel.value; renderQto(); });
-    const csvBtn = el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-qto-csv': '', onClick: () => qtoCsv() }, el('i', { className: 'bi bi-download', 'aria-hidden': 'true' }), ' ', t('qto.csv')));
-    if (qtoView === 'infra') {   // 0.8 SU.882: IFC 4.3 roads, rails, bridges and the rest, totalled per class
-      let rows = [], why = '';
-      try { rows = summary43(read43(ifc.api.file(model.modelID))); } catch (e) { why = String(e.message || e); }
-      const m = (v) => (v ? fmtNum(v) : '');
-      ui.qto.replaceChildren(el('div', { className: 'bc-find', 'data-qto-infra': '' },
-        el('label', { className: 'bc-clash' }, t('qto.view'), viewSel),
-        why ? el('p', { className: 'bc-muted' }, t('qto.infra.failed', { why })) : rows.length ? el('p', { className: 'bc-muted' }, t('qto.infra.kinds', { n: rows.length })) : el('p', { className: 'bc-muted', 'data-qto-noinfra': '' }, t('qto.infra.none')),
-        rows.length ? el('div', { className: 'bc-qto-wrap' }, el('table', { className: 'bc-qto-table', 'data-qto-table': '' },
-          el('thead', {}, el('tr', {}, ['group', 'class', 'type'].map((h) => el('th', {}, t('qto.infra.' + h))), ['count', 'length', 'area', 'volume'].map((h) => el('th', { className: 'n' }, t('qto.infra.' + h))))),
-          el('tbody', {}, rows.slice(0, QTO_SHOWN).map((r) => el('tr', {}, el('td', {}, r.group), el('td', {}, String(r.cls).replace(/^Ifc/, '')), el('td', {}, r.predefined), el('td', { className: 'n' }, String(r.count)), el('td', { className: 'n' }, m(r.length)), el('td', { className: 'n' }, m(r.area)), el('td', { className: 'n' }, m(r.volume))))))) : null,
-        rows.length ? el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-qto-toTakeoff': '', title: t('qto.infra.send.title'), onClick: () => sendInfra() }, el('i', { className: 'bi bi-download', 'aria-hidden': 'true' }), ' ', t('qto.infra.send'))) : null));
-      return;
-    }
-    if (qtoView === 'spaces') {
-      const sp = spaceRes();
-      const cellOf = (v, from) => el('td', { className: 'n' + (from === 'shape' ? ' is-measured' : ''), title: from === 'shape' ? t('qto.sp.measured') : null }, v === '' ? '' : fmtNum(v));
-      ui.qto.replaceChildren(el('div', { className: 'bc-find' },
-        el('label', { className: 'bc-clash' }, t('qto.view'), viewSel),
-        el('label', { className: 'bc-clash' }, t('qto.scope'), scope),
-        sp.rows.length ? el('p', { className: 'bc-muted' }, t('qto.spaces.count', { n: sp.rows.length }), ' ', t('qto.sp.note')) : el('p', { className: 'bc-muted', 'data-qto-nospaces': '' }, t('qto.spaces.none')),
-        sp.rows.length ? el('div', { className: 'bc-qto-wrap' }, el('table', { className: 'bc-qto-table', 'data-qto-table': '' },
-          el('thead', {}, el('tr', {}, ['number', 'name', 'storey'].map((h) => el('th', {}, t('qto.sp.' + h))), ['area', 'volume'].map((h) => el('th', { className: 'n' }, t('qto.sp.' + h))))),
-          el('tbody', {}, sp.rows.slice(0, QTO_SHOWN).map((r) => el('tr', {}, el('td', {}, el('button', { type: 'button', className: 'bc-linkbtn', 'data-qto-pick': '', onClick: () => pickKeys([r.key]) }, String(r.number))), el('td', {}, String(r.name)), el('td', {}, String(r.storey)), cellOf(r.area, r.areaFrom), cellOf(r.volume, r.volumeFrom)))),
-          el('tfoot', {}, el('tr', {}, el('td', { colSpan: 3 }, t('qto.total')), el('td', { className: 'n' }, fmtNum(sp.total.area)), el('td', { className: 'n' }, fmtNum(sp.total.volume)))))) : null,
-        sp.rows.length ? csvBtn : null));
-      return;
-    }
-    const groupRows = qtoGroups.map((g, i) => {
-      const sel = el('select', { className: 'select-cc', 'aria-label': t('qto.group'), 'data-qto-group': String(i) });
-      const groups = new Map();
-      for (const f of ix.fields) { if (f.id === 'guid') continue; const gn = f.group || t('color.group.element'); if (!groups.has(gn)) groups.set(gn, []); groups.get(gn).push(f); }
-      for (const [gn, list] of groups) sel.append(el('optgroup', { label: gn }, list.map((f) => el('option', { value: f.id }, fieldLabel(f)))));
-      sel.value = g;
-      sel.addEventListener('change', () => { qtoGroups[i] = sel.value; renderQto(); });
-      return el('div', { className: 'bc-find-rule' }, sel,
-        qtoGroups.length > 1 ? el('button', { type: 'button', className: 'bc-forget', title: t('find.remove'), 'aria-label': t('find.remove'), onClick: () => { qtoGroups.splice(i, 1); renderQto(); } }, el('i', { className: 'bi bi-x', 'aria-hidden': 'true' })) : null);
-    });
-    const sumBoxes = [];
-    let lastSet = null;
-    for (const f of qf) {   // under a heading per property set, so each box shows just the property's name
-      const set = f.group || t('color.group.element');
-      if (set !== lastSet) { sumBoxes.push(el('p', { className: 'bc-qto-set', title: set }, set)); lastSet = set; }
-      const cb = el('input', { type: 'checkbox', value: f.id, checked: qtoSums.includes(f.id), 'data-qto-sum': f.id });
-      cb.addEventListener('change', () => { qtoSums = cb.checked ? [...qtoSums, f.id] : qtoSums.filter((x) => x !== f.id); renderQto(); });
-      sumBoxes.push(el('label', {}, cb, el('span', {}, fieldLabel(f))));
-    }
-    const sums = qf.length ? el('div', { className: 'bc-qto-sums', role: 'group', 'aria-label': t('qto.sum') }, ...sumBoxes) : el('p', { className: 'bc-muted' }, t('qto.sum.none'));
-    if (qtoView === 'rows') {
-      const rr = rowsRes();
-      const show2 = (v) => (v === '' ? '' : typeof v === 'number' ? fmtNum(v) : String(v).replace(/^Ifc(?=[A-Z])/, ''));
-      ui.qto.replaceChildren(el('div', { className: 'bc-find' },
-        el('label', { className: 'bc-clash' }, t('qto.view'), viewSel),
-        el('label', { className: 'bc-clash' }, t('qto.scope'), scope),
-        el('p', { className: 'bc-h' }, t('qto.columns')), ...groupRows,
-        qtoGroups.length < MAX_GROUP ? el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'bc-linkbtn', 'data-qto-add': '', onClick: () => { qtoGroups.push('name'); renderQto(); } }, t('qto.column.add'))) : null,
-        el('p', { className: 'bc-h' }, t('qto.sum')), sums,
-        el('p', { className: 'bc-muted' }, t('qto.elements', { n: rr.rows.length }), ' ', t('qto.units')),
-        rr.rows.length > QTO_SHOWN ? el('p', { className: 'bc-muted' }, t('qto.more', { shown: QTO_SHOWN, n: rr.rows.length })) : null,
-        el('div', { className: 'bc-qto-wrap' }, el('table', { className: 'bc-qto-table', 'data-qto-table': '' },
-          el('thead', {}, el('tr', {}, rr.columns.map((c, i) => el('th', { className: i >= qtoGroups.length ? 'n' : '' }, fieldName(c))))),
-          el('tbody', {}, rr.rows.slice(0, QTO_SHOWN).map((r) => el('tr', {}, r.values.map((v, i) => i === 0
-            ? el('td', {}, el('button', { type: 'button', className: 'bc-linkbtn', 'data-qto-pick': '', onClick: () => pickKeys([r.key]) }, show2(v) || '#' + (r.key - model.keyBase)))
-            : el('td', { className: i >= qtoGroups.length ? 'n' : '' }, show2(v)))))))),
-        csvBtn));
-      return;
-    }
-    const res = qtoResult();
-    const shown = res.rows.slice(0, QTO_SHOWN);
-    const gaps = res.sum.map((_, i) => res.total.counted[i] < res.total.count);
-    const show = (v) => (v === '' ? t('qto.empty') : typeof v === 'number' ? fmtNum(v) : String(v).replace(/^Ifc(?=[A-Z])/, ''));
-    const table = el('div', { className: 'bc-qto-wrap' }, el('table', { className: 'bc-qto-table', 'data-qto-table': '' },
-      el('thead', {}, el('tr', {}, res.groupBy.map((g) => el('th', {}, fieldName(g))), el('th', { className: 'n' }, t('qto.count')), res.sum.map((f) => el('th', { className: 'n' }, fieldName(f))))),
-      el('tbody', {}, shown.map((r) => el('tr', {}, r.values.map((v) => el('td', {}, show(v))), el('td', { className: 'n' }, String(r.count)), r.sums.map((v, i) => el('td', { className: 'n', title: gaps[i] && r.counted[i] < r.count ? t('qto.leftout', { name: String(r.count - r.counted[i]) }) : null }, fmtNum(v)))))),
-      el('tfoot', {}, el('tr', {}, el('td', { colSpan: res.groupBy.length }, t('qto.total')), el('td', { className: 'n' }, String(res.total.count)), res.total.sums.map((v) => el('td', { className: 'n' }, fmtNum(v)))))));
-    ui.qto.replaceChildren(el('div', { className: 'bc-find' },
-      el('label', { className: 'bc-clash' }, t('qto.view'), viewSel),
-      el('label', { className: 'bc-clash' }, t('qto.scope'), scope),
-      el('p', { className: 'bc-h' }, t('qto.group')), ...groupRows,
-      qtoGroups.length < MAX_GROUP ? el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'bc-linkbtn', 'data-qto-add': '', onClick: () => { qtoGroups.push('storey'); renderQto(); } }, t('qto.group.add'))) : null,
-      el('p', { className: 'bc-h' }, t('qto.sum')), sums,
-      el('p', { className: 'bc-muted' }, t('qto.rows', { n: res.rows.length }), ' ', t('qto.units')),
-      res.rows.length > QTO_SHOWN ? el('p', { className: 'bc-muted' }, t('qto.more', { shown: QTO_SHOWN, n: res.rows.length })) : null,
-      table,
-      csvBtn));
-  }
-  function sendInfra() {   // 0.8 SU.882: a 'cadcraft-quantities' file TakeoffCraft opens
-    try {
-      const doc = quantities43(read43(ifc.api.file(model.modelID)), { project: ifcName.replace(/\.ifc$/i, ''), app: 'BimCraft' });
-      const name = ifcName.replace(/\.ifc$/i, '') + '.quantities.json';   // i18n-ignore: a file name
-      download(name, JSON.stringify(doc, null, 1), 'application/json');
-      status(t('qto.downloaded', { name }));
-    } catch (e) { status(t('qto.infra.failed', { why: String(e.message || e) }), true); }
-  }
-  function qtoCsv() {
-    const ix = index();
-    const label = (id) => { const f = ix.fields.find((x) => x.id === id); return f ? (f.group ? f.group + '.' + f.label : fieldLabel(f)) : id; };
-    const base = ifcName.replace(/\.ifc$/i, '');
-    let name, text;
-    if (qtoView === 'spaces') {
-      const sp = spaceRes();
-      if (!sp.rows.length) { status(t('qto.spaces.none'), true); return; }
-      const from = (f) => (f === 'shape' ? t('qto.sp.shape') : f === 'file' ? t('qto.sp.file') : '');
-      text = tableCsv(['number', 'name', 'storey', 'area', 'areafrom', 'volume', 'volumefrom'].map((h) => t('qto.sp.' + h)),
-        [...sp.rows.map((r) => [r.number, r.name, r.storey, r.area, from(r.areaFrom), r.volume, from(r.volumeFrom)]), [t('qto.total'), '', '', sp.total.area, '', sp.total.volume, '']]);
-      name = base + ' spaces.csv';   // i18n-ignore: a file name
-    } else if (qtoView === 'rows') {
-      const rr = rowsRes();
-      if (!rr.rows.length) { status(t('qto.nothing'), true); return; }
-      text = tableCsv(['GlobalId', ...rr.columns.map(label)], rr.rows.map((r) => [ix.value('guid', r.key - ix.keyBase) ?? '', ...r.values]));   // i18n-ignore: an IFC attribute name
-      name = base + ' elements.csv';   // i18n-ignore: a file name
-    } else {
-      const res = qtoResult();
-      if (!res.total.count) { status(t('qto.nothing'), true); return; }
-      text = totalsCsv(res, { label, countLabel: t('qto.count'), totalLabel: t('qto.total'), leftOut: (h) => t('qto.leftout', { name: h }) });
-      name = base + ' quantities.csv';   // i18n-ignore: a file name
-    }
-    download(name, '\ufeff' + text, 'text/csv;charset=utf-8');
-    status(t('qto.downloaded', { name }));
-  }
   ui.qtoDetails?.addEventListener('toggle', () => { if (ui.qtoDetails.open) renderQto(); });
-  window.bimcraftQto = { set: (o) => { if (o.view) qtoView = o.view; if (o.scope) qtoScope = o.scope; if (o.groups) qtoGroups = o.groups; if (o.sums) qtoSums = o.sums; ui.qtoDetails.open = true; renderQto(); return qtoResult(); } };   // for tests
+  window.bimcraftQto = { set: (o) => { if (o.view) qtoView = o.view; if (o.scope) qtoScope = o.scope; if (o.groups) qtoGroups = o.groups; if (o.sums) qtoSums = o.sums; ui.qtoDetails.open = true; renderQto(); return qtoResult(); }, spaces: () => spaceRes() };   // for tests; spaces(): the space schedule rows (SuperCad Studio's accommodation schedule, bk-r4-office-10)
 
-  // ---- Model checks (0.4 B19) ----
-  const RULES_KEY = 'bimcraft.checkrules';
   let checkRes = null;
+  let adviceSrc = null;   // 0.10 BK.73: the Drawing advice source (below)
   let checksSrc = null, checksArmed = false;   // 0.7.1 → 0.8: Model checks in the shell's Problems (below)
-  const readRules = () => { try { return cleanRules(localStorage.getItem(RULES_KEY)) || [{ cls: '', field: 'name' }]; } catch (e) { return [{ cls: '', field: 'name' }]; } };
-  const writeRules = (rs) => { try { localStorage.setItem(RULES_KEY, JSON.stringify(rs)); } catch (e) { /* this tab only */ } };
-  function renderChecks() {
-    if (!ui.checks) return;
-    ui.checksSec.hidden = mode !== 'ifc' || !model;
-    if (ui.checksSec.hidden || !ui.checksDetails.open) return;
-    const ix = index(), rules = readRules();
-    const classes = [...new Set(ix.values('cls').values())].sort();
-    const rows = rules.map((r, i) => {
-      const cs = el('select', { className: 'select-cc', 'aria-label': t('color.field.cls'), 'data-checks-cls': '' }, el('option', { value: '' }, t('checks.class.any')), classes.map((c) => el('option', { value: c }, c.replace(/^Ifc/, ''))));
-      cs.value = classes.includes(r.cls) ? r.cls : '';
-      const fs = el('select', { className: 'select-cc', 'aria-label': t('find.field'), 'data-checks-field': '' });
-      const groups = new Map();
-      for (const f of ix.fields) { if (f.id === 'cls' || f.id === 'guid') continue; const g = f.group || t('color.group.element'); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(f); }
-      for (const [g, list] of groups) fs.append(el('optgroup', { label: g }, list.map((f) => el('option', { value: f.id }, fieldLabel(f)))));
-      if (![...fs.options].some((o) => o.value === r.field)) fs.append(el('option', { value: r.field }, r.field));
-      fs.value = r.field;
-      cs.addEventListener('change', () => { rules[i].cls = cs.value; writeRules(rules); });
-      fs.addEventListener('change', () => { rules[i].field = fs.value; writeRules(rules); });
-      return el('div', { className: 'bc-find-rule', 'data-checks-rule': String(i) }, cs, fs,
-        rules.length > 1 ? el('button', { type: 'button', className: 'bc-forget', title: t('find.remove'), 'aria-label': t('find.remove'), onClick: () => { rules.splice(i, 1); writeRules(rules); renderChecks(); } }, el('i', { className: 'bi bi-x', 'aria-hidden': 'true' })) : null);
-    });
-    const pickBtn = (label, keys) => el('button', { type: 'button', className: 'bc-linkbtn', 'data-checks-pick': '', onClick: () => pickKeys(keys) }, label);
-    const groupLabel = (c, g) => {
-      if (c.id === 'required') return t('checks.group.required', { cls: g.rule.cls ? g.rule.cls.replace(/^Ifc/, '') : t('checks.class.any'), field: fieldLabel(ix.fields.find((f) => f.id === g.rule.field) || { group: '-', label: g.rule.field }), n: g.keys.length });
-      if (c.id === 'guid') return t('checks.group.guid', { guid: g.label, n: g.keys.length });
-      if (c.id === 'stacked') return t('checks.group.stacked', { name: nameOfKey(g.keys[0]), n: g.keys.length });
-      return t('checks.group.storey', { n: g.keys.length });
-    };
-    const res = checkRes ? el('ul', { className: 'bc-checks-res', 'data-checks-res': '' }, checkRes.map((c) => el('li', { 'data-check': c.id },
-      el('div', { className: 'bc-check-head' }, el('span', {}, t('checks.name.' + c.id)), c.count ? el('span', { className: 'n' }, String(c.count)) : el('span', { className: 'ok' }, t('checks.none'))),
-      c.groups.length ? el('ul', {}, c.groups.slice(0, 50).map((g) => el('li', {}, pickBtn(groupLabel(c, g), g.keys)))) : null))) : null;
-    ui.checks.replaceChildren(el('div', { className: 'bc-find' },
-      el('p', { className: 'bc-h' }, t('checks.required')),
-      el('p', { className: 'bc-muted' }, t('checks.required.hint')),
-      ...rows,
-      el('div', { className: 'bc-find-row' },
-        el('button', { type: 'button', className: 'bc-linkbtn', 'data-checks-add': '', onClick: () => { rules.push({ cls: '', field: 'name' }); writeRules(rules); renderChecks(); } }, t('checks.add'))),
-      el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-checks-run': '', onClick: () => runModelChecks() }, t('checks.run'))),
-      res,
-      editableBox()));
-  }
   /** 0.8 DC.115: what the model's shapes are made of (extrusions and other solids stay editable; face lists do not) and, when some
    *  tessellated bodies are exactly straight prisms, a button that writes them back as IfcExtrudedAreaSolid (one undo step). */
   let solidsRep = null;
@@ -1758,6 +1612,11 @@ function init(root) {
       const frmSrc = P.source({ id: 'bimcraft.frame', kind: 'engine', label: t('problems.src.frame') });
       frameSet = (list) => frmSrc.set(Qp(list));
       frameSet(frameProblems);
+      // 0.10 BK.73: advice from the drawing tools (a stair, column, ramp or opening outside the usual sizes was made as asked)
+      // It is worked out from the model itself (draw-advice-model.js), so it is there again when a file is reopened and goes when the thing is put right.
+      adviceSrc = P.source({ id: 'bimcraft.advice', kind: 'check', label: t('advice.title'), debounceMs: 300,
+        run: () => (model && mode === 'ifc' && editor ? Qp(adviceProblems(readAdvice(new ModelWriter(editor.W, editor.api, editor.mid)), t)) : null) });
+      onAdvice(() => adviceSrc.invalidate()); adviceSrc.invalidate();
       checksSrc = P.source({ id: 'bimcraft.checks', kind: 'check', label: t('checks.title'),
         run: () => (checksArmed && model && mode === 'ifc' ? checkProblems(runChecks(index(), model, { required: readRules() }), { guidOf: (k) => guidOf(k), nameOf: (k) => nameOfKey(k), t }) : null) });
       const problemsAdapter = {
@@ -1812,6 +1671,8 @@ function init(root) {
   let clashA = 'pick', clashB = 'all', clashTol = '0.01', clashRes = null, clashRun = null, clashAt = -1, clashMsg = '';
   let clashFix = null;   // 0.9 EG.42: discipline proposals for the clashes (mounted with the assistants, below)
   /** What a set can be: the pick, every class over the open models, each saved search set, everything. */
+  let hostSets = [];   // BK.128 / BK.45: sets of elements a host (Super's model layers) names by GlobalId
+  const keysOfGuids = (guids) => { const ix = guidIndex(), out = []; for (const g of guids || []) { const k = ix.get(g); if (k !== undefined) out.push(k); } return out; };
   function clashSources() {
     const out = [{ value: 'pick', label: t('clash.src.pick', { n: viewer.selection.size }), keys: () => [...viewer.selection] }, { value: 'all', label: t('clash.src.all'), keys: () => [...viewer.allKeys()].filter((k) => { const e = entryOf(k); return !e || e.model.classOf.get(k - e.model.keyBase) !== 'IfcSpace'; }) }];   // rooms are not clash objects (pick Class: Space to check them)
     const byCls = new Map();
@@ -1819,6 +1680,7 @@ function init(root) {
     for (const [c, ks] of [...byCls].sort((a, b) => b[1].length - a[1].length)) out.push({ value: 'cls:' + c, label: t('clash.src.class', { cls: c.replace(/^Ifc/, ''), n: ks.length }), keys: () => ks });
     for (const st of readSets()) out.push({ value: 'set:' + st.name, label: t('clash.src.set', { name: st.name }), keys: () => find(index(), st) });
     out.splice(2, 0, ...mepStruct.sources());   // 0.7 LC.9: pipes and ducts, walls, slabs, beams, columns, the structure
+    for (const h of hostSets) out.push({ value: 'host:' + h.value, label: h.label, keys: () => keysOfGuids(h.guids) });   // BK.45: a host's model layers (Super) as sets to check against each other
     return out;
   }
   // 0.7 LC.9 (mep-07, mep/structure-ui.js): ready-made MEP × structure sets, soft clearances and the openings list
@@ -1828,6 +1690,29 @@ function init(root) {
     author: () => authorOf(), rerender: () => renderClash(),
     show: (keys) => { viewer.vis.isolate(keys, { ghost: true }); viewer.applyVisibility(); viewer.select(keys); afterPick(); showMany(); viewer.frameKeys(keys); treeView.sync(); },
   });
+  // 0.10 MEP.1 (#1556, mep/autoroute-ui.js): a duct network found round the open model and drawn as runs (one undo step)
+  const mepRoute = mountAutoroute({
+    t, el, host: () => (mode === 'ifc' ? cur() : null), editor: () => (mode === 'ifc' ? editor : null), status: (m, bad) => status(m, bad), rerender: () => renderClash(),
+    apply: async (run, label) => { editor.modelChange(run, { label, verb: '' }); await rebuild(); afterEdit(); },
+  });
+  // 0.10 UI.17: declared here, ahead of the Part links card, which reads it while it mounts (it was declared further down: "Cannot access 'models' before initialization" on every page load)
+  const models = [];   // { mi, ifc, model, editor, name, tag, offset [x, y, z] metres (IFC axes), visible }
+  // 0.10 SU.1814 (bim-part-link-10): the "Part links" card; the button is drawn by ui.inc only when PartCraft takes a link in this area
+  const partLinks = (() => {
+    const btn = root.querySelector('[data-part-link]');
+    if (!btn || !btn.dataset.partUrl) return null;
+    return mountPartLinks({
+      t, el, root, status: (m, bad, fade) => status(m, bad, fade), button: btn, countEl: btn.querySelector('[data-part-link-count]'), partUrl: btn.dataset.partUrl,
+      models: () => models.filter((m) => m.ifc && m.model), selection: () => (mode === 'ifc' ? [...viewer.selection] : []),
+      show: (keys) => { viewer.select(keys); afterPick(); showProps(keys[0]); viewer.frameKeys(keys); },
+      apply: async (ent, run, label) => {
+        if (ent !== cur()) throw Object.assign(new Error('partlink.err.notactive'), { code: 'partlink.err.notactive' });
+        ent.editor.modelChange(run, { label, verb: t('partlink.verb') });
+        await rebuild(); afterEdit();
+      },
+    });
+  })();
+  window.bimcraftPartLinks = partLinks;
   const nameOfKey = (k) => { const e = entryOf(k); if (!e) return '#' + k; const id = k - e.model.keyBase; const n = e.ifc.api.GetLine(e.model.modelID, id).Name?.value; return (n || '#' + id) + (models.length > 1 ? ' (' + e.name + ')' : ''); };
   function renderClash() {
     if (!ui.clash) return;
@@ -1853,7 +1738,7 @@ function init(root) {
       el('button', { type: 'button', className: 'bc-clash-row', 'aria-pressed': i === clashAt ? 'true' : 'false', 'data-clash-row': String(i), onClick: () => showClash(i) },
         el('span', {}, t('clash.row', { a: nameOfKey(c.a), b: nameOfKey(c.b) })), el('span', { className: 'n' }, fmtLength(c.depth))),
       i === clashAt ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-clash-issue': '', onClick: () => clashIssue(c) }, t('clash.issue')) : null))));
-    ui.clash.replaceChildren(el('div', { className: 'bc-clash' }, ...kids), mepStruct.node((a, b) => { clashA = a; clashB = b; renderClash(); runClash(); }));
+    ui.clash.replaceChildren(el('div', { className: 'bc-clash' }, ...kids), mepStruct.node((a, b) => { clashA = a; clashB = b; renderClash(); runClash(); }), mepRoute.node());
   }
   async function runClash() {
     const tolText = String(clashTol).trim().replace(',', '.');   // GH.3-A: a bare number is metres (the label says so); a unit mark (2 cm, 1/2") is read in that unit
@@ -2337,6 +2222,9 @@ function init(root) {
     gridFocus = null;
     modelUi?.decorate(ui.props);   // a drawn wall, door or window: its numbers to change (0.5 BM.5)
     reportAsUi?.decorate(ui.props, id, p);   // 0.9 D8.12-C: Report as another IFC class (report-as.js)
+    if (editor) classifyUi?.decorate(ui.props, [id]);   // 0.10 BK.94: Uniclass / OmniClass / UniFormat codes (classify-ui.js)
+    if (editor) verifyUi?.decorate(ui.props, [id]);
+    if (editor) lodUi?.decorate(ui.props, [id]);   // 0.10 bim-lod-10   // 0.10 BK.64 / BK.49: the verification state (verify-ui.js)
     syncEdit();
     workspace?.propertiesChanged();
     addonSections([id], token);   // 0.5 AO.7
@@ -2409,6 +2297,9 @@ function init(root) {
         el('span', { className: 'n' }, num(n)),
         mixed ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-pick-only': c, title: t('pick.many.only.title', { cls: c }), onClick: () => only(c) }, t('pick.many.only')) : null))));
     modelUi?.decorate(ui.props);   // several drawn walls, doors or windows: what they share (0.5 BM.5)
+    if (editor) classifyUi?.decorate(ui.props, keys.filter((k) => entryOf(k) === cur()).map((k) => k - model.keyBase));   // 0.10 BK.94
+    if (editor) verifyUi?.decorate(ui.props, keys.filter((k) => entryOf(k) === cur()).map((k) => k - model.keyBase));   // 0.10 BK.64 / BK.49
+    if (editor) lodUi?.decorate(ui.props, keys.filter((k) => entryOf(k) === cur()).map((k) => k - model.keyBase));   // 0.10 bim-lod-10
     syncEdit();
     addonSections(addonSelection(), pickToken);   // 0.5 AO.7
   }
@@ -2429,7 +2320,7 @@ function init(root) {
   }
 
   // ---- Federation (0.4 B16) ----
-  const models = [];   // { mi, ifc, model, editor, name, tag, offset [x, y, z] metres (IFC axes), visible }
+  // (models is declared above, before the Part links card reads it: 0.10 UI.17)
   let active = null;
   let refC = null;     // the first model's coordination matrix: every model is placed in its coordinates
   const cur = () => active || models[0];
@@ -2451,7 +2342,9 @@ function init(root) {
     const t0 = performance.now();
     const im = IfcModel.sharing(ifc);
     let m;
-    try { m = await im.load(new Uint8Array(await file.arrayBuffer()), (done, total) => status(t('fed.building', { file: file.name, done, total })), { keyBase: keyOf(free, 0) }); }
+    const added = await ifcWithUnits(new Uint8Array(await file.arrayBuffer()), file);   // 0.10 BK.8: an added model with no length unit is asked about too
+    if (!added) { im.close(); return null; }
+    try { m = await im.load(added, (done, total) => status(t('fed.building', { file: file.name, done, total })), { keyBase: keyOf(free, 0) }); }
     catch (e) { im.close(); throw new Error(t('fed.unreadable', { file: file.name })); }
     const ent = { mi: free, ifc: im, model: m, editor: new IfcEditor(WebIFC, im), name: file.name, size: file.size, file, tag: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10), offset: [0, 0, 0], visible: true, link, matrix: null };
     models.push(ent);
@@ -2497,6 +2390,8 @@ function init(root) {
     afterPick();
     status(t('fed.removed', { file: ent.name }));
   }
+  /** Move a model by an offset [x, y, z] in metres (IFC axes): the Offset form below, and SuperCad Studio's placements (window.bimcraftModels.setOffset). */
+  const applyOffset = (m, v) => { m.offset = v; viewer.setModelMatrix(m.mi, placementOf(m)); if (cut) applySection(); };
   function renderModels() {
     if (!ui.modelsSec) return;
     ui.modelsSec.hidden = mode !== 'ifc' || !models.length;
@@ -2516,9 +2411,7 @@ function init(root) {
         e.preventDefault();
         const v = [...off.querySelectorAll('input')].map((i) => parseLen(String(i.value).trim(), getDisplayUnits()) / 1000);
         if (!v.every(Number.isFinite)) { status(t('fed.offset.bad.u'), true); return; }
-        m.offset = v;
-        viewer.setModelMatrix(m.mi, placementOf(m));
-        if (cut) applySection();
+        applyOffset(m, v);
         status(t('fed.offset.done.u', { file: m.name, x: lenMark(v[0] * 1000, getDisplayUnits()), y: lenMark(v[1] * 1000, getDisplayUnits()), z: lenMark(v[2] * 1000, getDisplayUnits()) }));
       });
       return el('li', { 'data-model': String(m.mi), className: m === cur() ? 'is-active' : '' },
@@ -2647,7 +2540,10 @@ function init(root) {
     ui.modelInput.value = '';
     guard(async () => { for (const f of files) await addModel(f); });
   });
-  window.bimcraftModels = { list: () => models.map((m) => ({ mi: m.mi, name: m.name, active: m === cur(), visible: m.visible, offset: m.offset, elements: m.model.elements })), add: addModel, setActive: (mi) => setActive(models.find((m) => m.mi === mi)), matrix: (mi) => viewer.modelMatrix(mi) };   // for tests
+  window.bimcraftModels = { list: () => models.map((m) => ({ mi: m.mi, name: m.name, active: m === cur(), visible: m.visible, offset: m.offset, elements: m.model.elements })), add: addModel, setActive: (mi) => setActive(models.find((m) => m.mi === mi)), matrix: (mi) => viewer.modelMatrix(mi),
+    // SuperCad Studio (SC.3 / SC.5, super-wire-links.js): a shape another app made is shown beside the model, moved and taken out again through the same code as the Models list
+    remove: (mi) => { const m = models.find((x) => x.mi === mi); return m ? removeModel(m) : null; },
+    setOffset: (mi, v) => { const m = models.find((x) => x.mi === mi); if (!m || !Array.isArray(v) || v.length !== 3 || !v.every(Number.isFinite)) return false; applyOffset(m, v.slice()); renderModels(); return true; } };   // for tests
 
   // ---- Editing ----
   const readRow = (k, v) => [el('dt', {}, k), el('dd', {}, v === null || v === undefined ? '' : String(v))];
@@ -2756,7 +2652,12 @@ function init(root) {
   const undoHook = mountUndoHook({ changes: () => (editor ? editor.changes : []), undoOne: () => undo() });   // 0.8 EG.77
   function renderChanges() {
     undoHook.settle();
+    adviceSrc?.invalidate();   // 0.10 BK.73: a file just opened (or changed): its drawing advice is worked out again
     syncAccepted();
+    if (root.querySelector('[data-eg44-details]')?.open) window.bimcraftPermit?.render();   // 0.10 BK.109: the supporting-documents list follows an edit, undo or redo while its section is open
+    if (root.querySelector('[data-issues-details]')?.open) window.bimcraftIssueLog?.render();   // 0.10 BK.46 / BK.48: the issue history follows an edit, undo or redo while its section is open
+    window.bimcraftMassOptions?.changed();   // 0.10 BK.44: the massing options list (and what is hidden) follows an edit, undo, redo or open
+    window.bimcraftSiteConstraints?.invalidate();   // 0.10 BK.104: walls against building lines and servitudes, re-checked after any edit, undo, redo or open (the plan need not be showing)
     bimShell?.changed();   // calc sheets and reasons live in the IFC: an edit, undo, redo, open or save may have moved them   // 0.7.1 → 0.8: the IFC's accepted problems after an edit, undo or redo
     idsUi?.changed();   // 0.7.1 71.25: re-check against the IDS (and read it again: an undo may have changed it)
     const list = editor ? editor.changes : [];
@@ -2819,7 +2720,7 @@ function init(root) {
     if (vaultUi) { const ro = await vaultUi.saveBlocked(); if (ro) { status(ro, true); return false; } }   // 0.8 SU.1058: a vault file is saved over only while checked out to you
     if (!unsavedIn(editor) && !picturesUi?.wantBundle()) return true;
     bimShell?.stampSave?.();   // 0.9 DI.1: the drawing details' save time, only when details were written
-    const pk = picturesUi ? await picturesUi.beforeSave(editor, ifcName) : null;   // 0.8 D8.8: pictures kept beside the IFC → a bundle, or a plain IFC with the small ones embedded
+    const pk = picturesUi ? await picturesUi.beforeSave(editor, ifcName, { handover: handoverBundleFiles(editor.api, editor.mid) }) : null;   // 0.8 D8.8: pictures kept beside the IFC → a bundle, or a plain IFC with the small ones embedded
     if (pk?.cancel) return false;
     const bytes = pk?.bytes || editor.save();
     let name = pk?.name || (editor.isNew ? ifcName : ifcName.replace(/\.ifc$/i, '') + ' (edited).ifc');   // i18n-ignore: the saved file's name (a new building keeps its own)
@@ -4153,82 +4054,23 @@ function init(root) {
       status(t('usd.done', { name: base + '.' + format, n: report.elements }));
     } catch (err) { status(t('usd.export.failed', { why: String(err.message || err) }), true); }
   }
-  // ---- Export › Collada (0.9 SU.1125, session bim-dae-09): dae-bim.js on cc-collada (collada-write.js = lib/collada, the writer
-  // ModelCraft's exportDAE uses too). A .dae for Blender and other 3D programs, or a Google Earth .kmz placed by the model's
-  // georeference (IfcMapConversion through its CRS, else IfcSite's latitude / longitude: ifc-geo.js, the same as Measure › Location).
-  async function daeChoices(geo, geoText) {
-    const hasGeo = !!(geo && !geo.error);
-    return new Promise((done) => {
-      const radio = (name, value, label, on, off = false) => el('label', { className: 'bc-dae-opt' }, el('input', { type: 'radio', name, value, checked: on, disabled: off, ['data-dae-' + name]: value }), el('span', {}, label));
-      const box = (key, label, on, off = false) => el('label', { className: 'bc-dae-opt' }, el('input', { type: 'checkbox', checked: on, disabled: off, ['data-dae-' + key]: '' }), el('span', {}, label));
-      const dlg = el('dialog', { className: 'bc-dialog', 'aria-labelledby': 'bc-dae-h', 'data-dae-dialog': '' },
-        el('form', { method: 'dialog' },
-          el('h2', { className: 'bc-h', id: 'bc-dae-h' }, t('dae.dialog.title')),
-          el('p', {}, t('dae.dialog.lede')),
-          el('fieldset', { className: 'bc-dae-set' }, el('legend', {}, t('dae.dialog.format')),
-            radio('format', 'dae', t('dae.dialog.format.dae'), true), radio('format', 'kmz', t('dae.dialog.format.kmz'), false, !hasGeo)),
-          box('geo', t('dae.dialog.geo'), hasGeo, !hasGeo),
-          el('p', { className: 'bc-muted bc-dae-geo', 'data-dae-geo-text': hasGeo ? 'found' : 'none' }, geoText),
-          el('fieldset', { className: 'bc-dae-set' }, el('legend', {}, t('dae.dialog.height')),
-            radio('height', 'ground', t('dae.dialog.height.ground'), true, !hasGeo), radio('height', 'model', t('dae.dialog.height.model'), false, !hasGeo)),
-          box('spaces', t('dae.dialog.spaces'), false),
-          box('hidden', t('dae.dialog.hidden'), false),
-          el('p', { className: 'bc-lib-actions' },
-            el('button', { type: 'submit', className: 'btn-plot btn-sm-cc', value: 'ok', 'data-dae-ok': '' }, t('dae.dialog.export')),
-            el('button', { type: 'submit', className: 'btn-line btn-sm-cc', value: 'cancel' }, t('dialog.cancel')))));
-      const kmz = dlg.querySelector('[data-dae-format="kmz"]'), geoBox = dlg.querySelector('[data-dae-geo]');
-      kmz.addEventListener('change', () => { if (kmz.checked) { geoBox.checked = true; geoBox.disabled = true; } });   // a .kmz always carries the location
-      dlg.querySelector('[data-dae-format="dae"]').addEventListener('change', () => { geoBox.disabled = !hasGeo; });
-      dlg.addEventListener('close', () => {
-        const q = (s) => dlg.querySelector(s);
-        const out = dlg.returnValue === 'ok' ? { format: q('[data-dae-format]:checked')?.value || 'dae', geo: q('[data-dae-geo]').checked && hasGeo, height: q('[data-dae-height]:checked')?.value || 'ground', spaces: q('[data-dae-spaces]').checked, hidden: q('[data-dae-hidden]').checked } : null;
-        dlg.remove();
-        done(out);
-      });
-      document.body.append(dlg);
-      dlg.showModal();
-    });
-  }
-  async function exportDae() {
-    const shown = models.filter((m) => m.visible !== false);
-    if (!viewer || mode !== 'ifc' || !shown.length) { status(t('dae.none'), true); return; }
-    modelUi?.need3d();
-    const D = await import('./dae-bim.js');
-    const ent = shown.includes(cur()) ? cur() : shown[0];   // the georeference and level 0 come from the model in front
-    const place = viewer.modelMatrix(ent.mi), lift = D.daeLift(ent, place);
-    let geo = null;
-    try {
-      const [crs, pick] = await Promise.all([import('./crs.js'), import('./crs-pick.js')]);
-      geo = await D.daeGeo(ent, { place, lift, crs, pick });
-    } catch (err) { geo = { error: 'math', why: String(err.message || err) }; }
-    const f6 = (v) => (Math.round(v * 1e6) / 1e6).toFixed(6);
-    const geoText = !geo ? t('dae.dialog.geo.none')
-      : geo.error ? t('dae.dialog.geo.failed', { why: geo.error === 'unknown' || geo.error === 'nocode' ? t('geo.crs.' + geo.error, { crs: geo.crs }) : geo.why || geo.error })
-        : t('dae.dialog.geo.found', { lat: f6(geo.lat), lon: f6(geo.lon), heading: (Math.round(geo.heading * 10) / 10).toFixed(1), source: geo.source === 'map' ? t('dae.dialog.geo.source.map', { crs: geo.crs }) : t('dae.dialog.geo.source.site') });
-    const pick = await daeChoices(geo, geoText);
-    if (!pick) return;
-    status(t('dae.making'));
-    try {
-      const placed = pick.geo || pick.format === 'kmz' ? D.geoPlace(geo, pick.height) : null;
-      const base = (ifcName || 'model').replace(/\.ifc$/i, '');
-      const { text, report } = await D.bimDae(models, {
-        name: base, matrixOf: (mi) => viewer.modelMatrix(mi), spaces: pick.spaces, lift, geo: placed,
-        isHidden: pick.hidden ? null : (key) => viewer.vis.state(key) === HIDDEN,
-        progress: (d, n) => status(t('dae.progress', { done: d.toLocaleString(), total: n.toLocaleString() })),
-      });
-      let file;
-      if (pick.format === 'kmz' && placed) {
-        const { zip } = await import('./bcf.js');
-        file = base + '.kmz';
-        fileHost.download(new Blob([D.bimKmz(text, placed, { name: base, zip })], { type: 'application/vnd.google-earth.kmz' }), file, 'application/vnd.google-earth.kmz');
-      } else {
-        file = base + '.dae';
-        fileHost.download(new Blob([text], { type: 'model/vnd.collada+xml' }), file, 'model/vnd.collada+xml');
-      }
-      window.bimcraftDae.last = { file, report, geo: placed, pick, bytes: text.length };
-      status(placed ? t('dae.done.geo', { name: file, n: report.elements, mats: report.materials, lat: f6(placed.lat), lon: f6(placed.lon) }) : t('dae.done', { name: file, n: report.elements, mats: report.materials }));
-    } catch (err) { status(t('dae.failed', { why: String(err.message || err) }), true); }
-  }
+  const { exportDae, openVr, openPaint, openViews } = mountXrPaint({
+    ui, status, fileHost, models, nameOfKey, authorOf, frameC, renderIssues, cur, entryOf, renderChanges, walkOff, measureOff, renderHooks, rebuild, root,
+    get viewer() { return viewer; },
+    get mode() { return mode; },
+    get modelUi() { return modelUi; },
+    get ifcName() { return ifcName; },
+    get xrOn() { return xrOn; }, set xrOn(v) { xrOn = v; },
+    get xrWhy() { return xrWhy; },
+    get issues() { return issues; },
+    get editor() { return editor; },
+    get paintUi() { return paintUi; }, set paintUi(v) { paintUi = v; },
+    get meas() { return meas; },
+    get liveTex() { return liveTex; },
+    get setPressed() { return setPressed; },
+    get viewsUi() { return viewsUi; }, set viewsUi(v) { viewsUi = v; },
+    get walking() { return walking; },
+  });
   window.bimcraftDae = { open: () => guard(exportDae), last: null };   // for tests
   // ---- Review in VR (0.6 LC.19, session lc-model): the shared xr/ (a copy of ModelCraft's, tools/xr/sync.mjs) on the same scene
   // as Render (render-bim.js). Issues placed in the headset join the Issues tab as BCF topics (the model's own coordinates). ----
@@ -4239,159 +4081,10 @@ function init(root) {
     xrBtn?.setAttribute('aria-disabled', String(!yes));
     if (xrBtn) xrBtn.title = yes ? t('ui.vr.title') : t('xr.why.' + xrWhy);
   });
-  const xrLayers = new WeakMap();
-  let xrNext = 1;
-  /** Changes when a model is loaded again (an edit, someone's in a live session): the headset then rebuilds its copy. */
-  const xrVersion = () => { if (!viewer) return -1; let v = 0; for (const L of viewer.layers.values()) { if (!xrLayers.has(L)) xrLayers.set(L, xrNext++); v = v * 31 + xrLayers.get(L); } return v; };
-  async function openVr() {
-    if (xrOn) return;
-    if (xrWhy) { status(t('xr.why.' + xrWhy), true); return; }
-    if (!viewer || mode !== 'ifc' || viewer.box.isEmpty()) { status(t('ui.render.none'), true); return; }
-    modelUi?.need3d();
-    const [X, R, PB, L] = await Promise.all([import('./xr/xr-session.js'), import('./render-bim.js'), import('./paint-bim.js'), import('./render/looks.js')]);
-    let saved = null;
-    try { saved = JSON.parse(localStorage.getItem('bimcraft.render') || 'null'); } catch { saved = null; }
-    const settings = L.cleanSettings(saved);
-    const ent = cur(), site = ent ? R.bimSite(ent.ifc.api, ent.model.modelID) : null;
-    const paints = () => new Map(models.map((m) => [m.mi, { paint: PB.readPaint(m.ifc.api, m.model.modelID), api: m.ifc.api, mid: m.model.modelID, keyBase: m.model.keyBase || 0, C: [...m.ifc.api.GetCoordinationMatrix(m.model.modelID)] }]));
-    const live = globalThis.bimcraftLive?.live;
-    const cam = viewer.camera, tgt = viewer.controls.target;
-    try {
-      xrOn = await X.startXR({
-        scene: () => R.bimScene(viewer, settings, R.bimSun(site, settings, ent ? viewer.modelMatrix(ent.mi) : null), paints()),
-        version: xrVersion,
-        appCamera: () => ({ eye: cam.position.toArray(), target: tgt.toArray() }),
-        format: (m) => fmtLength(m),
-        settings,
-        addIssue: (x) => {   // the camera and point arrive in the viewer's space: to the model's own (BCF) coordinates
-          const C = frameC(), now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-          const vp = { guid: newGuid(), camera: { kind: 'perspective', viewPoint: toIfcPoint(C, x.camera.viewPoint), direction: toIfcDir(C, x.camera.direction), up: toIfcDir(C, x.camera.up), fov: x.camera.fov },
-            selection: [], visibility: { defaultVisible: true, exceptions: [] }, clipping: [], snapshot: x.snapshot };
-          issues.push({ guid: newGuid(), title: x.title, status: 'Open', type: 'Issue', author: authorOf() || 'BimCraft', created: now, description: x.description, comments: [], viewpoints: [vp] });   // i18n-ignore: BCF values
-          renderIssues();
-        },
-        presence: live ? { send: (p) => live.setPresence(p), peers: () => live.peers(), nameOf: (c) => live.nameOf(c) } : null,
-        onExit: (pose) => {
-          xrOn = null;
-          if (pose) { cam.position.set(...pose.eye); tgt.set(...pose.target); viewer.controls.update(); viewer.render(); }
-          status(t('xr.ended'), false, true);
-        },
-      });
-      window.bimcraftXr = xrOn;   // the running session (tests read its state())
-      status(t('xr.started'));
-    } catch (e) {
-      xrOn = null;
-      status(t('xr.failed', { error: String(e?.message || e) }), true);
-    }
-  }
   // ---- Paint materials (0.5 RC.7, session render): paint-ui-bim.js + paint-bim.js + the library in render/, imported on
   // first use. Painting writes the active model (one undo step each), then it reloads so the colour shows. ----
   let paintUi = null;
-  async function openPaint() {
-    if (!viewer || mode !== 'ifc' || viewer.box.isEmpty() || !editor) { status(t('paint.nomodel'), true); return; }
-    if (!paintUi) {
-      const { mountPaint } = await import('./paint-ui-bim.js');
-      paintUi = mountPaint({
-        root, parent: ui.canvasWrap,
-        viewer: () => viewer,
-        target: (key) => { const ent = entryOf(key); if (!ent || ent !== cur() || !editor) return null; return { editor, id: key - (ent.model.keyBase || 0), C: [...ent.ifc.api.GetCoordinationMatrix(ent.model.modelID)], P: viewer.modelMatrix(ent.mi) }; },
-        selection: () => [...viewer.selection],
-        nameOfKey,
-        rebuild: (key) => rebuild(key),
-        afterEdit: () => renderChanges(),
-        status: (text, isError, fade) => status(text, isError, fade),
-        beforeOpen: () => { if (meas) measureOff(); },
-        liveTextures: { isOn: () => (liveTex ? liveTex.isOn() : true), set: (v) => liveTex?.on(v) },   // 0.8 RENDER-NEXT
-        photo: {   // 0.8 EG.62: a photo → a tiling material of the file (colour tile kept in the IFC; roughness and relief worked out from it)
-          make: async (file, { size }) => {
-            if (!/^image\/(png|jpeg|webp)$/.test(file.type) || file.size > 32 * 1048576) throw new Error(t('paint.photo.type'));
-            const { decodePhoto } = await import('./photo-material.js');
-            const photo = await decodePhoto(file.type, new Uint8Array(await file.arrayBuffer()));
-            const have = photoMat.readRecords(editor.api, editor.mid).records;
-            if (have.length >= photoMat.MAX_MATERIALS) throw new Error(t('paint.photo.many', { n: photoMat.MAX_MATERIALS }));
-            const name = file.name.replace(/\.[a-z0-9]+$/i, '').replace(/[_\-.]+/g, ' ').trim() || t('paint.photo.default_name');
-            const made = photoMat.makeFromPhoto(photo, { name, size });
-            photoMat.remember(made.record, made.maps.color);
-            editor.modelChange(photoMat.writeOp([...have, made.record]), { label: made.record.name, verb: t('paint.photo.verb') });
-            await photoMat.refresh(models.map((m) => ({ api: m.ifc.api, mid: m.model.modelID })));
-            renderChanges();
-            return { id: made.record.id, name: made.record.name, size: made.record.size, seam: made.stats.seam };
-          },
-          remove: async (id) => {
-            const used = [...paintLib.readPaint(editor.api, editor.mid).values()].filter((p) => p.all === id || Object.values(p.sides).includes(id)).length;
-            if (used) throw new Error(t('paint.photo.in_use', { n: used }));
-            const have = photoMat.readRecords(editor.api, editor.mid).records, gone = have.find((r) => r.id === id);
-            if (!gone) throw new Error(t('paint.photo.missing'));
-            editor.modelChange(photoMat.writeOp(have.filter((r) => r.id !== id)), { label: gone.name, verb: t('paint.photo.removed_verb') });
-            await photoMat.refresh(models.map((m) => ({ api: m.ifc.api, mid: m.model.modelID })));
-            renderChanges();
-            return gone.name;
-          },
-        },
-        onClose: () => { setPressed('paint', false, 'paint-open'); },
-      });
-    }
-    if (paintUi.isOpen()) { paintUi.close(); return; }
-    modelUi?.need3d();   // 0.6 BIM-F5: the palette sits over the 3D view, so the plan-only layout shows it beside the plan
-    paintUi.open();
-    setPressed('paint', true, 'paint-open');
-  }
-  // ---- Views (0.5 RC.7, session render): saved cameras and walkthroughs in the IFC (views-ui-bim.js + views-bim.js) ----
-  // 0.8 WALK: a saved walkthrough as a rendered video, frame by frame, in the shared Render video dialog (render/video-ui.js, the one ModelCraft uses).
-  // The camera of frame i is the walk's eye and direction at that second (views-bim.js viewAt), in the 3D view's own coordinates.
-  async function renderWalkVideo(walk) {
-    if (!viewer || mode !== 'ifc' || viewer.box.isEmpty() || !walk || !walk.pts || walk.pts.length < 2) { status(t('ui.render.none'), true); return; }
-    modelUi?.need3d();
-    const [{ openVideoDialog }, { viewAt }, H] = await Promise.all([import('./render/video-ui.js'), import('./views-bim.js'), renderHooks()]);
-    const C = frameC(), end = walk.pts[walk.pts.length - 1].t;
-    openVideoDialog({
-      scene: (st) => {
-        const sc = H.scene(st);
-        sc.frameAt = (sec) => ({
-          camera(aspect) {
-            const at = viewAt(walk, sec), pos = fromIfcPoint(C, at.pos), dir = fromIfcDir(C, at.dir), c = viewer.camera.clone();
-            c.position.set(pos[0], pos[1], pos[2]); c.up.set(0, 1, 0); c.lookAt(pos[0] + dir[0], pos[1] + dir[1], pos[2] + dir[2]);
-            if (c.isPerspectiveCamera) c.aspect = aspect;
-            c.updateProjectionMatrix(); c.updateMatrixWorld(true);
-            return { world: c.matrixWorld.elements.slice(), proj: c.projectionMatrix.elements.slice() };
-          },
-        });
-        return sc;
-      },
-      length: () => end,
-      fps: 30,
-      viewSize: () => ({ w: ui.canvas.clientWidth, h: ui.canvas.clientHeight }),
-      settings: H.saved,
-      video: null,
-      saveVideo: () => {},
-      download: (blob, name) => fileHost.download(blob, name, blob.type),
-      fileBase: () => (ifcName || 'model').replace(/\.ifc$/i, '') + ' ' + walk.name,
-      parent: root,
-      onClose: () => viewer.render(),
-    });
-  }
   let viewsUi = null;
-  async function openViews() {
-    if (!viewer || mode !== 'ifc' || viewer.box.isEmpty() || !editor) { status(t('views.nomodel'), true); return; }
-    if (!viewsUi) {
-      const { mountViews } = await import('./views-ui-bim.js');
-      viewsUi = mountViews({
-        root, parent: ui.canvasWrap,
-        viewer: () => viewer,
-        editor: () => (mode === 'ifc' ? editor : null),
-        frameC,
-        stopWalk: () => { if (walking) walkOff(); },
-        status: (text, isError, fade) => status(text, isError, fade),
-        afterEdit: () => renderChanges(),
-        renderWalk: (walk) => renderWalkVideo(walk),   // 0.8 WALK
-        onClose: () => setPressed('views', false, 'saved-views'),
-      });
-    }
-    if (viewsUi.isOpen()) { viewsUi.close(); return; }
-    modelUi?.need3d();   // 0.6 BIM-F5: views are cameras of the 3D view
-    viewsUi.open();
-    setPressed('views', true, 'saved-views');
-  }
   // ---- Point clouds (0.5 SG.1; cloud-ui.js, pointcloud.js, pointcloud-three.js — imported on the first cloud) ----
   // A cloud joins the 3D view beside the model (or on its own): it is not a document, so it never asks about unsaved
   // edits and a new model keeps it. Measure snaps to its points; Location reads a cloud point through the cloud's own system.
@@ -4640,6 +4333,27 @@ function init(root) {
     return null;
   };
   window.bimcraftVis = { act: visAct, state: () => viewer?.vis.toJSON(), pick: (keys) => { viewer.select(keys); if (viewer.selection.size > 1) showMany(); else showProps(viewer.selected); afterPick(); } };   // for tests
+  // BK.128 / BK.45 (Super's model layers, super-layers-ui.js): a host switches sets of elements off by GlobalId (apart from the person's own Hide), reads
+  // which elements the view holds, and names sets the clash check can run between. Inert until a host calls it.
+  window.bimcraftLayerSets = {
+    all: () => { if (!viewer || mode !== 'ifc') return []; const out = []; for (const m of models) for (const [id, c] of m.model.classOf) { const g = m.ifc.api.GetLine(m.model.modelID, id).GlobalId?.value; if (g) out.push({ guid: g, cls: c }); } return out; },
+    count: () => { let n = 0; for (const m of models) n += m.model.classOf.size; return n; },
+    keysOf: (guids) => keysOfGuids(guids),
+    guidOf: (key) => { const e = entryOf(key); return e ? e.ifc.api.GetLine(e.model.modelID, key - e.model.keyBase).GlobalId?.value || null : null; },
+    off: (guids) => { if (!viewer) return 0; guidKeys = null; const keys = keysOfGuids(guids); if (viewer.vis.setOff(keys)) { viewer.applyVisibility(); syncVis(); if (tree) treeView.sync(); } return keys.length; },
+    offKeys: () => (viewer ? [...viewer.vis.off] : []),
+    sources: (list) => { hostSets = (Array.isArray(list) ? list : []).filter((h) => h && typeof h.value === 'string' && Array.isArray(h.guids)).map((h) => ({ value: h.value, label: String(h.label || h.value), guids: h.guids })); if (ui.clashDetails?.open) renderClash(); return hostSets.length; },
+    /** Check two named sets against each other with the clash check as it is → Promise<[{ a, b (GlobalIds), an, bn (names), depth }]> (null when it could not run). */
+    check: async (a, b, tol = 0.01) => {
+      if (!viewer || mode !== 'ifc' || clashRun) return null;
+      clashA = 'host:' + a; clashB = 'host:' + b; clashTol = String(tol); clashRes = null;
+      await runClash();
+      for (let i = 0; i < 1200 && clashRun; i++) await new Promise((r) => setTimeout(r, 100));
+      if (clashRun || !clashRes) return null;
+      const g = window.bimcraftLayerSets.guidOf;
+      return clashRes.map((c) => ({ a: g(c.a), b: g(c.b), an: nameOfKey(c.a), bn: nameOfKey(c.b), depth: c.depth }));
+    },
+  };
 
   function renderLayers(drawing) {
     const boxes = [];
@@ -4694,12 +4408,18 @@ function init(root) {
     const fit = () => {
       frame = 0;
       root.classList.remove('bc-fit-compact');
-      if (ui.toolbar.hidden || !ui.toolbar.offsetParent || ui.toolbar.classList.contains('ws-toolbar-strip') || document.documentElement.classList.contains('cc-phone')) return;
-      if (ui.toolbar.offsetHeight > stageEl.clientHeight * 0.3) root.classList.add('bc-fit-compact');
+      if (document.documentElement.classList.contains('cc-phone')) return;
+      if (!ui.toolbar.hidden && ui.toolbar.offsetParent && !ui.toolbar.classList.contains('ws-toolbar-strip') && ui.toolbar.offsetHeight > stageEl.clientHeight * 0.3) { root.classList.add('bc-fit-compact'); return; }
+      // 0.10 FX.189 (bim-core-10): the Draw bar too. Its groups row grows with every tool added (84 tools in the lab); when it alone covers more than 30 % of
+      // the stage (1600 x 1000 with the plan beside 3D: 566 px of 952), it drops its words and group names as the view toolbar does. Tool option rows stay.
+      const mb = root.querySelector('.bc-modelbar:not([hidden])'), gr = mb?.querySelector('.bc-mb-groups');
+      if (gr && mb.offsetParent && !mb.closest('.ws-active') && gr.offsetHeight > stageEl.clientHeight * 0.3) root.classList.add('bc-fit-compact');
     };
     const fitSoon = () => { if (!frame) frame = requestAnimationFrame(fit); };
     if (typeof ResizeObserver === 'function') new ResizeObserver(fitSoon).observe(stageEl);
     new MutationObserver(fitSoon).observe(ui.toolbar, { attributes: true, attributeFilter: ['hidden', 'class'] });
+    const mbar = root.querySelector('.bc-modelbar');
+    if (mbar) { if (typeof ResizeObserver === 'function') new ResizeObserver(fitSoon).observe(mbar); new MutationObserver(fitSoon).observe(mbar, { attributes: true, attributeFilter: ['hidden'] }); }
     fitSoon();
   }
   const toolButton = (name, attr = 'toggle') => ui.toolbar.querySelector('[data-' + attr + '="' + name + '"]');
@@ -4814,8 +4534,11 @@ function init(root) {
     });
   });
 
+  let libKinds = null;   // set where the model tools mount (library-kinds-bim.js)
   const library = new LibraryPanel(ui.library, {
     mode: () => mode,
+    addType: (item) => (libKinds ? libKinds.addType(item) : status(t('lib.type.needs_model'), true)),   // 0.10 BK.21
+    saveKitTemplate: (item) => libKinds?.saveKitTemplate(item), quickKit: () => libKinds?.quickKitDialog(),   // 0.10 BK.98
     dwg: () => dwgOpen,
     ifcApi: async () => { if (!ifc) ifc = await IfcModel.create(WebIFC); return ifc.api; },
     readDrawing: (bytes, kind) => readDrawingModel(bytes, kind),
@@ -5104,6 +4827,7 @@ function init(root) {
     renderFind();
     checkRes = null; renderChecks();   // results describe the model before the edit
     if (checksArmed) checksSrc?.invalidate();   // 0.7.1 → 0.8: once run, Model checks re-run a moment after each edit for the Problems panel
+    adviceSrc?.invalidate();   // 0.10 BK.73: the drawing advice follows the model
     renderQto();
     if (colorField) applyColor(colorField, true); else renderColor();
     if (placing) planCut();
@@ -5716,6 +5440,7 @@ function init(root) {
     status: (text, isError) => status(text, isError),
     download: (name, data, type) => download(name, data, type),
     fileName: () => ifcName,
+    saveBundle: () => picturesUi?.saveBundle(),   // 0.10 BK.114: the handover list's Save as a project bundle
     afterEdit: () => afterEdit(),
     shown: () => !rPanel.querySelector('[data-rpane="assets"]')?.hidden,
     storeyName: (id) => String((cur()?.model?.storeys || []).find((s) => s.id === id)?.name || ''),
@@ -5754,9 +5479,25 @@ function init(root) {
   });
   window.bimcraftPhases = phasesUi;   // tests
   // 0.8 EG.44 (bim_PART_2; permit-ui.js): the regulation check, the problems, sheets and forms into one zip with the comments a reviewer is likely to make
-  const permitUi = mountPermit({ root, editor: () => (mode === 'ifc' ? editor : null), status: (text, isError) => status(text, isError), download: (name, data, type) => download(name, data, type), fileName: () => ifcName });
+  const permitUi = mountPermit({ root, editor: () => (mode === 'ifc' ? editor : null), status: (text, isError) => status(text, isError), download: (name, data, type) => download(name, data, type), fileName: () => ifcName, afterEdit: () => afterEdit() });   // afterEdit: BK.109, the checklist's choices are edits (Undo, the changes list)
   root.querySelector('[data-eg44-details]')?.addEventListener('toggle', (e) => { if (e.target.open) permitUi?.render(); });
   window.bimcraftPermit = permitUi;   // tests
+  const issuesUi = mountIssues({ root, editor: () => (mode === 'ifc' ? editor : null), model: () => model, index: () => index(), status: (text, isError) => status(text, isError), download: (name, data, type) => download(name, data, type), fileName: () => ifcName, afterEdit: () => afterEdit(),
+    select: (keys) => { if (!viewer) return; viewer.select(keys.length ? keys : null); afterPick(); if (viewer.selection.size) showProps(viewer.selected); }, selection: () => (viewer ? [...viewer.selection] : []), openSheet: (id) => viewsUi?.openSheet(id),
+    presetSheets: () => { try { const rows = permitUi?.checklist?.forPackage()?.rows || []; const ids = [...new Set(rows.flatMap((r) => (r.by || []).filter((b) => b.kind === 'sheet').map((b) => b.id)))]; return ids.length ? ids : null; } catch (e) { return null; } } });   // 0.10 BK.46: a submission starts from the sheets the permit package's list is linked to
+  root.querySelector('[data-issues-details]')?.addEventListener('toggle', (e) => { if (e.target.open) issuesUi?.render(); });
+  // 0.10 stages-10 (landed by bim-core-10): Project stages (brief, options against the brief, type links, shop drawings, site instructions), a section after Issues
+  {
+    const ixGuid = () => { const ix = index(); return ix ? { ix, g: ix.values('guid') } : null; };
+    const stKeysOf = (guids) => { const r = ixGuid(); if (!r) return []; const want = new Set(guids), out = []; for (const [id, g] of r.g) if (want.has(g)) out.push(r.ix.keyBase + id); return out; };
+    const stGuidsOf = (keys) => { const r = ixGuid(); if (!r) return []; return keys.map((k) => r.g.get(k - r.ix.keyBase)).filter(Boolean); };
+    mountStages({ after: root.querySelector('[data-issues-details]'), editor: () => (mode === 'ifc' ? editor : null), status: (text, isError) => status(text, isError), afterEdit: () => afterEdit(),
+      selection: () => stGuidsOf(viewer ? [...viewer.selection] : []), select: (g) => { if (!viewer) return; viewer.select(stKeysOf(g)); afterPick(); }, download: (n, d, ty) => download(n, d, ty), fileName: () => ifcName, WebIFC, IfcModel,
+      openNew: (bytes, name) => openIfc(bytes, new File([bytes], name, { type: 'application/x-step' })), templates: async () => (await listTemplates()), template: (id) => getTemplate(id),
+      priceRows: () => { try { return mode === 'ifc' && editor ? readCostSettings(new ModelWriter(editor.W, editor.api, editor.mid)).rows : []; } catch (e) { return []; } },
+      changes: (id) => issuesUi?.changes?.(id), issues: () => issuesUi?.history?.()?.issues || [] });
+  }
+  window.bimcraftIssueLog = issuesUi;   // tests   // its own name: window.bimcraftIssues is the BCF issues list (0.4), which this assignment had replaced
   // 0.8 EG.1–EG.4 (mep_PART_2; mep-calc-ui.js): pipe, duct, cable and lighting calculations in a right-panel tab; the sizes that fix a problem apply as ONE undo step
   const calcPane = rPanel.querySelector('[data-mepcalc]');
   if (calcPane) {
@@ -5808,6 +5549,7 @@ function init(root) {
   // 0.8 EG.60 + EG.58 (bim_PART_2; design-ui.js): furnish a room by rules; a room program into massing options, built as levels, walls and slabs
   const designHost = { root, editor: () => (mode === 'ifc' ? editor : null), frameModel: () => analysisUi?.frameModel?.() || null, viewer: () => viewer, place: (p) => toWorld(toViewer(coordMatrix(), p)), status: (text, isError) => status(text, isError), download: (name, data, type) => download(name, data, type), fileName: () => ifcName, afterEdit: () => { propIx = null; afterEdit(); renderQto(); } };
   const furnishUi = mountFurnish(designHost), programUi = mountProgram(designHost);
+  mountMassOptions({ ...designHost, programUi, keyBase: () => (mode === 'ifc' && model ? model.keyBase || 0 : 0), afterEdit: () => { propIx = null; return guard(() => rebuild(null)); } });   // 0.10 BK.44: the list under the program's options (mass-options-ui.js)
   root.querySelector('[data-eg60-details]')?.addEventListener('toggle', (e) => { if (e.target.open) furnishUi?.render(); });
   window.bimcraftFurnish = furnishUi; window.bimcraftProgram = programUi;   // tests
   // 0.8 EG.48 (bim-sim_PART_2; people-ui.js): evacuation and arrivals, queues at doors and stairs, a plan that plays the run
@@ -5895,6 +5637,7 @@ function init(root) {
   });
   if (modelUi) mountRes(modelUi);   // 0.5 part 4, track RC (res-ui.js): the residential tools join the plan's tools
   if (modelUi) mountTrim(modelUi);   // 0.6 DF.17 (model-trim-ui.js): trim, extend and corner walls
+  if (modelUi) { try { mountWallFinishes(modelUi); } catch (e) { console.error(e); } root.querySelector('[data-wall-finishes]')?.addEventListener('click', () => { modelUi.ask('openWallFinishes'); root.querySelectorAll('details.bc-mb-more[open]').forEach((d) => d.removeAttribute('open')); }); }   // 0.10 bim-finishes-10: the Walls menu's Wall finishes… button
   if (modelUi) mountWallTools(modelUi);   // 0.9 WT.2-WT.7 (wall-tools-ui.js): wall shapes, split, offset, box stretch, align and lock, grid locks
   if (modelUi) mountWallShape(modelUi);   // 0.9 WT.6 (wall-shape-ui.js): attach top / base, profile, slant, wall openings
   if (modelUi) mountStairSketch(modelUi);   // 0.8 SU.1055 (stair-sketch-ui.js)
@@ -5905,18 +5648,37 @@ function init(root) {
   if (modelUi) mountSymbols(modelUi);   // 0.8 GH.3-F/G (symbols-ui.js): Build › Symbol palette; plumbing plan symbols
   if (modelUi) mountGrids(modelUi);   // 0.6 DF.16 (model-grids-ui.js): grids and columns
   if (modelUi) mountPlanMeasure(modelUi);   // 0.9 D9.3 (model-measure-ui.js): temporary measuring on the plan
+  if (modelUi) mountRollover(modelUi);   // 0.10 BK.33 (rollover-bim.js): rest the pointer on a wall, door, window, room or dimension to read it
   if (modelUi) mountFloors(modelUi);   // 0.6 DF.18 (model-floors-ui.js): floors of any shape, ramps
   mountPanelFocus(root, { t });
   if (modelUi) mountSite(modelUi);   // 0.6 DF.20 (model-site-ui.js): the site, the building on it, levels
+  if (modelUi) mountSiteConstraints(modelUi);   // 0.10 BK.104 (model-site-constraints-ui.js): building lines and servitudes; a wall over one is a Problems warning
   if (modelUi) mountSiteMass(modelUi);   // 0.7 LC.1 B2 (model-site-mass-ui.js): a CivilCraft building mass in Properties
   if (modelUi) mountMep(modelUi);   // 0.6 DF.29 (mep-ui.js): pipe and duct runs with their fittings, valves
   if (modelUi) mountHvac(modelUi);   // 0.8 SU.888 (sx-mep, mep/hvac-ui.js): Build › Line set and Line set sizes
   if (modelUi) mountWallAssemblies(modelUi);
+  if (modelUi) mountElementTypes(modelUi);   // 0.10 BK.24 / BK.15 (element-types-ui.js): floor, roof and ceiling types with layers, Schedules › Layers, the sketch band setting
+  if (modelUi) mountAssetSymbols(modelUi, { registry: bimcraftSymbolSets().registry });   // 0.10 BK.23 (asset-symbol-ui.js): Build › Symbol link; mounted after the tools that draw elements
+  if (modelUi) mountQuantities(modelUi);   // 0.10 BK.84 / BK.11 / BK.40 (quantities-ui.js): Floors, Finishes and Wall types: takeoff data schedules, gross / deductions / net
+  if (modelUi) { const wpUi = mountWorkPlane(modelUi); mountCurtain(modelUi, wpUi); }   // 0.10 bk-tools-b-10 (workplane-ui.js, curtain-ui.js): the work plane tools and curtain systems
   if (modelUi) mountWallDimensions(modelUi);
   if (modelUi) mountFamilies(modelUi);   // 0.6 DC.114 (family-ui.js): Families (before the project browser, which lists them)
+  if (modelUi) annoUi = mountAnnoScale(modelUi);   // 0.10 BK.10 (before the views: they ask it for the dialog)
   if (modelUi) planViews = mountViewsBim(modelUi);   // 0.6 DF.19 (views-ui.js): the project browser, view ranges, templates, sheets
   if (modelUi) reportAsUi = mountReportAs({ modelUi, t, status, schema: () => { try { return editor ? editor.api.GetModelSchema(editor.mid) : 'IFC4'; } catch (e) { return 'IFC4'; } } });   // 0.9 D8.12-C
+  if (modelUi) classifyUi = mountClassify({ modelUi, t, status });   // 0.10 BK.94
+  // 0.10 BK.64 / BK.49 (verify-ui.js): Properties › Verification, the plan's marks, Schedules › Verification; BK.65 / BK.20 (audit-ui.js): Model checks › Audit
+  if (modelUi) verifyUi = mountVerify({ modelUi, t, status, who: () => authorOf() });
+  if (modelUi) lodUi = mountLod({ root, modelUi, editor: () => (mode === 'ifc' ? editor : null), model: () => (mode === 'ifc' ? model : null), t, status: (text, isError) => status(text, isError) });   // 0.10 bim-lod-10 (BK.13-BK.101)
+  auditUi = mountAudit({ root, editor: () => (mode === 'ifc' ? editor : null), model: () => (mode === 'ifc' ? model : null), t, status: (text, isError) => status(text, isError), nameOfKey: (k) => nameOfKey(k), verify: verifyUi });
+  if (modelUi) window.bimcraftSchedules = mountScheduleLayouts(modelUi, { status });   // 0.10 BK.39 / BK.29 / BK.149 / BK.142 / BK.47 (schedule-layouts-ui.js; after classification, so its columns are in): set-ups, the office layout, finishes, exports, figure links, the specification
+  if (modelUi) mountPack(modelUi, { status, docs: () => tagsUi?.docs, prints: () => window.bimcraftIssueLog?.prints() || null, words: () => window.bimcraftIssueLog?.panel.words() || {} });   // 0.10 BK.63 / BK.170 (pack-ui.js; after the schedules, whose rooms table it reads)
+  if (modelUi) mountTypePacks({ modelUi, t, status });   // 0.10 BK.97
+  libKinds = mountLibraryKinds({ modelUi, t, status, el, download: (n, d, ty) => download(n, d, ty),
+    placed: () => { try { const seen = new Map(); for (const p of editor ? editor.placer().placements() : []) if (p.uuid && p.library === 'librarycraft' && !seen.has(p.uuid)) seen.set(p.uuid, { uuid: p.uuid, name: p.equipment?.Name || p.name || '' }); return [...seen.values()]; } catch (e) { return []; } } });   // 0.10 BK.21 / BK.98
   if (modelUi) mountElevEdit(modelUi);   // 0.9 SU.1123 (elev-edit-ui.js): edit in elevation and section views
+  if (modelUi) mountWallShapeViews(modelUi);   // 0.9 WT.6 (wall-shape-view-ui.js): profile grips, wall openings, slant and attach in those views and in 3D; the Walls menu's four Shape commands
+  if (modelUi) mountSpaces(modelUi);   // 0.10 (spaces-ui.js, bk-tools-a-10): rooms, separators, areas, tags, shafts, vertical openings, model groups; a Rooms menu after the Walls menu
   if (modelUi) mountPens(modelUi);   // 0.8 SU.1055 (pens-ui.js); 0.9 D8.12-B: after the views, so its scene hook sees their drafting and the dimensions
   if (modelUi) mountComforts(modelUi);   // 0.6 round 2 (comforts-ui.js): drawing comforts — moving library items, dormers
   // 0.6 DF.25 (agents.js): an assistant draws walls, doors, windows, floors, levels and grids, each one undo step "Assistant: …"
@@ -5990,6 +5752,7 @@ function init(root) {
     expected: () => (fdTasks ? statusAt(fdView(), fdDay) : null),
     dayLabel: () => (fdTasks && fdDay !== null ? dayText(fdDay) : ''),
     name: (k) => nameOfKey(k), guid: (k) => guidOf(k),
+    verify: (keys, o) => verifyUi?.fromScan(keys, o),   // 0.10 BK.49: what the scan matched within tolerance → field-verified
     select: (keys) => { if (!viewer) return; viewer.select(keys); afterPick(); if (viewer.selection.size) showProps(viewer.selected); },
     setColors: (m) => { if (!viewer) return; if (m && colorField) colorOff(); viewer.setColors(m); },
     setProblems: (list) => { scanProgProblems = list; brkScanSet?.(list); },

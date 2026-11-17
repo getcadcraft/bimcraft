@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /**
  * libitem.js — the "CadCraft library item", format 1 (docs/LIBRARY-SPEC.md §1), and the file adapters
- * that need nothing but bytes or an already-parsed file (§2). No DOM, no imports, no Node-only APIs:
+ * that need nothing but bytes or an already-parsed file (§2). No DOM, no Node-only APIs, one import (./packver.js, the version rule):
  * BimCraft, CadCraft (a byte-identical copy at cadcraft/dev/libitem.js), the server-side converter
  * (tools/library/convert.mjs) and the tests all run this same file.
  *
@@ -33,6 +33,8 @@
  *   ellipse {cx,cy,mx,my,ratio,t0,t1} (major axis vector mx,my; parameters in degrees) · text {x,y,h,rot,value}
  *   (x,y = left end of the baseline) · point {x,y} · hatch {loops:[[x,y,x,y,…]…], solid:true}
  */
+
+import { validatePackVersion } from './packver.js';   // BK.153/154: the one version + changelog rule (lib/packver; PHP twin PackVersioning)
 
 export const FORMAT = 'cadcraft-library-item';
 export const FORMAT_VERSION = 1;
@@ -209,6 +211,12 @@ export const MESSAGES = {
   'libitem.cat.openings.doors': 'Doors',
   'libitem.cat.openings.windows': 'Windows',
   'libitem.cat.templates.specification': 'Document templates',
+  'libitem.cat.types.walls': 'Wall types',
+  'libitem.cat.types.floors': 'Floor types',
+  'libitem.cat.types.roofs': 'Roof types',
+  'libitem.cat.types.ceilings': 'Ceiling types',
+  'libitem.cat.kits.templates': 'Project templates',
+  'libitem.cat.kits.quick': 'Quick Kits',
   'libitem.v.not_object': 'not a JSON object',
   'libitem.v.not_json': 'cannot be written as JSON',
   'libitem.v.too_large': 'larger than 8 MB',
@@ -230,6 +238,53 @@ export const MESSAGES = {
   'libitem.v.one_of': 'must be one of {list}',
   'libitem.v.taxonomy': 'is not in the taxonomy',
   'libitem.v.ifc_class': 'must be an IFC class name',
+  'libitem.v.ifc_required': 'is required: every item placed in a drawing or model names its IFC class (ifc.class, for example IfcFurniture; IfcAnnotation for a drawing-only symbol or detail), so other software reads it as what it is',
+  'libitem.v.ifc_door': 'must be IfcDoor for a door',
+  'libitem.v.license_required': 'is required: every item states the licence it is shared under (CC0, CC BY, CC BY-SA, the maker\'s own terms or team-only), so people know what they may do with it',
+  'libitem.v.lod': 'must be one of {list} (a whole number)',
+  'libitem.v.lod_required': 'is required: every item states its level of development (LOD 100, 200, 300, 350, 400 or 500; the number means the same in every library)',
+  'libitem.v.class_list': 'must be a list of at most 12 codes: [{{"system": "uniclass", "code": "Pr_40_50_30"}}]',
+  'libitem.v.class_twice': 'is listed twice: one code per system',
+  'libitem.v.class_code': 'must be a classification code such as Pr_40_50_30 (letters, digits, dots, dashes, underscores; at most 40 characters), not a description',
+  'libitem.v.class_required': 'is required: every item carries a classification code (for example Uniclass Pr_40_50_30), not just a name, so schedules and other software can group it',
+  'libitem.v.type_kind': 'only an item of kind type has one',
+  'libitem.v.type_required': 'is required for a type',
+  'libitem.v.type_ifc_required': 'is required: a type names its IFC type class ({list})',
+  'libitem.v.type_ifc_class': 'must be one of {list} for a type',
+  'libitem.v.type_body': 'must be null for a type',
+  'libitem.v.type_plan': 'must have no entities for a type',
+  'libitem.v.type_extra': 'a type has no ports or variants',
+  'libitem.v.type_lod_twice': 'differs from the item\'s own lod: state it once',
+  'libitem.v.type_thickness_req': 'is required (mm)',
+  'libitem.v.type_gt0': 'must be more than 0',
+  'libitem.v.type_layers_req': 'is required (how many layers)',
+  'libitem.v.type_pack_req': 'is required: a cadcraft-type-pack holding exactly this type and the materials its layers use',
+  'libitem.v.type_pack_big': 'is larger than 1 MB',
+  'libitem.v.type_pack_one': 'must hold exactly one type',
+  'libitem.v.type_pack_list': 'must be a list',
+  'libitem.v.type_pack_object': 'must be an object',
+  'libitem.v.type_pack_same': 'must be the same as type.element',
+  'libitem.v.type_layers_n': 'must be {n}, the number of layers in the pack',
+  'libitem.v.type_thickness_sum': 'must be {n} mm, the sum of the pack\'s layers',
+  'libitem.v.kit_kind': 'only an item of kind kit has one',
+  'libitem.v.kit_required': 'is required for a project template or Quick Kit',
+  'libitem.v.kit_body': 'must be null for a kit',
+  'libitem.v.kit_plan': 'must have no entities for a kit',
+  'libitem.v.kit_extra': 'a kit has no ports or variants',
+  'libitem.v.kit_app': 'must be an app name in lower case, like bimcraft',
+  'libitem.v.kit_apps': 'must be a list of at most 8 app names',
+  'libitem.v.kit_app_name': 'must be an app name in lower case',
+  'libitem.v.kit_app_req': 'is required for a project template: the app that opens it',
+  'libitem.v.kit_file_req': 'is required for a project template: the template as an IFC file',
+  'libitem.v.kit_file_format': 'must be ifc-step: a project template is shared as an IFC file',
+  'libitem.v.kit_file_data': 'must be the text of an IFC (STEP) file, starting ISO-10303-21;',
+  'libitem.v.kit_file_big': 'is larger than 4 MB',
+  'libitem.v.kit_members_tpl': 'a project template has no members: they belong to a Quick Kit',
+  'libitem.v.kit_file_qk': 'a Quick Kit has no file: it names Library items in members',
+  'libitem.v.kit_members_req': 'is required for a Quick Kit: the Library items it brings',
+  'libitem.v.kit_members_list': 'must be a list of 1 to 200 Library items',
+  'libitem.v.kit_member_uuid': 'must be the UUID of a Library item',
+  'libitem.v.ifc_window': 'must be IfcWindow for a window',
   'libitem.v.enum': 'must be an enumeration value',
   'libitem.v.list': 'must be a list',
   'libitem.v.too_many_entities': 'more than {n} entities',
@@ -386,10 +441,38 @@ for (const k of [
   'plants/species',
   // 0.8 SU.889: per-trade document templates (kind template: Markdown with fields, filled from the open IFC)
   'templates/specification',
+  // 2026-11-11 BK.21 / BK.98: Types (kind type) and Quick Kits / project templates (kind kit)
+  'types/walls', 'types/floors', 'types/roofs', 'types/ceilings', 'kits/templates', 'kits/quick',
 ]) {
   Object.defineProperty(CATEGORIES, k, { enumerable: true, get: () => msg('libitem.cat.' + k.replace('/', '.')) });
 }
-export const KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'symbol', 'detail', 'material', 'regulation', 'component', 'plant', 'template'];
+export const KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'symbol', 'detail', 'material', 'regulation', 'component', 'plant', 'template', 'type', 'kit'];
+/**
+ * BK.21: the three kinds of Library item people see, a class over the item kinds: Symbols (drawing conventions, 2D), Types (what an element is made
+ * of: layers, LOD), Assets (physical objects, plan view plus 3D). A kind in no class (material, regulation, template, kit) is data. The PHP twin is
+ * LibraryCatalog::ITEM_CLASSES / KIND_CLASS. Both apps' pickers read this, so the names live in one place.
+ */
+export const ITEM_CLASSES = ['symbol', 'type', 'asset'];
+export const KIND_CLASS = { symbol: 'symbol', detail: 'symbol', type: 'type', door: 'asset', window: 'asset', furniture: 'asset', fixture: 'asset', equipment: 'asset', component: 'asset', plant: 'asset', family: 'asset' };
+export const classOfKind = (kind) => KIND_CLASS[kind] || '';
+export const kindsOfClass = (cls) => Object.keys(KIND_CLASS).filter((k) => KIND_CLASS[k] === cls);
+/** BK.18: the LOD scale (walls/lod.js LOD_SCALE), classification systems, and which kinds must state a LOD or carry a code (the content rules). */
+export const LOD_SCALE = [100, 200, 300, 350, 400, 500];
+export const CLASSIFICATION_SYSTEMS = ['uniclass', 'omniclass', 'uniformat'];
+export const LOD_KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'type'];
+export const CLASSIFIED_KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'symbol', 'detail', 'plant', 'type'];
+export const TYPE_ELEMENTS = ['wall', 'floor', 'roof', 'ceiling'];
+export const TYPE_IFC_CLASSES = ['IfcWallType', 'IfcSlabType', 'IfcRoofType', 'IfcCoveringType'];
+export const KIT_TYPES = ['project-template', 'quick-kit'];
+export const MAX_KIT_BYTES = 4194304;
+const CLASS_CODE_RE = /^[A-Za-z0-9][A-Za-z0-9 ._:\/-]{0,39}$/;
+const APP_RE = /^[a-z][a-z0-9-]{1,30}$/;
+/**
+ * BK.96: the kinds that are placed in a drawing or model. Each must name its IFC class (`ifc.class`), whatever library it came from; a door is an
+ * IfcDoor and a window an IfcWindow. A drawing-only symbol or detail that stands for no physical thing uses IfcAnnotation. The other kinds
+ * (material, regulation, component, template) are records, not elements, and need no class. LibraryCatalog::ELEMENT_KINDS is the PHP twin.
+ */
+export const ELEMENT_KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'symbol', 'detail', 'plant'];
 /** 0.8 IND.7: a component record's vocabulary. LibraryCatalog.php has the same lists. */
 export const COMPONENT = {
   classes: ['substance', 'equipment', 'instrument', 'other'],
@@ -426,8 +509,8 @@ const ENTITY_KEYS = {
   line: ['x1', 'y1', 'x2', 'y2'], circle: ['x', 'y', 'r'], arc: ['x', 'y', 'r', 'a0', 'a1'], poly: ['pts', 'closed'],
   ellipse: ['cx', 'cy', 'mx', 'my', 'ratio', 't0', 't1'], text: ['x', 'y', 'h', 'rot', 'value'], point: ['x', 'y'], hatch: ['loops', 'solid'],
 };
-const TOP_KEYS = ['format', 'format_version', 'uuid', 'version', 'name', 'kind', 'category', 'description', 'maker', 'model', 'ifc',
-  'plan', 'body', 'clearances', 'params', 'material', 'regulation', 'component', 'plant', 'template', 'source_attrs', 'license', 'provenance', 'i18n', 'ports', 'variants'];
+const TOP_KEYS = ['format', 'format_version', 'uuid', 'version', 'name', 'kind', 'category', 'description', 'maker', 'model', 'ifc', 'lod', 'classification',
+  'plan', 'body', 'clearances', 'params', 'material', 'regulation', 'component', 'plant', 'template', 'type', 'kit', 'source_attrs', 'license', 'provenance', 'i18n', 'ports', 'variants'];
 
 /**
  * 0.8 IND.7: the shape of a component record (format cadcraft-component, version 1). Mirrors LibraryItemFormat::component: every
@@ -584,7 +667,73 @@ function checkPlant(c, err) {
   if ('symbol' in c && c.symbol !== '' && !PLANT.symbols.includes(c.symbol)) bad('plant.symbol', 'must be empty or one of ' + PLANT.symbols.join(', '));
 }
 
-export function validateItem(obj, { partial = false } = {}) {
+/** BK.21: item.type = { element, lod?, thickness (mm, the layers' sum), layers (how many), pack (a cadcraft-type-pack holding exactly this type) }. Twin of LibraryItemFormat::typeBlock. */
+function checkTypeBlock(t, item, { err, num, keys }) {
+  const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
+  keys('type', t, ['element', 'lod', 'thickness', 'layers', 'pack']);
+  if (!TYPE_ELEMENTS.includes(t.element)) err('type.element', msg('libitem.v.one_of', { list: TYPE_ELEMENTS.join(', ') }));
+  if ('lod' in t && !LOD_SCALE.includes(t.lod)) err('type.lod', msg('libitem.v.lod', { list: LOD_SCALE.join(', ') }));
+  if ('lod' in t && 'lod' in item && t.lod !== item.lod) err('type.lod', msg('libitem.v.type_lod_twice'));
+  if (!('thickness' in t)) err('type.thickness', msg('libitem.v.type_thickness_req')); else num('type.thickness', t.thickness, { min: 0, max: 20000 });
+  if (isNum(t.thickness) && !(t.thickness > 0)) err('type.thickness', msg('libitem.v.type_gt0'));
+  if (!('layers' in t)) err('type.layers', msg('libitem.v.type_layers_req')); else num('type.layers', t.layers, { min: 1, max: 60, int: true });
+  if (!('pack' in t)) { err('type.pack', msg('libitem.v.type_pack_req')); return; }
+  const pk = t.pack;
+  if (!pk || typeof pk !== 'object' || Array.isArray(pk)) { err('type.pack', msg('libitem.v.object')); return; }
+  if (JSON.stringify(pk).length > 1048576) { err('type.pack', msg('libitem.v.type_pack_big')); return; }
+  if (pk.format !== 'cadcraft-type-pack') err('type.pack.format', msg('libitem.v.must_be', { value: 'cadcraft-type-pack' }));
+  if (pk.version !== 1) err('type.pack.version', msg('libitem.v.must_be_1'));
+  if (!Array.isArray(pk.types) || pk.types.length !== 1) { err('type.pack.types', msg('libitem.v.type_pack_one')); return; }
+  if (!Array.isArray(pk.materials)) err('type.pack.materials', msg('libitem.v.type_pack_list'));
+  const ty = pk.types[0];
+  if (!ty || typeof ty !== 'object' || Array.isArray(ty)) { err('type.pack.types[0]', msg('libitem.v.type_pack_object')); return; }
+  if (ty.kind !== (t.element ?? '')) err('type.pack.types[0].kind', msg('libitem.v.type_pack_same'));
+  const layers = ty.recipe && typeof ty.recipe === 'object' ? ty.recipe.layers : null;
+  if (Array.isArray(layers) && isNum(t.layers) && layers.length !== t.layers) err('type.layers', msg('libitem.v.type_layers_n', { n: layers.length }));
+  if (Array.isArray(layers) && isNum(t.thickness)) {
+    let sum = 0;
+    for (const l of layers) if (l && typeof l === 'object' && isNum(l.t)) sum += l.t;
+    if (Math.abs(sum - t.thickness) > 0.01) err('type.thickness', msg('libitem.v.type_thickness_sum', { n: String(Number(sum.toFixed(4))) }));
+  }
+}
+
+/** BK.98: item.kit (see LibraryItemFormat::kit, its twin). The version, adopted and changelog go through packver.js, the one rule for packs and documents. */
+function checkKit(k, { err, keys, obj_, str }) {
+  keys('kit', k, ['type', 'app', 'apps', 'summary', 'file', 'members', 'version', 'adopted', 'changelog']);
+  if (!KIT_TYPES.includes(k.type)) err('kit.type', msg('libitem.v.one_of', { list: KIT_TYPES.join(', ') }));
+  if ('app' in k && (typeof k.app !== 'string' || !APP_RE.test(k.app))) err('kit.app', msg('libitem.v.kit_app'));
+  if ('apps' in k) {
+    if (!Array.isArray(k.apps) || k.apps.length > 8) err('kit.apps', msg('libitem.v.kit_apps'));
+    else k.apps.forEach((a, i) => { if (typeof a !== 'string' || !APP_RE.test(a)) err('kit.apps[' + i + ']', msg('libitem.v.kit_app_name')); });
+  }
+  if ('summary' in k) str('kit.summary', k.summary);
+  if (k.type === 'project-template') {
+    if (!('app' in k)) err('kit.app', msg('libitem.v.kit_app_req'));
+    if (!('file' in k)) err('kit.file', msg('libitem.v.kit_file_req'));
+    else if (obj_('kit.file', k.file)) {
+      keys('kit.file', k.file, ['format', 'data']);
+      const d = k.file.data;
+      if (k.file.format !== 'ifc-step') err('kit.file.format', msg('libitem.v.kit_file_format'));
+      if (typeof d !== 'string' || !d.trimStart().startsWith('ISO-10303-21;')) err('kit.file.data', msg('libitem.v.kit_file_data'));
+      else if (new TextEncoder().encode(d).length > MAX_KIT_BYTES) err('kit.file.data', msg('libitem.v.kit_file_big'));
+    }
+    if ('members' in k) err('kit.members', msg('libitem.v.kit_members_tpl'));
+  } else if (k.type === 'quick-kit') {
+    if ('file' in k) err('kit.file', msg('libitem.v.kit_file_qk'));
+    if (!('members' in k)) err('kit.members', msg('libitem.v.kit_members_req'));
+    else if (!Array.isArray(k.members) || !k.members.length || k.members.length > 200) err('kit.members', msg('libitem.v.kit_members_list'));
+    else k.members.forEach((m, i) => {
+      if (!obj_('kit.members[' + i + ']', m)) return;
+      keys('kit.members[' + i + ']', m, ['uuid', 'name']);
+      if (typeof m.uuid !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(m.uuid)) err('kit.members[' + i + '].uuid', msg('libitem.v.kit_member_uuid'));
+      if ('name' in m) str('kit.members[' + i + '].name', m.name);
+    });
+  }
+  const sub = {}; for (const f of ['version', 'adopted', 'changelog']) if (f in k) sub[f] = k[f];
+  for (const e of validatePackVersion(sub, 'kit').errors) { const i = e.indexOf(': '); err(e.slice(0, i), e.slice(i + 2)); }
+}
+
+export function validateItem(obj, { partial = false, content = false } = {}) {
   const errors = [];
   const err = (path, text) => { if (errors.length < 50) errors.push(path + ': ' + text); };
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return { ok: false, errors: ['item: ' + msg('libitem.v.not_object')] };
@@ -615,7 +764,7 @@ export function validateItem(obj, { partial = false } = {}) {
   keys('item', obj, TOP_KEYS);
   const required = ['format', 'format_version', 'name', 'kind', 'category', 'plan', 'body', 'params'];
   if (!partial) required.push('uuid', 'version', 'license');
-  for (const k of required) if (!(k in obj)) err(k, msg('libitem.v.required'));
+  for (const k of required) if (!(k in obj)) err(k, msg(k === 'license' ? 'libitem.v.license_required' : 'libitem.v.required'));   // BK.155: a licence on every item, with its reason
 
   if ('format' in obj && obj.format !== FORMAT) err('format', msg('libitem.v.must_be', { value: FORMAT }));
   if ('format_version' in obj && obj.format_version !== FORMAT_VERSION) err('format_version', msg('libitem.v.must_be_1'));
@@ -630,8 +779,38 @@ export function validateItem(obj, { partial = false } = {}) {
     keys('ifc', obj.ifc, ['class', 'predefined']);
     if (typeof obj.ifc.class !== 'string' || !/^Ifc[A-Za-z]{2,60}$/.test(obj.ifc.class)) err('ifc.class', msg('libitem.v.ifc_class'));
     if ('predefined' in obj.ifc && (typeof obj.ifc.predefined !== 'string' || !/^[A-Z_]{1,60}$/.test(obj.ifc.predefined))) err('ifc.predefined', msg('libitem.v.enum'));
-  }
+    const okClass = typeof obj.ifc.class === 'string' && /^Ifc[A-Za-z]{2,60}$/.test(obj.ifc.class);
+    if (okClass && obj.kind === 'door' && obj.ifc.class !== 'IfcDoor') err('ifc.class', msg('libitem.v.ifc_door'));
+    if (okClass && obj.kind === 'window' && obj.ifc.class !== 'IfcWindow') err('ifc.class', msg('libitem.v.ifc_window'));
+  } else if (!('ifc' in obj) && ELEMENT_KINDS.includes(obj.kind)) err('ifc', msg('libitem.v.ifc_required'));   // BK.96: no class, no upload
 
+  // BK.18: LOD and classification codes. Their shape is always checked; that they are there is a content rule ({ content: true }; the server's twin is
+  // LibraryCatalog::contentRules, its switch LIBRARY_CONTENT_RULES).
+  const lodNow = obj.kind === 'type' && obj.type && typeof obj.type === 'object' ? (obj.type.lod ?? obj.lod) : obj.lod;
+  if ('lod' in obj && !LOD_SCALE.includes(obj.lod)) err('lod', msg('libitem.v.lod', { list: LOD_SCALE.join(', ') }));
+  let classCodes = 0;
+  if ('classification' in obj) {
+    if (!Array.isArray(obj.classification) || obj.classification.length > 12) err('classification', msg('libitem.v.class_list'));
+    else {
+      const seenSys = new Set();
+      obj.classification.forEach((c, i) => {
+        const q = 'classification[' + i + ']';
+        if (!obj_(q, c)) return;
+        keys(q, c, ['system', 'code', 'title']);
+        if (typeof c.system !== 'string' || !CLASSIFICATION_SYSTEMS.includes(c.system)) err(q + '.system', msg('libitem.v.one_of', { list: CLASSIFICATION_SYSTEMS.join(', ') }));
+        else if (seenSys.has(c.system)) err(q + '.system', msg('libitem.v.class_twice'));
+        else seenSys.add(c.system);
+        if (typeof c.code !== 'string' || !CLASS_CODE_RE.test(c.code)) err(q + '.code', msg('libitem.v.class_code'));
+        else classCodes++;
+        if ('title' in c) str(q + '.title', c.title);
+      });
+    }
+  }
+  if (content && typeof obj.kind === 'string') {
+    if (LOD_KINDS.includes(obj.kind) && (lodNow === undefined || lodNow === null)) err(obj.kind === 'type' ? 'type.lod' : 'lod', msg('libitem.v.lod_required'));
+    const annot = obj.ifc && typeof obj.ifc === 'object' && obj.ifc.class === 'IfcAnnotation';
+    if (CLASSIFIED_KINDS.includes(obj.kind) && !annot && classCodes === 0 && (!('classification' in obj) || (Array.isArray(obj.classification) && !obj.classification.length))) err('classification', msg('libitem.v.class_required'));
+  }
   if ('plan' in obj && obj_('plan', obj.plan)) {
     const plan = obj.plan;
     keys('plan', plan, ['layers', 'entities']);
@@ -834,6 +1013,30 @@ export function validateItem(obj, { partial = false } = {}) {
     if ('body' in obj && obj.body !== null) err('body', msg('libitem.v.template_body'));
     if (obj.plan && Array.isArray(obj.plan.entities) && obj.plan.entities.length) err('plan', msg('libitem.v.template_plan'));
     if ('ports' in obj || 'variants' in obj) err('item', msg('libitem.v.template_extra'));
+  }
+  // BK.21: a type item (what an element is made of): the block, the class, no geometry. The recipe is type-pack.js's to read.
+  const isType = obj.kind === 'type';
+  if ('type' in obj) {
+    if (!isType) err('type', msg('libitem.v.type_kind'));
+    else if (obj_('type', obj.type)) checkTypeBlock(obj.type, obj, { err, num, keys, obj_ });
+  } else if (isType) err('type', msg('libitem.v.type_required'));
+  if (isType) {
+    if (!obj.ifc || typeof obj.ifc !== 'object' || Array.isArray(obj.ifc)) err('ifc', msg('libitem.v.type_ifc_required', { list: TYPE_IFC_CLASSES.join(', ') }));
+    else if (typeof obj.ifc.class === 'string' && !TYPE_IFC_CLASSES.includes(obj.ifc.class)) err('ifc.class', msg('libitem.v.type_ifc_class', { list: TYPE_IFC_CLASSES.join(', ') }));
+    if ('body' in obj && obj.body !== null) err('body', msg('libitem.v.type_body'));
+    if (obj.plan && Array.isArray(obj.plan.entities) && obj.plan.entities.length) err('plan', msg('libitem.v.type_plan'));
+    if ('ports' in obj || 'variants' in obj) err('item', msg('libitem.v.type_extra'));
+  }
+  // BK.98: a kit item (a project template or a Quick Kit shared through the Library), versioned like every pack (packver.js)
+  const isKit = obj.kind === 'kit';
+  if ('kit' in obj) {
+    if (!isKit) err('kit', msg('libitem.v.kit_kind'));
+    else if (obj_('kit', obj.kit)) checkKit(obj.kit, { err, keys, obj_, str });
+  } else if (isKit) err('kit', msg('libitem.v.kit_required'));
+  if (isKit) {
+    if ('body' in obj && obj.body !== null) err('body', msg('libitem.v.kit_body'));
+    if (obj.plan && Array.isArray(obj.plan.entities) && obj.plan.entities.length) err('plan', msg('libitem.v.kit_plan'));
+    if ('ports' in obj || 'variants' in obj) err('item', msg('libitem.v.kit_extra'));
   }
   if (isReg) {
     if ('body' in obj && obj.body !== null) err('body', msg('libitem.v.regulation_body'));
@@ -2182,4 +2385,27 @@ export function cleanItem(item) {
   const out = {};
   for (const [k, v] of Object.entries(item)) if (!k.startsWith('_')) out[k] = v;
   return out;
+}
+
+/**
+ * BK.98: a project template or a Quick Kit as a format-1 library item, ready to upload at /library/upload (the same submission flow as every item:
+ * review, licence, attestation; the Library fills uuid, version, licence and provenance). Pure; both apps' pickers and the tools call it.
+ *   kitItem({ type: 'project-template', name, app, summary, ifcText, version = '0.1.0', added = ['First version'], date, description })
+ *   kitItem({ type: 'quick-kit', name, apps, summary, members: [{ uuid, name }], version, added, date, description })
+ * -> { ok, item, errors[] }: the item is checked with validateItem(partial) before it is handed back.
+ */
+export function kitItem({ type, name, app = '', apps = [], summary = '', ifcText = '', members = [], version = '0.1.0', added = ['First version'], date = null, description = '' } = {}) {
+  const day = date || new Date().toISOString().slice(0, 10);
+  const kit = { type };
+  if (type === 'project-template') { kit.app = app; kit.file = { format: 'ifc-step', data: String(ifcText) }; }
+  else { if (apps.length) kit.apps = apps; kit.members = members.map((m) => (m.name ? { uuid: m.uuid, name: String(m.name).slice(0, LIMITS.text) } : { uuid: m.uuid })); }
+  if (summary) kit.summary = String(summary).slice(0, LIMITS.text);
+  kit.version = version;
+  kit.changelog = [{ version, date: day, added: added.filter(Boolean) }];
+  const item = {
+    format: FORMAT, format_version: FORMAT_VERSION, name: String(name || '').slice(0, 200), kind: 'kit', category: type === 'project-template' ? 'kits/templates' : 'kits/quick',
+    ...(description ? { description: String(description).slice(0, LIMITS.text) } : {}), plan: { layers: [], entities: [] }, body: null, params: {}, kit,
+  };
+  const v = validateItem(item, { partial: true });
+  return { ok: v.ok, item, errors: v.errors };
 }

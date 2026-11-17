@@ -5,6 +5,8 @@
  *
  *   const text = newBuilding({ name, levels: [{ name, elevation, height }], author, now });   // lengths in mm
  *   const levels = stackLevels(count, heightMm, (i) => name);                                  // evenly stacked levels
+ *   newBuilding({ …, sheet: { number, title, paper, x, y, ratio } })   0.10 BK.74: also the first sheet, with the lowest
+ *        level's plan on it (new-defaults.js firstSheet); read by views-model.js readSheets like any saved sheet
  *
  * What it writes (Design Transfer View, millimetres, Z up): owner history (BimCraft), units, the 3D model context with
  * Body and FootPrint sub-contexts (ifc-place.js reuses them when items are placed), IfcProject → IfcSite → IfcBuilding →
@@ -58,7 +60,7 @@ export function levelsProblem(levels) {
   if (!Array.isArray(levels) || !levels.length) return 'new.err.levels';
   if (levels.length > 200) return 'new.err.levels';
   for (const l of levels) {
-    if (!Number.isFinite(l.height) || l.height < 1000 || l.height > 100000) return 'new.err.height';
+    if (!Number.isFinite(l.height) || l.height < 10 || l.height > 1e7) return 'new.err.height';   // 0.10 BK.73: was 1 m to 100 m (practice); outside that is advice now (draw-advice.js USUAL.level)
     if (!Number.isFinite(l.elevation) || Math.abs(l.elevation) > 1e6) return 'new.err.elevation';
   }
   return '';
@@ -68,7 +70,7 @@ export function levelsProblem(levels) {
  * The building as IFC4 text. `name` names the project and the building; `fileName` goes in the header;
  * `now` is a Date (header time stamp and owner history), `guid` makes GlobalIds (tests pass a fixed one).
  */
-export function newBuilding({ name, siteName, levels, author = '', fileName = 'building.ifc', now = new Date(), guid = ifcGuid, version = '' }) {
+export function newBuilding({ name, siteName, levels, author = '', fileName = 'building.ifc', now = new Date(), guid = ifcGuid, version = '', sheet = null }) {
   const bad = levelsProblem(levels);
   if (bad) throw Object.assign(new Error(bad), { key: bad });
   const lines = [];
@@ -105,12 +107,14 @@ export function newBuilding({ name, siteName, levels, author = '', fileName = 'b
   const bldgPl = add(`IFCLOCALPLACEMENT(${sitePl},${world})`);
   const building = add(`IFCBUILDING(${S(guid())},${oh},${S(name)},$,$,${bldgPl},$,$,.ELEMENT.,$,$,$)`);
 
-  const storeys = [];
+  const storeys = [], storeyGuids = [];
   for (const l of levels) {
     const pt = add(`IFCCARTESIANPOINT((0.,0.,${real(l.elevation)}))`);
     const ax = add(`IFCAXIS2PLACEMENT3D(${pt},$,$)`);
     const pl = add(`IFCLOCALPLACEMENT(${bldgPl},${ax})`);
-    const st = add(`IFCBUILDINGSTOREY(${S(guid())},${oh},${S(l.name)},$,$,${pl},$,$,.ELEMENT.,${real(l.elevation)})`);
+    const stGuid = guid();
+    storeyGuids.push({ guid: stGuid, elevation: l.elevation });
+    const st = add(`IFCBUILDINGSTOREY(${S(stGuid)},${oh},${S(l.name)},$,$,${pl},$,$,.ELEMENT.,${real(l.elevation)})`);
     const h = add(`IFCPROPERTYSINGLEVALUE('Height',$,IFCPOSITIVELENGTHMEASURE(${real(l.height)}),$)`);
     const ps = add(`IFCPROPERTYSET(${S(guid())},${oh},'CadCraft_Level',$,(${h}))`);
     add(`IFCRELDEFINESBYPROPERTIES(${S(guid())},${oh},$,$,(${st}),${ps})`);
@@ -119,6 +123,16 @@ export function newBuilding({ name, siteName, levels, author = '', fileName = 'b
   add(`IFCRELAGGREGATES(${S(guid())},${oh},$,$,${project},(${site}))`);
   add(`IFCRELAGGREGATES(${S(guid())},${oh},$,$,${site},(${building}))`);
   add(`IFCRELAGGREGATES(${S(guid())},${oh},$,$,${building},(${storeys.join(',')}))`);
+  // 0.10 BK.74: the first sheet (views-model.js CadCraft_Sheets on the project, as saveSheet writes it): the lowest level's plan
+  if (sheet) {
+    const low = storeyGuids.slice().sort((p, q) => p.elevation - q.elevation)[0];
+    const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
+    const spec = { number: String(sheet.number || 'A-101').slice(0, 20), title: String(sheet.title || '').slice(0, 120), paper: String(sheet.paper || ''),   // i18n-ignore: a sheet number
+      views: [{ kind: 'plan', ref: low.guid, x: num(sheet.x, 200), y: num(sheet.y, 150), ratio: Math.max(0, num(sheet.ratio, 0)) }] };
+    const pv = add(`IFCPROPERTYSINGLEVALUE('sheet-1',$,IFCTEXT(${S(JSON.stringify(spec))}),$)`);
+    const ps = add(`IFCPROPERTYSET(${S(guid())},${oh},'CadCraft_Sheets',$,(${pv}))`);
+    add(`IFCRELDEFINESBYPROPERTIES(${S(guid())},${oh},$,$,(${project}),${ps})`);
+  }
 
   const iso = now.toISOString().slice(0, 19);
   return [

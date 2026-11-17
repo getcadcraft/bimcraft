@@ -2,7 +2,7 @@
 title: Qala isakhiwo esisha
 summary: Yenza imodeli yesakhiwo esingenalutho ngamazinga awo, dweba izindonga zayo, faka izinto ezivela emtapweni, bese uyigcina njenge-IFC.
 keywords: entsha, isakhiwo esisha, esingenalutho, qala kusukela ekuqaleni, isifanekiso, amazinga, izitezi, amaphansi, dala, imodeli
-from: 546b8ae8
+from: 68786865
 ---
 
 ## Okuzokwenza

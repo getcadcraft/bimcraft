@@ -57,6 +57,19 @@ export const COMMANDS = [
   C('wall.offset', 'model', 'bi-distribute-vertical', '[data-mtool="woffset"]', { draw: true }),
   C('wall.boxstretch', 'model', 'bi-bounding-box', '[data-mtool="wbox"]', { draw: true }),
   C('wall.alignlock', 'model', 'bi-lock', '[data-mtool="walign"]', { draw: true }),
+  // 0.9 WT.5 / FX.70 (walls-join-10): the Join tools (ids = the DU.1 icon set's: walljoinstyle, walldisjoin, walllayerprio)
+  C('wall.joinstyle', 'model', 'bi-bounding-box-circles', '[data-mtool="wjoinstyle"]', { draw: true }),
+  C('wall.disallow', 'model', 'bi-x-diamond', '[data-mtool="wdisjoin"]', { draw: true }),
+  C('wall.layerpriority', 'model', 'bi-layers', '[data-wall-layerprio]', { draw: true }),
+  C('wall.swaptype', 'model', 'bi-arrow-left-right', '[data-wall-swaptype]', { draw: true }),   // 0.10 BK.7 / BK.16 (bk-typeswap-10)
+  // 0.10 BK.94 / BK.97 (bk-content-10): the project's classification and type packs (the model bar's Data menu)
+  C('model.classification', 'model', 'bi-tags', '[data-cls-open]', { draw: true }),
+  C('model.typepacks', 'model', 'bi-box-seam', '[data-typepack-open]', { draw: true }),
+  // 0.9 WT.6 (walls-shape-10): the Shape tools as commands (wall-shape-view-ui.js adds their buttons to the Walls menu)
+  C('wall.attach', 'model', 'bi-arrow-bar-up', '[data-mtool="wsattach"]', { draw: true }),
+  C('wall.profile', 'model', 'bi-bezier2', '[data-mtool="wsprofile"]', { draw: true }),
+  C('wall.slant', 'model', 'bi-slash-lg', '[data-mtool="wsslant"]', { draw: true }),
+  C('wall.opening', 'model', 'bi-bounding-box-circles', '[data-mtool="wsopen"]', { draw: true }),
   C('model.door', 'model', 'bi-door-open', '[data-mtool="door"]', { draw: true, defKeys: ['D'] }),
   C('model.window', 'model', 'bi-window', '[data-mtool="window"]', { draw: true, defKeys: ['N'] }),
   C('model.floor', 'model', 'bi-layers', '[data-mtool="floor"]', { draw: true }),
@@ -81,10 +94,12 @@ export const COMMANDS = [
   C('build.panels', 'model', 'bi-columns-gap', '[data-panels-open]', { draw: true }),   // 0.8 EG.6: panel shop drawings, timber or light-gauge steel
   C('build.electrical', 'model', 'bi-plug', '[data-mtool="electrical"]', { draw: true }),
   C('build.symbols', 'model', 'bi-grid-3x3-gap-fill', '[data-sym-open], [data-sym-toolbar]', { draw: true }),   // 0.8 GH.3-F/G (symbols-ui.js): the symbol palette
+  C('build.symbollink', 'model', 'bi-link-45deg', '[data-symlink-open]', { draw: true }),   // 0.10 BK.23 (bk-r3-types-10, asset-symbol-ui.js): link a placed element to a symbol
   C('build.terrain', 'model', 'bi-globe', '[data-mtool="terrain"]', { draw: true }),
   C('build.pad', 'model', 'bi-square-half', '[data-mtool="pad"]', { draw: true }),
   C('build.paving', 'model', 'bi-signpost-split', '[data-mtool="paving"]', { draw: true }),
   C('build.section', 'model', 'bi-slash-square', '[data-mtool="section"]', { draw: true }),
+  C('build.elevation', 'model', 'bi-arrow-up-circle', '[data-mtool="elevation"]', { draw: true }),   // 0.10 BT.10: an elevation marker
   C('file.sheets', 'file', 'bi-files', '[data-res-sheetsopen]', { draw: true }),
   C('tools.takeoff', 'tools', 'bi-calculator', '[data-res-takeoff]', { draw: true }),
   C('view.plan', 'view', 'bi-square', '[data-model-layout="plan"]'),
@@ -129,11 +144,60 @@ export const COMMANDS = [
   C('library.updates', 'library', 'bi-arrow-repeat', '[data-lib-tool="updates"]'),
   C('library.credits', 'library', 'bi-c-circle', '[data-lib-tool="credits"]'),
   C('tools.handoff', 'tools', 'bi-box-arrow-up-right', '[data-handoff-ifc]', { optional: true }),
+  C('tools.part-link', 'tools', 'bi-box-arrow-up-right', '[data-part-link]', { optional: true }),   // 0.10 SU.1814: part links to PartCraft
   C('file.ifcx', 'file', 'bi-file-earmark-code', '[data-ifcx-export]', { optional: true }),   // IFC5 alpha export: shown only where the model can be exported
   C('tools.ids', 'tools', 'bi-clipboard2-check', '[data-ids-open]', { optional: true }),   // 0.7.1 71.25: Check against IDS… (ids-ui.js)
+  // 0.10 BK.65 / BK.20 / BK.64 (bk-r3-checks-10): the audit (audit-ui.js) and Mark as checked (verify-ui.js)
+  C('tools.audit', 'tools', 'bi-clipboard2-pulse', '[data-audit-open]', { optional: true }),
+  C('tools.markchecked', 'tools', 'bi-patch-check', '[data-verify-mark]', { optional: true }),
   C('app.settings', 'app', 'bi-gear', '[data-settings-open]', { defKeys: ['Ctrl+,'], keyOnly: true }),
   C('app.palette', 'app', 'bi-search', '[data-palette-open]', { defKeys: ['Ctrl+K'], keyOnly: true }),
   C('app.help', 'app', 'bi-question-circle', '[data-help-open]', { defKeys: ['F1'], keyOnly: true }),
+  // 0.10 BK.126 (bk-shell-10): the Draw bar's remaining tools as commands, so every tool button is one (keys, menu styles, ribbons and
+  // layouts all bind to it); labels are the buttons' own (model.tool.*, mep.tool.*, fam.tool)
+  C('model.grid', 'model', 'bi-grid-3x3', '[data-mtool="grid"]', { draw: true, label: 'model.tool.grid' }),
+  C('model.column', 'model', 'bi-pause', '[data-mtool="column"]', { draw: true, label: 'model.tool.column' }),
+  C('model.floorbyoutline', 'model', 'bi-pentagon', '[data-mtool="drawfloor"]', { draw: true, label: 'model.tool.drawfloor' }),
+  C('model.ramp', 'model', 'bi-triangle-half', '[data-mtool="ramp"]', { draw: true, label: 'model.tool.ramp' }),
+  C('modify.trim', 'model', 'bi-scissors', '[data-mtool="trim"]', { draw: true, label: 'model.tool.trim' }),
+  C('modify.corner', 'model', 'bi-arrow-90deg-right', '[data-mtool="corner"]', { draw: true, label: 'model.tool.corner' }),
+  C('model.callout', 'model', 'bi-chat-square', '[data-mtool="callout"]', { draw: true, label: 'model.tool.callout' }),
+  C('tools.pmeasure', 'model', 'bi-rulers', '[data-mtool="pmeasure"]', { draw: true, label: 'model.tool.pmeasure' }),
+  C('site.outline', 'model', 'bi-map', '[data-mtool="site"]', { draw: true, label: 'model.tool.site' }),
+  C('site.buildingline', 'model', 'bi-border-outer', '[data-mtool="bline"]', { draw: true, label: 'model.tool.bline' }),
+  C('site.servitude', 'model', 'bi-signpost', '[data-mtool="servitude"]', { draw: true, label: 'model.tool.servitude' }),
+  C('draft.line', 'model', 'bi-slash-lg', '[data-mtool="dline"]', { draw: true, label: 'model.tool.dline' }),
+  C('draft.polyline', 'model', 'bi-bezier', '[data-mtool="dpoly"]', { draw: true, label: 'model.tool.dpoly' }),
+  C('draft.rectangle', 'model', 'bi-square', '[data-mtool="drect"]', { draw: true, label: 'model.tool.drect' }),
+  C('draft.hatch', 'model', 'bi-grid-3x3-gap', '[data-mtool="dhatch"]', { draw: true, label: 'model.tool.dhatch' }),
+  C('mep.pipe', 'model', 'bi-dash-lg', '[data-mtool="pipe"]', { draw: true, label: 'mep.tool.pipe' }),
+  C('mep.duct', 'model', 'bi-distribute-horizontal', '[data-mtool="duct"]', { draw: true, label: 'mep.tool.duct' }),
+  C('mep.valve', 'model', 'bi-hourglass', '[data-mtool="valve"]', { draw: true, label: 'mep.tool.valve' }),
+  C('mep.weld', 'model', 'bi-record-circle', '[data-mtool="weld"]', { draw: true, label: 'mep.tool.weld' }),
+  C('mep.equipment', 'model', 'bi-box', '[data-mtool="equip"]', { draw: true, label: 'mep.tool.equip' }),
+  C('model.family', 'model', 'bi-box-seam', '[data-mtool="family"]', { draw: true, label: 'fam.tool' }),
+  C('wall.refdimension', 'model', 'bi-arrows', '[data-mtool="wallDimension"]', { draw: true, label: 'dimension.title' }),
+  // 0.10 (bk-tools-a-10): rooms, areas, openings through floors, model groups (spaces-ui.js adds the buttons to the Rooms menu of the Draw bar)
+  C('room.place', 'model', 'bi-door-open', '[data-mtool="room"]', { draw: true, label: 'spaces.tool.room' }),
+  C('room.separator', 'model', 'bi-distribute-horizontal', '[data-mtool="roomsep"]', { draw: true, label: 'spaces.tool.roomsep' }),
+  C('room.tag', 'model', 'bi-tag', '[data-mtool="tagroom"]', { draw: true, label: 'spaces.tool.tagroom' }),
+  C('area.place', 'model', 'bi-bounding-box', '[data-mtool="area"]', { draw: true, label: 'spaces.tool.area' }),
+  C('area.boundary', 'model', 'bi-border-outer', '[data-mtool="areabound"]', { draw: true, label: 'spaces.tool.areabound' }),
+  C('area.tag', 'model', 'bi-tags', '[data-mtool="tagarea"]', { draw: true, label: 'spaces.tool.tagarea' }),
+  C('opening.shaft', 'model', 'bi-box-arrow-down', '[data-mtool="shaft"]', { draw: true, label: 'spaces.tool.shaft' }),
+  C('opening.vertical', 'model', 'bi-square', '[data-mtool="vopening"]', { draw: true, label: 'spaces.tool.vopening' }),
+  C('group.model', 'model', 'bi-collection', '[data-mtool="mgroup"]', { draw: true, label: 'spaces.tool.mgroup' }),
+  // 0.10 (bk-tools-b-10): curtain systems (curtain-ui.js) and the work plane with what is drawn on it (workplane-ui.js); the buttons are in the Build menu of the Draw bar
+  C('curtain.system', 'model', 'bi-grid-1x2', '[data-mtool="curtain"]', { draw: true, label: 'curtain.tool.curtain' }),
+  C('curtain.grid', 'model', 'bi-grid-3x3', '[data-mtool="curtaingrid"]', { draw: true, label: 'curtain.tool.curtaingrid' }),
+  C('curtain.mullion', 'model', 'bi-distribute-vertical', '[data-mtool="mullion"]', { draw: true, label: 'curtain.tool.mullion' }),
+  C('model.byface', 'model', 'bi-box', '[data-mtool="byface"]', { draw: true, label: 'curtain.tool.byface' }),
+  C('workplane.set', 'model', 'bi-grid-3x3', '[data-mtool="workplane"]', { draw: true, label: 'wp.tool.workplane' }),
+  C('workplane.show', 'model', 'bi-eye', '[data-wp-show]', { draw: true, label: 'wp.tool.show' }),
+  C('workplane.reference', 'model', 'bi-border-center', '[data-mtool="refplane"]', { draw: true, label: 'wp.tool.refplane' }),
+  C('workplane.viewer', 'model', 'bi-aspect-ratio', '[data-wp-viewer]', { draw: true, label: 'wp.tool.viewer' }),
+  C('model.text', 'model', 'bi-badge-3d', '[data-mtool="modeltext"]', { draw: true, label: 'wp.tool.modeltext' }),
+  C('model.line', 'model', 'bi-slash-lg', '[data-mtool="modelline"]', { draw: true, label: 'wp.tool.modelline' }),
 ];
 export const GROUPS = ['file', 'edit', 'model', 'view', 'show', 'tools', 'library', 'app'];
 
@@ -146,6 +210,13 @@ const m = (label, items) => ({ label: 'input.m.' + label, items });
 const tab = (label, panels) => ({ label: 'input.m.' + label, panels: panels.map(([l, items, extra]) => ({ label: 'input.m.' + l, items, ...(extra || {}) })) });
 const lg = (id) => ({ id, size: 'lg' }), sm = (id) => ({ id, size: 'sm' });   // 0.8 RIBBON-COMPACT rest (shell-08)
 
+// 0.10 (bk-tools-a-10): the Rooms menu's tools, placed with the Draw bar's other tools in every menu style
+const ROOMS_DRAW = ['room.place', 'room.separator', 'room.tag', 'area.place', 'area.boundary', 'area.tag', 'opening.shaft', 'opening.vertical', 'group.model'];
+// 0.10 (bk-tools-b-10): curtain systems and the work plane tools, placed in every menu style
+const CURTAIN_DRAW = ['curtain.system', 'curtain.grid', 'curtain.mullion', 'model.byface'];
+const PLANE_DRAW = ['workplane.set', 'workplane.show', 'workplane.reference', 'workplane.viewer', 'model.text', 'model.line'];
+// 0.10 BK.126: the Draw bar's other tools, placed once in every menu style
+const MORE_DRAW = ['model.grid', 'model.column', 'model.floorbyoutline', 'model.ramp', 'modify.trim', 'modify.corner', 'model.callout', 'tools.pmeasure', 'site.outline', 'site.buildingline', 'site.servitude', 'draft.line', 'draft.polyline', 'draft.rectangle', 'draft.hatch', 'mep.pipe', 'mep.duct', 'mep.valve', 'mep.weld', 'mep.equipment', 'model.family', 'wall.refdimension'];
 const FILE_MENU = ['file.new', 'file.open', 'file.folder', 'file.documents', '-', 'file.save', 'file.print', 'file.dae', '-', 'app.settings', 'app.palette', 'app.help'];   // file.dae: File › Export Collada (0.9 SU.1125)
 const EDIT_MENU = ['edit.undo', 'edit.redo', '-', 'edit.cut', 'edit.copy', 'edit.paste', 'edit.paste-in-place', 'edit.duplicate', 'edit.delete', '-', 'edit.select-all', 'edit.select-none'];
 
@@ -160,11 +231,14 @@ export const STYLES = {
     menus: [
       m('file', [...FILE_MENU.slice(0, 6), 'file.sheets', ...FILE_MENU.slice(6)]),
       m('edit', EDIT_MENU),
-      m('build', ['model.draw', 'model.levels', '-', 'model.select', 'model.wall', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'model.door', 'model.window', '-', 'model.floor', 'model.ceiling', 'model.roof', '-', 'build.roofplane', 'build.dormer', 'build.foundation', 'build.stair', 'build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', '-', 'build.terrain', 'build.pad', 'build.paving', '-', 'build.section', '-', 'build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'modify.move', 'modify.align', 'modify.distribute']),
+      m('build', ['model.draw', 'model.levels', '-', 'model.select', 'model.wall', 'model.door', 'model.window', '-', 'model.floor', 'model.ceiling', 'model.roof', '-', 'build.roofplane', 'build.dormer', 'build.foundation', 'build.stair', 'build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', 'build.symbollink', '-', 'build.terrain', 'build.pad', 'build.paving', '-', 'build.section', 'build.elevation', '-', 'build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'modify.move', 'modify.align', 'modify.distribute', '-', ...MORE_DRAW]),
+      m('walls', ['wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'wall.joinstyle', 'wall.disallow', 'wall.layerpriority', 'wall.swaptype', 'wall.attach', 'wall.profile', 'wall.slant', 'wall.opening']),   // 0.10: the wall tools in a menu of their own (Build went over the 80-item limit)
+      m('rooms', ROOMS_DRAW),   // 0.10 (bk-tools-a-10): a menu of its own (Build is near the 80-item limit)
+      m('curtain', CURTAIN_DRAW), m('workplane', PLANE_DRAW),   // 0.10 (bk-tools-b-10): curtain systems; the work plane and what is drawn on it
       m('library', ['library.open', 'library.equipment', 'library.updates', 'library.credits']),
       m('3d', ['view.3d', 'view.split', '-', 'view.fit', 'view.top', 'view.front', 'view.side', '-', 'view.walk', 'view.views', 'view.section', 'view.secbox', '-', 'view.render', 'view.live', 'view.livewindow', 'view.vr', 'file.glb', 'file.gltf', 'file.usd', 'file.dae']),
       m('cad', ['view.dims', 'tools.measure']),
-      m('tools', ['tools.paint', '-', 'tools.takeoff', 'tools.handoff', 'tools.ids', 'view.cloud', 'view.register', 'view.maps']),
+      m('tools', ['tools.paint', '-', 'tools.takeoff', 'tools.handoff', 'tools.ids', 'tools.audit', 'tools.markchecked', 'view.cloud', 'view.register', 'view.maps', '-', 'model.classification', 'model.typepacks']),   // 0.10 BK.94 / BK.97: here because Build is at the 80-item limit
       m('view', ['view.plan', 'view.planfit', '-', 'view.edges', 'view.display.shaded', 'view.display.edges', 'view.display.wireframe', 'view.spaces', '-', 'vis.hide', 'vis.isolate', 'vis.ghost', 'vis.all']),
     ],
     bar: ['model.select', '-', 'model.wall', 'model.door', 'model.window', 'model.floor', 'model.roof', '-', 'view.plan', 'view.split', 'view.3d', '-', 'edit.undo', 'edit.redo', 'library.open'],
@@ -177,9 +251,9 @@ export const STYLES = {
     menus: [m('file', FILE_MENU)],
     quick: ['file.open', 'file.save', 'edit.undo', 'edit.redo'],
     tabs: [
-      tab('architecture', [['select', ['model.select']], ['build', [lg('model.wall'), sm('model.door'), sm('model.window'), sm('model.floor')], { more: ['model.ceiling', 'model.roof', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock'] }], ['residential', [lg('build.roofplane'), sm('build.dormer'), sm('build.foundation'), sm('build.stair')], { more: ['build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols'] }], ['site', [lg('build.terrain'), sm('build.pad'), sm('build.paving')]], ['model', ['model.draw', 'model.levels']]]),
+      tab('architecture', [['select', ['model.select']], ['build', [lg('model.wall'), sm('model.door'), sm('model.window'), sm('model.floor')], { more: ['model.ceiling', 'model.roof', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'wall.joinstyle', 'wall.disallow', 'wall.layerpriority', 'wall.swaptype', 'model.classification', 'model.typepacks', 'wall.attach', 'wall.profile', 'wall.slant', 'wall.opening'] }], ['residential', [lg('build.roofplane'), sm('build.dormer'), sm('build.foundation'), sm('build.stair')], { more: ['build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', 'build.symbollink'] }], ['site', [lg('build.terrain'), sm('build.pad'), sm('build.paving')]], ['model', ['model.draw', 'model.levels'], { more: MORE_DRAW }], ['rooms', [lg('room.place'), sm('room.separator'), sm('room.tag')], { more: ROOMS_DRAW.slice(3) }], ['curtain', [lg('curtain.system'), sm('curtain.grid'), sm('curtain.mullion')], { more: ['model.byface'] }], ['workplane', [lg('workplane.set'), sm('workplane.show'), sm('workplane.reference')], { more: ['workplane.viewer', 'model.text', 'model.line'] }]]),
       tab('insert', [['library', [lg('library.open'), sm('library.equipment'), sm('library.updates'), sm('library.credits')]], ['open', ['file.open', 'file.folder', 'file.documents', 'file.new']], ['link', ['tools.handoff', 'view.cloud', 'view.register', 'view.maps']]]),
-      tab('annotate', [['dimension', ['view.dims', 'tools.measure']], ['sections', ['build.section']]]),
+      tab('annotate', [['dimension', ['view.dims', 'tools.measure']], ['sections', ['build.section', 'build.elevation']]]),
       tab('modify', [['arrange', [lg('modify.move'), sm('modify.align'), sm('modify.distribute'), sm('model.traceref')], { more: ['build.stairsketch', 'model.pens', 'model.picture'] }], ['clipboard', ['edit.cut', 'edit.copy', 'edit.paste', 'edit.paste-in-place', 'edit.duplicate', 'edit.delete']], ['selection', ['edit.select-all', 'edit.select-none']]]),
       tab('view', [['views', ['view.plan', 'view.split', 'view.3d', 'view.planfit']], ['navigate', ['view.fit', 'view.top', 'view.front', 'view.side', 'view.walk', 'view.views']], ['graphics', ['view.edges', 'view.display.shaded', 'view.display.edges', 'view.display.wireframe', 'view.spaces', 'view.section', 'view.secbox']], ['visibility', ['vis.hide', 'vis.isolate', 'vis.ghost', 'vis.all']]]),
       tab('output', [['print', ['file.print', 'file.sheets', 'file.save']], ['render', ['tools.paint', 'view.render', 'view.live', 'view.livewindow', 'view.vr', 'file.glb', 'file.gltf', 'file.usd', 'file.dae']], ['quantities', ['tools.takeoff']]]),
@@ -199,7 +273,7 @@ export const STYLES = {
     menus: [m('file', FILE_MENU)],
     quick: ['file.new', 'file.open', 'file.save', 'file.print', 'edit.undo', 'edit.redo'],
     tabs: [
-      tab('home', [['draw', [lg('model.wall'), sm('model.door'), sm('model.window'), sm('model.floor')], { more: ['model.ceiling', 'model.roof', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock'] }], ['residential', [lg('build.roofplane'), sm('build.dormer'), sm('build.foundation'), sm('build.stair')], { more: ['build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', 'build.terrain', 'build.pad', 'build.paving', 'build.section'] }], ['modify', [lg('modify.move'), sm('modify.align'), sm('modify.distribute'), sm('model.select')], { more: ['build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'edit.copy', 'edit.paste', 'edit.duplicate', 'edit.delete'] }], ['annotation', ['view.dims', 'tools.measure']], ['levels', ['model.draw', 'model.levels']]]),
+      tab('home', [['draw', [lg('model.wall'), sm('model.door'), sm('model.window'), sm('model.floor')], { more: ['model.ceiling', 'model.roof', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'wall.joinstyle', 'wall.disallow', 'wall.layerpriority', 'wall.swaptype', 'model.classification', 'model.typepacks', 'wall.attach', 'wall.profile', 'wall.slant', 'wall.opening'] }], ['residential', [lg('build.roofplane'), sm('build.dormer'), sm('build.foundation'), sm('build.stair')], { more: ['build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', 'build.symbollink', 'build.terrain', 'build.pad', 'build.paving', 'build.section', 'build.elevation'] }], ['modify', [lg('modify.move'), sm('modify.align'), sm('modify.distribute'), sm('model.select')], { more: ['build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'edit.copy', 'edit.paste', 'edit.duplicate', 'edit.delete'] }], ['annotation', ['view.dims', 'tools.measure']], ['levels', ['model.draw', 'model.levels'], { more: MORE_DRAW }], ['rooms', [lg('room.place'), sm('room.separator'), sm('room.tag')], { more: ROOMS_DRAW.slice(3) }], ['curtain', [lg('curtain.system'), sm('curtain.grid'), sm('curtain.mullion')], { more: ['model.byface'] }], ['workplane', [lg('workplane.set'), sm('workplane.show'), sm('workplane.reference')], { more: ['workplane.viewer', 'model.text', 'model.line'] }]]),
       tab('insert', [['block', [lg('library.open'), sm('library.equipment'), sm('library.updates'), sm('library.credits')]], ['reference', ['tools.handoff', 'view.cloud', 'view.register', 'view.maps']]]),
       tab('view', [['viewports', ['view.plan', 'view.split', 'view.3d', 'view.planfit']], ['navigate', ['view.fit', 'view.top', 'view.front', 'view.side', 'view.walk', 'view.views']], ['visual', ['view.edges', 'view.display.shaded', 'view.display.edges', 'view.display.wireframe', 'view.spaces', 'view.section', 'view.secbox', 'vis.hide', 'vis.isolate', 'vis.ghost', 'vis.all']]]),
       tab('output', [['plot', ['file.print', 'file.sheets', 'file.save']], ['render', ['tools.paint', 'view.render', 'view.live', 'view.livewindow', 'view.vr', 'file.glb', 'file.gltf', 'file.usd', 'file.dae']], ['quantities', ['tools.takeoff']], ['clipboard', ['edit.cut', 'edit.paste-in-place', 'edit.select-all', 'edit.select-none']]]),
@@ -218,10 +292,10 @@ export const STYLES = {
       'vis.hide': ['HIDEOBJECTS', 'HIDE'], 'vis.isolate': ['ISOLATEOBJECTS', 'ISOLATE'], 'vis.ghost': ['GHOST'], 'vis.all': ['UNISOLATEOBJECTS', 'UNHIDE'],
       'library.open': ['INSERT', 'I', 'LIBRARY'], 'library.equipment': ['EQUIPMENT'], 'library.updates': ['UPDATES'], 'library.credits': ['CREDITS'],
       'file.new': ['NEW'], 'file.open': ['OPEN'], 'file.folder': ['OPENFOLDER'], 'file.documents': ['DOCUMENTS', 'VAULT'], 'file.save': ['SAVE', 'QSAVE', 'SAVEAS'], 'file.print': ['PLOT', 'PRINT'],
-      'app.settings': ['OPTIONS', 'SETTINGS'], 'app.help': ['HELP'], 'view.cloud': ['POINTCLOUD'], 'view.maps': ['MAP'], 'tools.handoff': ['DETAILCRAFT'], 'tools.ids': ['IDS', 'IDSCHECK'],
+      'app.settings': ['OPTIONS', 'SETTINGS'], 'app.help': ['HELP'], 'view.cloud': ['POINTCLOUD'], 'view.maps': ['MAP'], 'tools.handoff': ['DETAILCRAFT'], 'tools.ids': ['IDS', 'IDSCHECK'], 'tools.audit': ['AUDIT'], 'tools.markchecked': ['MARKCHECKED'],
       'build.roofplane': ['ROOFPLANE'], 'build.dormer': ['DORMER'], 'build.foundation': ['FOUNDATION', 'FOOTING'], 'build.stair': ['STAIR'], 'build.railing': ['RAILING'], 'build.countertop': ['COUNTERTOP'],
-      'build.framing': ['FRAMING', 'FRAME'], 'build.panels': ['PANELS', 'PANELDRAW'], 'build.electrical': ['ELECTRICAL', 'ELINSTALL'], 'build.symbols': ['SYMBOLS', 'SYMBOL'], 'build.terrain': ['TERRAIN', 'TOPO'], 'build.pad': ['PAD'], 'build.paving': ['PAVING'],
-      'build.section': ['SECTIONLINE'], 'file.sheets': ['SHEETS', 'SHEETSET', 'PUBLISH'], 'tools.takeoff': ['TAKEOFF'],
+      'build.framing': ['FRAMING', 'FRAME'], 'build.panels': ['PANELS', 'PANELDRAW'], 'build.electrical': ['ELECTRICAL', 'ELINSTALL'], 'build.symbols': ['SYMBOLS', 'SYMBOL'], 'build.symbollink': ['SYMBOLLINK'], 'build.terrain': ['TERRAIN', 'TOPO'], 'build.pad': ['PAD'], 'build.paving': ['PAVING'],
+      'build.section': ['SECTIONLINE'], 'build.elevation': ['ELEVATION', 'ELEVATIONMARK'], 'file.sheets': ['SHEETS', 'SHEETSET', 'PUBLISH'], 'tools.takeoff': ['TAKEOFF'],
     },
     mouse: { wheel: 1, zoomSpeed: 1, pan2d: ['middle'], orbit3d: { left: 'none', middle: 'pan', right: 'none' } },
   },
@@ -233,9 +307,10 @@ export const STYLES = {
       m('file', ['file.open', 'file.folder', 'file.documents', '-', 'file.save', 'file.print', 'file.sheets', 'file.dae', '-', 'app.settings', 'app.palette', 'app.help']),
       m('view', ['view.fit', 'view.top', 'view.front', 'view.side', '-', 'view.3d', 'view.plan', 'view.split', 'view.planfit', '-', 'view.walk', 'view.views', 'view.render', 'view.live', 'view.livewindow', 'view.vr', 'file.glb', 'file.gltf', 'file.usd', 'file.dae', '-', 'view.edges', 'view.display.shaded', 'view.display.edges', 'view.display.wireframe', 'view.spaces']),
       m('show', ['vis.hide', 'vis.isolate', 'vis.ghost', 'vis.all', '-', 'view.section', 'view.secbox', '-', 'view.cloud', 'view.register', 'view.maps']),
-      m('check', ['tools.measure', 'view.dims', '-', 'library.equipment', 'library.updates', 'library.credits', '-', 'tools.takeoff', 'tools.handoff', '-', 'tools.ids']),
+      m('check', ['tools.measure', 'view.dims', '-', 'library.equipment', 'library.updates', 'library.credits', '-', 'tools.takeoff', 'tools.handoff', '-', 'tools.ids', 'tools.audit', 'tools.markchecked']),
       m('edit', EDIT_MENU),
-      m('model', ['file.new', 'model.draw', 'model.levels', '-', 'model.select', 'model.wall', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'model.door', 'model.window', 'model.floor', 'model.ceiling', 'model.roof', '-', 'build.roofplane', 'build.dormer', 'build.foundation', 'build.stair', 'build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', '-', 'build.terrain', 'build.pad', 'build.paving', 'build.section', '-', 'build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'modify.move', 'modify.align', 'modify.distribute', '-', 'library.open', 'tools.paint', '-', 'tools.ids']),
+      m('model', ['file.new', 'model.draw', 'model.levels', '-', 'model.select', 'model.wall', 'wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'wall.joinstyle', 'wall.disallow', 'wall.layerpriority', 'wall.swaptype', 'model.classification', 'model.typepacks', 'wall.attach', 'wall.profile', 'wall.slant', 'wall.opening', 'model.door', 'model.window', 'model.floor', 'model.ceiling', 'model.roof', '-', 'build.roofplane', 'build.dormer', 'build.foundation', 'build.stair', 'build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', 'build.symbollink', '-', 'build.terrain', 'build.pad', 'build.paving', 'build.section', 'build.elevation', '-', 'build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'modify.move', 'modify.align', 'modify.distribute', '-', 'library.open', 'tools.paint', '-', 'tools.ids']),
+      m('draw', [...MORE_DRAW, ...ROOMS_DRAW, ...CURTAIN_DRAW, ...PLANE_DRAW]),   // 0.10 BK.126: a menu of its own (the Model menu is at the 80-item limit)
     ],
     bar: ['file.open', 'file.folder', '-', 'view.fit', 'view.top', 'view.front', 'view.side', '-', 'view.section', 'tools.measure', '-', 'vis.hide', 'vis.isolate', 'vis.ghost', 'vis.all', '-', 'view.walk'],
     labels: { 'model.draw': 'input.lbl.viewer.draw' },
@@ -279,6 +354,8 @@ export function hooks({ root, t }) {
       const st = window.bimcraftPlan?.state, tool = st?.on ? st.tool : 'select';
       // 2026-10-24: Esc ends a running Draw tool (or its chain) — the engine's fixed Esc (Select none) took it first, in every layout
       if (combo === 'Escape' && st?.on && (tool !== 'select' || st.chain)) return true;
+      // 0.10 (bk-tools-a-10): Enter finishes and Backspace steps back an outline being sketched (Shaft, Vertical Opening, Floor by outline, a separator's chain), in every layout
+      if ((combo === 'Enter' || combo === 'Backspace') && st?.on && tool !== 'select') return true;
       return plain && tool !== 'select' && (/^[0-9]$/.test(combo) || ((tool === 'door' || tool === 'window') && combo === 'H'));
     },
     mouse: (m) => setMouse(m),

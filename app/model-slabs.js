@@ -38,6 +38,10 @@ import { roofPlan } from './model-roof.js';
 import { writeRoofParts, edgeKinds, roofGeometry, ROOF_DEFAULTS } from './res-roof.js';   // 0.5 part 4 RC.1 (bim-residential)
 import { syncResidential } from './res-follow.js';   // 0.5 part 4 track RC: foundations (and more) follow the walls too
 import { t as tr } from './i18n.js';
+import { ruleOf } from './quantity-method.js';   // 0.10 BK.42 (bk-measure-10): the project's measurement method; null under the default
+import { outlineArea } from './quantities/rules.js';   // BK.11 (bk-quantities-10): the one stated measuring rule, shared with the schedules and TakeoffCraft
+import { separatorLines } from './room-bounds.js';
+import { ensureTypeLine, assignType, releaseType, typeTotal } from './element-types.js';   // 0.10 BK.24 (bk-r3-types-10): floors, roofs and ceilings take a layered type   // 0.10 (bk-tools-a-10): room separators bound rooms like a wall with no thickness
 
 export const ROOM_PSET = 'CadCraft_Room', FLOOR_PSET = 'CadCraft_Floor', CEILING_PSET = 'CadCraft_Ceiling', ROOF_PSET = 'CadCraft_Roof';
 const IN = 25.4;
@@ -57,7 +61,7 @@ export function storeyLoops(w, storey) {
   const all = levels.length > 1 ? readWalls(w) : readWalls(w, storey);
   const walls = [...all.filter((x) => x.storey === storey), ...(levels.length > 1 ? wallsThrough(all, levels, storey, PLAN_CUT) : [])];
   const polys = [...wallOutlines(walls.map((x) => ({ key: x.guid, a: x.a, b: x.b, t: x.t, bulge: x.bulge, off: x.joinOff }))).values()];
-  return { walls, ...planLoops(polys), outlines: buildingOutlines(walls) };
+  return { walls, ...planLoops(polys, { lines: separatorLines(w, storey) }), outlines: buildingOutlines(walls) };
 }
 
 
@@ -76,21 +80,21 @@ export function readDerived(w) {
     if (!ps) continue;
     const l = w.api.GetLine(w.mid, id, false);
     out.floors.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, seed: seedOf(ps), mode: ps.Mode === 'building' ? 'building' : 'room', kind: ps.Kind || 'wood',
-      thickness: Number(ps.Thickness) * w.unitMm, offset: Number(ps.Offset || 0) * w.unitMm, key: ps.ShapeKey || '' });
+      thickness: Number(ps.Thickness) * w.unitMm, offset: Number(ps.Offset || 0) * w.unitMm, key: ps.ShapeKey || '', typeKey: ps.TypeKey || '' });
   }
   for (const id of safeIds(w, 'IFCCOVERING')) {
     const ps = w.readPset(id, CEILING_PSET);
     if (!ps) continue;
     const l = w.api.GetLine(w.mid, id, false);
     out.ceilings.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, seed: seedOf(ps), mode: ps.Mode === 'building' ? 'building' : 'room',
-      height: Number(ps.Height) * w.unitMm, thickness: Number(ps.Thickness) * w.unitMm, key: ps.ShapeKey || '', pattern: CEILING_PATTERNS.some((x) => x.key === ps.Pattern) ? ps.Pattern : '' });
+      height: Number(ps.Height) * w.unitMm, thickness: Number(ps.Thickness) * w.unitMm, key: ps.ShapeKey || '', typeKey: ps.TypeKey || '', pattern: CEILING_PATTERNS.some((x) => x.key === ps.Pattern) ? ps.Pattern : '' });
   }
   for (const id of safeIds(w, 'IFCROOF')) {
     const ps = w.readPset(id, ROOF_PSET);
     if (!ps) continue;
     const l = w.api.GetLine(w.mid, id, false);
     out.roofs.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, walls: ps.WallsLevel || '', seed: seedOf(ps), pitch: Number(ps.PitchDegrees), overhang: Number(ps.Overhang) * w.unitMm,
-      thickness: Number(ps.Thickness) * w.unitMm, gables: String(ps.Gables || '').split(',').filter((x) => x !== '').map(Number), key: ps.ShapeKey || '', parts: partsOf(w, id),
+      thickness: Number(ps.Thickness) * w.unitMm, gables: String(ps.Gables || '').split(',').filter((x) => x !== '').map(Number), key: ps.ShapeKey || '', typeKey: ps.TypeKey || '', parts: partsOf(w, id),
       // RC.1: per-wall edges, rake overhang, plate height (0 = the walls' top), fascia height (0 = none), soffit
       edges: ps.Edges || '', rake: ps.Rake !== undefined && ps.Rake !== null ? Number(ps.Rake) * w.unitMm : null, plate: Number(ps.PlateHeight || 0) * w.unitMm,
       fascia: ps.FasciaHeight !== undefined && ps.FasciaHeight !== null ? Number(ps.FasciaHeight) * w.unitMm : 0, soffit: ps.Soffit === true || /^(\.?T\.?|true)$/i.test(String(ps.Soffit ?? '')) });
@@ -153,7 +157,7 @@ function writeFloor(w, f, loop) {
   const key = shapeKey(poly, holes, f.thickness, f.offset);
   if (f.key === key) return false;
   w.setShape(f.id, [w.rep('body', 'Body', 'SweptSolid', [w.extrude(w.profileVoids(poly, holes), f.offset - f.thickness, f.thickness)])]);
-  const a = Math.abs(loopArea(poly)) - holes.reduce((s, h) => s + Math.abs(loopArea(h)), 0);
+  const a = outlineArea(Math.abs(loopArea(poly)), holes.map((h) => Math.abs(loopArea(h))), ruleOf(w, 'floor')).net;   // BK.11: the shared rule; BK.42: by the project's method
   w.upsertQto(f.id, 'Qto_SlabBaseQuantities', [['Width', 'length', f.thickness], ['Perimeter', 'length', perim(poly)], ['GrossArea', 'area', Math.abs(loopArea(poly))], ['NetArea', 'area', a], ['NetVolume', 'volume', a * f.thickness]]);
   const sd = labelPoint(poly);
   w.upsertPset(f.id, FLOOR_PSET, [['SeedX', 'IFCLENGTHMEASURE', round(w.u(sd[0]))], ['SeedY', 'IFCLENGTHMEASURE', round(w.u(sd[1]))], ['ShapeKey', 'IFCIDENTIFIER', key]]);
@@ -164,14 +168,14 @@ function writeCeiling(w, c, loop) {
   const key = shapeKey(poly, holes, c.height, c.thickness);
   if (c.key === key) return false;
   w.setShape(c.id, [w.rep('body', 'Body', 'SweptSolid', [w.extrude(w.profileVoids(poly, holes), c.height, c.thickness)])]);
-  const a = Math.abs(loopArea(poly)) - holes.reduce((s, h) => s + Math.abs(loopArea(h)), 0);
+  const a = outlineArea(Math.abs(loopArea(poly)), holes.map((h) => Math.abs(loopArea(h))), ruleOf(w, 'finish.ceiling')).net;   // BK.11: the shared rule; BK.42: by the project's method
   w.upsertQto(c.id, 'Qto_CoveringBaseQuantities', [['Width', 'length', c.thickness], ['GrossArea', 'area', Math.abs(loopArea(poly))], ['NetArea', 'area', a]]);
   const sd = labelPoint(poly);
   w.upsertPset(c.id, CEILING_PSET, [['SeedX', 'IFCLENGTHMEASURE', round(w.u(sd[0]))], ['SeedY', 'IFCLENGTHMEASURE', round(w.u(sd[1]))], ['ShapeKey', 'IFCIDENTIFIER', key]]);
   return true;
 }
 
-export function addFloor(w, { storey, seed, mode = 'room', kind = 'wood', thickness, offset = 0, guid } = {}) {
+export function addFloor(w, { storey, seed, mode = 'room', kind = 'wood', thickness, offset = 0, guid, typeKey = '' } = {}) {
   const k = FLOOR_KINDS.find((x) => x.key === kind) || FLOOR_KINDS[0];
   const loop = pickLoop(w, storey, seed, mode);
   const st = w.api.GetLine(w.mid, storey, false);
@@ -181,15 +185,17 @@ export function addFloor(w, { storey, seed, mode = 'room', kind = 'wood', thickn
   const id = w.make('IFCSLAB', g, w.ownerHistory(), name, null, name, w.H(lp), null, null, 'FLOOR');
   w.noteGuid(g, id);
   w.contain(id, storey);
-  w.associateMaterial(id, w.material(tr('model.mat.' + k.mat)));
-  const T = thickness > 0 ? thickness : k.t;
-  w.upsertPset(id, FLOOR_PSET, [['Mode', 'IFCLABEL', mode], ['Kind', 'IFCLABEL', k.key], ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(T))], ['Offset', 'IFCLENGTHMEASURE', round(w.u(offset))],
+  // BK.24: with a type, the thickness is the type's and the material is its layer set
+  const ty = typeKey ? assignType(w, id, 'floor', typeKey) : null;
+  if (!ty) w.associateMaterial(id, w.material(tr('model.mat.' + k.mat)));
+  const T = ty ? typeTotal(ty) : thickness > 0 ? thickness : k.t;
+  w.upsertPset(id, FLOOR_PSET, [['Mode', 'IFCLABEL', mode], ['Kind', 'IFCLABEL', k.key], ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(T))], ['Offset', 'IFCLENGTHMEASURE', round(w.u(offset))], ['TypeKey', 'IFCIDENTIFIER', typeKey || null],
     ['SeedX', 'IFCLENGTHMEASURE', round(w.u(seed[0]))], ['SeedY', 'IFCLENGTHMEASURE', round(w.u(seed[1]))], ['ShapeKey', 'IFCIDENTIFIER', '']]);
   w.upsertPset(id, 'Pset_SlabCommon', [['IsExternal', 'IFCBOOLEAN', false], ['LoadBearing', 'IFCBOOLEAN', true]]);
   writeFloor(w, { id, thickness: T, offset, key: '' }, loop);
   return { id, guid: g };
 }
-export function addCeiling(w, { storey, seed, mode = 'room', height, thickness = 0.5 * IN, guid } = {}) {
+export function addCeiling(w, { storey, seed, mode = 'room', height, thickness = 0.5 * IN, guid, typeKey = '' } = {}) {
   const loop = pickLoop(w, storey, seed, mode);
   const st = w.api.GetLine(w.mid, storey, false);
   const lp = w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0);
@@ -198,8 +204,9 @@ export function addCeiling(w, { storey, seed, mode = 'room', height, thickness =
   const id = w.make('IFCCOVERING', g, w.ownerHistory(), name, null, name, w.H(lp), null, null, 'CEILING');
   w.noteGuid(g, id);
   w.contain(id, storey);
-  w.associateMaterial(id, w.material(tr('model.mat.gypsum')));
-  w.upsertPset(id, CEILING_PSET, [['Mode', 'IFCLABEL', mode], ['Height', 'IFCLENGTHMEASURE', round(w.u(height))], ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(thickness))],
+  const ty = typeKey ? assignType(w, id, 'ceiling', typeKey) : null;   // BK.24
+  if (ty) thickness = typeTotal(ty); else w.associateMaterial(id, w.material(tr('model.mat.gypsum')));
+  w.upsertPset(id, CEILING_PSET, [['Mode', 'IFCLABEL', mode], ['Height', 'IFCLENGTHMEASURE', round(w.u(height))], ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(thickness))], ['TypeKey', 'IFCIDENTIFIER', typeKey || null],
     ['SeedX', 'IFCLENGTHMEASURE', round(w.u(seed[0]))], ['SeedY', 'IFCLENGTHMEASURE', round(w.u(seed[1]))], ['ShapeKey', 'IFCIDENTIFIER', '']]);
   writeCeiling(w, { id, height, thickness, key: '' }, loop);
   return { id, guid: g };
@@ -213,7 +220,9 @@ function pickLoop(w, storey, seed, mode) {
 }
 
 // ---- roofs ----
-export function addRoof(w, { storey, seed, pitch = 26.565, overhang = 12 * IN, gables = [], thickness = 8 * IN, guid, edges = '', rake = null, plate = 0, fascia = ROOF_DEFAULTS.fascia, soffit = true } = {}) {
+export function addRoof(w, { storey, seed, pitch = 26.565, overhang = 12 * IN, gables = [], thickness = 8 * IN, guid, edges = '', rake = null, plate = 0, fascia = ROOF_DEFAULTS.fascia, soffit = true, typeKey = '' } = {}) {
+  const rty = typeKey ? ensureTypeLine(w, 'roof', typeKey).type : null;   // BK.24: a typed roof is as thick as its type
+  if (rty) thickness = typeTotal(rty);
   const L = storeyLoops(w, storey);
   const outline = loopAt(L.outlines, seed);
   if (!outline) throw Object.assign(new Error('model.err.nobuilding2'), { key: 'model.err.nobuilding2' });
@@ -233,7 +242,8 @@ export function addRoof(w, { storey, seed, pitch = 26.565, overhang = 12 * IN, g
   w.upsertPset(id, ROOF_PSET, [['WallsLevel', 'IFCIDENTIFIER', wallsGuid], ['PitchDegrees', 'IFCREAL', pitch], ['Overhang', 'IFCLENGTHMEASURE', round(w.u(overhang))],
     ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(thickness))], ['Gables', 'IFCLABEL', gables.join(',')], ['SeedX', 'IFCLENGTHMEASURE', round(w.u(seed[0]))], ['SeedY', 'IFCLENGTHMEASURE', round(w.u(seed[1]))], ['ShapeKey', 'IFCIDENTIFIER', ''],
     ['Edges', 'IFCTEXT', edges || null], ['Rake', 'IFCLENGTHMEASURE', rake === null || rake === undefined ? null : round(w.u(rake))], ['PlateHeight', 'IFCLENGTHMEASURE', round(w.u(plate || 0))],
-    ['FasciaHeight', 'IFCLENGTHMEASURE', round(w.u(fascia || 0))], ['Soffit', 'IFCBOOLEAN', !!soffit]]);
+    ['FasciaHeight', 'IFCLENGTHMEASURE', round(w.u(fascia || 0))], ['Soffit', 'IFCBOOLEAN', !!soffit], ['TypeKey', 'IFCIDENTIFIER', typeKey || null]]);
+  if (rty) assignType(w, id, 'roof', typeKey);
   writeRoof(w, { id, guid: g, storey: host.id, walls: wallsGuid, seed, pitch, overhang, gables, thickness, key: '', parts: [], edges, rake, plate, fascia, soffit }, { outline, levels, L });
   return { id, guid: g };
 }
@@ -321,6 +331,13 @@ export function updateDerived(w, guid, ch = {}) {
     return { kind, storey: x.storey };
   }
   const rows = [['ShapeKey', 'IFCIDENTIFIER', '']];
+  // 0.10 BK.24: a type swap. The element is the same element (its GlobalId, place, room and data stay): only its type, its
+  // thickness and its material change. '' takes the type off (the thickness stays). While it has a type, the type gives the thickness.
+  if (ch.typeKey !== undefined) {
+    if (ch.typeKey) { const ty = assignType(w, x.id, kind, ch.typeKey); ch = { ...ch, thickness: typeTotal(ty) }; }
+    else releaseType(w, x.id);
+    rows.push(['TypeKey', 'IFCIDENTIFIER', ch.typeKey || '']);
+  } else if (x.typeKey && ch.thickness !== undefined) { ch = { ...ch }; delete ch.thickness; }
   if (kind === 'floor') {
     if (ch.thickness > 0) rows.push(PL('Thickness', ch.thickness));
     if (Number.isFinite(ch.offset)) rows.push(L('Offset', ch.offset));

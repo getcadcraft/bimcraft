@@ -32,6 +32,7 @@ import { documentPages } from './assembly-schedule-layout.js';
  */
 import { merge as mergeCredits, creditRows } from './report/credits.js';
 import { el } from './ui-util.js';
+import { projectName } from './schedule-data.js';   // 0.10 BK.4: the one reader of the project's name
 import { readGrids, toPlan as gridsToPlan, gridsInView } from './model-grids.js';   // 0.6 DF.16 (bim-draw): grids on the elevations and sections
 import { fmtLen, parseLen, parsePitch, fmtPitch, fmtArea, isMetric } from './model-units.js';
 import { labelPapers } from './paper-labels.js';
@@ -48,12 +49,14 @@ import { wallGeom } from './model-arcs.js';
 import { STAIR_KINDS, STAIR_DEFAULTS, STAIR_LIMITS, stairLayout, readStairs, placeStair, changeStair, removeStairs, stairHeight, SPIRAL_DEFAULTS } from './res-stair.js';
 import { rules, onRules } from './rules-hook.js';   // 0.8 REG.1: the building regulations an add-on says are in force (none without one)
 import { RAIL_DEFAULTS, railingParts, readRailings, placeRailing, changeRailing, removeRailings } from './res-railing.js';
+import { placeFence } from './fence-bim.js';   // 0.10 SU.1814b (written by bim-part-link-10): the Railing tool's Fence kind, lib/fence's layout as one element
 import { parseTjiTable, activeTji, setActiveTji, tjiStatement } from './tji-table.js';   // 0.8 GH.3-E
 import { TJI_PSET, FRAME_DEFAULTS, readFraming, frameHosts, changeFraming, removeFraming, keepPiece, lumberList, frameWall, LUMBER } from './res-framing.js';
 import { readOpenings, openingType, openingTypeName } from './model-openings.js';
 import { wallType, typeName as wallTypeName } from './model-walls.js';
 import { roofGeometry, edgeKinds } from './res-roof.js';
 import { modelQuantities, buildTakeoff } from './res-takeoff.js';
+import { readMethodSetting } from './quantity-method.js';   // 0.10 BK.42 (bk-measure-10)
 import { newHandoffId, putHandoff } from './handoff.js';
 import { loadTin, readTerrain, readPads, readHardscape, finishedSurface, existingSurface, placeTerrain, changeTerrain, removeTerrain, placePad, changePad, removePads, placeHardscape, changeHardscape, removeHardscape,
   parsePointText, drawingContours, thinToGrid, toModel, autoOffset, landXml, readLandXmlSurfaces, padShape, PAD_DEFAULTS, HARD_KINDS } from './res-terrain.js';
@@ -64,7 +67,7 @@ import { readCopies } from './view-copies.js';
 import { printSheets } from './print-style.js';   // 0.9 D8.12-B
 import { readViewNotes, readViewDims } from './elev-edit.js';   // 0.9 SU.1123: notes written in elevations and sections   // 0.9 D8.12-A: duplicated elevations and sections on sheets
 import { readMaterials } from './project-materials.js';
-import { buildSet, setPdf, sheetSvg, PAPERS, readSectionLines, placeSectionLine, changeSectionLine, removeSectionLines, sectionDir } from './res-sheets.js';
+import { buildSet, setPdf, sheetSvg, PAPERS, readSectionLines, placeSectionLine, changeSectionLine, removeSectionLines, sectionDir, placeElevationMarker, elevationMarkerOf, sectionTitle } from './res-sheets.js';
 import { viewerToPlan } from './model-plan.js';
 import { DEVICES, symbolPlan, symbolScale, wallSpot, readDevices, placeDevice, changeDevice, linkLight, removeDevices, deviceSchedule, circuitSchedule, isLight, isSwitch, isBoard } from './res-elec.js';
 import { GROUPS as EL_GROUPS, SYMBOLS as EL_SYMBOLS } from './res-elec-symbols.js';
@@ -87,7 +90,7 @@ export const creditsSchedule = (items, t) => ({ ref: 'credits', title: t('res.sh
 
 export function mountRes(modelUi) {
   if (!modelUi?.extend) return null;
-  const R = { planes: [], plane: { pitch: Math.atan(4 / 12) / D2R, base: null, pts: null, at: null }, founds: [], found: { kind: 'slab', hover: null }, stairs: [], stair: { ...STAIR_DEFAULTS, start: null, at: null }, rails: [], rail: { kind: 'guard', height: RAIL_DEFAULTS.height, pts: null, at: null }, frames: [], frame: { ...FRAME_DEFAULTS, show: true, see: false, hover: null }, terrain: null, pads: [], hards: [], tr: { spots: [], z: 0, unit: 'ft', tinReady: false, fin: null, finKey: null, contours: null, pad: { ...PAD_DEFAULTS }, hard: { kind: 'walk', pts: null, at: null } }, devs: [], el: { kind: 'socket.double', circuit: '', height: null, at: null, link: null }, secs: [], sec: { a: null, at: null }, sheets: null, counters: [], counter: { overhang: COUNTER_DEFAULTS.overhang, thickness: COUNTER_DEFAULTS.thickness, hover: null }, cabinets: [] };
+  const R = { planes: [], plane: { pitch: Math.atan(4 / 12) / D2R, base: null, pts: null, at: null }, founds: [], found: { kind: 'slab', hover: null }, stairs: [], stair: { ...STAIR_DEFAULTS, start: null, at: null }, rails: [], rail: { kind: 'guard', height: RAIL_DEFAULTS.height, pts: null, at: null }, frames: [], frame: { ...FRAME_DEFAULTS, show: true, see: false, hover: null }, terrain: null, pads: [], hards: [], tr: { spots: [], z: 0, unit: 'ft', tinReady: false, fin: null, finKey: null, contours: null, pad: { ...PAD_DEFAULTS }, hard: { kind: 'walk', pts: null, at: null } }, devs: [], el: { kind: 'socket.double', circuit: '', height: null, at: null, link: null }, secs: [], sec: { a: null, at: null }, elv: { a: null, at: null }, sheets: null, counters: [], counter: { overhang: COUNTER_DEFAULTS.overhang, thickness: COUNTER_DEFAULTS.thickness, hover: null }, cabinets: [] };
   let A = null;   // the plan's API (model-ui.js extend)
   let tjiBar = null;   // GH.3-E: refreshes the Framing tool's TJI table row
   const t = (k, v) => A.t(k, v);
@@ -161,7 +164,7 @@ export function mountRes(modelUi) {
       root.querySelector('[data-res-trxml]')?.addEventListener('click', () => exportLandXml());
       const pm = (sel, key, min) => { const i = root.querySelector(sel); i?.addEventListener('change', () => { const mm = parseLen(i.value, A.units()); if (mm >= min) R.tr.pad[key] = mm; else A.host.status(t('model.err.length'), true); i.value = L(R.tr.pad[key]); }); };
       pm('[data-res-padmargin]', 'margin', 0); pm('[data-res-paddepth]', 'depth', -2000);
-      root.querySelector('[data-res-padslope]')?.addEventListener('change', (e) => { const v = Number(String(e.target.value).replace(/:1$/, '')); if (v >= 1 && v <= 10) R.tr.pad.slope = v; else A.host.status(t('res.err.padslope'), true); e.target.value = R.tr.pad.slope + ':1'; });
+      root.querySelector('[data-res-padslope]')?.addEventListener('change', (e) => { const v = Number(String(e.target.value).replace(/:1$/, '')); if (v >= 0.1 && v <= 100) R.tr.pad.slope = v; else A.host.status(t('res.err.padslope'), true); e.target.value = R.tr.pad.slope + ':1'; });
       root.querySelector('[data-res-hdkind]')?.addEventListener('change', (e) => { R.tr.hard.kind = e.target.value; });
     }
     if (tz && document.activeElement !== tz) tz.value = L(R.tr.z);
@@ -180,7 +183,7 @@ export function mountRes(modelUi) {
         if (A.S.tool === 'stair' && A.root.querySelector('[data-model-hint]')) A.root.querySelector('[data-model-hint]').textContent = t(e.target.value === 'spiral' ? 'comforts.hint.spiral' : 'res.hint.stair');
       });
       sw?.addEventListener('change', () => { const mm = parseLen(sw.value, A.units()); if (mm >= 500) R.stair.width = mm; else A.host.status(t('res.err.stairwidth'), true); sw.value = L(R.stair.width); A.drawOverlay(); });
-      root.querySelector('[data-res-rlkind]')?.addEventListener('change', (e) => { R.rail.kind = e.target.value; R.rail.height = e.target.value === 'handrail' ? 36 * 25.4 : RAIL_DEFAULTS.height; const rh = root.querySelector('[data-res-rlheight]'); if (rh) rh.value = L(R.rail.height); });
+      root.querySelector('[data-res-rlkind]')?.addEventListener('change', (e) => { R.rail.kind = e.target.value; R.rail.height = e.target.value === 'handrail' ? 36 * 25.4 : e.target.value === 'fence' ? 1800 : RAIL_DEFAULTS.height; const rh = root.querySelector('[data-res-rlheight]'); if (rh) rh.value = L(R.rail.height); });
       const rh = root.querySelector('[data-res-rlheight]');
       rh?.addEventListener('change', () => { const mm = parseLen(rh.value, A.units()); if (mm >= 300) R.rail.height = mm; else A.host.status(t('model.err.length'), true); rh.value = L(R.rail.height); });
     }
@@ -440,7 +443,7 @@ export function mountRes(modelUi) {
     const pts = R.rail.pts;
     R.rail.pts = null;
     if (!pts || pts.length < 2) { A.host.status(t('res.err.rail'), true); return; }
-    A.commit(placeRailing({ level: levelGuid(), points: pts, height: R.rail.height, kind: R.rail.kind }), { label: t(R.rail.kind === 'handrail' ? 'res.rail.handrail' : 'res.rail.guard'), verb: t('model.verb.placed') });
+    A.commit(R.rail.kind === 'fence' ? placeFence({ level: levelGuid(), points: pts, height: R.rail.height }) : placeRailing({ level: levelGuid(), points: pts, height: R.rail.height, kind: R.rail.kind }), { label: t(R.rail.kind === 'fence' ? 'res.rl.fence' : R.rail.kind === 'handrail' ? 'res.rail.handrail' : 'res.rail.guard'), verb: t('model.verb.placed') });
   }
   const fmtRule = (v, unit) => (unit === 'pct' ? (Math.round(v * 10) / 10) + ' %' : L(v));
   /** What the regulations add-on says about this stair's checks, in its words; null without one (the labelled-defaults line is used). */
@@ -719,7 +722,10 @@ export function mountRes(modelUi) {
       if (name.endsWith('.dwg')) { const D = await import('./dwg/read.js'); model = D.readDwg(new Uint8Array(await f.arrayBuffer())); }
       else { const D = await import('./dxf-model.js'); model = D.readDxfModel(await f.text()); }
       const r = drawingContours(model);
-      return { points: r.points, lines: r.lines, unit: R.tr.unit };
+      // 0.10 BK.8 (units on import): the drawing's own $INSUNITS when it states one this tool reads (it was ignored); else asked first
+      const said = { 2: 'ft', 4: 'mm', 6: 'm', 21: 'ftUS' }[model.header?.INSUNITS | 0] || null;
+      const unit = await groundUnit(f, name.endsWith('.dwg') ? 'DWG' : 'DXF', said);
+      return unit ? { points: r.points, lines: r.lines, unit } : null;
     }
     if (/\.(xml|landxml)$/.test(name)) {   // 0.6 DF.24: CivilCraft's LandXML surfaces, their own triangles kept
       const lx = readLandXmlSurfaces(await f.text());
@@ -728,7 +734,15 @@ export function mountRes(modelUi) {
       const sf = lx.surfaces[i];
       return { points: sf.pts, lines: [], faces: sf.faces.length ? sf.faces : null, unit: lx.unit, source: 'landxml', notes: lx.notes, surface: sf.name };
     }
-    return { points: parsePointText(await f.text()), lines: [], unit: R.tr.unit };
+    const unit = await groundUnit(f, t('res.tr.pointsfile'), null);   // a list of points states no unit: asked first (it was read in the Units list's unit, feet unless changed)
+    return unit ? { points: parsePointText(await f.text()), lines: [], unit } : null;
+  }
+  /** 0.10 BK.8: the unit of a ground file. Stated by the file: used and said. Else the shell's one dialog (remembered per file), with this tool's units as its choices. → unit | null (not answered) */
+  async function groundUnit(f, format, said) {
+    const IU = window.ccImportUnits, id = (u) => (u === 'ftUS' ? 'usft' : u), back = (u) => (u === 'usft' ? 'ftUS' : u);
+    if (!IU) return said || R.tr.unit;
+    const a = await IU.resolve({ file: f, format, stated: said ? id(said) : null, choices: Object.keys(UNIT_MM).map(id), suggest: id(R.tr.unit), say: (s) => { R.tr.unitSaid = s; A.host.status(s); } });
+    return a ? back(a.unit) : null;
   }
   /** A LandXML file with several surfaces: which one is the ground (0.6 DF.24). → its index, or −1 (Cancel). */
   function chooseSurface(list) {
@@ -769,8 +783,9 @@ export function mountRes(modelUi) {
     try {
       await ensureTin();
       A.host.status(t('res.tr.reading', { name: f.name }));
+      R.tr.unitSaid = '';
       let r = await readGroundFile(f);
-      if (!r) { A.host.status(''); return; }
+      if (!r) { A.host.status(R.tr.unitSaid || ''); return; }
       r = await inModelSystem(f, r);   // 0.8 D8.9 item 3: a file in another system than the model's is offered the model's
       if (!r) { A.host.status(''); return; }
       const all = [...r.points, ...r.lines.flat()];
@@ -852,7 +867,7 @@ export function mountRes(modelUi) {
       kit.field(t('res.pad.margin'), kit.lenInput(pd.margin, 'data-mp-padmargin', (mm) => run({ margin: mm }), { allowZero: true }));
       kit.field(t('res.pad.depth'), kit.lenInput(pd.depth, 'data-mp-paddepth', (mm) => run({ depth: mm }), { any: true }));
       const sl = el('input', { type: 'text', className: 'bc-input bc-num', value: pd.slope + ':1', 'data-mp-padslope': '' });
-      sl.addEventListener('change', () => { const v = Number(String(sl.value).replace(/:1$/, '')); if (v >= 1 && v <= 10) run({ slope: v }); else { A.host.status(t('res.err.padslope'), true); sl.value = sl.defaultValue; } });
+      sl.addEventListener('change', () => { const v = Number(String(sl.value).replace(/:1$/, '')); if (v >= 0.1 && v <= 100) run({ slope: v }); else { A.host.status(t('res.err.padslope'), true); sl.value = sl.defaultValue; } });
       kit.field(t('res.pad.slope'), sl);
       const ps = w?.readPset(pd.id, 'CadCraft_Pad') || {};
       kit.rows.push(el('dt', {}, t('res.tr.cut')), el('dd', { 'data-mp-padcut': '' }, Number(ps.Cut || 0).toFixed(1) + ' m³'), el('dt', {}, t('res.tr.fill')), el('dd', {}, Number(ps.Fill || 0).toFixed(1) + ' m³'));   // i18n-ignore: unit
@@ -959,6 +974,7 @@ export function mountRes(modelUi) {
       kit.field(t('res.el.load'), ld, el('span', { className: 'bc-sub' }, ' W'));   // i18n-ignore: watts
     }
     kit.field(DEVICES[d.kind].mount === 'ceiling' ? t('res.el.height.at') : t('res.el.height'), kit.lenInput(d.height, 'data-mp-elheight', (mm) => run({ height: mm }), { min: 50 }));
+    kit.field(t('res.el.room'), el('span', { 'data-mp-elroom': '' }, d.room || t('res.el.room.none')));   // 0.10 BK.22 (bk-r3-types-10): the room it stands in (room-lookup.js keeps it up to date)
     if (isSwitch(d.kind)) {
       const tags = d.controls.map((g) => R.devs.find((x) => x.guid === g)?.tag).filter(Boolean);
       kit.field(t('res.el.controls'), el('span', { 'data-mp-elcontrols': '' }, tags.length ? tags.join(', ') : t('res.el.controls.none')));
@@ -1003,7 +1019,7 @@ export function mountRes(modelUi) {
     const scenes = new Map(levels.map((l) => [l.id, A.sceneFor(l.id)]));
     const base = String(A.host.fileName?.() || 'model').replace(/\.ifc$/i, '');
     return { name: base + ' — ' + t('res.to.button').toLowerCase(), units: A.units(), levels, scenes, walls, openings, roofs, founds: R.founds, cabinets: R.cabinets, devs: R.devs, rooms,
-      lumber: lumberList(w, { metric: isMetric(A.units()) }).rows, fmtLen: L, date: new Date().toISOString().slice(0, 10) };   // i18n-ignore: a file name
+      lumber: lumberList(w, { metric: isMetric(A.units()) }).rows, fmtLen: L, date: new Date().toISOString().slice(0, 10), method: readMethodSetting(w).method };   // i18n-ignore: a file name   (method: 0.10 BK.42, the project's measurement method)
   }
   async function makeTakeoff() {
     const d = takeoffData();
@@ -1034,6 +1050,14 @@ export function mountRes(modelUi) {
     const k = A.kb();
     for (const sl of R.secs) {
       if (sl.storey !== A.S.level) continue;
+      if (sl.kind === 'elevation') {   // 0.10 BT.10: an elevation marker — a circle with its number and a pointer the way it looks
+        const { at: m, dir: d } = elevationMarkerOf(sl), n = [-d[1], d[0]], r = 300, ring = [];
+        for (let i = 0; i < 24; i++) { const a0 = i * Math.PI / 12, a1 = (i + 1) * Math.PI / 12; ring.push([m[0] + Math.cos(a0) * r, m[1] + Math.sin(a0) * r, m[0] + Math.cos(a1) * r, m[1] + Math.sin(a1) * r]); }
+        const tip = [m[0] + d[0] * 620, m[1] + d[1] * 620], p1 = [m[0] + d[0] * 150 + n[0] * 260, m[1] + d[1] * 150 + n[1] * 260], p2 = [m[0] + d[0] * 150 - n[0] * 260, m[1] + d[1] * 150 - n[1] * 260];
+        scene.symbols.push({ key: k + sl.id, lines: [...ring, [p1[0], p1[1], tip[0], tip[1]], [p2[0], p2[1], tip[0], tip[1]]], dashed: [], poly: [[m[0] - 320, m[1] - 320], [m[0] + 320, m[1] - 320], [m[0] + 320, m[1] + 320], [m[0] - 320, m[1] + 320]] });
+        scene.rooms.push({ key: k + sl.id, poly: [[m[0] - 250, m[1] - 250], [m[0] + 250, m[1] - 250], [m[0] + 250, m[1] + 250], [m[0] - 250, m[1] + 250]], at: m, label: [sl.name] });
+        continue;
+      }
       const { dir, u } = sectionDir(sl), ext = 600;
       const a = [sl.a[0] - u[0] * ext, sl.a[1] - u[1] * ext], b = [sl.b[0] + u[0] * ext, sl.b[1] + u[1] * ext];
       const arrows = [];
@@ -1043,6 +1067,19 @@ export function mountRes(modelUi) {
     }
   }
   function sectionOverlay(o) {
+    if (A.S.tool === 'elevation') {   // 0.10 BT.10: where the marker stands, then the way it looks
+      const ev = R.elv;
+      if (ev.at) o.snap = ev.at;
+      if (!ev.a) { if (ev.at) o.hud = { p: ev.at.p, text: t('res.elv.hud.a') }; return; }
+      o.points.push(ev.a);
+      if (ev.at) {
+        const b = ev.at.p, d = [b[0] - ev.a[0], b[1] - ev.a[1]], L2 = Math.hypot(...d) || 1, u = [d[0] / L2, d[1] / L2], n = [-u[1], u[0]], tip = [ev.a[0] + u[0] * Math.max(L2, 620), ev.a[1] + u[1] * Math.max(L2, 620)];
+        o.lines.push([ev.a[0], ev.a[1], tip[0], tip[1]], [tip[0], tip[1], tip[0] - u[0] * 200 + n[0] * 140, tip[1] - u[1] * 200 + n[1] * 140], [tip[0], tip[1], tip[0] - u[0] * 200 - n[0] * 140, tip[1] - u[1] * 200 - n[1] * 140],
+          [ev.a[0] - n[0] * 500, ev.a[1] - n[1] * 500, ev.a[0] + n[0] * 500, ev.a[1] + n[1] * 500]);
+        o.hud = { p: b, text: t('res.elv.hud.b') };
+      }
+      return;
+    }
     if (A.S.tool !== 'section') return;
     const sc = R.sec;
     if (sc.at) o.snap = sc.at;
@@ -1057,24 +1094,29 @@ export function mountRes(modelUi) {
   function sectionProps(items, kit) {
     const sl = R.secs.find((x) => x.guid === items[0].guid);
     if (!sl) return null;
-    const run = (ch) => A.commit(changeSectionLine(sl.guid, ch), kit.one(t('res.sec.name', { name: sl.name })));
+    const run = (ch) => A.commit(changeSectionLine(sl.guid, ch), kit.one(sectionTitle(sl)));
     const nm = el('input', { type: 'text', className: 'bc-input', value: sl.name, maxLength: 8, 'data-mp-secname': '' });
     nm.addEventListener('change', () => { if (nm.value.trim()) run({ name: nm.value.trim() }); });
     kit.field(t('res.sec.label'), nm);
     kit.field(t('res.sec.look'), kit.button(t('res.sec.flip'), 'data-mp-secflip', () => run({ look: sl.look === 'left' ? 'right' : 'left' })));
     kit.field(t('res.sec.depth'), kit.lenInput(sl.depth, 'data-mp-secdepth', (mm) => run({ depth: mm }), { allowZero: true }), el('span', { className: 'bc-sub' }, ' ' + t('res.sec.depth.note')));
     kit.field(t('res.sh.title'), kit.button(t('res.sh.open'), 'data-mp-secsheets', () => openSheets()));
-    return { title: t('res.sec.name', { name: sl.name }) };
+    return { title: sectionTitle(sl) };
   }
   const PAPER_KEY = 'bimcraft.sheets.paper';
   const paperNow = () => { let p = null; try { p = localStorage.getItem(PAPER_KEY); } catch (e) { /* none */ } return PAPERS[p] ? p : (isMetric(A.units()) ? 'a3' : 'tabloid'); };
   /** Every drawing of the set, from the model as it is now. */
-  function makeSet(paper) {
+  function makeSet(paper, tb = null) {
     const input = setInput();
     if (!input) return [];
-    return buildSet(input, setOpts(paper));
+    return buildSet(input, withProject(setOpts(paper), tb));
   }
-  const setOpts = (paper) => ({ paper, units: A.units(), project: String(A.host.fileName?.() || '').replace(/\.ifc$/i, ''), date: new Date().toISOString().slice(0, 10) });
+  /** The project's title block (SC.7; `tb` = { use, project, client, drawnBy, revision, date, labels } from SuperCad Studio's export set) put into the set's own strip:
+   *  with `use` the project's name and date take the place of the model's; without it they only fill what the model leaves empty. Client, drawn by and revision join the strip. */
+  const withProject = (o, tb) => (!tb ? o : { ...o, project: (tb.use ? tb.project || o.project : o.project || tb.project) || '', date: (tb.use && tb.date) || o.date,
+    strip: [tb.client && `${tb.labels?.client || ''}: ${tb.client}`, tb.drawnBy && `${tb.labels?.drawn_by || ''}: ${tb.drawnBy}`, tb.revision && `${tb.labels?.revision || ''}: ${tb.revision}`].filter(Boolean) });
+  // 0.10 BK.4 (the small-house run): the title block names the PROJECT (IfcProject's long name or name), as a new building's does; the file's name only when the project has none
+  const setOpts = (paper) => ({ paper, units: A.units(), project: (() => { try { const w = writer(); return (w && projectName(w)) || ''; } catch (e) { return ''; } })() || String(A.host.fileName?.() || '').replace(/\.ifc$/i, ''), date: new Date().toISOString().slice(0, 10) });
   /** What the sheets draw, from the model as it is now (refs: a level's / section line's GlobalId, a side, a schedule kind:
    *  0.6 DF.19's own sheets find their views by them). */
   /** 0.8 D8.8 round 5: the vertical pictures that face a view (picture-ui.js forView; their images are made by prepareSheet before the set is built). */
@@ -1122,7 +1164,7 @@ export function mountRes(modelUi) {
     }
     for (const sl of R.secs) {
       if(!levels.some(l=>l.id===sl.storey)||![...sl.a,...sl.b,sl.depth].every(Number.isFinite)||Math.hypot(sl.b[0]-sl.a[0],sl.b[1]-sl.a[1])<100||sl.depth<0) {
-        input.sections.push({ref:sl.guid,title:t('res.sec.name',{name:sl.name}),view:{bounds:null,warnings:[{reason:t('proj.section_invalid')}]}});
+        input.sections.push({ref:sl.guid,title:sectionTitle(sl),view:{bounds:null,warnings:[{reason:t('proj.section_invalid')}]}});
         continue;
       }
       const M = viewerToPlan(C, w.storeyWorld(sl.storey));
@@ -1132,7 +1174,7 @@ export function mountRes(modelUi) {
       if(settings.issue)view.warnings.push({reason:settings.issue});
       view.images = pictureViews({ dir, o, guid: sl.guid }, levels.find((l) => l.id === sl.storey) || g);   // 0.8 D8.8 round 5
       view.notes = [...noted(view, { kind: 'section', dir, base: levels.find((l) => l.id === sl.storey)?.elevation || 0 }), ...ownNotes('section:' + sl.guid)];   // 0.9 SU.1123
-      input.sections.push({ ref: sl.guid, title: t('res.sec.name', { name: sl.name }), view });
+      input.sections.push({ ref: sl.guid, title: sectionTitle(sl), view });
     }
     // 0.9 D8.12-A: duplicated elevations and sections — the same drawing; an own copy with its own detail, scale and crop
     try {
@@ -1180,7 +1222,8 @@ export function mountRes(modelUi) {
     }
     const sch = A.schedules?.() || {};
     const schTitle = { lumber: t('res.fr.sch.lumber'), devices: t('res.el.sch.devicesched'), circuits: t('res.el.sch.circuitsched') };
-    for (const kind of ['doors', 'windows', 'rooms', 'devices', 'circuits', 'lumber']) if (sch[kind]?.rows?.length) input.schedules.push({ ref: kind, title: schTitle[kind] || t('model.sch.' + kind), ...sch[kind] });
+    for (const kind of ['doors', 'windows', 'walls', 'rooms', 'devices', 'circuits', 'lumber']) if (sch[kind]?.rows?.length)   // 0.10 BK.129: Walls by type too, so a sheet's wall lengths and areas follow the model like its plan
+      input.schedules.push({ ref: kind, ...sch[kind], title: sch[kind].title || schTitle[kind] || t('model.sch.' + kind) });   // 0.10 BK.4 (the small-house run): a schedule that comes with an empty title still gets its heading on the sheet
     for (const [kind,key] of [['assemblies','assemblies'],['materialLegend','materials']]) if(sch[kind]) input.schedules.push(...documentPages(sch[kind],key));
     // the Library credits: a schedule like the others, so it is on the set's schedule sheet and can be placed on any sheet, and it is made again from the model each time
     try {
@@ -1227,12 +1270,15 @@ export function mountRes(modelUi) {
 
   // ---- the extension ----
   const ext = {
-    tools: ['roofplane', 'foundation', 'countertop', 'stair', 'railing', 'framing', 'terrain', 'pad', 'paving', 'section', 'electrical', 'ellink'],
+    tools: ['roofplane', 'foundation', 'countertop', 'stair', 'railing', 'framing', 'terrain', 'pad', 'paving', 'section', 'elevation', 'electrical', 'ellink'],
     hint: (name) => (name === 'stair' && R.stair.kind === 'spiral' ? 'comforts.hint.spiral' : 'res.hint.' + name),   // 0.6 round 2: the spiral stair's own
     typed: () => false,
     classes: /^Ifc(Roof|Slab|ElementAssembly|Footing|Wall|Furniture|FurnishingElement|Stair|StairFlight|Railing|Member|Beam|GeographicElement|Annotation|Outlet|SwitchingDevice|LightFixture|Sensor|JunctionBox|ElectricDistributionBoard|FlowTerminal|FlowController|FlowFitting)$/,
     /** 0.6 DF.19 (views-ui.js): what a sheet can show, and the set's paper / title-block options. */
     sheetInput: () => setInput(), sheetOpts: () => setOpts(paperNow()),
+    /** 0.10 BK.49 (bk-r3-checks-10, asbuilt.js): the drawing set as it is now, as one PDF, for the handover package's as-built drawings. → { bytes, sheets } | null */
+    /** `o.titleBlock`: the project's title block for the set's strip (withProject). `o.paper` (SC.7, the export set's entry below): a paper asked for by the caller instead of the one last chosen in the Sheets dialog; `list` = what is on each page. */
+    setPdfBytes(o = {}) { if (!A.ed()) return null; if (!A.S.data) A.prepareWorkspace(); if (!A.S.data) return null; const paper = PAPERS[o && o.paper] ? o.paper : paperNow(); const set = makeSet(paper, (o && o.titleBlock) || null); if (!set.length) return null; return { bytes: setPdf(printSheets(set), { paper, title: String(A.host.fileName?.() || 'model').replace(/\.ifc$/i, '') }), sheets: set.length, list: set.map((sh) => ({ id: sh.number, number: sh.number, title: sh.title, scale: sh.scale || (sh.views || []).map((v) => v.scale).filter(Boolean)[0] || '', revision: '', paper, block: !!(o && o.titleBlock) })) }; },
     /** 0.8 EG.56: what a keynote legend can number: the model's classification references (system + code, with the reference's name) and its presentation layers, each with how many elements carry it. */
     legendSource() {
       const e = A.ed(); if (!e) return [];
@@ -1325,6 +1371,7 @@ export function mountRes(modelUi) {
       if (A.S.tool === 'framing') R.frame.hover = frameHostAt(p);
       if (A.S.tool === 'terrain') R.tr.at = p;
       if (A.S.tool === 'section') R.sec.at = snap(p, e, R.sec.a ? [R.sec.a] : []);
+      if (A.S.tool === 'elevation') R.elv.at = snap(p, e, R.elv.a ? [R.elv.a] : []);
       if (A.S.tool === 'electrical' || A.S.tool === 'ellink') R.el.at = p;
       if (A.S.tool === 'paving') R.tr.hard.at = snap(p, e, R.tr.hard.pts || []);
       if (A.S.tool === 'pad') { const o = A.S.loops && loopAt(A.S.loops.outlines, p); R.tr.padHover = o ? o.poly : null; }
@@ -1365,6 +1412,13 @@ export function mountRes(modelUi) {
         const sw = R.devs.find((d) => d.guid === R.el.link);
         if (!sw) { endLink(); return; }
         A.commit(linkLight(sw.guid, lt.guid), { label: sw.tag, verb: t(sw.controls.includes(lt.guid) ? 'res.el.verb.unlinked' : 'res.el.verb.linked') });
+        return;
+      }
+      if (A.S.tool === 'elevation') {   // 0.10 BT.10
+        const q = snap(p, e, R.elv.a ? [R.elv.a] : []).p;
+        if (!R.elv.a) { R.elv.a = q; return; }
+        const at = R.elv.a; R.elv.a = null;
+        A.commit(placeElevationMarker({ level: levelGuid(), at, toward: q }), { label: t('res.elv.marker'), verb: t('model.verb.placed') });
         return;
       }
       if (A.S.tool === 'section') {
@@ -1414,6 +1468,7 @@ export function mountRes(modelUi) {
       if (R.rail.pts) { R.rail.pts = null; return true; }
       if (R.tr.hard.pts) { R.tr.hard.pts = null; return true; }
       if (R.sec.a) { R.sec.a = null; return true; }
+      if (R.elv.a) { R.elv.a = null; return true; }
       if (A.S.tool === 'ellink') { const g = R.el.link; endLink(); const d = R.devs.find((x) => x.guid === g); if (d) A.host.select([A.kb() + d.id]); return true; }
       return false;
     },
@@ -1441,7 +1496,7 @@ export function mountRes(modelUi) {
       const dv = R.devs.find((x) => k + x.id === key);
       if (dv) return { kind: 'device', guid: dv.guid, label: dv.tag + ' · ' + t('res.el.kind.' + dv.kind) };   // i18n-ignore: tag and name
       const slx = R.secs.find((x) => k + x.id === key);
-      if (slx) return { kind: 'section', guid: slx.guid, label: t('res.sec.name', { name: slx.name }) };
+      if (slx) return { kind: 'section', guid: slx.guid, label: sectionTitle(slx) };
       if (R.terrain && k + R.terrain.id === key) return { kind: 'terrain', guid: R.terrain.guid, label: t('res.terrain') };
       const pdx = R.pads.find((x) => k + x.id === key);
       if (pdx) return { kind: 'pad', guid: pdx.guid, label: t('res.pad') };
@@ -1490,5 +1545,26 @@ export function mountRes(modelUi) {
   if (schedSel && !schedSel.querySelector('option[value="lumber"]')) schedSel.append(el('option', { value: 'lumber' }, t('res.fr.sch.lumber')));
   if (schedSel && !schedSel.querySelector('option[value="devices"]')) schedSel.append(el('option', { value: 'devices' }, t('res.el.sch.devicesched')), el('option', { value: 'circuits' }, t('res.el.sch.circuitsched')));
   if (typeof window !== 'undefined') window.bimcraftRes = { state: R, api: A, makeTakeoff };   // for tests
+  /**
+   * The export set's entry (SuperCad Studio's Finalize and export, SC.7): the drawing set's own PDF writer and the model's own IFC writer, called with options and
+   * no dialog; nothing about the model changes (it is not marked saved). sheets() → the set as it would be made now; can(kind) → null | 'empty' | 'unknown';
+   * run(kind, o) → [{ name, bytes, sheets? }]. o = { paper: 'iso-a3' | 'a3' | 'arch-d' … (else the Sheets dialog's paper) }
+   */
+  const paperOf = (k) => { const x = String(k || '').toLowerCase().replace(/^iso-/, '').replace('-', ''); return PAPERS[x] ? x : paperNow(); };
+  const stem = () => String(A.host.fileName?.() || 'model').replace(/\.ifc$/i, '');
+  const exportSet = {
+    kinds: ['pdf', 'ifc'], direct: true,   // run() returns the bytes: no download is started
+    sheets() { try { if (!A.ed()) return []; if (!A.S.data) A.prepareWorkspace(); if (!A.S.data) return []; const paper = paperNow(); return makeSet(paper).map((sh) => ({ id: sh.number, number: sh.number, title: sh.title, scale: sh.scale || (sh.views || []).map((v) => v.scale).filter(Boolean)[0] || '', revision: '', paper })); } catch (e) { return []; } },
+    can: (kind) => (!exportSet.kinds.includes(kind) ? 'unknown' : A.ed() ? null : 'empty'),
+    async run(kind, o = {}) {
+      if (!A.ed()) return [];
+      if (kind === 'ifc') return [{ name: stem() + '.ifc', bytes: A.ed().save() }];
+      if (kind !== 'pdf') return [];
+      try { await window.bimcraftPicture?.prepareSheet?.(); } catch (e) { /* the sheets go on without pictures */ }
+      const r = ext.setPdfBytes({ paper: paperOf(o.paper), titleBlock: o.titleBlock || null });
+      return r ? [{ name: stem() + ' ' + t('res.sh.set') + '.pdf', bytes: r.bytes, sheets: r.list }] : [];
+    },
+  };
+  if (typeof window !== 'undefined') window.bimcraftExport = exportSet;
   return { ext, state: R };
 }

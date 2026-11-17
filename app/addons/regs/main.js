@@ -24,7 +24,8 @@
  *               CadCraft_Regulations on IfcProject (Settings = JSON {format cc-regs-drawing, packs, rulesOff, mode, versions}), one undo step
  */
 import { setActivePacks, activeIds, profiles, onRegsChange, packVersion, setLimitsApplier, setAppliesFilter } from './lib/active.js';
-import { stairLimitsFrom, strictest } from './lib/regs.js';
+import { stairLimitsFrom, strictest, setReleaseCheck } from './lib/regs.js';
+import { validatePackVersion } from '../../packver.js';   // BK.153/154: the shared pack version + changelog rule
 import * as BK from '../../study/breakit.js';   // 0.8 EG.31: escape routes through the pack's egress rule (lib/study, copied by tools/study/sync.mjs bimcraft)
 import { routeFindings } from './lib/route.js';
 import { stairRows, roomRows, doorRows, elecRows, foundRows, framingRows, joistRows, rafterRows, ceilingJoistRows, energyRows, regsSchedule, limitText } from './lib/check.js';
@@ -47,9 +48,10 @@ import { fmtLen, fmtArea, getDisplayUnits } from '../../model-units.js';   // th
 const PSET = 'CadCraft_Regulations';
 
 export async function activate(api) {
+  setReleaseCheck(validatePackVersion);   // a pack's release record is checked by the one shared validator
   setLimitsApplier(useStairLimits);   // the engine (lib/active.js) has no app imports; BimCraft applies the limits through its stair tool
   const t = api.t;
-  setAppliesFilter(['stair', 'room', 'door', 'window', 'building', 'storey', 'foundation', 'wall', 'header', 'floor', 'roof']);   // the packs for drawing practice, zoning, roads and connections belong to the other apps
+  setAppliesFilter(['stair', 'room', 'door', 'window', 'building', 'storey', 'foundation', 'wall', 'header', 'floor', 'roof'], { sections: true });   // the packs for drawing practice, zoning, roads and connections belong to the other apps
   await setupRegs(api);
   api.onDeactivate(() => useStairLimits(null));
 

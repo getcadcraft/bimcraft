@@ -17,6 +17,7 @@
  *     engines                        optional: the engine registry (engines.js); default = the page's shared one for `where`
  *     where: 'web' | 'studio'        which edition this is (outside engines run only in Studio; the web saves their package)
  *     handoff(settings, {w, h}) → {files, manifest}   optional: the hand-off package for an outside engine (handoff.js, RE.2)
+ *     viewHints() → {section, inside}   optional: what the view is (looks.js viewHints); default = read from scene() once, when asked
  *     parent                         where the dialog goes (the app's root, so its own key handling sees a dialog open)
  *   }) → {dialog, close()}
  *
@@ -26,7 +27,7 @@
  * engine path traced it. Nothing here touches the model.
  */
 import { t, locale } from "../i18n.js";
-import { QUALITY, SIZES, SKIES, LOOK_KEYS, MODES, MINUTES, IES_MAX_TEXT, IES_MAX_LAMPS, CAM_FSTOPS, CAM_SHUTTERS, CAM_ISOS, CAM_BLADES, PROJECTIONS, cleanSettings, sizeFor } from "./looks.js";
+import { QUALITY, SIZES, SKIES, LOOK_KEYS, MODES, MINUTES, IES_MAX_TEXT, IES_MAX_LAMPS, CAM_FSTOPS, CAM_SHUTTERS, CAM_ISOS, CAM_BLADES, PROJECTIONS, cleanSettings, sizeFor, SCENE_KEYS, applyScene, sceneOf, viewHints, defaultScene } from "./looks.js";
 import { ev100 } from "./pt-camera.js";
 import { BUILTIN, sharedRegistry, engineFor, modeFor, cleanEngineOpts, defaultEngine, saveDefaultEngine } from "./engines.js";
 import { compose, mixKey, cleanMix, SHOW, MAX_PRESETS } from "./pt-mix.js";
@@ -66,6 +67,8 @@ const CSS = `
 .cc-render-swatch { width: 1.25rem; height: 1.25rem; border: var(--pen-1, 1px) solid var(--ink); }
 .cc-render-look span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-render input[type=range] { width: 100%; }
+.cc-render-scenes { display: flex; flex-wrap: wrap; gap: .35rem; }
+.cc-render-scenes button[aria-pressed=true] { background: var(--ink); color: var(--sheet-2); border-color: var(--ink); }
 @media (max-width: 760px) { .cc-render-body { grid-template-columns: 1fr; } }
 `;
 
@@ -426,7 +429,14 @@ export function openRenderDialog(o) {
   const syncFormats = () => { for (const op of fmtSel.options) op.disabled = NEEDS_LAYERS.has(op.value) && !layers; if (fmtSel.selectedOptions[0]?.disabled) fmtSel.value = 'png'; };
   const closeBtn = el('button', { type: 'button', className: 'btn-line btn-sm-cc', dataset: { renderClose: '' } }, t('render.close'));
 
+  // 0.10 BK.12: scene presets. One click sets the sky, brightness, ground, edge lines, quality and sun; every setting stays below.
+  const sceneBtns = SCENE_KEYS.map((k) => el('button', { type: 'button', className: 'btn-line btn-sm-cc', title: t('render.scene.' + k + '.tip'), 'aria-pressed': 'false', dataset: { renderScene: k } }, t('render.scene.' + k)));
+  const sceneAuto = el('button', { type: 'button', className: 'btn-line btn-sm-cc', title: t('render.scene.auto.tip'), dataset: { renderSceneAuto: '' } }, t('render.scene.auto'));
+  const sceneNote = el('p', { className: 'cc-render-note', dataset: { renderSceneNote: '' } }, '');
+  const sceneFs = el('fieldset', { dataset: { renderScenes: '' } }, el('legend', {}, t('render.scene')), el('div', { className: 'cc-render-scenes' }, sceneBtns, sceneAuto), sceneNote);
+
   const form = el('form', { className: 'cc-render-form', method: 'dialog' },
+    sceneFs,
     el('label', {}, t('render.engine'), engineSel),
     engineNote,
     engineFs,
@@ -516,6 +526,7 @@ export function openRenderDialog(o) {
       const [hh, mm] = (timeIn.value || '12:00').split(':').map(Number);
       s.sun = { month: Number(monSel.value), day: Number(dayIn.value), hour: (hh || 0) + (mm || 0) / 60 };
     }
+    else if (!ownIn) s.sun = settings.sun;   // no sun controls in this app: a preset's sun stays
     for (const [k, sel] of lookSel) if (sel.value !== ownLook.get(k)) s.looks[k] = sel.value;
     // keep looks of colours not on screen now (hidden tags, other scenes)
     for (const [k, val] of Object.entries(settings.looks)) if (!lookSel.has(k)) s.looks[k] = val;
@@ -554,7 +565,39 @@ export function openRenderDialog(o) {
     wbOut.value = t('render.cam.wb.k', { k: wbIn.value });
     hdriName.textContent = SESSION.hdri ? SESSION.hdri.name : settings.hdriName ? t('render.hdri.again', { file: settings.hdriName }) : t('render.hdri.none');
     if (ownIn) for (const x of [monSel, dayIn, timeIn]) x.disabled = !ownIn.checked || !!running;
+    syncScene();
   };
+  /** Which preset the form's values are now: its button is pressed; none = the person's own settings. */
+  function syncScene() {
+    let cur = '';
+    try { cur = sceneOf(readForm()); } catch { cur = ''; }
+    for (const b of sceneBtns) b.setAttribute('aria-pressed', String(b.dataset.renderScene === cur));
+    sceneNote.textContent = cur ? t('render.scene.' + cur + '.note') : t('render.scene.own');
+    sceneFs.dataset.renderScenes = cur;
+  }
+  /** A preset's values into the form's own controls (so they stay editable), then saved like any other change. */
+  function useScene(key) {
+    if (running) return;
+    const s = applyScene(key, readForm(), { lat: msun?.lat ?? 0 });
+    skySel.value = s.sky; expIn.value = String(s.exposure); groundIn.checked = s.ground; edgesIn.checked = s.edges; qualSel.value = s.quality;
+    if (ownIn) {
+      ownIn.checked = !!s.sun;
+      const d = s.sun || msun;
+      monSel.value = String(d.month); dayIn.value = String(d.day); timeIn.value = hourText(d.hour);
+    } else settings = { ...settings, sun: s.sun };
+    syncForm(); settings = readForm(); o.save?.(settings); dropResume();
+    status.textContent = t('render.scene.set', { name: t('render.scene.' + key) });
+  }
+  /** The preset for this view: a section cut → Section view, the camera inside the model → Interior, else Exterior. */
+  function hintsNow() {
+    try {
+      if (o.viewHints) return o.viewHints();
+      const z = o.viewSize(), sc = o.scene(settings);
+      try { return viewHints(sc, Math.max(1, z.w) / Math.max(1, z.h)); } finally { sc.dispose?.(); }
+    } catch { return {}; }
+  }
+  for (const b of sceneBtns) b.addEventListener('click', () => useScene(b.dataset.renderScene));
+  sceneAuto.addEventListener('click', () => useScene(defaultScene(hintsNow())));
   engineSel.addEventListener('change', () => {
     if (!BUILTIN.includes(engineSel.value)) settings = { ...settings, engine: engineSel.value };
     else { modeSel.value = modeFor(engineSel.value); settings = { ...settings, engine: '' }; }
@@ -565,6 +608,7 @@ export function openRenderDialog(o) {
   form.addEventListener('input', () => { syncForm(); settings = readForm(); o.save?.(settings); dropResume(); });
   form.addEventListener('change', () => { syncForm(); settings = readForm(); o.save?.(settings); dropResume(); });
   syncForm();
+  if (!o.settings) useScene(defaultScene(hintsNow()));   // BK.12, nothing remembered yet: start from the preset this view asks for
   loadEngines();
 
   /** The Render button's words: "Send to …" / "Open in …" / "Save for …" for engines that do not draw the picture here. */

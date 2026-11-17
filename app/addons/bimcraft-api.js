@@ -33,7 +33,10 @@
  * 1.3 (0.8 P.4b): api.problems.source(def) / available() from the shared addons.js: an add-on's checks go into the shell's Problems.
  * 1.4 (0.8 DC.117, session `cabinetcraft_hosts`): model.levels() · model.roomPlans() · drafting.put(tag, items, { label }) — see ADDONS-SPEC § 5.7. Plain data in, plain data out;
  * the add-on writes its own elements with model.write.
- * Add-ons written for 1.0, 1.1, 1.2 and 1.3 keep working (the loader takes 1.0 to 1.4 manifests).
+ * 1.5 (0.10 DP.1, session bk-defaults-10): api.defaults.provide(provider) / api.defaults.changed(): one add-on at a time may say what a new project starts with and
+ * what new things get (defaults-hook.js has the provider's shape: get(id, ctx) → value | undefined, source() → words). The app asks policy by policy and uses
+ * its own built-in default for every one that is not set; switching the add-on off removes the provider. The first user is the bundled Default Policies add-on.
+ * Add-ons written for 1.0 to 1.4 keep working (the loader takes 1.0 to 1.5 manifests).
  *
  * The model is BimCraft's IFC model (ifc-model.js: properties(id) → { id, cls, name, guid, tag, sets: [{ name, rows: [{ name,
  * value, edit }] }] }); ids are the open model's express ids. Importers return { ifc: Uint8Array, name } (opened like an .ifc
@@ -62,8 +65,9 @@ import { writePorts, readEquipment } from '../mep/equipment.js';
 import { readSpools } from '../mep/spools.js';
 import { val } from '../ifc-util.js';
 import { rules as currentRules, setRules, rulesChanged } from '../rules-hook.js';
+import { defaults as currentDefaults, setDefaults, defaultsChanged } from '../defaults-hook.js';
 
-export const BIMCRAFT_API_VERSION = '1.4';
+export const BIMCRAFT_API_VERSION = '1.5';
 const SAFE_ID = /^[a-z0-9][a-z0-9-]{0,40}$/;
 const clone = (v) => (v === undefined || v === null ? v ?? null : JSON.parse(JSON.stringify(v)));
 
@@ -271,8 +275,19 @@ export function makeBimcraftApi(base, addon, ctx) {
     },
     changed() { rulesChanged(); },
   };
+  /** 1.5 (0.10 DP.1): the person's defaults for new projects and new things (defaults-hook.js). */
+  const defaultsApi = {
+    provide(provider) {
+      if (!provider || typeof provider !== 'object' || typeof provider.get !== 'function') throw new Error('defaults.provide: (provider with get(id, ctx))');
+      setDefaults(provider);
+      const off = () => { if (currentDefaults() === provider) setDefaults(null); };
+      track(off);
+      return off;
+    },
+    changed() { defaultsChanged(); },
+  };
   const ui = { ...shared.ui, panelTab: panelTabMaker(ctx, id, base, track, '.bc-rtabs[role="tablist"]', 'bc-rtab', 'bc-rpane-') };
-  const api = { ...shared, ui, model, edit, mep, drafting, commands, props, rules: rulesApi, status: (text) => ctx.status(String(text)) };
+  const api = { ...shared, ui, model, edit, mep, drafting, commands, props, rules: rulesApi, defaults: defaultsApi, status: (text) => ctx.status(String(text)) };
   return api;
 }
 

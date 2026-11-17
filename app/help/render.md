@@ -3,7 +3,7 @@ title: Render a picture of the model
 summary: Make a daylight picture of the 3D view: sky, the sun at your site's latitude, soft shadows, glass windows; with WebGPU, path traced on the graphics card with skies, a camera, light mixing, grading, fog and a render queue.
 section: tasks
 order: 32
-keywords: render, rendering, path tracing, path traced, ray tracing, global illumination, reflections, refraction, high quality, photo, photoreal, realistic, picture, image, png, still, sky, sun, daylight, shadows, soft shadows, ambient occlusion, glass, windows, metal, materials, exposure, brightness, overcast, dusk, studio, presentation, visualization, webgpu, denoise, physical sky, hdri, ies, depth of field, panorama, white balance, light mixing, render elements, exr, 16-bit png, fog, caustics, render queue
+keywords: render, preset, presets, scene preset, interior, exterior, section view, night, one click, rendering, path tracing, path traced, ray tracing, global illumination, reflections, refraction, high quality, photo, photoreal, realistic, picture, image, png, still, sky, sun, daylight, shadows, soft shadows, ambient occlusion, glass, windows, metal, materials, exposure, brightness, overcast, dusk, studio, presentation, visualization, webgpu, denoise, physical sky, hdri, ies, depth of field, panorama, white balance, light mixing, render elements, exr, 16-bit png, fog, caustics, render queue
 ---
 
 {{ui:Render}} on the toolbar makes a picture of the 3D view that looks like daylight: a sky, the sun where the site's latitude puts it, soft shadows, light from the whole sky that darkens corners, and colors that can look like glass or metal. The model and the file are not changed.
@@ -12,7 +12,7 @@ keywords: render, rendering, path tracing, path traced, ray tracing, global illu
 
 1. Set up the 3D view the way you want the picture: orbit and zoom, hide storeys or elements you don't want, and set a [section](topic:section-plane) if the picture should show a cut.
 2. Click {{ui:Render}} on the toolbar.
-3. Choose the {{ui:Size}} and the {{ui:Quality}}, then click {{ui:Render}} in the dialog.
+3. Pick a {{ui:Scene}} if the one pressed is not what you want (see [Scene presets](topic:render#scene-presets-a-good-picture-in-one-click)), choose the {{ui:Size}}, then click {{ui:Render}} in the dialog.
 
    The picture fills in as it renders and gets smoother with each pass. {{ui:Stop}} (or {{key:Esc}}) ends it early and keeps the picture so far.
 
@@ -20,6 +20,25 @@ keywords: render, rendering, path tracing, path traced, ray tracing, global illu
 
 :::tip
 Start with {{ui:Draft}} at {{ui:The view's size}} to check the camera, then render {{ui:Good}} or {{ui:Best}} at a bigger size for the final picture.
+:::
+
+## Scene presets: a good picture in one click
+
+The top of the dialog has four {{ui:Scene}} buttons. Each sets the sky, the brightness, the ground, the edge lines, the quality and the sun in one click, so there is nothing to learn before the first picture. Click one, then {{ui:Render}}.
+
+| Scene | What it sets | Use it for |
+|---|---|---|
+| {{ui:Exterior}} | Clear sky, the model's own sun, ground on | The building from outside |
+| {{ui:Interior}} | Overcast sky (even light, no hard sun patches), half a stop brighter | A view from inside a room |
+| {{ui:Section view}} | White studio, no ground, edge lines in the fast render | A model cut by a section |
+| {{ui:Night}} | The sun down (midnight in midwinter for the site's half of the world), one stop brighter | Lamps lighting the model. With no lamps the picture is dark |
+
+- {{ui:Pick for this view}} chooses for you: {{ui:Section view}} when a section cut is on, {{ui:Interior}} when the camera is inside the model, otherwise {{ui:Exterior}}. The first time you open the dialog it starts this way by itself.
+- Every setting stays below and can be changed. Once you change one the scene sets, no button is pressed and the line under the buttons says the settings are your own. Click the scene again to put its values back.
+- A scene does not touch the engine, the mode, the size, the materials, the camera or the lamps.
+
+:::note
+The scenes give the same values in ModelCraft and BimCraft. How the finished picture looks depends on your model and your graphics card.
 :::
 
 ## What shows in the picture

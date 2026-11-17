@@ -22,9 +22,12 @@
  */
 import { op } from './model-ops.js';
 import { FLOOR_KINDS } from './model-slabs.js';
+import { assignType, releaseType, typeTotal } from './element-types.js';   // 0.10 BK.24 (bk-r3-types-10): a drawn floor takes a layered floor type
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
 import { t as tr } from './i18n.js';
+import { ruleOf } from './quantity-method.js';   // 0.10 BK.42 (bk-measure-10): the project's measurement method; null under the default
+import { outlineArea } from './quantities/rules.js';   // BK.11 (bk-quantities-10): the one stated measuring rule, shared with the schedules and TakeoffCraft
 
 export const DRAWN_PSET = 'CadCraft_DrawnFloor', OPENING_PSET = 'CadCraft_FloorOpening';
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
@@ -77,7 +80,7 @@ export function readDrawnFloors(w, storey = null) {
     const points = ptsOf(ps.Points).map((q) => [q[0] * w.unitMm, q[1] * w.unitMm]);
     const openings = (H.voids.get(id) || []).map((oid) => ({ id: oid, guid: val(w.api.GetLine(w.mid, oid, false)?.GlobalId), points: ptsOf(w.readPset(oid, OPENING_PSET)?.Points).map((q) => [q[0] * w.unitMm, q[1] * w.unitMm]) })).filter((o) => o.points.length >= 3);
     out.push({ id, guid: val(line.GlobalId), storey: st, points, kind: ps.Kind === 'concrete' ? 'concrete' : 'wood', use: ps.Use === 'landing' ? 'landing' : 'floor',
-      thickness: Number(ps.Thickness) * w.unitMm, offset: (Number(ps.Offset) || 0) * w.unitMm, area: Math.abs(area(points)), openings });
+      thickness: Number(ps.Thickness) * w.unitMm, offset: (Number(ps.Offset) || 0) * w.unitMm, area: Math.abs(area(points)), openings, typeKey: ps.TypeKey || '' });
   }
   return out;
 }
@@ -88,10 +91,10 @@ function writeFloorShape(w, f) {
   const pts = ccw(f.points);
   w.setShape(f.id, [w.rep('body', 'Body', 'SweptSolid', [w.extrude(w.profile(pts), f.offset - f.thickness, f.thickness)])]);
   const holes = f.openings || [];
-  const hArea = holes.reduce((s, h) => s + Math.abs(area(h.points)), 0), A = Math.abs(area(pts));
+  const A = Math.abs(area(pts)), hArea = outlineArea(A, holes.map((h) => Math.abs(area(h.points))), ruleOf(w, 'floor')).deductions;   // BK.11: the shared rule
   w.upsertQto(f.id, 'Qto_SlabBaseQuantities', [['Width', 'length', f.thickness], ['Perimeter', 'length', perim(pts)], ['GrossArea', 'area', A], ['NetArea', 'area', A - hArea], ['GrossVolume', 'volume', A * f.thickness], ['NetVolume', 'volume', (A - hArea) * f.thickness]]);
   w.upsertPset(f.id, DRAWN_PSET, [['Points', 'IFCTEXT', ptsText(pts.map((q) => [w.u(q[0]), w.u(q[1])]))], ['Kind', 'IFCLABEL', f.kind], ['Use', 'IFCLABEL', f.use],
-    ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(f.thickness))], ['Offset', 'IFCLENGTHMEASURE', round(w.u(f.offset))]]);
+    ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(f.thickness))], ['Offset', 'IFCLENGTHMEASURE', round(w.u(f.offset))], ...(f.typeKey !== undefined && (f.typeKey || f.hadType) ? [['TypeKey', 'IFCIDENTIFIER', f.typeKey || '']] : [])]);
   for (const h of holes) w.setShape(h.id, [w.rep('body', 'Body', 'SweptSolid', [w.extrude(w.profile(ccw(h.points)), f.offset - f.thickness - 10, f.thickness + 20)])]);
 }
 function writeOpening(w, f, points, guid) {
@@ -122,9 +125,10 @@ export function writeDrawnFloor(w, spec) {
     const id = w.make('IFCSLAB', g, w.ownerHistory(), name, null, name, w.H(w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0)), null, null, s.use === 'landing' ? 'LANDING' : 'FLOOR');
     w.noteGuid(g, id);
     w.contain(id, storey);
-    w.associateMaterial(id, w.material(tr('model.mat.' + k.mat)));
+    const ty = s.typeKey ? assignType(w, id, 'floor', s.typeKey) : null;   // BK.24: the type gives the thickness and the layers
+    if (!ty) w.associateMaterial(id, w.material(tr('model.mat.' + k.mat)));
     w.upsertPset(id, 'Pset_SlabCommon', [['IsExternal', 'IFCBOOLEAN', false], ['LoadBearing', 'IFCBOOLEAN', true]]);
-    writeFloorShape(w, { id, points: s.points, kind: k.key, use: s.use, thickness: T, offset: s.offset, openings: [] });
+    writeFloorShape(w, { id, points: s.points, kind: k.key, use: s.use, thickness: ty ? typeTotal(ty) : T, offset: s.offset, openings: [], typeKey: s.typeKey || '' });
     return { id, ids: [id], made: new Map([[g, id]]) };
   }
 }
@@ -143,10 +147,17 @@ export function shiftDrawnFloor(w, f, dx, dy) {
 
 export function changeDrawnFloor(guid, ch) {
   const c = { ...ch };
-  return op((w) => {
+  return op((w) => changeDrawnFloorIn(w, guid, c));
+}
+/** The writer-level body of changeDrawnFloor (element-type-ops.js changes several floors inside one op). */
+export function changeDrawnFloorIn(w, guid, c) {
+  {
     const f = readDrawnFloors(w).find((x) => x.guid === guid);
     if (!f) refuse('model.err.fl.none');
-    const nf = { ...f, ...c };
+    const nf = { ...f, ...c, hadType: !!f.typeKey };
+    // BK.24: a type swap keeps the floor (outline, openings, GlobalId); '' takes the type off; a typed floor's thickness is its type's
+    if (c.typeKey !== undefined) { if (c.typeKey) nf.thickness = typeTotal(assignType(w, f.id, 'floor', c.typeKey)); else releaseType(w, f.id); }
+    else if (f.typeKey) nf.thickness = f.thickness;
     if (c.points) { const pr = polyProblem(c.points); if (pr) refuse(pr); if (!f.openings.every((h) => inside(c.points, h.points))) refuse('model.err.fl.hole'); }
     if (c.use && c.use !== f.use) { const l = w.touch(f.id); l.PredefinedType = c.use === 'landing' ? 'LANDING' : 'FLOOR'; l.Name = w.L(tr(c.use === 'landing' ? 'model.fl.landing' : 'model.fl.drawn')); l.ObjectType = l.Name; w.write(l); }
     if (c.kind && c.kind !== f.kind) {
@@ -156,7 +167,7 @@ export function changeDrawnFloor(guid, ch) {
     }
     writeFloorShape(w, nf);
     return { id: f.id, ids: [f.id] };
-  });
+  }
 }
 
 export function addFloorOpening(guid, points) {

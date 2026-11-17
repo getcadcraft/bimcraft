@@ -29,6 +29,14 @@ Prefer to browse by picture? Open the **Symbol palette** from {{ui:Build}} to fi
 
 The plan draws a dashed curve from the switch to each of its lights. A light's **Properties** shows which switches turn it on.
 
+## The room a device stands in
+
+Every device knows the room it stands in. A device on a wall is in the room it faces; a ceiling device is in the room it is over. Properties shows **Room**, and the **Electrical devices** schedule has a **Room** column (number and name, such as 101 Kitchen).
+
+It is kept up to date: rename or renumber the room, move the device, or move a wall, and the room follows in the same step. A device on the outside face of a building, or in a space that is not a room, says it is not in a room.
+
+The room is also written into the file, in the device's property set `CadCraft_Location` (Room, RoomNumber, RoomName), so Find, Color by property and a tag schedule can use it, and so can another program. Plan symbols and elements linked to a symbol get the same set; see [Symbol palette](topic:symbol-palette).
+
 ## Let your assistant place them
 
 With an assistant connected (Settings › Assistants, with edits allowed), you can ask for devices in words: "put a double socket every 2 m along the living room walls, 300 mm up, on circuit 3", or "add a ceiling light with its switch by the door". The assistant uses five tools: `devices_add`, `device_change`, `lights_set`, `devices_delete` and `devices_list`. They make the same devices the Electrical tool makes, on the same walls and with the same tags, circuits, loads and heights, and each call is one undo step.

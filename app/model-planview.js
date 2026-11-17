@@ -82,6 +82,9 @@ export class PlanView {
   fromCanvas(px, py) { return [(px - this.w / 2) / this.scale + this.cx, (this.h2 / 2 - py) / this.scale + this.cy]; }
   pxToMm(px) { return px / this.scale; }
 
+  /** 0.10 BK.10: a text's size on screen in px: at a view with a scale of its own, its printed size (paper height x scale, as
+   *  the model is zoomed); a view with no scale keeps the fixed screen size `own`. */
+  annoPx(kind, own) { const a = this.scene?.anno; const em = a?.em?.[kind]; return em > 0 ? Math.max(2, Math.round(em * this.scale * 100) / 100) : own; }
   setScene(s) { this.scene = { walls: [], through: [], symbols: [], cut: [], below: [], above: [], rooms: [], dims: [], grids: [], ...s }; this.render(); }
   setOverlay(o) { this.overlay = o; this.render(); }
   setSelection(keys) { this.selection = new Set(keys || []); this.render(); }
@@ -220,7 +223,7 @@ export class PlanView {
     for (const d of this.scene.dims || []) {
       if (!d.key) continue;
       const L = Math.hypot(d.b[0]-d.a[0],d.b[1]-d.a[1]); if (L < 0.001) continue;
-      const n = [-(d.b[1]-d.a[1])/L,(d.b[0]-d.a[0])/L], off = d.off || 0;
+      const n = [-(d.b[1]-d.a[1])/L,(d.b[0]-d.a[0])/L], off = d.offPx !== undefined ? d.offPx / this.scale : d.off || 0;   // 0.10 BK.33: where the line is DRAWN (drawDim), not on the wall's face
       if (segD(x,y,d.a[0]+n[0]*off,d.a[1]+n[1]*off,d.b[0]+n[0]*off,d.b[1]+n[1]*off)<=tol) return d.key;
     }
     for (const w of this.scene.walls) if ((w.pieces || [w.poly]).some((p) => inPoly(x, y, p))) return w.key;
@@ -355,7 +358,8 @@ export class PlanView {
     for (const r of this.scene.rooms || []) {
       if (!r.at || !r.label) continue;
       const s = S(r.at);
-      r.label.forEach((t, i) => { g.font = (i ? '500 11px ' : '700 12px ') + 'system-ui, sans-serif'; g.fillStyle = sel(r.key) ? action : ink; g.fillText(t, s.x, s.y + (i - (r.label.length - 1) / 2) * 15); });
+      const p0 = this.annoPx('room', 12), p1 = this.annoPx('tag', 11);   // 0.10 BK.10: at the view's scale the label is its printed size
+      r.label.forEach((t, i) => { g.font = (i ? '500 ' + p1 + 'px ' : '700 ' + p0 + 'px ') + 'system-ui, sans-serif'; g.fillStyle = sel(r.key) ? action : ink; g.fillText(t, s.x, s.y + (i - (r.label.length - 1) / 2) * p0 * 1.25); });
     }
     this.drawGridBubbles(g, C, S);
     this.drawCrop(g, sheet, ink2, S);
@@ -415,7 +419,7 @@ export class PlanView {
   }
   /** Bubbles: a circle beyond each end the grid shows them at (both / start / end / none), the label inside. */
   drawGridBubbles(g, C, S) {
-    const R = 11;
+    const R = this.annoPx('grid', 11);   // 0.10 BK.10
     for (const x of this.scene.grids || []) {
       if (x.bubbles === 'none') continue;
       const [p, q, u] = this.gridEnds(x, S);
@@ -426,7 +430,7 @@ export class PlanView {
       for (const c of at) {
         g.beginPath(); g.arc(c.x, c.y, R, 0, Math.PI * 2);
         g.fillStyle = C['--sheet'] || '#fff'; g.fill(); g.lineWidth = 1.25; g.strokeStyle = col; g.stroke();
-        g.fillStyle = col; g.font = '700 ' + (x.tag.length > 2 ? 9 : 11) + 'px system-ui, sans-serif';   // i18n-ignore: a CSS font g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillStyle = col; g.font = '700 ' + (x.tag.length > 2 ? R * 9 / 11 : R) + 'px system-ui, sans-serif';   // i18n-ignore: a CSS font g.textAlign = 'center'; g.textBaseline = 'middle';
         g.fillText(x.tag, c.x, c.y + 0.5);
       }
     }
@@ -510,8 +514,9 @@ export class PlanView {
     if (ang > Math.PI / 2 || ang <= -Math.PI / 2) ang += Math.PI;
     g.save(); g.translate((a.x + b.x) / 2, (a.y + b.y) / 2); g.rotate(ang);
     g.textAlign = 'center'; g.textBaseline = 'bottom';
+    if (this.scene.anno) g.font = this.annoPx('dimension', 10) + 'px system-ui, sans-serif';   // 0.10 BK.10 // i18n-ignore: a CSS font
     const tw = g.measureText(d.text).width;
-    if (tw + 6 < Math.hypot(b.x - a.x, b.y - a.y)) { g.fillStyle = this.colors()['--sheet'] || '#fff'; g.globalAlpha = 0.85; g.fillRect(-tw / 2 - 2, -15, tw + 4, 13); g.globalAlpha = 1; g.fillStyle = color; g.fillText(d.text, 0, -3); }
+    if (tw + 6 < Math.hypot(b.x - a.x, b.y - a.y)) { g.fillStyle = this.colors()['--sheet'] || '#fff'; g.globalAlpha = 0.85; const th = this.scene.anno ? this.annoPx('dimension', 10) * 1.3 : 13; g.fillRect(-tw / 2 - 2, -2 - th, tw + 4, th); g.globalAlpha = 1; g.fillStyle = color; g.fillText(d.text, 0, -3); }
     g.restore();
   }
   drawOverlay(g, C, S, path) {

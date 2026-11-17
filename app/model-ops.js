@@ -13,9 +13,11 @@
  * Every op ends by bringing the walls it may have changed up to date (model-walls.js regenWalls): joins, heights that
  * follow a level, quantities.
  */
+import { syncWallFinishCoverings } from './finishes/wall-finishes.js';   // 0.10 BK.25-28 (bim-finishes-10)
 import { writeAssembly, validateAssembly, assertAssembliesEditable } from './wall-assemblies.js';
 import { readMaterials } from './project-materials.js';
 import { syncWallDimensions } from './wall-dimensions.js';
+import { syncClassDefaults } from './classify-model.js';   // 0.10 BK.94: default classification codes by class follow every change
 import { ModelWriter } from './model-write.js';
 import { readLevels, addLevel, setLevel } from './model-levels.js';
 import { addWall, updateWall, deleteWalls, regenWalls, readWalls, wallLevelsPassed, regenAttached, wallShapeHooks } from './model-walls.js';
@@ -27,6 +29,8 @@ import { t as tr } from './i18n.js';
 import { readReportAs } from './report-as-core.js';   // 0.9 D8.12-C
 import { syncResidential } from './res-follow.js';   // 0.5 part 4 track RC: wall framing follows its doors and windows
 import { holdPlan } from './wall-tools.js';   // 0.9 WT.3 / WT.7: the Hold block (locks) after a wall change
+import { syncSpaces } from './spaces-sync.js';
+import { syncPlacedRooms } from './room-lookup.js';   // 0.10 BK.22 (bk-r3-types-10): devices, plan symbols and linked assets know the room they stand in after every change   // 0.10 (bk-tools-a-10): model groups, area boundaries, areas, tags, shafts and vertical openings follow every change
 
 /** Wrap a writing function as an op: a fresh writer on the editor's model, one journal. */
 export function op(fn) {
@@ -43,6 +47,10 @@ export function op(fn) {
       const took = adoptLibraryOpenings(writer);
       if (took.length) afterOpenings(writer, took);
       syncWallDimensions(writer);
+      syncClassDefaults(writer);
+      syncSpaces(writer);
+      syncWallFinishCoverings(writer);   // 0.10 bim-finishes-10: the finish coverings follow a wall that moved, changed type or went (nothing when the file has none)
+      syncPlacedRooms(writer);
       return result;
     });
   };
@@ -199,6 +207,15 @@ export function copyLevel({ from, to, newLevel: spec = null }) {
     let floors = 0, ceilings = 0;
     for (const f of D.floors.filter((x) => x.storey === src)) { const [g] = fresh(w, f.guid); const r = addFloor(w, { storey: dst, seed: f.seed, mode: f.mode, kind: f.kind, thickness: f.thickness, offset: f.offset, guid: g }); made.set(r.guid, r.id); floors++; }
     for (const c of D.ceilings.filter((x) => x.storey === src)) { const [g] = fresh(w, c.guid); const r = addCeiling(w, { storey: dst, seed: c.seed, mode: c.mode, height: c.height, thickness: c.thickness, guid: g }); made.set(r.guid, r.id); ceilings++; }
+    // walls-shape-10 (WT.6): each wall's profile, slant and wall openings go with it; an attachment goes to the copied floor or ceiling
+    // (a roof is not copied: that link is dropped)
+    const hooks = wallShapeHooks();
+    if (hooks?.copy) {
+      const D2 = readDerived(w), wo = hooks.openings(w, walls), touched = [];
+      const attach = (g) => { const hit = keep.get(g)?.[0]; return hit && [...D2.floors, ...D2.ceilings].some((x) => x.guid === hit) ? hit : ''; };
+      for (const x of walls) if ((x.shape || wo.some((o) => o.wallGuid === x.guid)) && hooks.copy(w, x, map.get(x.guid), { guidFor: (k) => fresh(w, 'wo:' + k)[0], attach, openings: wo })) touched.push(map.get(x.guid));
+      if (touched.length) regenWalls(w, dst, touched);
+    }
     const ids = [...made.values()];
     return { id: ids[ids.length - 1], ids, made, counts: { walls: walls.length, openings, floors, ceilings } };
   });
@@ -293,6 +310,28 @@ export function changeWalls(guids, changes) {
     const ids = guids.map((g) => w.byGuid(g)).filter(Boolean);
     return { id: ids[0] ?? null, ids };
   });
+}
+/**
+ * 0.10 BK.7 (wall-typeswap.js): give several walls another type INSIDE an op that is already running (the swap and its report are one
+ * undo step). Each wall is changed as changeWall changes one: its location line stays, the walls joined to it follow at the corners
+ * (FX.65) and its locks hold (WT.3 / WT.7); then the doors and windows, joins, rooms and quantities follow once for all of them.
+ */
+export function retypeWallsIn(w, guids, typeKey) {
+  const before = readWalls(w), ops0 = readOpenings(w, null, before);
+  const touched = new Set(), storeys = new Set();
+  for (const g of guids) {
+    const wall = before.find((x) => x.guid === g);
+    if (!wall) continue;
+    const was = readWalls(w), r = updateWall(w, g, { typeKey });
+    const now = readWalls(w), done = new Map(r.guids.map((x) => [x, now.find((y) => y.guid === x)]).filter(([, x]) => x).map(([x, y]) => [x, { a: y.a, b: y.b }]));
+    for (const [g2, m] of holdPlan(w, was, done, [g])) if (!done.has(g2)) { updateWall(w, g2, { a: m.a, b: m.b }, { carryJoined: false }); r.guids.push(g2); }
+    for (const x of r.guids) touched.add(x);
+    storeys.add(wall.storey);
+  }
+  afterWallMove(w, before, ops0, [...touched], true);
+  settle(w, storeys, [...touched]);
+  const ids = guids.map((g) => w.byGuid(g)).filter(Boolean);
+  return { id: ids[0] ?? null, ids };
 }
 
 /** Put a door or window in a wall: { wall (GlobalId), typeKey, offset, width, height, sill, hand, face }. */

@@ -92,7 +92,7 @@ export function mountDrafting(modelUi, views) {
     const key = views.viewKey(), r = A.viewRange?.();
     if (!key || [...(r?.hiddenClasses || [])].some((c) => c.toLowerCase() === 'ifcannotation')) return;
     const k = A.kb();
-    scene.drafting = D.items.filter((d) => d.view === key).map((d) => draftingItem(d, k + d.id));
+    scene.drafting = [...(scene.drafting || []), ...D.items.filter((d) => d.view === key).map((d) => draftingItem(d, k + d.id))];   // BK.104: kept what an earlier extension put there (site constraints)
   }
   function overlay(o) {
     const tool = A.S.tool;

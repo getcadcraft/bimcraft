@@ -18,9 +18,11 @@
 import { ModelWriter, round } from './model-write.js';
 import { ids, val } from './ifc-util.js';
 import { readWalls } from './model-walls.js';
+import { placedSources, syncPlacedRooms, readLocation } from './room-lookup.js';   // 0.10 BK.22 (bk-r3-types-10): the room a symbol stands in
 
 export const PLAN_SYMBOL_PSET = 'CadCraft_PlanSymbol';
-const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run(fn);
+const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run((w) => { const r = fn(w); syncPlacedRooms(w); return r; });   // BK.22: the room is kept up to date
+placedSources().set('plan-symbols', (w) => readPlanSymbols(w).map((d) => ({ id: d.id, storey: d.storey, at: d.at, angle: d.angle, onWall: !!d.wall })));
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
 const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
 const tidy = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, n);
@@ -36,7 +38,7 @@ export function readPlanSymbols(w) {
     const l = w.api.GetLine(w.mid, id, false);
     const mm = w.unitMm;
     out.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, level: ps.Level || '', set: String(ps.Set), key: String(ps.Key), name: val(l.Name) || '', tag: String(ps.Tag || ''),
-      at: [num(ps.X) * mm, num(ps.Y) * mm], angle: (num(ps.Angle) * Math.PI) / 180, wall: String(ps.Wall || ''), side: num(ps.Side, 1) < 0 ? -1 : 1, offset: num(ps.Offset) * mm, base: (num(ps.Base) * Math.PI) / 180 });
+      at: [num(ps.X) * mm, num(ps.Y) * mm], angle: (num(ps.Angle) * Math.PI) / 180, wall: String(ps.Wall || ''), side: num(ps.Side, 1) < 0 ? -1 : 1, offset: num(ps.Offset) * mm, base: (num(ps.Base) * Math.PI) / 180, room: readLocation(w, id)?.room || '' });
   }
   return out;
 }

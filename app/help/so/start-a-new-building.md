@@ -2,7 +2,7 @@
 title: Bilow dhismo cusub
 summary: Samee moodel dhismo oo cad oo leh heerarkiisa, sawir darbiyadiisa, ka soo qaad walxo maktabadda, oo u kaydi sida IFC.
 keywords: cusub, dhismo cusub, cad, madhan, bilow bilowga, qaab, heerarka, dabaqyada, sagxadaha, samee, moodel
-from: 546b8ae8
+from: 68786865
 ---
 
 ## Waxa aad samayn doontid

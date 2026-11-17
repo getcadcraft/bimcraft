@@ -92,7 +92,9 @@ function junctions(tree, flow) {
 /**
  * analyzePipes({ graph, source, loads, curve, catalogFor, opts }) → { segs, loads, problems-ready data }
  *   graph: from graphFromRuns; source: node id; loads: [{ key, node, fu?, lps? (fixed flow), label }]
- *   segment attributes come from `runAttrs[runId]` = { mat, idMm (current inside diameter), od, sizes: [{ key, idMm }] smallest first, label }
+ *   segment attributes come from `runAttrs[runId]` = { mat, idMm (current inside diameter), od, sizes: [{ key, idMm }] smallest first, label, epsMm? }
+ *     epsMm (0.9.1): the pipe's absolute roughness in mm when its own spec gives one — that run's friction is then Darcy–Weisbach with the
+ *     Colebrook factor at that roughness (darcyWater) instead of Hazen–Williams; each segment says which (`method`)
  *   opts: { vmax (m/s, 2.4 default), rateMax (kPa/m, none), C (by mat), eps, availKpa (pressure at the source), minKpa (needed at the fixture) }
  */
 export function analyzePipes({ graph, source, loads, runAttrs, curve = DEFAULT_CURVE, opts = {} }) {
@@ -108,12 +110,14 @@ export function analyzePipes({ graph, source, loads, runAttrs, curve = DEFAULT_C
   for (const id of tree.order) {
     const s = tree.segOf.get(id), a = runAttrs[s.run] || {};
     const Q = flow.get(id), C = o.C?.[a.mat] ?? HW_C[a.mat] ?? HW_C.default, D = (a.idMm || 0) / 1000;
-    const V = velocity(Q, D), rate = hazenWilliams(Q, D, C);
+    const eps = Number.isFinite(a.epsMm) && a.epsMm !== null ? a.epsMm / 1000 : null;
+    const rateOf = (q, d) => (eps !== null ? darcyWater(q, d, eps) : hazenWilliams(q, d, C));
+    const V = velocity(Q, D), rate = rateOf(Q, D);
     let need = null;
-    for (const z of a.sizes || []) { const d = z.idMm / 1000; if (velocity(Q, d) <= o.vmax + 1e-9 && (!o.rateMax || hazenWilliams(Q, d, C) / 1000 <= o.rateMax + 1e-12)) { need = z; break; } }
+    for (const z of a.sizes || []) { const d = z.idMm / 1000; if (velocity(Q, d) <= o.vmax + 1e-9 && (!o.rateMax || rateOf(Q, d) / 1000 <= o.rateMax + 1e-12)) { need = z; break; } }
     const fit = D > 0 ? fittingLoss(s, V, WATER.rho, o.K, jn.get(id) || null, true) : 0;
     const dp = rate * s.length + fit + WATER.rho * G * s.dz;     // friction + fittings + static (up is a cost)
-    segs.set(id, { id, run: s.run, a: s.a, b: s.b, length: s.length, dz: s.dz, fu: fu.get(id) || 0, flow: Q, V, rate, C, D, friction: rate * s.length, fittings: fit, static: WATER.rho * G * s.dz, dp, size: a.label || '', need: need ? need.key : null, needMm: need ? need.idMm : null,
+    segs.set(id, { id, run: s.run, a: s.a, b: s.b, length: s.length, dz: s.dz, fu: fu.get(id) || 0, flow: Q, V, rate, C, D, method: eps !== null ? 'darcy' : 'hazen-williams', epsMm: eps !== null ? a.epsMm : null, friction: rate * s.length, fittings: fit, static: WATER.rho * G * s.dz, dp, size: a.label || '', need: need ? need.key : null, needMm: need ? need.idMm : null,
       status: !(D > 0) ? 'nosize' : need === null ? 'toobig' : (need.idMm > a.idMm + 1e-9 ? 'small' : 'ok'), beyond: beyond.includes(id) });
   }
   // pressure from the source to every load

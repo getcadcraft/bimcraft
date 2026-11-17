@@ -51,6 +51,9 @@ const CLASSES = {
   IfcDoor: ['IFCDOOR', 'IFCDOORTYPE', 'IFCDOOR', 'IFCDOORSTYLE'],
   IfcWindow: ['IFCWINDOW', 'IFCWINDOWTYPE', 'IFCWINDOW', 'IFCWINDOWSTYLE'],
 };
+/** BK.96: type classes written this session that the file did not have when it opened (libraryTypes looks at them too). api → Map(mid → Set). */
+const LIB_TYPE_NAMES = new WeakMap();
+function noteTypeName(api, mid, name) { let m = LIB_TYPE_NAMES.get(api); if (!m) LIB_TYPE_NAMES.set(api, (m = new Map())); if (!m.has(mid)) m.set(mid, new Set()); m.get(mid).add(name); }
 export const PSETS = { placement: 'CadCraft_Placement', library: 'CadCraft_LibraryItem', equipment: 'CadCraft_Equipment', source: 'CadCraft_SourceAttributes' };
 
 /**
@@ -89,10 +92,27 @@ export function typeFrame(placer, typeId) {
   return ['dx', 'dy', 'dz', 'width', 'height'].every((k) => Number.isFinite(f[k])) && f.width > 0 && f.height > 0 ? f : null;
 }
 
+const KNOWN_OCC = new Set(Object.values(CLASSES).flatMap((r) => [r[0], r[2]]));
+/**
+ * 0.10 BK.96: any other element class the file's own schema has, with its own type class, is written as ITSELF (an IfcBoiler from the
+ * Library is an IfcBoiler in the file, not a proxy). `sch` = the file's schema (cc-ifc: api.file(mid).schema); without it, or for a class
+ * the schema lacks (an IFC4 class in an IFC2X3 file), an abstract class, a class with no type class (IfcAnnotation) or one that needs
+ * values this tool cannot give, the element is an IfcBuildingElementProxy as before: still an element with a class, never without one.
+ */
+function schemaClasses(c, sch) {
+  if (!sch || typeof sch.entity !== 'function' || !/^Ifc[A-Za-z]{2,60}$/.test(c)) return null;
+  const up = c.toUpperCase(), ty = up + 'TYPE';
+  const e = sch.entity(up), t = sch.entity(ty);
+  if (!e || e.abstract || !t || t.abstract || !sch.isA(up, 'IFCELEMENT') || !sch.isA(ty, 'IFCELEMENTTYPE')) return null;
+  const fine = (a) => a.t.opt || (a.t.base === 'e' && /PredefinedType$/.test(a.name));
+  if (!e.attrs.slice(8).every(fine) || !t.attrs.slice(9).every(fine)) return null;
+  return { occ: up, type: ty, used: e.name };
+}
 /** The pair of classes an item becomes in this schema. */
-export function classesFor(item, schema) {
+export function classesFor(item, schema, sch = null) {
   let c = item?.ifc?.class || 'IfcBuildingElementProxy';
   if (c === 'IfcFlowTerminal') c = /^electrical\//.test(item.category || '') ? 'IfcLightFixture' : 'IfcSanitaryTerminal';
+  if (!CLASSES[c]) { const g = schemaClasses(c, sch); if (g) return { requested: item?.ifc?.class || null, used: g.used, occ: g.occ, type: g.type, generic: true }; }
   const row = CLASSES[c] || CLASSES.IfcBuildingElementProxy;
   const v4 = !/^IFC2X3/i.test(schema);
   return { requested: item?.ifc?.class || null, used: CLASSES[c] ? c : 'IfcBuildingElementProxy', occ: v4 ? row[0] : row[2], type: v4 ? row[1] : row[3] };
@@ -209,6 +229,7 @@ export class IfcPlacer {
       const n = String(t.typeName || '').toUpperCase();
       if (/TYPE$/.test(n) && !/^IFCREL/.test(n)) names.add(n);
     }
+    for (const n of LIB_TYPE_NAMES.get(this.api)?.get(this.mid) || []) names.add(n);   // BK.96: type classes this session wrote for the first time
     for (const n of names) {
       let list = [];
       try { list = ids(this.api, this.mid, n); } catch (e) { continue; }
@@ -398,7 +419,7 @@ export class IfcPlacer {
       maps.push(this.make('IFCREPRESENTATIONMAP', this.H(this.origin()), this.H(rep)));
     }
     const libPset = this.pset(PSETS.library, this.libraryProps(item, opts));
-    const cls = classesFor(item, this.schema);
+    const cls = classesFor(item, this.schema, this.fileSchema());
     // 2026-11-02: a Library door or window's type says how its mesh sits, so any placement of it can be set into a wall opening
     const fr = (item.kind === 'door' || item.kind === 'window') && body ? libraryFrame(body) : null;
     const framePset = fr ? this.pset(FRAME_PSET, frameRows(fr, opts.stretch)) : null;
@@ -407,6 +428,7 @@ export class IfcPlacer {
     let extra = [];
     if (cls.type === 'IFCDOORTYPE' || cls.type === 'IFCWINDOWTYPE') extra = [cls.type === 'IFCDOORTYPE' ? 'DOOR' : 'WINDOW', 'NOTDEFINED', false, null];   // as family-model.js makeType
     else if (cls.type === 'IFCDOORSTYLE' || cls.type === 'IFCWINDOWSTYLE') { head.pop(); extra = ['NOTDEFINED', 'NOTDEFINED', false, false]; }   // IFC2X3 styles have no ElementType
+    else if (cls.generic) { extra = this.schemaExtra(cls.type, 9, item.ifc?.predefined === 'USERDEFINED' && !head[8] ? 'NOTDEFINED' : item.ifc?.predefined); noteTypeName(this.api, this.mid, cls.type); }   // BK.96 (USERDEFINED on a type needs an ElementType)
     else if (cls.type === 'IFCFURNITURETYPE') extra = this.v4 ? [this.E('NOTDEFINED'), this.E('NOTDEFINED')] : [this.E('NOTDEFINED')];
     else if (cls.type !== 'IFCFURNISHINGELEMENTTYPE') extra = [this.E('NOTDEFINED')];
     const id = this.make(cls.type, ...head, ...extra);
@@ -470,7 +492,7 @@ export class IfcPlacer {
     const type = this.typeFor(item, opts);
     const lp = this.localPlacement(st, opts);
     const shape = this.shapeFor(type.id);
-    const cls = classesFor(item, this.schema);
+    const cls = classesFor(item, this.schema, this.fileSchema());
     const head = [this.guid(), this.ownerHistory(), this.L(item.name), this.X(item.description || null), this.L(item.name), this.H(lp), shape ? this.H(shape) : null, null];
     const id = this.make(cls.occ, ...head, ...this.occExtra(cls.occ, item));
     this.relateType(id, type.id);
@@ -545,9 +567,23 @@ export class IfcPlacer {
     const ax = this.make('IFCAXIS2PLACEMENT3D', this.H(loc), this.H(this.dir(0, 0, 1)), this.H(this.dir(round(dl[0], 9), round(dl[1], 9), 0)));
     return this.make('IFCLOCALPLACEMENT', st.ObjectPlacement, this.H(ax));
   }
+  /** The file's schema (cc-ifc), or null with an engine that does not hand it out. */
+  fileSchema() { try { return this.api.file?.(this.mid)?.schema || null; } catch (e) { return null; } }
+  /** BK.96: the attributes of entity `up` after its first `skip`, for a class written from the schema: PredefinedType = the item's when the
+   *  schema's enumeration has it, else NOTDEFINED; every other one empty (classesFor let only optional ones through). null with no schema. */
+  schemaExtra(up, skip, predefined = '') {
+    const sch = this.fileSchema(), e = sch?.entity(up);
+    if (!e) return null;
+    return e.attrs.slice(skip).map((a) => {
+      if (a.t.base !== 'e' || !/PredefinedType$/.test(a.name)) return null;
+      const values = String(sch.table?.typ?.[a.t.tname]?.[2] || '').split(';');
+      return values.includes(predefined) ? this.E(predefined) : values.includes('NOTDEFINED') ? this.E('NOTDEFINED') : null;
+    });
+  }
   /** Attributes after Tag: IFC4 PredefinedType (not on furnishing elements / flow terminals), IFC2X3 proxy CompositionType; a door or
    *  window: OverallHeight, OverallWidth (the item's height / width) and, in IFC4, PredefinedType, OperationType / PartitioningType. */
   occExtra(occ, item = null) {
+    if (!KNOWN_OCC.has(occ)) { const g = this.schemaExtra(occ, 8, item?.ifc?.predefined); if (g) return g; }   // BK.96: a class written as itself
     if (occ === 'IFCDOOR' || occ === 'IFCWINDOW') {
       const p = item?.params || {};
       const len = (v) => (Number(v) > 0 ? Math.round(this.u(Number(v)) * 1e6) / 1e6 : null);
@@ -607,7 +643,7 @@ export class IfcPlacer {
     const shape = this.shapeFor(type.id);
     occ.Representation = shape ? this.H(shape) : null;
     occ.Name = this.L(item.name); occ.ObjectType = this.L(item.name); occ.Description = this.X(item.description || null);
-    const cls = classesFor(item, this.schema);
+    const cls = classesFor(item, this.schema, this.fileSchema());
     const was = (occ.constructor?.name || '').toUpperCase();
     let classChanged = null;
     if (was && was !== cls.occ && !opts.keepClass) {

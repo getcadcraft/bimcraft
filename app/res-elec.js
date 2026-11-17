@@ -28,6 +28,8 @@ import { ids, val } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 import { SYMBOLS } from './res-elec-symbols.js';
 import { isMetric } from './model-units.js';
+import { placedSources, syncPlacedRooms, readLocation } from './room-lookup.js';   // 0.10 BK.22 (bk-r3-types-10): the room a device stands in
+import { planSymbolScale } from './anno-scale-bim.js';
 
 export const ELEC_PSET = 'CadCraft_Electrical';
 const IN = 25.4;
@@ -82,7 +84,7 @@ export function defaultHeight(kind, units, ceiling) {
   return d.mount === 'ceiling' ? ceiling : d.height[isMetric(units) ? 'mm' : 'ftin'];
 }
 /** Plan mm per paper mm for the symbols: drawn for a 1:50 plan (1/4" = 1'-0" in feet and inches). */
-export const symbolScale = (units) => (isMetric(units) ? 50 : 48);
+export const symbolScale = (units) => planSymbolScale(units);   // 0.10 BK.10: the scale of the view being drawn (anno-scale-bim.js); a view with no scale of its own: 1:50 / 1:48 as before
 
 /** A symbol in the plan: rotated (angle in radians; the symbol's +y points along it), scaled, moved to `at`. */
 export function symbolPlan(kind, at, angle, scale) {
@@ -147,7 +149,8 @@ export function readDevices(w) {
       const mm = w.unitMm;
       out.push({ id, guid: val(l.GlobalId), storey: so.get(id) ?? null, level: ps.Level || '', kind: ps.Kind, tag: val(l.Tag) || '', circuit: String(ps.Circuit ?? ''), load: num(ps.Load), height: num(ps.MountingHeight) * mm,
         wall: ps.Wall || '', side: num(ps.Side, 1) < 0 ? -1 : 1, offset: num(ps.Offset) * mm, at: [num(ps.X) * mm, num(ps.Y) * mm], angle: num(ps.Angle) * Math.PI / 180,
-        controls: String(ps.Controls || '').split(',').map((x) => x.trim()).filter(Boolean) });
+        controls: String(ps.Controls || '').split(',').map((x) => x.trim()).filter(Boolean),
+        room: readLocation(w, id)?.room || '' });   // BK.22: the room it stands in, as the file holds it (room-lookup.js keeps it up to date)
     }
   }
   return out.sort((a, b) => cmpTag(a.tag, b.tag));
@@ -187,7 +190,9 @@ function writeDevice(w, d, walls) {
   w.upsertPset(d.id, ELEC_PSET, [['X', 'IFCLENGTHMEASURE', round(w.u(at[0]))], ['Y', 'IFCLENGTHMEASURE', round(w.u(at[1]))], ['Angle', 'IFCREAL', round((ang * 180) / Math.PI, 4)]]);
   return { at, angle: ang };
 }
-const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run(fn);
+// BK.22: every change of a device ends with the rooms of the placed things brought up to date (room-lookup.js)
+const op = (fn) => (ed) => new ModelWriter(ed.W, ed.api, ed.mid).run((w) => { const r = fn(w); syncPlacedRooms(w); return r; });
+placedSources().set('electrical', (w) => readDevices(w).map((d) => ({ id: d.id, storey: d.storey, at: d.at, angle: d.angle, onWall: DEVICES[d.kind].mount === 'wall' })));
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
 
 /** One device written inside a running writer (placeDevice and placeDevices share it). */
@@ -313,11 +318,13 @@ export function syncElectrical(w, storey) {
 }
 
 // ------------------------------------------------------------------------------------------------------------ schedules
-export function deviceSchedule(devs, levels, { fmtLen = (mm) => String(Math.round(mm)), t = tr } = {}) {
+/** roomOf(device) → text (BK.22): the room each device stands in, looked up live by the page (room-lookup.js roomIndex); none = what the file holds. The Room column is the last one. */
+export function deviceSchedule(devs, levels, { fmtLen = (mm) => String(Math.round(mm)), t = tr, roomOf = null } = {}) {
   const byGuid = new Map(devs.map((d) => [d.guid, d]));
-  const rows = devs.map((d) => [d.tag, t('res.el.kind.' + d.kind), levels.find((l) => l.id === d.storey)?.name || '', d.circuit, d.load ? String(Math.round(d.load)) : '', fmtLen(d.height), d.controls.map((g) => byGuid.get(g)?.tag).filter(Boolean).join(', ')]);
+  const room = (d) => (roomOf ? roomOf(d) : d.room) || '';
+  const rows = devs.map((d) => [d.tag, t('res.el.kind.' + d.kind), levels.find((l) => l.id === d.storey)?.name || '', d.circuit, d.load ? String(Math.round(d.load)) : '', fmtLen(d.height), d.controls.map((g) => byGuid.get(g)?.tag).filter(Boolean).join(', '), room(d)]);
   const watts = devs.reduce((s, d) => s + (d.load || 0), 0);
-  return { head: [t('res.el.sch.tag'), t('res.el.sch.device'), t('res.el.sch.level'), t('res.el.sch.circuit'), t('res.el.sch.load'), t('res.el.sch.height'), t('res.el.sch.controls')], rows, total: [t('model.sch.total'), String(devs.length), '', '', String(Math.round(watts)), '', ''] };
+  return { head: [t('res.el.sch.tag'), t('res.el.sch.device'), t('res.el.sch.level'), t('res.el.sch.circuit'), t('res.el.sch.load'), t('res.el.sch.height'), t('res.el.sch.controls'), t('res.el.sch.room')], rows, total: [t('model.sch.total'), String(devs.length), '', '', String(Math.round(watts)), '', '', ''] };
 }
 export function circuitSchedule(devs, { units = 'ftin', t = tr } = {}) {
   const map = new Map();

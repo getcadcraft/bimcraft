@@ -53,13 +53,13 @@ export class IfcModel {
   }
 
   /** `coordination`: the coordination matrix to keep (a reload after an edit: the model stays where it was in the scene). */
-  async load(bytes, onProgress = () => {}, { keyBase = 0, coordination = null } = {}) {
+  async load(bytes, onProgress = () => {}, { keyBase = 0, coordination = null, transfer = false } = {}) {
     this.close();
     const { api, WebIFC } = this;
     const settings = coordination ? { COORDINATE_TO_ORIGIN: true, COORDINATION_MATRIX: [...coordination] } : { COORDINATE_TO_ORIGIN: true };
     let modelID = -1;
     if (typeof api.AdoptModel === 'function') {
-      try { modelID = api.AdoptModel(await openIfcAsync(bytes), settings); } catch (e) { modelID = -1; }
+      try { modelID = api.AdoptModel(await openIfcAsync(bytes, { transfer }), settings); } catch (e) { modelID = -1; }
     } else modelID = api.OpenModel(bytes, settings);
     if (modelID < 0) throw new Error(t('ifc.open.failed'));
     this.modelID = modelID;
@@ -95,7 +95,7 @@ export class IfcModel {
         const key = storey + (space ? '|s|' : '|e|') + [c.x, c.y, c.z, c.w].map((v) => v.toFixed(3)).join(',');
         let b = batches.get(key);
         if (!b) {
-          b = { storey, space, color: [c.x, c.y, c.z, c.w], pos: [], nrm: [], idx: [], ids: [], vcount: 0, runs: { ids: [], t0: [], tn: [], v0: [], vn: [] } };
+          b = { storey, space, color: [c.x, c.y, c.z, c.w], pos: new Grow(Float32Array), nrm: new Grow(Float32Array), idx: new Grow(Uint32Array), ids: new Grow(Uint32Array), vcount: 0, runs: { ids: [], t0: [], tn: [], v0: [], vn: [] } };   // 0.10 PERF.8: typed, not number arrays (8+ bytes a number, boxed)
           batches.set(key, b);
         }
         appendGeometry(b, verts, idx, pg.flatTransformation, keyBase + id);
@@ -104,10 +104,14 @@ export class IfcModel {
       }
       if (index % 200 === 0) onProgress(index + 1, total);
     };
-    api.StreamAllMeshes(modelID, onMesh);
+    // 0.10 PERF.8: in slices that give the page back (no one long task; the progress line paints), and each element's meshes are dropped from the
+    // engine once copied into the batches. An engine without the Async calls (web-ifc, the oracle tests) streams in one go, as before.
+    if (typeof api.StreamAllMeshesAsync === 'function') await api.StreamAllMeshesAsync(modelID, onMesh);
+    else api.StreamAllMeshes(modelID, onMesh);
     // web-ifc's StreamAllMeshes leaves IfcSpace out: stream the spaces too (hidden in the viewer until Spaces is on; the
     // spaces schedule, 0.4 B10, measures them). Found 2026-10-12: before this the Spaces button had nothing to show.
-    api.StreamAllMeshesWithTypes(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
+    if (typeof api.StreamAllMeshesWithTypesAsync === 'function') await api.StreamAllMeshesWithTypesAsync(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
+    else api.StreamAllMeshesWithTypes(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
 
     const out = [...batches.values()].map(finishBatch);
     return {
@@ -235,15 +239,24 @@ export class IfcModel {
   }
 }
 
+/** A growing typed array (doubling): the batches' vertex and index data without a boxed number per value (0.10 PERF.8). */
+class Grow {
+  constructor(Type) { this.T = Type; this.a = new Type(1024); this.n = 0; }
+  need(k) { if (this.n + k > this.a.length) { const b = new this.T(Math.max(this.a.length * 2, this.n + k)); b.set(this.a.subarray(0, this.n)); this.a = b; } }
+  push3(x, y, z) { this.need(3); const a = this.a, n = this.n; a[n] = x; a[n + 1] = y; a[n + 2] = z; this.n = n + 3; }
+  fill(v, k) { this.need(k); this.a.fill(v, this.n, this.n + k); this.n += k; }
+  done() { return this.a.slice(0, this.n); }
+}
+
 function appendGeometry(b, verts, idx, m, id) {
   // verts: x,y,z,nx,ny,nz per vertex; m: column-major 4×4 placement. `id` is the element's key.
   const base = b.vcount;
   const r = b.runs, last = r.ids.length - 1;
   if (last >= 0 && r.ids[last] === id) { r.tn[last] += idx.length / 3; r.vn[last] += verts.length / 6; }
-  else { r.ids.push(id); r.t0.push(b.idx.length / 3); r.tn.push(idx.length / 3); r.v0.push(base); r.vn.push(verts.length / 6); }
+  else { r.ids.push(id); r.t0.push(b.idx.n / 3); r.tn.push(idx.length / 3); r.v0.push(base); r.vn.push(verts.length / 6); }
   for (let i = 0; i < verts.length; i += 6) {
     const x = verts[i], y = verts[i + 1], z = verts[i + 2];
-    b.pos.push(
+    b.pos.push3(
       m[0] * x + m[4] * y + m[8] * z + m[12],
       m[1] * x + m[5] * y + m[9] * z + m[13],
       m[2] * x + m[6] * y + m[10] * z + m[14],
@@ -253,10 +266,12 @@ function appendGeometry(b, verts, idx, m, id) {
     let ty = m[1] * nx + m[5] * ny + m[9] * nz;
     let tz = m[2] * nx + m[6] * ny + m[10] * nz;
     const l = Math.hypot(tx, ty, tz) || 1;
-    b.nrm.push(tx / l, ty / l, tz / l);
+    b.nrm.push3(tx / l, ty / l, tz / l);
   }
-  for (let i = 0; i < idx.length; i++) b.idx.push(base + idx[i]);
-  for (let i = 0; i < idx.length; i += 3) b.ids.push(id);
+  b.idx.need(idx.length);
+  for (let i = 0, a = b.idx.a, n = b.idx.n; i < idx.length; i++) a[n + i] = base + idx[i];
+  b.idx.n += idx.length;
+  b.ids.fill(id, idx.length / 3);
   b.vcount += verts.length / 6;
 }
 
@@ -265,10 +280,10 @@ function finishBatch(b) {
     storey: b.storey,
     space: b.space,          // IfcSpace volumes: hidden by default in the viewer
     color: b.color,
-    positions: Float32Array.from(b.pos),
-    normals: Float32Array.from(b.nrm),
-    indices: Uint32Array.from(b.idx),
-    triIds: Uint32Array.from(b.ids),   // element key per triangle (faceIndex → element)
+    positions: b.pos.done(),
+    normals: b.nrm.done(),
+    indices: b.idx.done(),
+    triIds: b.ids.done(),   // element key per triangle (faceIndex → element)
     // one run per element: its triangles [t0, t0 + tn) and vertices [v0, v0 + vn) in this batch
     elems: { ids: Uint32Array.from(b.runs.ids), t0: Uint32Array.from(b.runs.t0), tn: Uint32Array.from(b.runs.tn), v0: Uint32Array.from(b.runs.v0), vn: Uint32Array.from(b.runs.vn) },
   };

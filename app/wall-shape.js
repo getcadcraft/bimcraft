@@ -12,7 +12,7 @@
  *   Slant      IFCLABEL  "deg" (single: both faces lean the same way) or "left,right" (double), from vertical, + to the wall's left
  *   ShapeKey   IFCIDENTIFIER  what the body was made from (so a regeneration that changes nothing writes nothing)
  * A shaped wall's Body is an IfcFacetedBrep ('Brep') of the joined plan outline with a top and base per vertex; an unshaped wall keeps its
- * extrusion. Curved walls are refused (wshape.err.curved).
+ * extrusion. Curved walls too (walls-shape-10): the body runs along the chords of the plan's own outline, heights per vertex along the arc.
  *
  * Wall openings (a hole with no door or window): IfcOpeningElement voiding the wall, no filling, a box through the wall, placed in
  * the wall's axes like a door's opening; CadCraft_Opening Width, Height, Kind = 'wallopening'.
@@ -22,7 +22,11 @@
  *   readWallOpenings(w, walls?) → [{ id, guid, wallGuid, storey, offset, width, height, sill }]
  *   ops (IfcEditor.modelChange, one undo step each): setWallShape(guid, { profile, attachTop, attachBase, slant }),
  *     addWallOpening({ wall, offset, width, height, sill }), changeWallOpening(guid, { offset, width, height, sill }),
- *     removeWallOpenings(guids)
+ *     removeWallOpenings(guids), setWallsShape(guids, changes) (several walls, one step: Attach top / base from a view)
+ *   walls-shape-10: attachTargets(w) → what a wall can attach to with its place (for picking it in a view or in 3D) ·
+ *     planOutline(w, wall, poly, cutZ, cache) → a slanted wall's outline at the plan's cut · withShapeCopies(op, moves) → a Copy
+ *     (model-modify.js moveElements) that also carries each copied wall's shape and wall openings, one undo step ·
+ *     the `copy` hook (model-ops.js copyLevel calls it through model-walls.js wallShapeHooks)
  * Errors (lang keys): wshape.err.curved, wshape.err.profile, wshape.err.low, wshape.err.nofit, wshape.err.attach.
  */
 import { readWalls, setWallShapeHooks, regenWalls, writeWallShape, WALL_PSET } from './model-walls.js';
@@ -32,15 +36,16 @@ import { readLevels } from './model-levels.js';
 import { loopAt } from './model-rooms.js';
 import { edgeKinds, roofGeometry, heightAt, ROOF_DEFAULTS } from './res-roof.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
-import { round } from './model-write.js';
+import { round, ModelWriter } from './model-write.js';
 import { t as tr } from './i18n.js';
-import { parseShape, hasShape, shapeBody, profileAt, lineBreaks, inPoly, checkProfile } from './walls/shape.js';
+import { parseShape, hasShape, shapeBody, profileAt, lineBreaks, inPoly, checkProfile, cutOutline } from './walls/shape.js';
+import { wallSide } from './quantities/rules.js';   // BK.11 (bk-quantities-10): the one stated measuring rule, shared with the schedules and TakeoffCraft
+import { hostFrame, hostOffset, openingCut, arcAxisCurve, arcOf } from './model-arcs.js';   // walls-shape-10: curved walls
 
 export const OPENING_PSET = 'CadCraft_Opening';
 export const WALL_OPENING = 'wallopening';
 const PROUD = 10;
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
-const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 /** The wall's shape settings, parsed (readWalls carries them raw in wall.shape). */
 export function readShape(wall) {
@@ -115,8 +120,12 @@ function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^=
 
 /** Work the shaped body out for a wall (plan mm, its own heights): → shapeBody's result. Throws wshape.err.low. */
 export function bodyFor(w, wall, poly, cache = {}) {
+  const H = heightsFor(w, wall, cache);
+  return shapeBody(wall, poly, { topAt: H.topAt, baseAt: H.baseAt, breaks: H.breaks, slant: H.sh.slant });
+}
+/** The wall's top and base at a plan point (its own heights) from its profile and what it is attached to, and where they change slope. */
+function heightsFor(w, wall, cache = {}) {
   const sh = readShape(wall), breaks = [];
-  const L = dist(wall.a, wall.b), u = [(wall.b[0] - wall.a[0]) / L, (wall.b[1] - wall.a[1]) / L];
   const ownTop = wall.height;
   const top = sh.profile?.top, bot = sh.profile?.bottom;
   for (const line of [top, bot]) if (line) for (const q of line) breaks.push(q[0]);
@@ -133,8 +142,15 @@ export function bodyFor(w, wall, poly, cache = {}) {
     if (AB) { const a = AB.z(p); if (a !== null && (!bot || a > z)) z = a; }
     return z;
   };
-  void u;
-  return shapeBody(wall, poly, { topAt, baseAt, breaks, slant: sh.slant });
+  return { sh, topAt, baseAt, breaks };
+}
+/** walls-shape-10: a slanted wall's outline where the plan cuts it (`cutZ` above the level's floor); the outline itself when it does not lean. */
+export function planOutline(w, wall, poly, cutZ, cache = {}) {
+  const sh = readShape(wall);
+  if (!sh.slant) return poly;
+  let H = null;
+  try { H = heightsFor(w, wall, cache); } catch (e) { H = null; }
+  return cutOutline(wall, poly, { slant: sh.slant, cut: cutZ - wall.baseOffset, topAt: H?.topAt || null, baseAt: H?.baseAt || null });
 }
 
 function writeShaped(w, wall, poly, host, cache, forced) {
@@ -149,14 +165,14 @@ function writeShaped(w, wall, poly, host, cache, forced) {
   const P = local.map(([x, y, z]) => w.H(w.point3(round(w.u(x)), round(w.u(y)), round(w.u(z)))));
   const faces = body.faces.map((f) => w.H(w.make('IFCFACE', [w.H(w.make('IFCFACEOUTERBOUND', w.H(w.make('IFCPOLYLOOP', f.map((i) => P[i]))), w.T('IFCBOOLEAN', true)))])));
   const brep = w.make('IFCFACETEDBREP', w.H(w.make('IFCCLOSEDSHELL', faces)));
-  const axis = w.rep('axis', 'Axis', 'Curve2D', [w.polyline2([[0, 0], [wall.len, 0]])]);
+  const axis = w.rep('axis', 'Axis', 'Curve2D', [arcOf(wall.a, wall.b, wall.bulge) ? arcAxisCurve(w, wall) : w.polyline2([[0, 0], [wall.len, 0]])]);
   w.setShape(wall.id, [axis, w.rep('body', 'Body', 'Brep', [brep])]);
   let openArea = 0, openVol = 0;
   for (const [ow, oh] of opens) if (ow > 0 && oh > 0) { openArea += ow * oh; openVol += ow * oh * wall.t; }
   const tops = body.verts.slice(body.ring).map((v) => v[2]), bases = body.verts.slice(0, body.ring).map((v) => v[2]);
   const H = Math.max(...tops) - Math.min(...bases);
   w.upsertQto(wall.id, 'Qto_WallBaseQuantities', [['Length', 'length', wall.len], ['Width', 'length', wall.t], ['Height', 'length', H],
-    ['GrossFootprintArea', 'area', body.footArea], ['GrossSideArea', 'area', body.sideArea], ['NetSideArea', 'area', Math.max(0, body.sideArea - openArea)],
+    ['GrossFootprintArea', 'area', body.footArea], ['GrossSideArea', 'area', body.sideArea], ['NetSideArea', 'area', wallSide({ gross: body.sideArea, openings: [{ area: openArea }] }).net],
     ['GrossVolume', 'volume', body.volume], ['NetVolume', 'volume', Math.max(0, body.volume - openVol)]]);
   w.upsertPset(wall.id, WALL_PSET, [['Length', 'IFCPOSITIVELENGTHMEASURE', round(w.u(wall.len))], ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(wall.t))], ['ShapeKey', 'IFCIDENTIFIER', key]]);
   if (sh.slant) for (const o of readWallOpenings(w, [wall])) writeOpeningBody(w, o.id, wall, o);   // their boxes reach through the leaning faces
@@ -179,7 +195,7 @@ export function readWallOpenings(w, walls = readWalls(w)) {
     const wall = byId.get(R.voidHost.get(id));
     if (!wall) continue;
     const line = w.api.GetLine(w.mid, id, false), M = w.relMatrix(wall.lp, line.ObjectPlacement.value);
-    out.push({ id, guid: val(line.GlobalId), wall: wall.id, wallGuid: wall.guid, storey: wall.storey, offset: M[12], width: Number(ps.Width) * w.unitMm, height: Number(ps.Height) * w.unitMm, sill: M[14] + wall.baseOffset, lp: line.ObjectPlacement.value });
+    out.push({ id, guid: val(line.GlobalId), wall: wall.id, wallGuid: wall.guid, storey: wall.storey, offset: hostOffset(wall, M, Number(ps.Width) * w.unitMm), width: Number(ps.Width) * w.unitMm, height: Number(ps.Height) * w.unitMm, sill: M[14] + wall.baseOffset, lp: line.ObjectPlacement.value });
   }
   return out;
 }
@@ -192,7 +208,8 @@ function writeOpeningBody(w, id, wall, o) {
   // through the whole wall: a slanted wall's faces move off by tan(slant) × height, so the box reaches that far too
   const sl = readShape(wall).slant, lean = sl ? Math.max(...sl.map((v) => Math.abs(Math.tan(v * Math.PI / 180)))) * (o.sill - wall.baseOffset + o.height) : 0;
   const d = wall.t / 2 + PROUD + lean;
-  w.setShape(id, [w.rep('body', 'Body', 'SweptSolid', [w.box(0, -d, 0, o.width, d, o.height)])]);
+  const cut = openingCut(wall, o, PROUD + lean);   // a curved wall: jambs along the radius (as its doors and windows)
+  w.setShape(id, [w.rep('body', 'Body', 'SweptSolid', [cut ? w.extrude(w.profile(cut), 0, o.height) : w.box(0, -d, 0, o.width, d, o.height)])]);
   w.upsertPset(id, OPENING_PSET, [['Width', 'IFCPOSITIVELENGTHMEASURE', round(w.u(o.width))], ['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(o.height))], ['Kind', 'IFCIDENTIFIER', WALL_OPENING]]);
 }
 export function addWallOpening(spec) {
@@ -200,18 +217,23 @@ export function addWallOpening(spec) {
   return op((w) => {
     const wall = readWalls(w).find((x) => x.guid === s.wall);
     if (!wall) fail('model.err.nowall');
-    if (wall.bulge) fail('wshape.err.curved');
     const o = { offset: s.offset, width: s.width, height: s.height, sill: Number.isFinite(s.sill) ? s.sill : wall.baseOffset };
-    checkOpening(wall, o);
     const g = val(w.guid());
-    const lp = w.placeAt(wall.lp, o.offset, 0, o.sill - wall.baseOffset, 0);
-    const id = w.make('IFCOPENINGELEMENT', g, w.ownerHistory(), w.L(tr('wshape.opening')), null, null, w.H(lp), null, null, ...(w.v4 ? ['OPENING'] : []));
-    w.noteGuid(g, id);
-    w.make('IFCRELVOIDSELEMENT', w.guid(), w.ownerHistory(), null, null, w.H(wall.id), w.H(id));
-    writeOpeningBody(w, id, wall, o);
+    const id = putOpening(w, wall, o, g);
     regenWalls(w, wall.storey, [wall.guid]);
     return { id, ids: [id], made: new Map([[g, id]]) };
   });
+}
+/** One wall opening written into a wall (checked first): → its id. The caller brings the wall up to date. */
+function putOpening(w, wall, o, g) {
+  checkOpening(wall, o);
+  const hf = hostFrame(wall, o.offset, o.width);   // a curved wall: square to it at the opening's middle
+  const lp = w.placeAt(wall.lp, hf.x, hf.y, o.sill - wall.baseOffset, hf.ang);
+  const id = w.make('IFCOPENINGELEMENT', g, w.ownerHistory(), w.L(tr('wshape.opening')), null, null, w.H(lp), null, null, ...(w.v4 ? ['OPENING'] : []));
+  w.noteGuid(g, id);
+  w.make('IFCRELVOIDSELEMENT', w.guid(), w.ownerHistory(), null, null, w.H(wall.id), w.H(id));
+  writeOpeningBody(w, id, wall, o);
+  return id;
 }
 export function changeWallOpening(guid, ch) {
   const c = { ...ch };
@@ -221,7 +243,8 @@ export function changeWallOpening(guid, ch) {
     const wall = walls.find((x) => x.guid === o0.wallGuid), o = { ...o0 };
     for (const k of ['offset', 'width', 'height', 'sill']) if (Number.isFinite(c[k])) o[k] = c[k];
     checkOpening(wall, o);
-    w.movePlacement(o0.lp, o.offset, 0, o.sill - wall.baseOffset, 0);
+    const hf = hostFrame(wall, o.offset, o.width);
+    w.movePlacement(o0.lp, hf.x, hf.y, o.sill - wall.baseOffset, hf.ang);
     writeOpeningBody(w, o0.id, wall, o);
     regenWalls(w, wall.storey, [wall.guid]);
     return { id: o0.id, ids: [o0.id] };
@@ -242,7 +265,24 @@ export function setWallShape(guid, changes) {
   return op((w) => {
     const wall = readWalls(w).find((x) => x.guid === guid);
     if (!wall) fail('model.err.nowall');
-    if (wall.bulge) fail('wshape.err.curved');
+    applyShape(w, wall, ch);
+    regenWalls(w, wall.storey, [guid]);
+    return { id: wall.id, ids: [wall.id] };
+  });
+}
+/** walls-shape-10: the same change on several walls as ONE undo step (Attach top / base and Slant from a view: pick walls, then the roof). */
+export function setWallsShape(guids, changes) {
+  const ch = structuredClone(changes), list = [...guids];
+  return op((w) => {
+    const all = readWalls(w), walls = list.map((g) => all.find((x) => x.guid === g)).filter(Boolean);
+    if (!walls.length) fail('model.err.nowall');
+    for (const wall of walls) applyShape(w, wall, ch);
+    for (const st of new Set(walls.map((x) => x.storey))) regenWalls(w, st, walls.filter((x) => x.storey === st).map((x) => x.guid));
+    return { id: walls[0].id, ids: walls.map((x) => x.id) };
+  });
+}
+function applyShape(w, wall, ch) {
+  {
     const cur = readShape(wall), next = { ...cur };
     if ('profile' in ch) next.profile = ch.profile && (ch.profile.top || ch.profile.bottom) ? { top: ch.profile.top || null, bottom: ch.profile.bottom || null } : null;
     if ('attachTop' in ch) next.attachTop = ch.attachTop || '';
@@ -255,9 +295,99 @@ export function setWallShape(guid, changes) {
     if (next.attachBase && !choices.get(next.attachBase)?.base) fail('wshape.err.attach');
     const pr = next.profile ? JSON.stringify({ ...(next.profile.top ? { top: next.profile.top } : {}), ...(next.profile.bottom ? { bottom: next.profile.bottom } : {}) }) : '';
     w.upsertPset(wall.id, WALL_PSET, [['Profile', 'IFCTEXT', pr], ['AttachTop', 'IFCIDENTIFIER', next.attachTop], ['AttachBase', 'IFCIDENTIFIER', next.attachBase], ['Slant', 'IFCLABEL', next.slant ? next.slant.join(',') : ''], ['ShapeKey', 'IFCIDENTIFIER', '']]);
-    regenWalls(w, wall.storey, [guid]);
-    return { id: wall.id, ids: [wall.id] };
+  }
+}
+
+// ------------------------------------------------------------------------------- what a wall can attach to, with its place
+/**
+ * walls-shape-10: every roof, floor and ceiling a wall can attach to, with where it is, so a view or the 3D view can pick it:
+ * → [{ guid, kind, label, top, base, id (expressID | null), storey (the storey its plan is in), polys (that storey's plan, mm),
+ *      z0, z1 (mm above that storey's floor: its lowest underside and highest top) }]. One with no surface now (a roof whose walls
+ * are gone) is left out.
+ */
+export function attachTargets(w) {
+  const cache = {}, out = [];
+  for (const c of attachChoices(w, null)) {
+    const s = surfaceOf(w, c.guid, cache);
+    if (!s) continue;
+    let z0 = Infinity, z1 = -Infinity;
+    const see = (q) => { for (const z of [s.under(q), s.over(q)]) if (z !== null && z !== undefined && Number.isFinite(z)) { z0 = Math.min(z0, z); z1 = Math.max(z1, z); } };
+    for (const poly of s.polys) {
+      const m = [poly.reduce((t, q) => t + q[0], 0) / poly.length, poly.reduce((t, q) => t + q[1], 0) / poly.length];
+      see(m);
+      for (const q of poly) see([q[0] + (m[0] - q[0]) * 1e-3, q[1] + (m[1] - q[1]) * 1e-3]);   // just inside each corner (faces meet on their edges, where either may answer)
+    }
+    if (!Number.isFinite(z0)) continue;
+    out.push({ ...c, id: w.byGuid(c.guid) ?? null, storey: s.frame, polys: s.polys, z0, z1 });
+  }
+  return out;
+}
+
+// --------------------------------------------------------------------------------------- copies carry the shape (walls-shape-10)
+/**
+ * The shape settings and wall openings of `src` (a readWalls row, read BEFORE the copy was made or of another level) written onto the
+ * wall `dstGuid`. `guidFor(key)` gives the copy's GlobalId for a source GlobalId (fixed on the first run, so Redo makes the same ones);
+ * `attach(guid)` names what the copy attaches to for a source target ('' = that target has no copy: the link is dropped).
+ * `openings` = readWallOpenings rows of the source. A wall opening that no longer fits is left out, never an error. → true when
+ * anything was written (the caller brings the walls up to date: regenWalls with the copy forced).
+ */
+function copyShape(w, src, dstGuid, { guidFor, attach = (g) => g, openings = [] } = {}) {
+  const dst = readWalls(w).find((x) => x.guid === dstGuid);
+  if (!dst) return false;
+  let wrote = false;
+  if (src.shape) {
+    const sh = readShape(src), at = sh.attachTop ? attach(sh.attachTop) || '' : '', ab = sh.attachBase ? attach(sh.attachBase) || '' : '';
+    const pr = sh.profile ? JSON.stringify({ ...(sh.profile.top ? { top: sh.profile.top } : {}), ...(sh.profile.bottom ? { bottom: sh.profile.bottom } : {}) }) : '';
+    if (pr || at || ab || sh.slant) {
+      w.upsertPset(dst.id, WALL_PSET, [['Profile', 'IFCTEXT', pr], ['AttachTop', 'IFCIDENTIFIER', at], ['AttachBase', 'IFCIDENTIFIER', ab], ['Slant', 'IFCLABEL', sh.slant ? sh.slant.join(',') : ''], ['ShapeKey', 'IFCIDENTIFIER', '']]);
+      dst.shape = { profile: pr, attachTop: at, attachBase: ab, slant: sh.slant ? sh.slant.join(',') : '' };
+      wrote = true;
+    }
+  }
+  for (const o of openings.filter((x) => x.wallGuid === src.guid)) {
+    try { putOpening(w, dst, { offset: o.offset, width: o.width, height: o.height, sill: o.sill - src.baseOffset + dst.baseOffset }, guidFor(o.guid)); wrote = true; } catch (e) { if (!e.key) throw e; }
+  }
+  return wrote;
+}
+const joinJournals = (a, b) => {
+  if (!a) return b; if (!b) return a;
+  const before = new Map(a.before);
+  for (const [id, line] of b.before) if (!before.has(id) && !a.created.includes(id)) before.set(id, line);
+  return { created: [...a.created, ...b.created], before, retyped: [...(a.retyped || []), ...(b.retyped || [])] };
+};
+/**
+ * A Copy of walls (model-modify.js moveElements(moves, { copy: true })) that also carries each copied wall's profile, slant, attachments
+ * (to the same roof, floor or ceiling: it is still there) and wall openings: the copy's op, then this one, as ONE undo step.
+ * `moves` = the list given to moveElements (the copies come back in its order).
+ */
+export function withShapeCopies(copyOp, moves) {
+  const list = moves.map((m) => m.guid), keep = new Map();
+  let pairs = [], srcWalls = [], srcOpenings = [];
+  const carry = op((w) => {
+    const fresh = (key) => { if (!keep.has(key)) keep.set(key, val(w.guid())); return keep.get(key); };
+    const done = [];
+    for (const [srcGuid, dstGuid] of pairs) {
+      const src = srcWalls.find((x) => x.guid === srcGuid);
+      if (src && copyShape(w, src, dstGuid, { guidFor: fresh, openings: srcOpenings })) done.push(dstGuid);
+    }
+    const walls = readWalls(w);
+    for (const st of new Set(done.map((g) => walls.find((x) => x.guid === g)?.storey).filter((x) => x !== undefined))) regenWalls(w, st, done);
+    return { id: null, ids: [] };
   });
+  return (ed) => {
+    const w0 = new ModelWriter(ed.W, ed.api, ed.mid);
+    srcWalls = readWalls(w0).filter((x) => list.includes(x.guid));
+    srcOpenings = srcWalls.length ? readWallOpenings(w0, srcWalls) : [];
+    const r = copyOp(ed);
+    if (!srcWalls.some((x) => x.shape) && !srcOpenings.length) return r;
+    const w1 = new ModelWriter(ed.W, ed.api, ed.mid), ids = r.ids || [];
+    pairs = [];
+    list.forEach((g, i) => { const id = ids[i]; if (id === undefined || id === null) return; const dg = w1.guidOf(id); if (dg && dg !== g && srcWalls.some((x) => x.guid === g)) pairs.push([g, dg]); });
+    if (!pairs.length) return r;
+    let r2 = null;
+    try { r2 = carry(ed); } catch (e) { console.error(e); return r; }   // the copy stands; its shape could not be carried
+    return { ...r, journal: joinJournals(r.journal, r2.journal) };
+  };
 }
 
 /** Wall openings keep their place in the world when their wall's start slides along its line (as doors do); one that no longer fits refuses the change. */
@@ -266,6 +396,13 @@ function afterMove(w, before, after, guids) {
   for (const o of mine) {
     const A = before.find((x) => x.guid === o.wallGuid), B = after.find((x) => x.guid === o.wallGuid);
     if (!A || !B) continue;
+    if (A.bulge || B.bulge) {   // a curved wall: the opening keeps its distance along the arc and is set square to it again
+      if (o.offset < -0.5 || o.offset + o.width > B.len + 0.5) fail('model.err.nofit');
+      const hf = hostFrame(B, o.offset, o.width);
+      w.movePlacement(o.lp, hf.x, hf.y, o.sill - B.baseOffset, hf.ang);
+      writeOpeningBody(w, o.id, B, o);
+      continue;
+    }
     const uA = [(A.b[0] - A.a[0]) / A.len, (A.b[1] - A.a[1]) / A.len], uB = [(B.b[0] - B.a[0]) / B.len, (B.b[1] - B.a[1]) / B.len];
     const same = Math.abs(uA[0] * uB[1] - uA[1] * uB[0]) < 1e-9 && uA[0] * uB[0] + uA[1] * uB[1] > 0;
     const shift = same ? (B.a[0] - A.a[0]) * uA[0] + (B.a[1] - A.a[1]) * uA[1] : 0;
@@ -275,4 +412,4 @@ function afterMove(w, before, after, guids) {
   }
 }
 
-setWallShapeHooks({ write: writeShaped, afterMove });
+setWallShapeHooks({ write: writeShaped, afterMove, copy: copyShape, openings: readWallOpenings });

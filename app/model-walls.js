@@ -43,7 +43,10 @@ import { wallGeom, arcOf, arcLength, chordFor, flatPoly, arcAxisCurve, profileCu
 
 import { readAssemblies, readAssemblyRecords } from './wall-assemblies.js';
 import { deriveJoins, reconcile, joinsIndex, joinKey, kindOf } from './wall-joins.js';   // 0.9 FX.60: the join record
-import { squareMove } from './wall-square.js';   // 0.9 FX.65: a location line that holds moves the centre line square, the joined walls follow
+import { squareMove, setLength, setLengthGrow } from './wall-square.js';   // 0.9 FX.65: a location line that holds moves the centre line square, the joined walls follow
+import { wallSide } from './quantities/rules.js';   // BK.11 (bk-quantities-10): the one stated measuring rule, shared with the schedules and TakeoffCraft
+import { starterLod } from './new-policy.js';   // 0.10 DP.1 (bk-defaults-10): the LOD tag starter types carry when the person's Default Policies say so (not set = no tag, as before)
+import { cornerEnds, parseStyleToken, styleToken } from './walls/joinstyle.js';   // 0.9 WT.5 (walls-join-10): the join style of an L corner, shared with CadCraft plan walls
 
 /** Where a plan cuts, mm above its level (the Draw plan's CUT; rooms close against what the cut meets). */
 export const PLAN_CUT = 1200;
@@ -61,6 +64,10 @@ export const WALL_TYPES = [
   { key: 'concrete-200', exterior: true, layers: [{ mat: 'concrete', t: 200 }] },
   { key: 'ext-300', exterior: true, layers: [{ mat: 'render', t: 15 }, { mat: 'insulation', t: 100 }, { mat: 'block', t: 175 }, { mat: 'plaster', t: 10 }] },
   { key: 'int-100', exterior: false, layers: [{ mat: 'gypsum', t: 12.5 }, { mat: 'studs', t: 75 }, { mat: 'gypsum', t: 12.5 }] },
+  // 0.10 BK.15 (bk-r3-types-10): the generic walls of the sketch stage: one layer of the generic material, their own LOD 200 tag (the plan
+  // draws them as one hatched band, wall-plan-graphics.js). They become developed by a type swap (wall-typeswap.js), never by redrawing.
+  { key: 'generic-200', exterior: true, lod: 200, layers: [{ mat: 'generic', t: 200 }] },
+  { key: 'generic-100', exterior: false, lod: 200, layers: [{ mat: 'generic', t: 100 }] },
 ];
 /**
  * A wall type by key: a starter, or a starter at another thickness — key "<starter>@<mm>" (Properties › Thickness): the
@@ -72,8 +79,10 @@ export function wallType(key, source = null) {
   const k = String(key || '');
   const base = WALL_TYPES.find((x) => x.key === k.split('@')[0]) || null;
   if (!base) return null;
-  const coreIndex = base.layers.findIndex(l => ['studs', 'block', 'cmu', 'concrete'].includes(l.mat));
+  const coreIndex = base.layers.findIndex(l => ['studs', 'block', 'cmu', 'concrete', 'generic'].includes(l.mat));
   const recipe = { ...base, layers: base.layers.map((l, i) => normalizeLayer({ ...l, core: i === (coreIndex < 0 ? 0 : coreIndex), function: i === coreIndex ? 'structure' : l.mat === 'osb' ? 'substrate' : l.mat === 'insulation' ? 'insulation' : 'finish' })) };
+  const lod = starterLod();   // 0.10 DP.1: undefined unless a policy is set
+  if (lod && !base.lod) recipe.lod = lod;   // BK.15: a generic starter keeps its own tag
   if (!k.includes('@')) return recipe;
   const want = Number(k.split('@')[1]);
   const rest = base.layers.reduce((s, l) => s + l.t, 0) - Math.max(...base.layers.map((l) => l.t));
@@ -90,7 +99,7 @@ export function typeAt(typeKey, mm) {
   return wallType(k) ? k : null;
 }
 export const wallTypes = (w) => [...WALL_TYPES.map(x => wallType(x.key)), ...readAssemblies(w)];
-export const typeThickness = (type) => type.layers.reduce((s, l) => s + l.t, 0);
+export const typeThickness = (type) => (type?.layers || []).reduce((s, l) => s + l.t, 0);   // no type (a type saved a moment ago, not read yet): 0, not a page error (bk-r3-types-10)
 export const typeName = (type) => type.name || (type.base ? tr('model.wt.custom', { name: tr('model.wt.' + type.base), t: Math.round(typeThickness(type)) }) : tr('model.wt.' + type.key));
 
 // ---------------------------------------------------------------------------------------------------------------- joins
@@ -173,11 +182,40 @@ function prepare(walls) {
   }).filter((w) => w.L > 0 && w.h > 0);
 }
 
-export function wallOutlines(walls, { tol = 1 } = {}) {
+/**
+ * 0.9 WT.5 (walls-join-10): the join style of a corner (walls/joinstyle.js: mitre | butt | square off, and which wall runs through).
+ * A node of exactly two straight wall ends takes its style from `styles` (Map of joins.js joinKey → { style, through: wall key }), else from
+ * what readWalls put on the walls' joinOff (`off.st[end]` = { style, through: this wall runs through, other }), so every caller that
+ * passes `off: wall.joinOff` draws the stored style. No style (every older file, every other node) = the mitre below, unchanged.
+ * A curved wall keeps the mitre. Straight walls' outlines also carry `ends` (not enumerable): { a: [left, right], b: [left, right] } = the
+ * points where each end is cut, on the wall's own left and right face (the layer clean-up reads them).
+ */
+function styledCorner(W, n, styles) {
+  if (n.solo || n.ends.length !== 2 || n.tees.length) return null;
+  const [e0, e1] = n.ends, A = W[e0.w], B = W[e1.w];
+  if (A.arc || B.arc || e0.w === e1.w) return null;
+  let st = null;
+  if (styles) {
+    const r = styles.get(joinKey({ guid: A.key, pos: e0.end === 'a' ? 'start' : 'end' }, { guid: B.key, pos: e1.end === 'a' ? 'start' : 'end' }));
+    if (r) st = { style: r.style, through: r.through === B.key ? 'b' : 'a' };
+  }
+  if (!st) {
+    const s0 = A.off?.st?.[e0.end], s1 = B.off?.st?.[e1.end];
+    if (s0 && s0.other === B.key) st = { style: s0.style, through: s0.through ? 'a' : 'b' };
+    else if (s1 && s1.other === A.key) st = { style: s1.style, through: s1.through ? 'b' : 'a' };
+  }
+  if (!st || (st.style !== 'butt' && st.style !== 'square')) return null;
+  const ray = (x, e) => ({ p: n.p, d: e.end === 'a' ? x.g.tan(0) : mul(x.g.tan(x.L), -1), h: x.h });
+  const c = cornerEnds(ray(A, e0), ray(B, e1), st);
+  return c.style === 'mitre' ? null : [{ w: e0.w, end: e0.end, ...c.a }, { w: e1.w, end: e1.end, ...c.b }];
+}
+export function wallOutlines(walls, { tol = 1, styles = null } = {}) {
   const W = prepare(walls);
   const nodes = wallNodes(W, tol);
   const ends = W.map(() => ({ a: null, b: null }));
   for (const n of nodes) {
+    const styled = styledCorner(W, n, styles);
+    if (styled) { for (const r of styled) ends[r.w][r.end] = { left: r.left, right: r.right, centre: null }; continue; }
     // each ray: a direction out of the node and a point its centre line passes through (a T's through wall: its own axis)
     // a curved wall's ray leaves along its tangent; its faces are circles (yl: the wall's own offset of the ray's left face)
     const rays = n.ends.map((e) => { const x = W[e.w]; return { w: e.w, end: e.end, d: e.end === 'a' ? x.g.tan(0) : mul(x.g.tan(x.L), -1), o: n.p, h: x.h, real: true, yl: e.end === 'a' ? x.h : -x.h }; });
@@ -214,7 +252,9 @@ export function wallOutlines(walls, { tol = 1 } = {}) {
     if (w.arc) { out.set(w.key, arcOutline(w, A, B)); return; }
     let poly = [A.right, B.left, B.centre, B.right, A.left, A.centre].filter(Boolean);
     poly = clean(poly);
-    if (!simpleCCW(poly)) poly = rect(w);
+    let cut = { a: [A.left, A.right], b: [B.right, B.left] };   // each end's cut on the wall's own left and right face (at its end b the ray ran the other way)
+    if (!simpleCCW(poly)) { poly = rect(w); cut = { a: [poly[3], poly[0]], b: [poly[2], poly[1]] }; }
+    Object.defineProperty(poly, 'ends', { value: cut, enumerable: false });
     out.set(w.key, poly);
   });
   return out;
@@ -358,8 +398,18 @@ export function readWalls(w, storey = null) {
   // its joins from the geometry until the first change writes them (syncJoins)
   const recs = readJoinRecords(w);
   if (recs.length) {
-    const idx = joinsIndex(recs);
-    for (const x of out) x.joins = idx.get(x.guid) || [];
+    const idx = joinsIndex(recs), byKey = new Map(recs.map((r) => [r.key, r]));
+    for (const x of out) {
+      x.joins = idx.get(x.guid) || [];
+      // 0.9 WT.5: a join with a style says so on the wall's side of it (`style`, `through` = this wall runs through), and an L's style rides on
+      // joinOff (`st[end]`) so wallOutlines gets it from every caller that passes `off: wall.joinOff`. A mitre adds nothing (rows as before).
+      for (const j of x.joins) {
+        const r = byKey.get(j.key);
+        if (!r || r.style === 'mitre') continue;
+        j.style = r.style; j.through = r.through === x.guid;
+        if (j.kind === 'L') (x.joinOff.st ||= {})[j.pos === 'start' ? 'a' : 'b'] = { style: r.style, through: j.through, other: j.other };
+      }
+    }
   }
   return out;
 }
@@ -518,8 +568,32 @@ export function updateWall(w, guid, changes = {}, { carryJoined = true, previous
     }
   }
   if (bulgeChanged) wall.bulge = changes.bulge;
+  // 0.10 BK.173 (bim-core-10): a caller that moves ONE end of a straight wall along its own line (the assistant, the API: "make this wall 500 longer")
+  // gets the join solver's setLength: the wall joined there moves square and keeps its angle, as a typed length or a grip drag does. The old
+  // moveEnd below swung it. An end moved off the line, or a curved wall, keeps the old carry (a rotation is what was asked for).
+  let carried = null;
+  if (carryJoined && !wall.bulge && !bulgeChanged && !changes.refreshType) {
+    const ma = dist(a, wall.a) > 1e-6, mb = dist(b, wall.b) > 1e-6, u0 = sub(wall.b, wall.a), L0 = Math.hypot(u0[0], u0[1]);
+    if (L0 > 0 && ma !== mb) {
+      const e = mb ? 'b' : 'a', to = mb ? b : a, fix = mb ? wall.a : wall.b, v = sub(to, fix), L1 = Math.hypot(v[0], v[1]);
+      const off = Math.abs(u0[0] * v[1] - u0[1] * v[0]) / (L0 * (L1 || 1)), same = (u0[0] * v[0] + u0[1] * v[1]) * (mb ? 1 : -1) > 0;
+      if (L1 >= 1 && off < 1e-6 && same) {
+        const plan = e === 'b' ? setLength(all, guid, L1) : setLengthGrow(all, guid, L1, 'center', 'end');
+        carried = plan;
+        const mine = plan.get(guid);
+        if (mine) { a = mine.a; b = mine.b; }
+        for (const [g2, m] of plan) {
+          if (g2 === guid) continue;
+          const o = all.find((x) => x.guid === g2);
+          if (!o || (dist(o.a, m.a) <= 1e-9 && dist(o.b, m.b) <= 1e-9)) continue;
+          if (dist(m.a, m.b) < 1) throw Object.assign(new Error('model.err.short'), { key: 'model.err.short' });
+          setGeom(w, o, m.a, m.b); o.a = m.a; o.b = m.b; touched.add(g2);
+        }
+      }
+    }
+  }
   if (dist(a, wall.a) > 1e-6 || dist(b, wall.b) > 1e-6 || bulgeChanged) {
-    if (carryJoined) {
+    if (carryJoined && !carried) {
       for (const [end, old, to] of [['a', wall.a, a], ['b', wall.b, b]]) {
         if (dist(old, to) <= 1e-6) continue;
         for (const o of all) {
@@ -619,7 +693,7 @@ const JOIN_NAME = 'CadCraft join';
 const CONN = { start: 'ATSTART', end: 'ATEND', mid: 'ATPATH' };
 const POS_OF = { ATSTART: 'start', ATEND: 'end', ATPATH: 'mid' };
 const enumOf = (v) => String(val(v) ?? '').replace(/\./g, '').toUpperCase();
-/** Our join records: [{ relId, key, kind, a: { guid, pos }, b: { guid, pos } }]. */
+/** Our join records: [{ relId, key, kind, a: { guid, pos }, b: { guid, pos }, style: 'mitre' | 'butt' | 'square', through: GlobalId | null }]. */
 export function readJoinRecords(w) {
   const out = [];
   let rels = [];
@@ -632,7 +706,8 @@ export function readJoinRecords(w) {
     const A = g(r.RelatingElement), B = g(r.RelatedElement), pa = POS_OF[enumOf(r.RelatingConnectionType)], pb = POS_OF[enumOf(r.RelatedConnectionType)];
     if (!A || !B || !pa || !pb) continue;
     const a = { guid: A, pos: pa }, b = { guid: B, pos: pb };
-    out.push({ relId, key: joinKey(a, b), kind: kindOf(pa, pb), a, b });
+    const st = parseStyleToken(String(val(r.Name)).slice(JOIN_NAME.length));   // 0.9 WT.5: "CadCraft join L butt 2"; no word (older files) = mitre
+    out.push({ relId, key: joinKey(a, b), kind: kindOf(pa, pb), a, b, style: st.style, through: st.style === 'mitre' ? null : (st.through === 2 ? B : A) });
   }
   return out;
 }
@@ -653,6 +728,22 @@ export function syncJoins(w, walls) {
 }
 
 /**
+ * 0.9 WT.5 (walls-join-10): the style of one join, kept IN its record (the IfcRelConnectsPathElements' Name: "CadCraft join L butt 1" = butt, the
+ * RelatingElement runs through; 2 = the RelatedElement). Other programs still read the relationship; an older BimCraft reads the record and
+ * ignores the word. The style stays with the record while the join exists (syncJoins never rewrites a kept record) and goes when the join goes.
+ * `through` = the GlobalId of the wall that runs through (one of the two; default the first). → the record, or throws model.err.nojoin.
+ */
+export function setJoinStyleRecord(w, key, { style = 'mitre', through = null } = {}) {
+  const rec = readJoinRecords(w).find((r) => r.key === key);
+  if (!rec) throw Object.assign(new Error('model.err.nojoin'), { key: 'model.err.nojoin' });
+  const token = styleToken({ style, through: through === rec.b.guid ? 2 : 1 });
+  const line = w.touch(rec.relId);
+  line.Name = w.L(JOIN_NAME + ' ' + rec.kind + (token ? ' ' + token : ''));
+  w.write(line);
+  return rec;
+}
+
+/**
  * Bring a storey's walls up to date: every wall whose joined outline, length or height differs from what its shape holds
  * gets a new shape, quantities and pset values; `force` (GlobalIds) are redone anyway (their openings changed).
  * Call it after any change to walls, levels or openings. → { walls: how many were rewritten }
@@ -665,6 +756,10 @@ const SHAPE_TOL_MM = 0.001;
  * loads wall-shape.js) a shaped wall is written as its plain extrusion.
  */
 let SHAPE_HOOKS = null;
+// 0.10 BK.42 (bk-measure-10): quantity-ifc.js hands in the pass that measures a level's walls by the project's measurement method
+// (it does nothing under the default method); called at the end of regenWalls, where every change of walls ends.
+let QUANTITY_HOOK = null;
+export function setWallQuantityHook(fn) { QUANTITY_HOOK = typeof fn === 'function' ? fn : null; }
 export function setWallShapeHooks(h) { SHAPE_HOOKS = h || null; }
 export function wallShapeHooks() { return SHAPE_HOOKS; }
 /** 0.9 WT.6: the storeys whose walls are attached to a roof, slab or ceiling made again (after those changed): → walls rewritten. */
@@ -687,7 +782,7 @@ export function regenWalls(w, storey, force = null) {
   for (const wall of walls) {
     const poly = outlines.get(wall.guid);
     if (!poly) continue;
-    if (SHAPE_HOOKS && wall.shape && !wall.bulge) { if (SHAPE_HOOKS.write(w, wall, poly, host, shapeCache, forced.has(wall.guid))) n++; continue; }   // 0.9 WT.6: a shaped wall's body
+    if (SHAPE_HOOKS && wall.shape) { if (SHAPE_HOOKS.write(w, wall, poly, host, shapeCache, forced.has(wall.guid))) n++; continue; }   // 0.9 WT.6: a shaped wall's body (walls-shape-10: curved walls too)
     const local = profileKeyPoints(toLocal(wall, poly.bulged || poly), w.v4);
     if (!forced.has(wall.guid)) {
       const cur = storedShape(w, wall.id);
@@ -696,6 +791,7 @@ export function regenWalls(w, storey, force = null) {
     writeWallShape(w, wall, poly, host);
     n++;
   }
+  if (QUANTITY_HOOK) QUANTITY_HOOK(w, storey, walls, host);   // BK.42: the walls' net side areas by the project's method (nothing under the default)
   return { walls: n };
 }
 const toLocal = (wall, poly) => {
@@ -761,7 +857,7 @@ export function writeWallShape(w, wall, poly, host = w.hostIndex()) {
     if (ow > 0 && oh > 0) { openArea += ow * oh; openVol += ow * oh * wall.t; }
   }
   w.upsertQto(wall.id, 'Qto_WallBaseQuantities', [['Length', 'length', wall.len], ['Width', 'length', wall.t], ['Height', 'length', wall.height],
-    ['GrossFootprintArea', 'area', foot], ['GrossSideArea', 'area', wall.len * wall.height], ['NetSideArea', 'area', Math.max(0, wall.len * wall.height - openArea)],
+    ['GrossFootprintArea', 'area', foot], ['GrossSideArea', 'area', wall.len * wall.height], ['NetSideArea', 'area', wallSide({ length: wall.len, height: wall.height, openings: [{ area: openArea }] }).net],
     ['GrossVolume', 'volume', foot * wall.height], ['NetVolume', 'volume', Math.max(0, foot * wall.height - openVol)]]);
   const rows = [['Length', 'IFCPOSITIVELENGTHMEASURE', round(w.u(wall.len))], ['Thickness', 'IFCPOSITIVELENGTHMEASURE', round(w.u(wall.t))]];
   if (wall.topLevel) rows.push(['Height', 'IFCPOSITIVELENGTHMEASURE', round(w.u(wall.height))]);

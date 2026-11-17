@@ -15,6 +15,7 @@
  *       the envelope and under the height cap, and one floor-count steeper (a smaller footprint) when that still fits. Same input, same answer.
  *   civilMass(option, { unitPerMm }) → { name, pts: [{ x, y }], floors, floorHeight, use }       the shape CivilCraft's massing.js cleanMass reads
  *   buildOption(option, { typeKey }) → op for IfcEditor.modelChange   levels, walls round the footprint on every level and a floor slab, ONE undo step
+ *   buildOptionIn(w, option, { typeKey })   the same inside a writer in hand (mass-options.js developOption)
  */
 import { op, settleFor } from './model-ops.js';
 import { readLevels, addLevel } from './model-levels.js';
@@ -184,7 +185,12 @@ const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
 /** The option as a building: levels up to its floor count, walls round the footprint on each (the footprint is the walls' outer face) and a floor slab. ONE undo step. */
 export function buildOption(option, { typeKey = 'ext-2x6' } = {}) {
   if (!option?.pts || option.pts.length < 3 || !(option.floors >= 1)) refuse('model.err.mass.shape');
-  return op((w) => {
+  return op((w) => buildOptionIn(w, option, { typeKey }));
+}
+/** The same inside a writer in hand (0.10 BK.44: mass-options.js develops a kept option with it, in its own undo step). */
+export function buildOptionIn(w, option, { typeKey = 'ext-2x6' } = {}) {
+  if (!option?.pts || option.pts.length < 3 || !(option.floors >= 1)) refuse('model.err.mass.shape');
+  {
     let levels = readLevels(w);
     if (!levels.length) refuse('model.err.nolevel');
     const base = levels[0].elevation;
@@ -213,7 +219,7 @@ export function buildOption(option, { typeKey = 'ext-2x6' } = {}) {
       floors.push(addFloor(w, { storey: l.id, seed: insidePoint(plan), mode: 'building', kind: 'concrete' }).id);
     }
     return { id: walls[0] ?? null, ids: [...walls, ...floors], made: new Map() };
-  });
+  }
 }
 
 /** Rooms typed or pasted from a spreadsheet: name, count, area, [ground]. Tab-separated (a pasted sheet) or comma-separated lines. */

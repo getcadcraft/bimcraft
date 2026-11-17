@@ -20,6 +20,7 @@
  * moves between nodes and their fields. Every edit is one undo step; a value is committed when its field changes.
  */
 
+import { PadDetector } from '../wheel-pad.js';   // D7.56: a trackpad's two-finger swipe pans
 const SVGNS = 'http://www.w3.org/2000/svg';
 const clone = (g) => JSON.parse(JSON.stringify(g));
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -401,6 +402,7 @@ export class NodeEditor {
   wheel(e) {
     if (e.target.closest?.('input, select')) return;   // i18n-ignore: selectors
     e.preventDefault();
+    if ((this._pad ||= new PadDetector()).isSwipe(e)) { this.pan = { x: this.pan.x - e.deltaX, y: this.pan.y - e.deltaY }; this.place(); return; }   // D7.56: two fingers pan, a pinch and a mouse wheel zoom
     const r = this.view.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
     const z = Math.min(2, Math.max(0.3, this.zoom * Math.exp(-e.deltaY * 0.0015)));
     this.pan = { x: mx - ((mx - this.pan.x) * z) / this.zoom, y: my - ((my - this.pan.y) * z) / this.zoom };

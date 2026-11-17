@@ -1,31 +1,35 @@
 ---
-title: Ein neues Gebäude beginnen
-summary: Ein leeres Gebäudemodell mit seinen Geschossen erstellen, seine Wände zeichnen, Elemente aus der Bibliothek platzieren und als IFC speichern.
-keywords: neu, neues Gebäude, leer, von Grund auf beginnen, Vorlage, Geschosse, Ebenen, Stockwerke, erstellen, Modell
-from: 546b8ae8
+title: Ein neues Gebäude anlegen
+summary: Erstellen Sie ein leeres Gebäudemodell mit seinen Ebenen, zeichnen Sie seine Wände, platzieren Sie Elemente aus der Bibliothek und speichern Sie es als IFC.
+keywords: neu, neues Gebäude, leer, unbeschrieben, von vorn beginnen, Vorlage, Ebenen, Geschosse, Etagen, Böden, erstellen, Modell
+from: 68786865
 ---
 
-## Was Sie tun werden
+## Was Sie hier tun
 
-Ein Gebäudemodell aus dem Nichts beginnen, statt eines zu öffnen. BimCraft erstellt ein leeres IFC-Modell mit einem Projekt, einem Grundstück, dem Gebäude und seinen Geschossen. Sie können Ausstattung und Möbel aus der Bibliothek auf den Geschossen platzieren und als IFC-Datei speichern.
+Beginnen Sie ein Gebäudemodell, statt eines zu öffnen. BimCraft erstellt ein leeres IFC-Modell mit einem Projekt, einem Grundstück, dem Gebäude und seinen Ebenen. Sie können Ausstattung und Möbel aus der Bibliothek auf den Ebenen platzieren und es als IFC-Datei speichern.
 
 :::note
-Wände lassen sich jetzt zeichnen: siehe [Wände zeichnen](topic:draw-walls). Türen, Fenster, Böden und Dächer folgen als Nächstes.
+Wände können Sie jetzt zeichnen: siehe [Wände zeichnen](topic:draw-walls). Türen, Fenster, Böden und Dächer werden als Nächstes umgesetzt.
 :::
 
 ## Schritte
 
-1. Unter **Datei oder Ordner öffnen** oder auf der Startseite {{ui:Neues Gebäude}} anklicken.
-2. Den **Gebäudenamen** tippen.
-3. Wählen, wie viele **Geschosse** es hat (1 bis 200).
-4. Die **Geschosshöhe** tippen, Oberkante Fußboden bis Oberkante Fußboden: zum Beispiel `10'-0"`, `10'6"` oder `3000 mm`. Eine einfache Zahl sind in den USA Fuß, sonst Millimeter.
-5. {{ui:Erstellen}} anklicken. Die Geschosse werden ab 0 gestapelt, jedes eine Geschosshöhe über dem vorigen, und heißen Level 1, Level 2 und so weiter. Sie erscheinen im Modellbaum, und der Grundriss von Level 1 öffnet sich neben der 3D-Ansicht mit eingeschaltetem {{ui:Zeichnen}}.
-6. Die Wände zeichnen: siehe [Wände zeichnen](topic:draw-walls). Geschosse umbenennen oder ihre Höhen ändern im Bereich **Levels**.
-7. Elemente platzieren: siehe [Ausstattung und Möbel aus der Bibliothek platzieren](topic:place-from-library). Die Platzierungsleiste listet jedes Geschoss auf.
-8. {{ui:Als IFC speichern}} anklicken. Die Datei heißt nach dem Gebäude, zum Beispiel `Smith's house.ifc`.
+1. Klicken Sie unter **Datei oder Ordner öffnen** oder auf der Startseite auf {{ui:Neues Gebäude}}.
+2. Geben Sie den **Gebäudenamen** ein.
+3. Wählen Sie, wie viele **Ebenen** es hat (1 bis 200).
+4. Geben Sie die **Ebenenhöhe** ein, von Boden zu Boden: zum Beispiel `10'-0"`, `10'6"` oder `3000 mm`. Eine reine Zahl bedeutet in den USA Fuß, sonst Millimeter.
+5. Jedes Feld ist bereits ausgefüllt, Sie können alles so lassen, wie es ist. Darunter zeigt das Feld, womit Sie beginnen: die Einheiten, den **Wandtyp**, den das Werkzeug Wand zuerst zeichnet (wählen Sie bei Bedarf einen anderen aus der Liste), und das erste Blatt.
+6. Klicken Sie auf {{ui:Erstellen}}. Die Ebenen werden ab 0 gestapelt, jede eine Ebenenhöhe über der letzten, und heißen Ebene 1, Ebene 2 usw. Sie erscheinen in der {{ui:Modellstruktur}}, und der Grundriss von Ebene 1 öffnet sich neben der 3D-Ansicht, mit eingeschaltetem {{ui:Zeichnen}}.
+7. Zeichnen Sie die Wände: Klicken Sie auf {{ui:Wand}} und dann auf zwei Punkte. Siehe [Wände zeichnen](topic:draw-walls). Benennen Sie Ebenen um oder ändern Sie ihre Höhen im Bereich **Ebenen**.
+8. Platzieren Sie Elemente: siehe [Ausstattung und Möbel aus der Bibliothek platzieren](topic:place-from-library). Die Platzierungsleiste listet jede Ebene auf.
+9. Klicken Sie auf {{ui:Als IFC speichern}}. Die Datei wird nach dem Gebäude benannt, zum Beispiel `Smith's house.ifc`.
 
 ## Gut zu wissen
 
 - Das Modell wird in Millimetern als IFC4 gespeichert. Andere BIM-Programme öffnen es.
-- **Storeys** im linken Bereich listet nur Geschosse, auf denen etwas steht. Der Modellbaum listet alle.
-- Bis Sie speichern, zählt das neue Gebäude als nicht gespeicherte Arbeit. BimCraft fragt nach, bevor Sie eine andere Datei öffnen oder die Seite verlassen, und behält in diesem Browser eine Kopie, falls der Tab sich schließt.
+- Ein neues Gebäude kommt mit einem Blatt, **A-101**, das den Grundriss der untersten Ebene enthält: A3 im Maßstab 1:100, wenn Sie in metrischen Einheiten arbeiten, sonst Tabloid mit 1/8" = 1'-0". Es ist leer, bis die erste Wand entsteht, und zeigt dann den Grundriss, während Sie zeichnen. Öffnen Sie es unter **Blätter** im Projektbrowser, um Papier, Maßstab oder Schriftfeld zu ändern, Ansichten hinzuzufügen oder es zu löschen. Ein aus einer Vorlage begonnenes Gebäude bringt stattdessen die Blätter der Vorlage mit.
+- Um festzulegen, womit jedes neue Gebäude beginnt (der Wandtyp für metrische Projekte, die Ebenen, das erste Blatt, das Werkzeug, das nach Erstellen aktiv ist), siehe [Standardrichtlinien](topic:default-policies).
+- Vor der ersten Wand muss nichts eingerichtet werden. Wandtyp, Ebenenhöhen, Einheiten und Blatt lassen sich alle später ändern.
+- **Geschosse** im linken Bereich listet nur Ebenen mit Inhalt auf; die Modellstruktur listet alle.
+- Bis Sie speichern, gilt das neue Gebäude als nicht gespeicherte Arbeit. BimCraft fragt, bevor Sie eine andere Datei öffnen oder die Seite verlassen, und behält eine Kopie in diesem Browser, falls der Tab geschlossen wird.

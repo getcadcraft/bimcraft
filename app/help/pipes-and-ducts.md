@@ -91,6 +91,8 @@ The tables are those of horizontal drains. Stacks, vents and storm drains are no
 
 Properties of the run lists its valves, each with {{ui:Remove}}.
 
+More valve kinds, a strainer, dampers on ducts, your own pipe specs and manufacturers' families: see [Pipe specs, valves, dampers and manufacturers' families](topic:pipe-specs).
+
 ## Change a run
 
 Pick any part of a run, in the plan or the 3D view. In Properties:

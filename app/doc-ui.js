@@ -18,6 +18,7 @@ import { docPdf } from './doc-pdf.js';
 import { docDocx } from './doc-docx.js';
 import { TEMPLATES, missingTags } from './doc-templates.js';
 import { validateItem } from './libitem.js';
+import { docFields, resetFigures, decoratePreview } from './doc-fields.js';   // 0.10 BK.47 / BK.142: {{schedule …}}, {{specification}}, figures that select their elements
 
 const STORE = 'bimcraft.sx.doctemplates';
 const MAX_OWN = 30, MAX_TEXT = 200000;
@@ -91,17 +92,19 @@ export function mountDocs(ctx) {
     const w = ctx.writer();
     let project = {};
     try { const ids = e.api.GetLineIDsWithType(e.mid, e.api.GetTypeCodeFromName('IFCPROJECT')); const p = ids.size() ? e.api.GetLine(e.mid, ids.get(0), false) : null; project = { name: String(p?.LongName?.value || p?.Name?.value || ''), description: String(p?.Description?.value || ''), phase: String(p?.Phase?.value || '') }; } catch (err) { project = {}; }
-    return docSource({ ixs: [ix], defs: ctx.defs(), units: projectUnits(e.api, e.mid), unitMm: w?.unitMm || 1, project, file: ctx.fileName() || '', date: today() });
+    return docSource({ ixs: [ix], defs: ctx.defs(), units: projectUnits(e.api, e.mid), unitMm: w?.unitMm || 1, project, file: ctx.fileName() || '', date: today(), fields: docFields() });
   }
-  function make(kind) {
+  function make(kind, opts = {}) {
     const src = source();
     if (!src) { ctx.status(t('sx.su915.needs'), true); return null; }
+    resetFigures();
     const res = renderDoc(S.text, src);
     S.result = res;
     const base = (tplOf() ? tplName(tplOf()) : S.ownName || String(S.fileName || 'document').replace(/\.(md|markdown|txt)$/i, '')) + ' - ' + String(ctx.fileName() || 'model').replace(/\.ifc$/i, '');   // i18n-ignore: a file name
     const title = res.blocks.find((b) => b.t === 'h')?.runs.map((r) => r.s).join('') || base;
     if (kind === 'pdf') {
       const p = docPdf(res.blocks, { title, paper: S.paper, footer: title, page: (n, of) => t('sx.su889.page', { n, of }) });
+      if (opts.keep) return { ...res, pdf: p, base, title };   // 0.10 BK.63: the pack builder takes the bytes instead of a download
       ctx.download(base + '.pdf', p.bytes, 'application/pdf');
       ctx.status(t('sx.su889.saved.pdf', { name: base + '.pdf', pages: p.pages }) + (p.missing ? ' ' + t('sx.su889.missing', { n: p.missing }) : ''));
     } else if (kind === 'docx') {
@@ -175,6 +178,7 @@ export function mountDocs(ctx) {
       res && res.warnings.length ? el('ul', { className: 'bc-muted', 'data-sx-docs-warnings': '' }, res.warnings.map((x) => el('li', {}, t(x.key, x.fill)))) : null,
       res ? el('div', { className: 'bc-doc-preview', 'data-sx-docs-out': '', style: 'border:1px solid var(--line);padding:.5rem;max-height:28rem;overflow:auto' }, blocksEl(res.blocks)) : null,
       input));
+    if (res) decoratePreview(box.querySelector('[data-sx-docs-out]'), (keys) => ctx.select(keys));   // 0.10 BK.142: a figure of a schedule in the document selects its elements
   }
   details?.addEventListener('toggle', () => { if (details.open) render(); });
   return {

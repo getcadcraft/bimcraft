@@ -30,6 +30,7 @@ import { projectView } from './res-views.js';
 import { cutFaceItems } from './wall-section-graphics.js';
 import { PAPERS, scaleFor } from './res-sheets.js';   // read only: the papers and scales every sheet uses
 import { t as tr } from './i18n.js';
+import { annoPt, annoK } from './anno-scale-bim.js';   // 0.10 BK.10: notes on elevations and sections sized by the same rule as the plan's
 
 export const ROOM_SIDES = ['north', 'east', 'south', 'west'];
 /** An interior elevation is named for the wall it shows: the north one looks north. */
@@ -140,21 +141,22 @@ export function noteItems(notes, P, k) {
       let rot = Math.atan2(u[1], u[0]);
       if (rot > Math.PI / 2 + 1e-9 || rot <= -Math.PI / 2) rot += Math.PI;
       const mid = [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2];
-      out.push({ t: 'text', s: n.text, x: mid[0] - Math.sin(rot) * 0.9, y: mid[1] + Math.cos(rot) * 0.9, size: 6, rot });
+      const dg = 0.9 * annoK('dimension');
+      out.push({ t: 'text', s: n.text, x: mid[0] - Math.sin(rot) * dg, y: mid[1] + Math.cos(rot) * dg, size: annoPt('dimension'), rot });
     } else if (n.t === 'level') {
       const a = P([n.x0, n.y]), b = P([n.x1, n.y]);
       out.push({ t: 'line', pts: [a, b], w: 0.13, g: 0.25, dash: [4, 0.8, 0.6, 0.8] });
       out.push({ t: 'fill', polys: [[[b[0], b[1]], [b[0] - 1.2, b[1] + 1.8], [b[0] + 1.2, b[1] + 1.8]]], g: 0 });
-      out.push({ t: 'text', s: n.name, x: b[0] + 2, y: b[1] + 0.8, size: 6.5, align: 'left', bold: true }, { t: 'text', s: n.text, x: b[0] + 2, y: b[1] - 2.2, size: 6, align: 'left' });
+      out.push({ t: 'text', s: n.name, x: b[0] + 2, y: b[1] + 0.8, size: annoPt('tag'), align: 'left', bold: true }, { t: 'text', s: n.text, x: b[0] + 2, y: b[1] - 2.2 * annoK('text'), size: annoPt('text'), align: 'left' });
     } else if (n.t === 'text') {   // 0.9 SU.1123: a note written in the elevation or section view (elev-edit.js)
       const q = P([n.x, n.y]);
-      String(n.s).split('\n').slice(0, 8).forEach((line, i) => out.push({ t: 'text', s: line, x: q[0], y: q[1] - i * 3, size: 6.5, align: 'left' }));
+      String(n.s).split('\n').slice(0, 8).forEach((line, i) => out.push({ t: 'text', s: line, x: q[0], y: q[1] - i * 3 * annoK('text'), size: annoPt('text') * 6.5 / 6, align: 'left' }));
     } else if (n.t === 'tag') {
-      const c = P([n.x, n.y]), r = String(n.s).length > 2 ? 2.8 : 2.2, pts = [];
+      const tk = annoK('tag'), c = P([n.x, n.y]), r = (String(n.s).length > 2 ? 2.8 : 2.2) * tk, pts = [];
       const sides = n.shape === 'hex' ? 6 : n.shape === 'box' ? 4 : 24, turn = n.shape === 'box' ? Math.PI / 4 : 0;
       const rr = n.shape === 'box' ? r * Math.SQRT2 : r;
       for (let i = 0; i <= sides; i++) { const a = turn + i / sides * Math.PI * 2; pts.push([c[0] + rr * Math.cos(a), c[1] + rr * Math.sin(a)]); }
-      out.push({ t: 'fill', polys: [pts], g: 1 }, { t: 'line', pts, w: 0.2, g: 0 }, { t: 'text', s: String(n.s), x: c[0], y: c[1] - 0.9, size: String(n.s).length > 2 ? 4.5 : 5.5, bold: true });
+      out.push({ t: 'fill', polys: [pts], g: 1 }, { t: 'line', pts, w: 0.2, g: 0 }, { t: 'text', s: String(n.s), x: c[0], y: c[1] - 0.9 * tk, size: annoPt('tag') * (String(n.s).length > 2 ? 4.5 : 5.5) / 6.5, bold: true });
     }
   }
   return out;

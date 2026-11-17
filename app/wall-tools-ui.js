@@ -32,6 +32,9 @@ import { readGrids, toPlan } from './model-grids.js';
 import { fmtLen, parseLen, parseTyped } from './model-units.js';
 import { ModelWriter } from './model-write.js';
 import { el } from './ui-util.js';
+import { mountTypeSwap } from './wall-typeswap-ui.js';   // 0.10 BK.7 / BK.16 (bk-typeswap-10): Swap type and its what-moved report
+import { mountWallJoins } from './wall-joinstyle-ui.js';   // 0.9 WT.5 / FX.70 (walls-join-10): Join style, Disallow join, Layer priority
+import { withShapeCopies } from './wall-shape.js';   // WT.6: an offset copy keeps the wall's shape
 
 const STORE = 'bimcraft.walls';
 const SHAPES = { rect: 'wrect', rectrot: 'wrectrot', poly: 'wpoly', arcc: 'warcc', tan: 'wtan', pick: 'wpick', trace: 'wtrace' };
@@ -222,7 +225,9 @@ export function mountWallTools(modelUi) {
     if (!Number.isFinite(d) || Math.abs(d) < 1) { status('model.err.length', null, true); return; }
     if (O.copy) {
       const n = [-(w.b[1] - w.a[1]) / dist(w.a, w.b), (w.b[0] - w.a[0]) / dist(w.a, w.b)];
-      A.commit(moveElements([{ guid: w.guid, dx: n[0] * d, dy: n[1] * d }], { copy: true }), { label: t('walls.tool.offset'), verb: t('model.verb.drew'), select: [] });
+      const mv = [{ guid: w.guid, dx: n[0] * d, dy: n[1] * d }];
+      A.commit(withShapeCopies(moveElements(mv, { copy: true }), mv), {   // WT.6: an offset copy keeps the wall's shape and wall openings
+        label: t('walls.tool.offset'), verb: t('model.verb.drew'), select: [] });
     } else A.commit(changeWallsBy(w.guid, (walls) => squareMove(walls, w.guid, d)), { label: t('walls.tool.offset'), verb: t('model.verb.moved'), select: [] });
     reset(); R.typed = null; hintNow();
   }
@@ -425,5 +430,7 @@ export function mountWallTools(modelUi) {
     if (x.name === 'bcWallFrom') applyFrom(x.value);
   });
   if (typeof window !== 'undefined') window.bimcraftWallTools = { state: R, opts: O, wallAt };   // for tests
+  try { mountTypeSwap(modelUi); } catch (e) { console.error(e); }   // Swap type (wall-typeswap-ui.js) is on this menu too
+  try { mountWallJoins(modelUi); } catch (e) { console.error(e); }   // the Join tools (wall-joinstyle-ui.js) share this menu
   return { state: R, opts: O };
 }

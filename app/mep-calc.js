@@ -15,10 +15,10 @@
  */
 import { readRuns, runVertices, sectionOf, worldOf, readFixturePorts, carrierOf, setRunSizes, setCalcProps, placeRun, ductForFlow } from './mep-model.js';
 import { readPorts } from './mep/ports.js';
-import { sizesFor, pipeSize } from './mep/tables.js';
+import { sizesFor, pipeSize } from './mep/pipes.js';   // 0.9.1 #1499: every table and the model's own pipe specs (was the US tables only)
 import { readEquipment } from './mep/equipment.js';
 import { graphFromRuns } from './mep/network.js';
-import { analyzePipes, analyzeDucts, DEFAULT_WSFU, DEFAULT_CURVE, cleanCurve } from './mep/flow.js';
+import { analyzePipes, analyzeDucts, DEFAULT_WSFU, DEFAULT_CURVE, cleanCurve, PIPE_K } from './mep/flow.js';
 import { routeCables, fillByRun, scheduleRows, scheduleCsv, conduitSize, CONDUIT_TYPES, FILL_DEFAULTS } from './mep/carrier.js';
 import { parsePhotometry, computeGrid, checkTargets, DEFAULT_LLF } from './mep/photometry.js';
 import { pipeProblems, ductProblems, carrierProblems, lightingProblems, lightingNote } from './mep/problems-mep.js';
@@ -72,8 +72,12 @@ export function calcPipes(w, o = {}) {
   const attrs = {};
   for (const x of runs) {
     const sizes = sizesFor(x.r.mat, x.r.cls).map((key) => { const p = pipeSize(x.r.mat, x.r.cls, key); return p ? { key, idMm: p.id * IN } : null; }).filter(Boolean);
-    attrs[x.id] = { mat: x.r.mat, idMm: x.sec.id, label: x.sec.label, sizes };
+    attrs[x.id] = { mat: x.r.mat, idMm: x.sec.id, label: x.sec.label, sizes, epsMm: x.sec.p?.roughnessMm ?? null };   // 0.9.1: a spec's roughness → Darcy–Weisbach for that run
   }
+  // 0.9.1: the loss table (mep/flow.js PIPE_K) has a coefficient for gate, ball, globe and check valves only; any other in-line
+  // component (butterfly, balancing, control, strainer, a manufacturer's family) adds NO loss here, and the result says so
+  const noLoss = [...new Set(runs.flatMap((x) => x.valves.map((v) => v.kind)).filter((k) => !(k in PIPE_K)))];
+  if (noLoss.length) notes.push({ key: 'calc.inlinenoloss', vars: { kinds: noLoss.join(', ') } });
   const nodeLoads = loads.filter((l) => graph.nodeOf[l.key] != null).map((l) => ({ ...l, node: graph.nodeOf[l.key] }));
   for (const l of loads) if (graph.nodeOf[l.key] == null) notes.push({ key: 'calc.loadoff', vars: { load: l.label } });
   const curve = cleanCurve(o.curve) || DEFAULT_CURVE;

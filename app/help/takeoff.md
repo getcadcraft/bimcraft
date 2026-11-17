@@ -22,7 +22,7 @@ When TakeoffCraft isn't available here, the button downloads the PDF instead. Op
 
 ## What is measured
 
-- **Walls** by type and height: their centrelines as runs, with the wall height on the item, so TakeoffCraft gives the length and the wall area.
+- **Walls** by type and height: their centrelines as runs, with the wall height on the item, so TakeoffCraft gives the length and the wall area. Each run carries the wall's doors and windows, so TakeoffCraft takes them out of the wall area once, by the same rule as BimCraft's schedules: the two agree on gross, deductions and net. A wall type's takeoff data (unit, mortar, rate; see [Wall assemblies](topic:wall-assemblies)) comes along as one priced line on that type's item. Under a measurement method other than the default (see [Choose a measurement method](topic:plan-schedules-and-pdf#choose-a-measurement-method)), the takeoff carries the method, each run carries what the junctions take off its wall face, and TakeoffCraft measures by the same method and names it. A type whose unit has a length and a height also hands over two components with quantities: the units to order and the mortar volume, priced when the type's rate is per unit, per 1000 units or per m³ of mortar. A count that lands exactly on a whole number can be one unit higher in TakeoffCraft, because the hand-over rounds positions on the sheet.
 - **Roofs**: each roof plane as an area with its pitch (TakeoffCraft gives the sloped area), ridges, hips and valleys (hips and valleys along their slope), eaves and rakes.
 - **Foundations**: footings and stem walls as runs round their middles, slabs as areas with their thickness, so the concrete comes out by volume.
 - **Doors and windows** counted by type, with window trim.

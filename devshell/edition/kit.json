@@ -76,6 +76,11 @@
             "spdx": "Apache-2.0",
             "url": "https://github.com/hobuinc/laz-perf"
         },
+        "liberation-sans": {
+            "name": "Liberation Sans (font)",
+            "spdx": "OFL-1.1",
+            "url": "https://github.com/liberationfonts/liberation-fonts"
+        },
         "manifold-3d": {
             "name": "Manifold",
             "spdx": "Apache-2.0",

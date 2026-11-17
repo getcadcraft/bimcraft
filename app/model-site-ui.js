@@ -84,7 +84,7 @@ export function mountSite(modelUi) {
         A.commit(addLevels({ elevations: list }), { label: t('model.lvd.levels', { n: list.length }), verb: t('model.verb.added') });
       } else {
         const T = parseLen(total.value, u), n = Math.floor(Number(count.value));
-        if (!(T >= 1000 * n) || !(n >= 1 && n <= 200)) { e.preventDefault(); err.textContent = t('model.err.lv.split'); return; }
+        if (!(T >= 10 * n) || !(n >= 1 && n <= 200)) { e.preventDefault(); err.textContent = t('model.err.lv.split'); return; }   // 0.10 BK.73: as model-site.js
         A.commit(splitLevels({ total: T, count: n }), { label: t('model.lvd.levels', { n }), verb: t('model.verb.changed') });
       }
     });

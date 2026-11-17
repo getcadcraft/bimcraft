@@ -2,7 +2,7 @@
 title: Yangi bino boshlash
 summary: Sathlari bilan boʻsh bino modeli yarating, uning devorlarini chizing, kutubxonadan elementlarni joylashtiring va IFC sifatida saqlang.
 keywords: yangi, yangi bino, boʻsh, noldan, shablon, sathlar, qavatlar, polar, yaratish, model
-from: 546b8ae8
+from: 68786865
 ---
 
 ## Nima qilasiz

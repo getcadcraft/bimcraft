@@ -12,6 +12,7 @@ import { op, settleFor } from './model-ops.js';
 import { addWall, readWalls, regenWalls } from './model-walls.js';
 import { addOpening } from './model-openings.js';
 import { syncResidential } from './res-follow.js';
+import { markRecognised, markNewRooms, spaceIds } from './verify-model.js';   // 0.10 BK.64 (bk-r3-checks-10): walls and doors from a scan are unverified until checked
 
 export const pick = (result, ids) => result.proposals.filter((p) => ids.includes(p.id));
 
@@ -20,7 +21,7 @@ export function scanChange(accepted, { storey, typeKey = 'ext-2x6', doorType = '
   return op((w) => {
     const sid = w.byGuid(storey);
     if (!sid) throw Object.assign(new Error('model.err.nolevel'), { key: 'model.err.nolevel' });
-    const made = new Map(), guid = new Map();
+    const made = new Map(), guid = new Map(), roomsBefore = spaceIds(w);
     for (const p of walls) {
       const r = addWall(w, { storey: sid, a: p.a.map(Math.round), b: p.b.map(Math.round), typeKey: p.typeKey || typeKey, topLevel, height, extSide });
       made.set(r.guid, r.id); guid.set(p.id, r.guid);
@@ -40,6 +41,8 @@ export function scanChange(accepted, { storey, typeKey = 'ext-2x6', doorType = '
       for (const st of sts) syncResidential(w, st);
     }
     const ids = [...made.values()];
-    return { id: ids[ids.length - 1], ids, made, counts: { walls: walls.length, doors: n } };
+    markRecognised(w, ids, 'pointcloud');   // BK.64
+    const rooms = markNewRooms(w, roomsBefore, 'pointcloud');
+    return { id: ids[ids.length - 1], ids, made, counts: { walls: walls.length, doors: n, rooms: rooms.rooms.length } };
   });
 }

@@ -53,6 +53,14 @@ When the level above has a floor, the stair cuts it where the steps would have l
 
 Railings get posts at their ends and corners and balusters with gaps under 4". Pick one to change its kind, height or how far above the floor it starts.
 
+## Draw a fence
+
+Choose **Fence** in the same Railing tool, set its height (1800 mm to start with), click along the line of the fence and press {{key:Enter}}.
+
+- The fence gets a post at each end and each corner, and a post at most every 2.4 m between them. A panel fence has a panel between posts; a rail fence has two rails. These sizes are usual choices, not a code requirement: local rules limit a fence's height.
+- It is one element in the model (an IfcRailing named Fence) with a property set {{ui:CadCraft_Fence}}: style, height, posts, panels, rails, gates, length and panel area. One undo step.
+- Not drawn here: gates (the generator in CivilCraft lays them out), pickets, terrain (the fence stands on the level), and picking a single post.
+
 ## What's saved
 
 A stair is saved as an IFC stair made of stair flights (with their risers, treads, riser height and tread length), landings, winders and handrails; the stairwell is an opening in the floor slab above. Railings are IFC railings with their length and their number of balusters and posts.

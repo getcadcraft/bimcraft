@@ -16,6 +16,10 @@
  *     where two runs of one size meet end to end at an angle; IFC2X3 IfcFlowFitting;
  *   - VALVES placed on a pipe (IfcValve .ISOLATING. gate / ball, .REGULATING. globe, .CHECK. check; IFC2X3
  *     IfcFlowController): generic bodies sized from the pipe (no maker's dimensions: the help says so).
+ *     0.9.1 (#1499, #1493): more kinds — butterfly, balancing, control valves, a strainer (IfcFilter), volume and fire dampers on
+ *     DUCTS (IfcDamper) — and manufacturers' families ({ kind: 'oem', fam }): mep/inline.js, mep/oem-families.js. A run may be
+ *     drawn in one of the model's own PIPE SPECS (material `spec:<id>`, no class; mep/pipe-specs.js): its segments carry
+ *     CadCraft_PipeSpec and their IfcPipeSegmentType the spec's dimensions.
  * Every part has its ports (IfcDistributionPort, nested — IFC2X3: IfcRelConnectsPortToElement — SINK at its upstream
  * end, SOURCE at the others, PIPE / DUCT, the system's type) and touching ports are connected (IfcRelConnectsPorts). Parts
  * are assigned to their system: IfcDistributionSystem (IFC2X3 IfcSystem, ObjectType = the IFC4 name) found by
@@ -32,6 +36,7 @@
  *   sectionOf(run) → { kind, round, od, wall, w, h, shape, label } | null      runVertices(run) → [[x, y, z]] (slope applied)
  *   mepLayout(runs) → { runs: Map(guid → { parts }), error? }   pure: what the runs make (parts with their ends)
  *   readRuns(w) · placeRun(spec) → op · changeRun(guid, ch) → op · removeRuns(guids) → op · addValve(guid, at, kind) → op
+ *   addValve(guid, at, kind, fam?) · inlineFits(run, { kind, fam }) → bool (0.9.1)
  *   regenMep(w, storey) · runSchedules(w) → { pipes, ducts, fittings } rows · pipeForFlow(mat, cls, q, vmax) · ductForFlow(…)
  *   drainPlan(w) → Map(guid → { id, std, units, floor, size, need, grow, toobig })   sanitary runs by the fixture units they carry
  *     (mep/drainage.js: UHC of NBR 8160 for the Brazilian pipes, DFU of the IPC for the others), each run's `role` (branch | main,
@@ -61,6 +66,11 @@ import { readPorts } from './mep/ports.js';
 import { spooled, planSpools, assignSpools, SPOOL_PSET } from './mep/spools.js';   // 0.7 LC.9 (mep-07): steel spools
 import { CONNECTOR_PSET } from './family-model.js';
 import { drainNetwork, smallestSize, upstreamFirst, MAIN_MIN_DN } from './mep/drainage.js';
+// 0.9.1 #1499 / #1493: a person's own pipe specs, more in-line components (butterfly, balancing, control, strainer, dampers), manufacturers' families
+import { specOfMaterial, specStamp, systemSpec, specMaterial } from './mep/pipe-specs.js';
+import { syncMepData } from './mep/pipe-specs-model.js';
+import { INLINE, INLINE_KINDS, OEM_KIND, inlineLength } from './mep/inline.js';
+import { familyById, inlineFrame, placeInline } from './mep/oem-families.js';
 
 export const RUN_PSET = 'CadCraft_MepRun';
 const SYS_PSET = 'CadCraft_MepSystem';
@@ -93,7 +103,14 @@ export const DUCT_SYSTEMS = {
 };
 /** 'tray' | 'conduit' for a run of a cable-carrier system, else null. */
 export const carrierOf = (r) => (r && r.kind === 'duct' ? DUCT_SYSTEMS[r.system]?.carrier || null : null);
-export const VALVE_KINDS = { gate: 'ISOLATING', ball: 'ISOLATING', globe: 'REGULATING', check: 'CHECK' };
+/** The in-line components a run can carry → their IFC PredefinedType (mep/inline.js: valves and a strainer on pipes, dampers on ducts). */
+export const VALVE_KINDS = Object.fromEntries(INLINE_KINDS.map((k) => [k, INLINE[k].pre]));
+/** Whether a run of this kind can carry this component ({ kind, fam? }): a built-in kind made for it, or a family whose two ports are of it. */
+export function inlineFits(r, v) {
+  if (carrierOf(r)) return false;
+  if (v.kind === OEM_KIND) { const f = inlineFrame(familyById(v.fam)); return f.ok && f.kind === r.kind; }
+  return INLINE[v.kind]?.on === r.kind;
+}
 export const DUCT_SHAPES = ['round', 'rect', 'oval'];
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
 
@@ -249,11 +266,12 @@ export function mepLayout(runs) {
   }
   // valves on pipes, by distance along the run
   for (const r of R) for (const v of r.valves || []) {
-    if (r.kind !== 'pipe') return fail('mep.err.valve');
+    let Lv;
+    if (v.kind === OEM_KIND) { const f = inlineFrame(familyById(v.fam)); if (!f.ok || f.kind !== r.kind) continue; Lv = f.L; }   // a family that is gone cuts nothing
+    else { if (INLINE[v.kind]?.on !== r.kind) return fail('mep.err.valve'); Lv = inlineLength(v.kind, r.sec); }   // schematic (mep/inline.js)
     let s = v.s, i = 0;
     while (i < r.legs.length && s > r.legs[i].L) { s -= r.legs[i].L; i++; }
     if (i >= r.legs.length) return fail('mep.err.valve');
-    const Lv = Math.max(75, 2.5 * r.sec.od);
     r.cuts[i].push({ s, half: Lv / 2, kind: 'valve', valve: v });
   }
   // ---- the parts, in order along each run ----
@@ -312,6 +330,7 @@ const okPoints = (p) => Array.isArray(p) && p.length >= 2 && p.length <= 500 && 
 export function readRuns(w) {
   const out = [];
   let list = [];
+  syncMepData(w);   // 0.9.1 #1499: the model's pipe specs and families are the ones in force before any size is asked for
   try { list = ids(w.api, w.mid, 'IFCELEMENTASSEMBLY'); } catch (e) { return out; }
   const so = w.storeyOf();
   for (const id of list) {
@@ -326,7 +345,7 @@ export function readRuns(w) {
       points: points.map((q) => [q[0], q[1], q[2] || 0]), mat: String(ps.Material || ''), cls: String(ps.Class || ''), size: String(ps.Size || ''),
       shape: DUCT_SHAPES.includes(ps.Shape) ? ps.Shape : 'rect', w: mmOf(w, ps.Width), h: mmOf(w, ps.Height), slope: Number(ps.Slope) || 0, flow: Number(ps.Flow) || 0,
       role: ps.DrainRole === 'main' ? 'main' : 'branch',
-      valves: Array.isArray(valves) ? valves.filter((v) => v && Number.isFinite(v.s) && VALVE_KINDS[v.kind]).map((v) => ({ s: v.s, kind: v.kind })) : [],
+      valves: Array.isArray(valves) ? valves.filter((v) => v && Number.isFinite(v.s) && (VALVE_KINDS[v.kind] || (v.kind === OEM_KIND && typeof v.fam === 'string'))).map((v) => (v.kind === OEM_KIND ? { s: v.s, kind: v.kind, fam: v.fam.slice(0, 40) } : { s: v.s, kind: v.kind })) : [],
       ends: okEnds(readJson(ps.Ends, null)),
       insulation: Math.max(0, mmOf(w, ps.Insulation)),   // 0.7 LC.9: insulation thickness (mm), for the soft clearance and openings
       spoolMax: Math.max(0, Number(ps.SpoolMaxMm) || 0), line: String(ps.Line || ''),
@@ -346,7 +365,7 @@ function writeDef(w, id, r) {
   w.upsertPset(id, RUN_PSET, [['Kind', 'IFCLABEL', r.kind], ['System', 'IFCLABEL', r.system], ['PointsMm', 'IFCTEXT', JSON.stringify(r.points.map((q) => q.map((x) => round(x, 3))))],
     ['Material', 'IFCLABEL', r.mat || ''], ['Class', 'IFCLABEL', r.cls || ''], ['Size', 'IFCLABEL', r.size || ''], ['Shape', 'IFCLABEL', r.kind === 'duct' ? r.shape : ''],
     Lm('Width', r.kind === 'duct' ? r.w : 0), Lm('Height', r.kind === 'duct' ? r.h : 0), ['Slope', 'IFCREAL', round(r.slope || 0, 9)], ['Flow', 'IFCREAL', round(r.flow || 0, 6)],
-    ['Valves', 'IFCTEXT', JSON.stringify((r.valves || []).map((v) => ({ s: round(v.s, 3), kind: v.kind })))],
+    ['Valves', 'IFCTEXT', JSON.stringify((r.valves || []).map((v) => (v.fam ? { s: round(v.s, 3), kind: v.kind, fam: v.fam } : { s: round(v.s, 3), kind: v.kind })))],
     ['Ends', 'IFCTEXT', JSON.stringify(okEnds(r.ends || [null, null]))], Lm('Insulation', Math.max(0, Number(r.insulation) || 0)),
     ['SpoolMaxMm', 'IFCREAL', round(Math.max(0, Number(r.spoolMax) || 0), 3)], ['FieldWelds', 'IFCTEXT', JSON.stringify((r.fieldWelds || []).map((s) => round(s, 3)))], ['Line', 'IFCLABEL', String(r.line || '').slice(0, 20)],
     ['DrainRole', 'IFCLABEL', r.role === 'main' ? 'main' : 'branch']]);
@@ -414,21 +433,55 @@ function bodyOf(w, part, sec) {
     }
     return { type: 'Brep', items: [loft(w, part, outlinePts(part.from), outlinePts(part.to))] };
   }
-  // a valve: a body of two cones (bow tie) round the pipe, a stem and a handwheel (gate, globe) or a lever (ball)
-  const L = dist(part.a, part.b), r = sec.od / 2 * 1.25, kind = part.valve.kind;
+  return inlineBody(w, part, sec);
+}
+/**
+ * An in-line component's body (0.9.1: more kinds, dampers, manufacturers' families). The built-in ones are SCHEMATIC shapes sized
+ * from the run (mep/inline.js): gate / globe / balancing a bow tie with a stem and handwheel, ball and butterfly a lever, check
+ * no stem, control an actuator box, a strainer a straight body with its screen leg at 45°, a damper a frame round the duct
+ * with its operator on the side. A family is its own mesh, put on the run's line by its two ports and never stretched.
+ */
+function inlineBody(w, part, sec) {
+  const L = dist(part.a, part.b), kind = part.valve.kind;
+  const mid = add(part.a, mul(part.d, L / 2)), up = Math.abs(part.d[2]) < 0.9 ? [0, 0, 1] : part.wd;
+  if (kind === OEM_KIND) {
+    const fam = familyById(part.valve.fam), pl = fam && placeInline(fam, part.a, part.d, up);
+    if (pl) {
+      const P = fam.body.positions, out = new Array(P.length);
+      for (let i = 0; i < P.length; i += 3) { const q = pl.map([P[i], P[i + 1], P[i + 2]]); out[i] = q[0]; out[i + 1] = q[1]; out[i + 2] = q[2]; }
+      return w.bodyItems({ type: 'mesh', positions: out, indices: fam.body.indices });
+    }
+  }
+  const disc = (rad) => w.make('IFCCIRCLEPROFILEDEF', 'AREA', null, w.H(w.make('IFCAXIS2PLACEMENT2D', w.H(w.point2(0, 0)), null)), round(w.u(rad)));
+  const rectP = (a, b) => w.make('IFCRECTANGLEPROFILEDEF', 'AREA', null, w.H(w.make('IFCAXIS2PLACEMENT2D', w.H(w.point2(0, 0)), null)), round(w.u(a)), round(w.u(b)));
+  if (sec.kind === 'duct') {
+    // a frame 25 mm proud of the duct all round, and the operator (a volume damper's quadrant, a fire damper's fusible-link box)
+    const frameP = sec.round ? disc(sec.w / 2 + 25) : rectP(sec.w + 50, sec.h + 50);
+    const items = [w.extrudeAt(frameP, w.axisFrame(part.a, part.d, part.wd), L)];
+    const side = sec.w / 2 + 25, box = kind === 'damper-fire' ? [L * 0.6, 120, 80] : [L * 0.4, 80, 40];
+    items.push(w.extrudeAt(rectP(box[0], box[1]), w.axisFrame(add(mid, mul(part.wd, side)), part.wd, part.d), box[2]));
+    return { type: 'SweptSolid', items };
+  }
+  const r = sec.od / 2 * 1.25;
   const pos = w.axisFrame(part.a, part.wd, part.d);
   const axis = w.make('IFCAXIS1PLACEMENT', w.H(w.point3(0, 0, 0)), w.H(w.dir(1, 0, 0)));
-  const prof = kind === 'ball' ? [[0, 0], [0, r * 0.8], [L * 0.2, r * 0.8], [L * 0.5, r * 1.15], [L * 0.8, r * 0.8], [L, r * 0.8], [L, 0]] : [[0, 0], [0, r], [L / 2, r * 0.35], [L, r], [L, 0]];
+  const prof = kind === 'ball' ? [[0, 0], [0, r * 0.8], [L * 0.2, r * 0.8], [L * 0.5, r * 1.15], [L * 0.8, r * 0.8], [L, r * 0.8], [L, 0]]
+    : kind === 'butterfly' ? [[0, 0], [0, r * 1.3], [L, r * 1.3], [L, 0]]
+      : kind === 'strainer' ? [[0, 0], [0, r], [L * 0.15, r], [L * 0.15, r * 0.85], [L * 0.85, r * 0.85], [L * 0.85, r], [L, r], [L, 0]]
+        : [[0, 0], [0, r], [L / 2, r * 0.35], [L, r], [L, 0]];
   const items = [w.make('IFCREVOLVEDAREASOLID', w.H(w.profile(prof)), w.H(pos), w.H(axis), round(2 * Math.PI * angleUnit(w), 9))];
-  const mid = add(part.a, mul(part.d, L / 2)), up = Math.abs(part.d[2]) < 0.9 ? [0, 0, 1] : part.wd;
+  if (kind === 'strainer') {
+    // the screen leg: down and along the flow at 45° (up when the pipe is vertical: across it)
+    const leg = norm(add(part.d, mul(up, -1)));
+    items.push(w.extrudeAt(disc(r * 0.6), w.axisFrame(mid, leg, perp(leg)), r * 2.4));
+    return { type: 'SweptSolid', items };
+  }
   if (kind !== 'check') {
-    const ring = () => w.make('IFCCIRCLEPROFILEDEF', 'AREA', null, w.H(w.make('IFCAXIS2PLACEMENT2D', w.H(w.point2(0, 0)), null)), round(w.u(r * 0.15)));
-    items.push(w.extrudeAt(ring(), w.axisFrame(mid, up, perp(up)), r * 1.6));
-    if (kind === 'ball') items.push(w.extrudeAt(w.profile([[0, -r * 0.12], [L * 1.1, -r * 0.12], [L * 1.1, r * 0.12], [0, r * 0.12]]), w.axisFrame(add(mid, mul(up, r * 1.6)), up, part.d), r * 0.15));
-    else {
-      const wheel = w.make('IFCCIRCLEPROFILEDEF', 'AREA', null, w.H(w.make('IFCAXIS2PLACEMENT2D', w.H(w.point2(0, 0)), null)), round(w.u(r * 0.9)));
-      items.push(w.extrudeAt(wheel, w.axisFrame(add(mid, mul(up, r * 1.6)), up, perp(up)), Math.max(6, r * 0.15)));
-    }
+    items.push(w.extrudeAt(disc(r * 0.15), w.axisFrame(mid, up, perp(up)), r * 1.6));
+    const top = add(mid, mul(up, r * 1.6));
+    if (kind === 'ball' || kind === 'butterfly') items.push(w.extrudeAt(w.profile([[0, -r * 0.12], [Math.max(L, 2 * r) * 1.1, -r * 0.12], [Math.max(L, 2 * r) * 1.1, r * 0.12], [0, r * 0.12]]), w.axisFrame(top, up, part.d), r * 0.15));
+    else if (kind === 'control') items.push(w.extrudeAt(rectP(r * 1.6, r * 1.6), w.axisFrame(top, up, part.d), r * 1.8));
+    else items.push(w.extrudeAt(disc(r * (kind === 'balancing' ? 0.6 : 0.9)), w.axisFrame(top, up, perp(up)), Math.max(6, r * 0.15)));
   }
   return { type: 'SweptSolid', items };
 }
@@ -515,34 +568,64 @@ const CARRIER_CLASS = (pre) => ({ segment: ['IFCCABLECARRIERSEGMENT', pre, 'IFCC
 PART_CLASS.tray = CARRIER_CLASS('CABLETRAYSEGMENT');
 PART_CLASS.conduit = CARRIER_CLASS('CONDUITSEGMENT');
 const X3_CLASS = { segment: 'IFCFLOWSEGMENT', bend: 'IFCFLOWFITTING', tee: 'IFCFLOWFITTING', reducer: 'IFCFLOWFITTING', valve: 'IFCFLOWCONTROLLER' };
+/** What an in-line component is written as: a built-in kind's row of mep/inline.js, or a family's (the kind it stands for). */
+function inlineDef(v) {
+  const fam = v.kind === OEM_KIND ? familyById(v.fam) : null;
+  const d = INLINE[fam ? fam.base : v.kind] || INLINE.gate;
+  return { ...d, fam };
+}
+const hexRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+/** A spec's pipe of one size as an IfcPipeSegmentType carrying the spec's dimensions (HasPropertySets): made once, brought up to date when the spec's numbers change. */
+function specSegmentType(w, spec, sec, rows) {
+  const name = spec.name + ' ' + sec.label, stamp = [sec.od, sec.wall, spec.standard, spec.material, spec.joint].join('|');
+  w._mepSpecTypes ??= new Map();
+  let id = w._mepSpecTypes.get(name);
+  if (!id || !w.api.GetLine(w.mid, id, false)) {
+    id = null;
+    try { for (const x of ids(w.api, w.mid, 'IFCPIPESEGMENTTYPE')) if (val(w.api.GetLine(w.mid, x, false).Name) === name) { id = x; break; } } catch (e) { /* none yet */ }
+  }
+  const sets = () => [w.H(w.pset('Pset_PipeSegmentTypeCommon', rows.common)), w.H(w.pset('CadCraft_PipeSpec', rows.spec))];
+  if (!id) id = w.make('IFCPIPESEGMENTTYPE', w.guid(), w.ownerHistory(), w.L(name), w.X(stamp), null, sets(), null, null, null, 'RIGIDSEGMENT');
+  else if (val(w.api.GetLine(w.mid, id, false).Description) !== stamp) { const l = w.touch(id); l.Description = w.X(stamp); l.HasPropertySets = sets(); w.write(l); }
+  w._mepSpecTypes.set(name, id);
+  return id;
+}
 
 /** One part: the element, its shape, type, material, colour, sets and ports (returned for connecting). */
 function writePart(w, r, sec, part, lp) {
-  const [cls4, pre, tcls] = PART_CLASS[carrierOf(r) || r.kind][part.kind];
-  const predefined = part.kind === 'valve' ? VALVE_KINDS[part.valve.kind] : pre;
+  const inl = part.kind === 'valve' ? inlineDef(part.valve) : null;   // 0.9.1: valves, a strainer, dampers, families
+  const [cls4, pre, tcls] = inl ? [inl.cls, inl.pre, inl.tcls] : PART_CLASS[carrierOf(r) || r.kind][part.kind];
+  const predefined = pre;
+  const spec = r.kind === 'pipe' ? specOfMaterial(r.mat) : null;   // 0.9.1 #1499: a run drawn in a person's pipe spec
   const sysName = systemLabel(r.kind, r.system);
   const sizeText = part.kind === 'tee' && !sameSec(sec, part.branchSec) ? sec.label + ' × ' + part.branchSec.label : part.kind === 'reducer' ? part.from.label + ' × ' + part.to.label : sec.label;
-  const what = part.kind === 'segment' ? tr(r.kind === 'pipe' ? 'mep.part.pipe' : carrierOf(r) ? 'mep.part.' + carrierOf(r) : 'mep.part.duct') : part.kind === 'valve' ? tr('mep.valve.' + part.valve.kind) : tr('mep.fit.' + part.kind + (r.kind === 'duct' && part.kind === 'reducer' ? '.duct' : ''));
+  const what = part.kind === 'segment' ? tr(r.kind === 'pipe' ? 'mep.part.pipe' : carrierOf(r) ? 'mep.part.' + carrierOf(r) : 'mep.part.duct') : part.kind === 'valve' ? (inl.fam ? inl.fam.name : tr('mep.valve.' + part.valve.kind)) : tr('mep.fit.' + part.kind + (r.kind === 'duct' && part.kind === 'reducer' ? '.duct' : ''));
   const name = w.L(what + ' ' + sizeText + ' ' + sysName);
   const place = w.H(w.placeAt(lp, 0, 0, 0, 0));
-  const objType = part.kind === 'valve' ? w.L(tr('mep.valve.' + part.valve.kind)) : null;
-  const id = w.v4 ? w.make(cls4, w.guid(), w.ownerHistory(), name, null, objType, place, null, null, predefined) : w.make(X3_CLASS[part.kind], w.guid(), w.ownerHistory(), name, null, objType || w.L(what), place, null, null);
+  const objType = part.kind === 'valve' ? w.L(what) : null;
+  const id = w.v4 ? w.make(cls4, w.guid(), w.ownerHistory(), name, null, objType, place, null, null, predefined) : w.make(inl ? inl.x3 : X3_CLASS[part.kind], w.guid(), w.ownerHistory(), name, null, objType || w.L(what), place, null, null);
   const body = bodyOf(w, part, sec);
   const reps = [w.rep('body', 'Body', body.type, body.items)];
   if (part.kind === 'segment') reps.push(w.rep('axis', 'Axis', 'Curve3D', [w.polyline3([part.a, part.b])]));
   w.setShape(id, reps);
-  const S = sysOf(r), style = w.surfaceStyle('CadCraft MEP ' + r.kind + ' ' + r.system, S.rgb);
+  const S = sysOf(r), style = spec?.colour ? w.surfaceStyle('CadCraft MEP spec ' + spec.id, hexRgb(spec.colour)) : w.surfaceStyle('CadCraft MEP ' + r.kind + ' ' + r.system, S.rgb);
   for (const it of body.items) w.styleItem(it, style);
   // type: segments by material and class (or duct shape), fittings and valves by kind
   const tname = part.kind === 'segment' ? (r.kind === 'pipe' ? tr('mep.type.pipe', { cls: tr('mep.cls.' + (MAT_NAMES[r.mat] ? r.mat : 'steel'), { c: r.cls }) }) : (carrierOf(r) ? tr('mep.part.' + carrierOf(r)) : tr('mep.type.duct.' + sec.shape))) : what;
-  w.relateType(id, typeOf(w, tcls, tname, predefined));
-  w.associateMaterial(id, w.material(r.kind === 'pipe' ? tr(MAT_NAMES[r.mat] || 'mep.mat.steel') : tr('mep.mat.galv')));
   const run = w.guidOf(r.id), Lm = (k, v) => [k, 'IFCLENGTHMEASURE', round(w.u(v))];
+  const Pm = (k, v) => [k, 'IFCPOSITIVELENGTHMEASURE', round(w.u(v))];
+  const commonRows = () => [Pm('NominalDiameter', sec.nps * IN), Pm('InnerDiameter', sec.id), Pm('OuterDiameter', sec.od)];
+  const specRows = () => [['Spec', 'IFCLABEL', spec.name], ['SpecId', 'IFCLABEL', spec.id], ['Standard', 'IFCTEXT', spec.standard], ['Material', 'IFCLABEL', spec.material], ['Joint', 'IFCLABEL', spec.joint], ['NominalSize', 'IFCLABEL', sec.label],
+    Lm('OuterDiameter', sec.od), Lm('WallThickness', sec.wall), Lm('InnerDiameter', sec.id), ['PressureRating', 'IFCLABEL', sec.p.pn || ''], ['RoughnessMm', 'IFCREAL', spec.roughness], ['WeightKgPerMetre', 'IFCREAL', sec.p.weight],
+    ['CheckAgainstProjectStandard', 'IFCBOOLEAN', !!spec.check], ['Source', 'IFCTEXT', spec.source.url]].filter((x) => x[2] !== null && x[2] !== undefined);
+  w.relateType(id, spec && part.kind === 'segment' ? specSegmentType(w, spec, sec, { common: commonRows(), spec: specRows() }) : typeOf(w, tcls, tname, predefined));
+  w.associateMaterial(id, w.material(spec ? spec.material || spec.name : r.kind === 'pipe' ? tr(MAT_NAMES[r.mat] || 'mep.mat.steel') : tr('mep.mat.galv')));
   if (part.kind === 'segment') {
     const L = dist(part.a, part.b);
     if (r.kind === 'pipe') {
       w.upsertPset(id, 'CadCraft_Pipe', [['Run', 'IFCLABEL', run], ['System', 'IFCLABEL', r.system], ['Material', 'IFCLABEL', r.mat], ['Class', 'IFCLABEL', r.cls], ['NominalSize', 'IFCLABEL', r.size], Lm('OuterDiameter', sec.od), Lm('WallThickness', sec.wall), ['Slope', 'IFCREAL', round(r.slope || 0, 9)], Lm('Length', L)]);
-      w.upsertPset(id, 'Pset_PipeSegmentTypeCommon', [['NominalDiameter', 'IFCPOSITIVELENGTHMEASURE', round(w.u(sec.nps * IN))], ['InnerDiameter', 'IFCPOSITIVELENGTHMEASURE', round(w.u(sec.id))], ['OuterDiameter', 'IFCPOSITIVELENGTHMEASURE', round(w.u(sec.od))]]);
+      w.upsertPset(id, 'Pset_PipeSegmentTypeCommon', commonRows());
+      if (spec) w.upsertPset(id, 'CadCraft_PipeSpec', specRows());
       w.upsertQto(id, 'Qto_PipeSegmentBaseQuantities', [['Length', 'length', L]]);
     } else {
       const per = sec.round ? Math.PI * sec.w : sec.shape === 'oval' ? Math.PI * sec.h + 2 * (sec.w - sec.h) : 2 * (sec.w + sec.h);
@@ -550,7 +633,10 @@ function writePart(w, r, sec, part, lp) {
       w.upsertQto(id, 'Qto_DuctSegmentBaseQuantities', [['Length', 'length', L], ['OuterSurfaceArea', 'area', per * L]]);
     }
   } else if (part.kind === 'valve') {
-    w.upsertPset(id, 'CadCraft_Valve', [['Run', 'IFCLABEL', run], ['Kind', 'IFCLABEL', part.valve.kind], ['System', 'IFCLABEL', r.system], ['Size', 'IFCLABEL', sec.label], ['Generic', 'IFCBOOLEAN', true]]);
+    // Generic = a schematic body sized from the run (no maker's or valve standard's face-to-face); a family is the maker's own model
+    w.upsertPset(id, 'CadCraft_Valve', [['Run', 'IFCLABEL', run], ['Kind', 'IFCLABEL', part.valve.kind], ['System', 'IFCLABEL', r.system], ['Size', 'IFCLABEL', sec.label], ['Generic', 'IFCBOOLEAN', !inl.fam], Lm('Length', dist(part.a, part.b)),
+      ...(inl.fam ? [['Family', 'IFCLABEL', inl.fam.name], ['FamilyId', 'IFCLABEL', inl.fam.id], ['Maker', 'IFCLABEL', inl.fam.maker], ['Model', 'IFCLABEL', inl.fam.model], ['StandsFor', 'IFCLABEL', inl.fam.base]] : []),
+      ...(spec ? [['Spec', 'IFCLABEL', spec.name], ['Joint', 'IFCLABEL', spec.joint]] : [])]);
   } else {
     const angle = part.kind === 'bend' ? round(part.th * 180 / Math.PI, 3) : null;
     w.upsertPset(id, 'CadCraft_MepFitting', [['Run', 'IFCLABEL', run], ['Kind', 'IFCLABEL', part.kind], ['System', 'IFCLABEL', r.system], ['Size', 'IFCLABEL', sizeText], ['AngleDegrees', 'IFCREAL', angle], ['Generic', 'IFCBOOLEAN', true]]);
@@ -730,7 +816,9 @@ export function readFixturePorts(w) {
 /** What a run's parts come out as (and what they are made of), as a short hash: unchanged = nothing to write. */
 function fingerprint(r, lay) {
   const R3 = (q) => q.map((x) => Math.round(x * 10) / 10);
+  const sp = r.kind === 'pipe' ? specOfMaterial(r.mat) : null, fams = (r.valves || []).filter((v) => v.fam).map((v) => { const f = familyById(v.fam); return f ? f.id + '@' + f.rev : ''; });
   const s = JSON.stringify([r.kind, r.system, r.mat, r.cls, r.size, r.shape, Math.round(r.w), Math.round(r.h), round(r.slope || 0, 9), r.flow || 0, r.valves,
+    ...(sp ? [specStamp(sp.id), sp.standard, sp.joint, sp.roughness, sp.check] : []), ...(fams.length ? [fams] : []),   // 0.9.1: a spec's numbers or a family's ports changed = written again (other runs hash as before)
     ...(spooled(r) ? [r.spoolMax, r.line, (r.breaks || []).map((b) => [Math.round(b.s * 10), b.kind])] : []),
     (lay?.parts || []).map((p) => [p.kind, ...(p.ports || []).map((q) => R3(q.p)), p.kind === 'tee' ? p.branchSec?.label : p.kind === 'reducer' ? [p.from.label, p.to.label] : p.valve?.kind || ''])]);
   let h = 0x811c9dc5;
@@ -761,6 +849,9 @@ function portOwner(w, id) {
 export function runDefaults(kind, system, size, std = projectStandard() || 'us') {   // 0.8 SU.955: the project's plumbing standard
   if (kind === 'duct') return { kind, system: DUCT_SYSTEMS[system] ? system : 'supply', shape: 'rect', w: 300, h: 200, slope: 0 };
   const key = PIPE_SYSTEMS[system] ? system : 'cw', S = PIPE_SYSTEMS[key];
+  // 0.9.1 #1499: a service given a pipe spec starts its runs in it (the size asked for when the spec has it, else its first size of 20 mm or more)
+  const sp = systemSpec(key);
+  if (sp) { const names = sp.sizes.map((z) => z.name); return { kind, system: key, mat: specMaterial(sp.id), cls: '', size: names.includes(size) ? size : (sp.sizes.find((z) => z.od >= 20) || sp.sizes[0]).name, slope: 0 }; }
   const mat = (SYSTEM_MATERIALS[std] || SYSTEM_MATERIALS.us)[key] || S.mat, cls = DEFAULT_CLASS[mat];
   const usual = mat === 'pvc-esg' ? '100' : mat === 'pvc-sold' ? '25' : S.drain ? '3' : '3/4';
   const sizes = sizesFor(mat, cls), sz = sizes.includes(size) ? size : (sizes.includes(usual) ? usual : sizes[0]);
@@ -821,12 +912,13 @@ export function removeRuns(guids) {
   });
 }
 /** A valve on a pipe run, `at` mm along it (from its first point). */
-export function addValve(guid, at, kind) {
+export function addValve(guid, at, kind, fam = null) {
   return op((w) => {
     const r = readRuns(w).find((x) => x.guid === guid);
     if (!r) refuse('mep.err.none');
-    if (r.kind !== 'pipe' || !VALVE_KINDS[kind]) refuse('mep.err.valve');
-    writeDef(w, r.id, { ...r, valves: [...r.valves, { s: at, kind }].sort((a, b) => a.s - b.s) });
+    const v = kind === OEM_KIND ? { s: at, kind, fam: String(fam || '') } : { s: at, kind };
+    if (!inlineFits(r, v)) refuse(r.kind === 'duct' && INLINE[kind]?.on === 'pipe' ? 'mep.err.valve.duct' : r.kind === 'pipe' && INLINE[kind]?.on === 'duct' ? 'mep.err.valve.pipe' : 'mep.err.valve');
+    writeDef(w, r.id, { ...r, valves: [...r.valves, v].sort((a, b) => a.s - b.s) });
     regenMep(w, r.storey);
     return { id: null, ids: [] };
   });
@@ -986,7 +1078,8 @@ export function runSchedules(w) {
       const f = w.readPset(id, 'CadCraft_MepFitting') || w.readPset(id, 'CadCraft_Valve');
       if (!f) continue;
       const kind = String(f.Kind || '');
-      bump(fits, [r.kind, r.system, kind, f.Size, f.AngleDegrees ?? ''].join('|'), { kind: r.kind, system: r.system, what: kind, valve: !!VALVE_KINDS[kind], size: String(f.Size || ''), angle: f.AngleDegrees ?? null, storey: so.get(id) }, { id });
+      const famName = kind === OEM_KIND ? String(f.Family || '') : '';
+      bump(fits, [r.kind, r.system, kind, f.Size, f.AngleDegrees ?? '', famName].join('|'), { kind: r.kind, system: r.system, what: kind, valve: !!VALVE_KINDS[kind] || kind === OEM_KIND, name: famName, size: String(f.Size || ''), angle: f.AngleDegrees ?? null, storey: so.get(id) }, { id });
     }
   }
   return { pipes: [...pipes.values()], ducts: [...ducts.values()], fittings: [...fits.values()] };

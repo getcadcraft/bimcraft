@@ -17,6 +17,7 @@
  * variants at the top of the panel, each one click away.
  *   lib.open(uuid)  lib.refresh()  lib.updates(refs)  lib.fetchItem(uuid, version)  lib.registerUse(entry, fileLabel)
  */
+import { changelogNewestFirst } from './packver.js';   // 0.10 BK.154: a kit's changelog, newest first
 import { el } from './ui-util.js';
 import * as L from './libitem.js';
 import { BUILTIN_SYMBOLS } from './library-symbols.js';
@@ -49,6 +50,7 @@ export class LibraryPanel {
     this.source = 'symbols';
     this.query = '';
     this.category = '';
+    this.itemClass = '';        // 0.10 BK.21: '' | symbol | type | asset (the Symbols / Types / Assets tabs; libitem.js ITEM_CLASSES)
     this.feed = null;
     this.entries = [];          // [{ key, name, maker, model, category, license, version, preview (url|svg), withdrawn, load() → entry }]
     this.fileEntries = [];      // from Files…
@@ -171,6 +173,8 @@ export class LibraryPanel {
     } else if (this.source === 'this') {
       const d = this.host.dwg();
       this.entries = d ? this.dwgEntries(d.db, d.fileName) : [];
+    } else if (this.source === 'kitmembers') {
+      /* the items of the kit that was opened: entries were set by showKitItems */
     } else if (this.source === 'files') {
       this.entries = this.fileEntries;
     } else {
@@ -178,7 +182,9 @@ export class LibraryPanel {
       if (!base) { this.entries = []; this.render(); return; }
       this.loading = true; this.render();
       try {
-        const q = new URLSearchParams({ q: this.query, category: this.category, page: String(this.page), per: '24', openings: '1' });   // doors and windows: this build places them (the API leaves them out otherwise)
+        const q = new URLSearchParams({ q: this.query, category: this.category, page: String(this.page), per: '24', openings: '1' });
+        if (this.source === 'kits') q.set('kind', 'kit');   // 0.10 BK.98: project templates and Quick Kits
+        else if (this.itemClass && L.ITEM_CLASSES.includes(this.itemClass)) q.set('class', this.itemClass);   // 0.10 BK.21   // doors and windows: this build places them (the API leaves them out otherwise)
         const d = await this.getJson(base + '/items?' + q, base);
         if (token !== this.loadToken) return;
         this.total = d.total || 0;
@@ -196,7 +202,7 @@ export class LibraryPanel {
   apiEntry(x, base) {
     const library = base === API ? 'librarycraft' : base;
     return {
-      key: x.uuid, name: x.name, maker: x.maker, model: x.model, category: x.category, license: x.license, version: x.version,
+      key: x.uuid, name: x.name, maker: x.maker, model: x.model, category: x.category, license: x.license, version: x.version, kind: x.kind || '',
       preview: safeUrl(x.preview_url, base), withdrawn: x.status === 'withdrawn', team: x.visibility === 'team', uuid: x.uuid, base,
       load: async () => {
         const { item, info, version } = await this.fetchItem(x.uuid, x.version, base);
@@ -228,13 +234,25 @@ export class LibraryPanel {
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const bytes = new Uint8Array(await file.arrayBuffer());
     const head = new TextDecoder('latin1').decode(bytes.subarray(0, 16));
-    const units = this.box.querySelector('[data-lib-units]')?.value || '';
+    let units = this.box.querySelector('[data-lib-units]')?.value || '';
     const up = this.box.querySelector('[data-lib-up]')?.value || '';
+    // 0.10 BK.8 (units on import): with "Units: as the file says", a file that says nothing is asked about before an item is made
+    // (the shell's one dialog, remembered per file). It was read as millimeters (OBJ) or guessed from the drawing's measurement flag (DWG).
+    let unitsSaid = '';
+    const askUnits = async (format) => {
+      if (units || !window.ccImportUnits) return true;
+      const a = await window.ccImportUnits.resolve({ file, format, stated: null, choices: ['mm', 'cm', 'm', 'in', 'ft'] });
+      if (!a) return false;
+      units = a.unit; unitsSaid = a.text;
+      return true;
+    };
+    const notAsked = () => new Error(t('lib.err.nounits', { file: file.name }));
     let r;
     if (head.startsWith('AC10') || ext === 'dwg' || ext === 'dxf') {
       let db;
       try { db = await this.host.readDrawing(bytes, head.startsWith('AC10') || ext === 'dwg' ? 'dwg' : 'dxf'); }
       catch (e) { console.warn(e); throw new Error(t('lib.err.read_here', { file: file.name })); }
+      if (!(db.header?.INSUNITS > 0) && !(await askUnits(ext === 'dxf' ? 'DXF' : 'DWG'))) throw notAsked();
       r = L.itemsFromDwg(db, { fileName: file.name, units: units || null });
     } else if (head.startsWith('ISO-10303-21') || ext === 'ifc') {
       const api = await this.host.ifcApi();
@@ -244,13 +262,14 @@ export class LibraryPanel {
     } else if (ext === 'glb' || ext === 'gltf' || head.startsWith('glTF')) {
       r = L.itemFromMesh(bytes, ext === 'gltf' ? 'gltf' : 'glb', { units: units || null, upAxis: up || null, name: file.name.replace(/\.[^.]+$/, '') });
     } else if (ext === 'obj') {
+      if (!(await askUnits('OBJ'))) throw notAsked();
       r = L.itemFromMesh(bytes, 'obj', { units: units || null, upAxis: up || null, name: file.name.replace(/\.[^.]+$/, '') });
     } else if (ext === 'rfa' || (bytes[0] === 0xd0 && bytes[1] === 0xcf)) {
       r = L.itemFromRfa(await this.host.readRevit(bytes, file.name));
     } else if (ext === 'csv') {
       r = L.itemsFromCsv(new TextDecoder().decode(bytes));
     } else throw new Error(t('lib.err.unsupported', { file: file.name }));
-    this.fileNotes = r.notes;
+    this.fileNotes = unitsSaid ? [unitsSaid, ...r.notes] : r.notes;
     this.fileEntries = r.items.map((raw, i) => {
       const item = L.cleanItem(raw);
       return { key: 'file:' + i + ':' + item.name, name: L.localized(item, locale()).name, maker: item.maker, model: item.model, category: item.category, license: null, version: null, local: true, item,
@@ -293,6 +312,7 @@ export class LibraryPanel {
         src('symbols', t('lib.src.symbols'), t('lib.src.symbols.title')),
         src('plants', t('lib.src.plants'), t('lib.src.plants.title')),
         src('librarycraft', 'Library', t('lib.src.librarycraft.title')),   // i18n-ignore: product name
+        src('kits', t('lib.src.kits'), t('lib.src.kits.title')),
         src('this', t('lib.src.this'), t('lib.src.this.title')),
         src('files', t('lib.src.files'), t('lib.src.files.title')),
         src('feed', t('lib.src.feed'), t('lib.src.feed.title'))),
@@ -312,7 +332,9 @@ export class LibraryPanel {
     }
     this._shownDetail = null;
     if (swapV) kids.unshift(swapV);
-    if (this.source === 'librarycraft') kids.push(this.signInRow());
+    if (this.source === 'librarycraft' || this.source === 'kits') kids.push(this.signInRow());
+    if (this.source === 'kits' && this.host.quickKit) kids.push(el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lib-kit-make': '', onClick: () => this.host.quickKit() }, t('lib.kit.make'))));
+    if (this.source === 'kitmembers') kids.push(el('p', { className: 'bc-muted' }, el('button', { type: 'button', className: 'bc-linkbtn', onClick: () => this.setSource('kits') }, el('i', { className: 'bi bi-arrow-left', 'aria-hidden': 'true' }), ' ' + t('lib.kit.back'))));
     if (this.source === 'feed') kids.push(this.feedRow(feeds));
     if (this.source === 'files') kids.push(this.filesRow());
     if (this.source === 'this' && mode !== 'dwg') kids.push(el('p', { className: 'bc-muted' }, t('lib.this.needs_dwg')));
@@ -326,7 +348,7 @@ export class LibraryPanel {
       const shown = this.filtered();
       if (!this.loading && !this.error && !shown.length) kids.push(el('p', { className: 'bc-muted' }, this.emptyText()));
       kids.push(el('ul', { className: 'bc-lib-cards' }, shown.slice(0, 300).map((e) => this.card(e))));
-      if ((this.source === 'librarycraft' || this.source === 'feed') && this.total > this.page * 24) {
+      if ((this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits') && this.total > this.page * 24) {
         kids.push(el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => { this.page++; this.load(); } }, t('lib.next_page'))));
       }
       if ((this.source === 'files' || this.source === 'this') && this.fileNotes.length) {
@@ -398,13 +420,17 @@ export class LibraryPanel {
     search.addEventListener('input', () => {
       this.query = search.value.trim();
       clearTimeout(timer);
-      timer = setTimeout(() => { this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed') this.load(); else this.renderListOnly(); }, 300);
+      timer = setTimeout(() => { this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits') this.load(); else this.renderListOnly(); }, 300);
     });
     const cat = el('select', { className: 'select-cc bc-lib-cat', 'aria-label': t('lib.category') },
       el('option', { value: '' }, t('lib.category.any')),
       Object.entries(L.CATEGORIES).map(([k, v]) => el('option', { value: k, selected: this.category === k }, t('lib.category.option', { group: k.split('/')[0].replace(/^./, (c) => c.toUpperCase()), label: v }))));
-    cat.addEventListener('change', () => { this.category = cat.value; this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed') this.load(); else this.render(); });
-    return el('div', { className: 'bc-lib-filter' }, search, cat);
+    cat.addEventListener('change', () => { this.category = cat.value; this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits') this.load(); else this.render(); });
+    // 0.10 BK.21: Symbols, Types, Assets: one picker for the three kinds of Library item (the Library's class filter, libitem.js ITEM_CLASSES)
+    const cls = this.source === 'librarycraft' ? el('select', { className: 'select-cc bc-lib-class', 'aria-label': t('lib.class'), 'data-lib-class': '' },
+      el('option', { value: '' }, t('lib.class.any')), L.ITEM_CLASSES.map((c) => el('option', { value: c, selected: this.itemClass === c }, t('lib.class.' + c)))) : null;
+    cls?.addEventListener('change', () => { this.itemClass = cls.value; this.page = 1; this.load(); });
+    return el('div', { className: 'bc-lib-filter' }, search, cls, cat);
   }
   renderListOnly() {
     const list = this.box.querySelector('.bc-lib-cards');
@@ -491,7 +517,7 @@ export class LibraryPanel {
           e.team ? el('span', { className: 'bc-pill is-info' }, t('lib.card.team')) : null,
           e.withdrawn ? el('span', { className: 'bc-pill is-bad' }, t('lib.card.withdrawn')) : null)));
     // a card is draggable onto the plan or the 3D view: it is placed there, through the same process as the Place button
-    if (!e.withdrawn) this.dragSource(btn, e.name || t('clip.unnamed'), async () => {
+    if (!e.withdrawn && !NOT_PLACED.includes(e.kind)) this.dragSource(btn, e.name || t('clip.unnamed'), async () => {
       const got = await e.load();
       return { item: L.localizedItem(got.item, locale()), meta: got.meta };
     });
@@ -594,6 +620,23 @@ export class LibraryPanel {
   /** The view changed: every Place control on screen takes the form for it. */
   syncPlaceButtons() { for (const slot of this.box.querySelectorAll('[data-lib-place-slot]')) this.fillPlaceSlot(slot); }
 
+  /** 0.10 BK.21 / BK.98: the buttons of a Type, a project template and a Quick Kit (their handlers are BimCraft's: library-kinds-bim.js). */
+  kindActions(kind, put, withdrawn) {
+    if (withdrawn) return [];
+    const btn = (attr, icon, label, fn) => el('button', { type: 'button', className: 'btn-plot btn-sm-cc', [attr]: '', onClick: fn }, el('i', { className: 'bi ' + icon, 'aria-hidden': 'true' }), ' ' + label);
+    if (kind === 'type') return this.host.addType ? [btn('data-lib-type-add', 'bi-plus-square', t('lib.type.add'), () => this.host.addType(put))] : [];
+    if (kind === 'kit' && put.kit?.type === 'project-template') return this.host.saveKitTemplate ? [btn('data-lib-kit-template', 'bi-download', t('lib.kit.template.save'), () => this.host.saveKitTemplate(put))] : [];
+    if (kind === 'kit' && put.kit?.type === 'quick-kit') return [btn('data-lib-kit-items', 'bi-list-ul', t('lib.kit.items.show'), () => this.showKitItems(put))];
+    return [];
+  }
+  /** A Quick Kit's items as cards, to place like any item. */
+  showKitItems(item) {
+    this.source = 'kitmembers'; this.detail = null; this.page = 1; this.query = ''; this.category = '';
+    this.entries = (item.kit.members || []).map((m) => this.apiEntry({ uuid: m.uuid, name: m.name || t('clip.name.libitem'), version: null }, API));
+    this.total = this.entries.length;
+    this.render();
+  }
+
   detailView() {
     const d = this.detail, e = d.entry;
     const back = el('p', {}, el('button', { type: 'button', className: 'bc-linkbtn', onClick: () => { this.detail = null; this.render(); } }, el('i', { className: 'bi bi-arrow-left', 'aria-hidden': 'true' }), ' ' + t('lib.back')));
@@ -615,10 +658,15 @@ export class LibraryPanel {
     const rows = [[t('lib.row.type'), loc.type || ''], [t('lib.row.category'), L.CATEGORIES[it.category] ? t('lib.category.option', { group: it.category.split('/')[0], label: L.CATEGORIES[it.category] }) : it.category], [t('lib.row.kind'), it.kind],
       [t('lib.row.maker'), it.maker], [t('lib.row.model'), it.model], [t('lib.row.width'), fmt(p.width)], [t('lib.row.depth'), fmt(p.depth)], [t('lib.row.height'), fmt(p.height)],
       [t('lib.row.elec'), p.elec ? Object.entries(p.elec).map(([k, v]) => loc.label('elec.' + k, k) + ' ' + v).join(', ') : ''], [t('lib.row.plumb'), p.plumb ? Object.entries(p.plumb).map(([k, v]) => loc.label('plumb.' + k, k.toUpperCase()) + ' ' + v).join(', ') : ''],
-      [t('lib.row.remarks'), p.remarks], [t('lib.row.body'), shown.body ? (shown.body.type === 'box' ? t('lib.body.box') : t('lib.body.mesh', { n: shown.body.indices.length / 3 })) : t('lib.body.none')],
+      [t('lib.row.remarks'), p.remarks], [t('lib.row.body'), NOT_PLACED.includes(it.kind) ? '' : shown.body ? (shown.body.type === 'box' ? t('lib.body.box') : t('lib.body.mesh', { n: shown.body.indices.length / 3 })) : t('lib.body.none')],
       [t('lib.row.ports'), (shown.ports || []).length ? t('lib.ports.count', { n: shown.ports.length }) : ''],
       [t('lib.row.version'), it.version ? String(it.version) : ''], [t('lib.row.from'), m.source],
-      [t('lib.row.stretch'), m.stretch ? (m.stretch.length ? m.stretch.map((a) => t('lib.stretch.' + a)).join(', ') : t('lib.stretch.none')) : '']];
+      [t('lib.row.stretch'), m.stretch ? (m.stretch.length ? m.stretch.map((a) => t('lib.stretch.' + a)).join(', ') : t('lib.stretch.none')) : ''],
+      // 0.10 BK.18 / BK.21 / BK.98: LOD, classification codes, a Type's build-up and a kit's version
+      [t('lib.row.lod'), (it.lod ?? it.type?.lod) ? 'LOD ' + (it.lod ?? it.type.lod) : ''],
+      [t('lib.row.classification'), (it.classification || []).map((c) => c.system + ' ' + c.code).join('; ')],
+      [t('lib.row.buildup'), it.type ? t('lib.buildup', { element: it.type.element, mm: it.type.thickness, n: it.type.layers }) : ''],
+      [t('lib.row.kitversion'), it.kit ? t('lib.kit.versionline', { version: it.kit.version }) : '']];
     const url = svgUrl(L.previewSvg(shown));
     const withdrawn = m.withdrawn || e.withdrawn;
     let variantPick = null;
@@ -628,14 +676,17 @@ export class LibraryPanel {
       sel.addEventListener('change', () => { d.variant = sel.value; this.render(); });
       variantPick = el('div', { className: 'bc-lib-variant' }, el('label', { for: 'bc-lib-variant', className: 'bc-h' }, t('lib.variant.label', { n: vlist.length })), sel);
     }
-    const bigprev = el('div', { className: 'bc-lib-bigprev' }, el('img', { src: url, alt: t('lib.detail.plan_alt', { name: it.name }), draggable: 'false' }));
+    const bigprev = NOT_PLACED.includes(it.kind) ? null : el('div', { className: 'bc-lib-bigprev' }, el('img', { src: url, alt: t('lib.detail.plan_alt', { name: it.name }), draggable: 'false' }));   // a Type or kit has no drawing
     // the detail picture drags too, with the variant chosen here
-    if (mode === 'ifc' && !withdrawn) this.dragSource(bigprev, loc.name, async () => ({ item: put, meta: m }));
+    if (bigprev && mode === 'ifc' && !withdrawn) this.dragSource(bigprev, loc.name, async () => ({ item: put, meta: m }));
+    const kind = it.kind || '';
+    const kindActions = this.kindActions(kind, put, withdrawn);
     const actions = el('div', { className: 'bc-lib-actions bc-lib-actions-top', 'data-lib-actions': '' },
-      mode === 'ifc' && !withdrawn ? this.placeSplit(put, m) : null,
+      ...kindActions,
+      mode === 'ifc' && !withdrawn && !NOT_PLACED.includes(kind) ? this.placeSplit(put, m) : null,
       mode === 'ifc' && swapT && !withdrawn ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => this.host.swap({ item: put, meta: m }) },
         el('i', { className: 'bi bi-arrow-left-right', 'aria-hidden': 'true' }), ' ' + t('lib.swap', { name: swapT.name })) : null,
-      mode !== 'ifc' ? el('span', { className: 'bc-muted' }, t('lib.needs_ifc')) : null);
+      mode !== 'ifc' && !NOT_PLACED.includes(kind) ? el('span', { className: 'bc-muted' }, t('lib.needs_ifc')) : null);
     return el('div', { className: 'bc-lib-detail' }, back,
       el('p', { className: 'bc-prop-name', 'data-lib-name': '' }, loc.name),
       loc.translated && loc.name !== it.name ? el('p', { className: 'bc-muted', 'data-lib-original': '' }, t('lib.detail.original', { name: it.name })) : null,
@@ -649,6 +700,7 @@ export class LibraryPanel {
         el('p', { className: 'bc-h' }, t('lib.license.heading')),
         lic ? el('p', {}, el('span', { className: 'bc-pill' }, licenseLabel(lic.id)), ' ', lic.attribution || lic.holder || '') : el('p', { className: 'bc-muted' }, t('lib.license.fromfile')),
         lic && lic.url && /^https?:/.test(lic.url) ? el('p', {}, el('a', { href: lic.url, rel: 'noopener noreferrer', target: '_blank' }, t('lib.license.link'))) : null),   // i18n-ignore: rel attribute value
+      it.kit?.changelog?.length ? el('details', { className: 'bc-lib-notes', 'data-lib-changelog': '' }, el('summary', {}, t('lib.kit.changelog')), el('ul', {}, changelogNewestFirst(it.kit.changelog).map((c) => el('li', {}, c.version + ' ' + c.date + ': ' + ['added', 'changed', 'fixed'].filter((k) => c[k]?.length).map((k) => t('lib.kit.' + k) + ' ' + c[k].join('; ')).join(' · '))))) : null,
       m.notes && m.notes.length ? el('details', { className: 'bc-lib-notes' }, el('summary', {}, t('lib.notes', { n: m.notes.length })), el('ul', {}, m.notes.map((n) => el('li', {}, localizeQuantities(n, getDisplayUnits()))))) : null,
       it.uuid && m.library === 'librarycraft' ? el('p', {}, el('a', { className: 'bc-linkbtn', href: '/library/item/' + encodeURIComponent(m.info?.slug || ''), target: '_blank', rel: 'noopener' }, t('lib.open_on'))) : null);
   }
@@ -674,6 +726,8 @@ function normalizeEmpty(item) {
   if (item && item.params) { fix(item.params, 'elec'); fix(item.params, 'plumb'); }
   return item;
 }
+/** Library kinds that are not drawn or placed: a Type is added to the project, a kit is a template or a list of items (0.10 BK.21 / BK.98). */
+const NOT_PLACED = ['type', 'kit'];
 const svgUrl = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 
 function safeUrl(u, base) {

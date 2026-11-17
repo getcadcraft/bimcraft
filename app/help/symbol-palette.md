@@ -40,3 +40,21 @@ These are common plumbing plan conventions, drawn by us; not certified to ISO 40
 :::tip
 If a file uses a symbol set this build does not have, the plan shows a box where the symbol was and Problems lists it.
 :::
+
+## Link a placed element to a symbol
+
+A light fitting from the Library is a 3D element, but an electrical layout shows it as its symbol. You place it **once** and link it:
+
+1. Choose Build › **Symbol link** (or type SYMBOLLINK). A Symbol link section opens in the left panel.
+2. Pick the placed elements in the plan or in 3D. The section says how many are picked and what they are linked to.
+3. Choose the **Symbol** (from any symbol set: Electrical, Plumbing) and choose **Link**.
+
+The element is still one element, and every schedule counts it once:
+
+- **3D** always shows its body.
+- A **plan** shows its plan form, as before.
+- A plan whose **This view shows linked elements as** is set to **Their symbol (a services layout)** shows the symbol in its place. A click on the symbol picks the element. The choice is kept for that view (a level's floor plan, its ceiling plan, or a callout) in the file.
+
+**Turn the symbol 90°** turns the symbol against its element. **Remove the link** takes the link off; the element stays. The **Linked symbols** schedule lists each linked element once with its level and the room it stands in.
+
+Not built: a view's choice on a sheet is the choice of the level's plan it shows; devices placed with the Electrical tool are symbols in every plan, as before.

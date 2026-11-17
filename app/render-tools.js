@@ -18,7 +18,7 @@
  *
  * Nothing in the model changes (no undo step). One picture at a time per window.
  */
-import { QUALITY, SKIES, MAX_SIDE, cleanSettings, sizeFor } from './render/looks.js';
+import { QUALITY, SKIES, MAX_SIDE, SCENE_KEYS, cleanSettings, sizeFor, applyScene, sceneOf, viewHints, defaultScene } from './render/looks.js';
 
 export const RENDER_FORMATS = Object.freeze({ png: { ext: 'png', mime: 'image/png' }, exr: { ext: 'exr', mime: 'image/x-exr' }, ccrender: { ext: 'ccrender', mime: 'application/octet-stream' } });
 /** Inline pictures (returned to the assistant rather than written or downloaded): at most this many pixels on the long side. */
@@ -26,7 +26,8 @@ export const INLINE_MAX = 1600;
 
 /** The dialog's remembered settings with the assistant's choices on top (cleaned as the dialog cleans them). */
 export function renderSettings(base, a = {}) {
-  const s = { ...(base && typeof base === 'object' ? base : {}) };
+  let s = { ...(base && typeof base === 'object' ? base : {}) };
+  if (a.preset && SCENE_KEYS.includes(a.preset)) s = applyScene(a.preset, s, { lat: a.lat ?? 0 });   // 0.10 BK.12: a scene preset first, the other choices on top
   if (a.mode) s.mode = a.mode;
   if (a.quality) s.quality = a.quality;
   if (a.sky) s.sky = a.sky;
@@ -81,6 +82,7 @@ export function renderTools(C, prepare, { toolResult = null } = {}) {
     inputSchema: obj({
       mode: { type: 'string', enum: ['fast', 'hq'], description: '"fast" = the quick renderer, "hq" = the path tracer. Default: the Render dialog\'s setting.' }, quality: { type: 'string', enum: Object.keys(QUALITY), description: 'draft / good / best = 16 / 64 / 256 samples.' }, width: { ...SIDE, description: 'Picture width in pixels. Default: the dialog\'s size.' }, height: { ...SIDE, description: 'Picture height in pixels. Default: the dialog\'s size.' },
       seconds: { type: 'integer', minimum: 1, maximum: 3600, description: 'Time limit in seconds for "hq".' }, engine: { type: 'string', enum: ['auto', 'webgl'], default: 'auto', description: '"hq" only: webgl keeps the path tracer off WebGPU.' },
+      preset: { type: 'string', enum: [...SCENE_KEYS, 'auto'], description: 'A scene preset (the Render dialog\'s Scene buttons): exterior (clear sky, the model\'s sun), interior (overcast sky, brighter), section (white studio, no ground, edge lines), night (the sun down, the lamps light it), or auto = section when a section cut is on, interior when the camera is inside the model, else exterior. It sets sky, brightness, ground, edge lines, quality and sun; sky, quality and exposure given here go on top. Default: the dialog\'s settings as they are.' },
       sky: { type: 'string', enum: Object.keys(SKIES), description: 'The sky to light the picture with. Default: the dialog\'s setting.' }, denoise: { type: 'boolean', description: 'Smooth the noise of an "hq" picture. Default: the dialog\'s setting.' }, scene: SCENE,
       format: { type: 'string', enum: Object.keys(RENDER_FORMATS), default: 'png', description: 'png, or exr / ccrender (the linear picture with its render elements; "hq" only).' }, path: PATH, overwrite: { type: 'boolean', default: false, description: 'Replace the file at path when it exists. Otherwise an existing file is an error.' },
       download: { type: 'boolean', default: false, description: 'Download the file even when it could come back as a picture.' },
@@ -89,7 +91,13 @@ export function renderTools(C, prepare, { toolResult = null } = {}) {
       const fmt = a.format || (a.path && /\.(png|exr|ccrender)$/i.exec(a.path)?.[1].toLowerCase()) || 'png';
       if (a.path && !new RegExp('\\.' + RENDER_FORMATS[fmt].ext + '$', 'i').test(a.path)) throw new Error('A ' + fmt + ' file ends in .' + RENDER_FORMATS[fmt].ext + '.');
       const o = await prepare();
-      const s = renderSettings(o.settings?.() || null, a);
+      let s = renderSettings(o.settings?.() || null, a);
+      if (a.preset === 'auto') {   // 0.10 BK.12: the preset this view asks for, read from the scene itself
+        const v = o.viewSize(), probe = o.scene(s);
+        let hints = {};
+        try { hints = viewHints(probe, Math.max(1, v?.w || 1) / Math.max(1, v?.h || 1)); } finally { probe.dispose?.(); }
+        s = renderSettings(o.settings?.() || null, { ...a, preset: defaultScene(hints) });
+      }
       if (fmt !== 'png' && s.mode !== 'hq') throw new Error(fmt.toUpperCase() + ' keeps the path tracer\'s linear picture: render with mode "hq".');
       const si = sceneIndex(o, a.scene);
       if (si >= 0) await o.goScene(si);
@@ -118,7 +126,7 @@ export function renderTools(C, prepare, { toolResult = null } = {}) {
           bytes = fmt === 'exr' ? OUT.exrBytes(r.layers, { samples: r.passes, app: o.appName || 'CadCraft' })
             : OUT.writeRenderFile(r.layers, s, { samples: r.passes, app: o.appName || 'CadCraft', created: new Date().toISOString() });
         }
-        const info = { format: fmt, width: r.w, height: r.h, mode: s.mode, quality: s.quality, samples: r.passes, ms: r.ms, engine: r.engine, ...(r.fallback && r.fallback !== 'no-webgpu' ? { fallback: r.fallback } : {}), ...(r.stopped || r.budget ? { stoppedEarly: true } : {}), ...(si >= 0 ? { scene: o.scenes()[si] } : {}), bytes: bytes.length };
+        const info = { format: fmt, width: r.w, height: r.h, mode: s.mode, quality: s.quality, sky: s.sky, exposure: s.exposure, preset: sceneOf(s) || 'none', samples: r.passes, ms: r.ms, engine: r.engine, ...(r.fallback && r.fallback !== 'no-webgpu' ? { fallback: r.fallback } : {}), ...(r.stopped || r.budget ? { stoppedEarly: true } : {}), ...(si >= 0 ? { scene: o.scenes()[si] } : {}), bytes: bytes.length };
         const name = (o.fileBase ? o.fileBase() : 'render') + ' render.' + RENDER_FORMATS[fmt].ext;
         if (a.path) return { ...info, path: await write(a.path, bytes, a.overwrite) };
         if (fmt === 'png' && !a.download && toolResult && Math.max(r.w, r.h) <= INLINE_MAX) return toolResult([{ type: 'image', data: b64(bytes), mimeType: 'image/png' }], info);

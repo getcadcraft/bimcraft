@@ -385,6 +385,18 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
     linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
   background-size: 1.5rem 1.5rem;
 }
+/* the start card: framed like every other app's, with the shared x and "Don't show this again" (app-start-tip.js); the grid behind it stays */
+.bc-empty { pointer-events: none; }
+.bc-empty-card .bc-empty-h { font-size: 1.25rem; margin-bottom: .35rem; padding-right: 2rem; }
+.bc-empty-card .bc-empty-lede { font-size: .875rem; line-height: 1.45; margin-bottom: .75rem; }
+.bc-empty-card .bc-fmts { border-top: var(--pen-1) solid var(--line); padding-top: .5rem; }
+.bc-empty-card .bc-fmts summary { cursor: pointer; font-weight: 600; font-size: .875rem; color: var(--action); }
+.bc-empty-card .bc-fmts[open] summary { margin-bottom: .5rem; }
+.bc-empty-card .bc-formats { font-size: .8125rem; gap: .5rem; }
+.bc-empty-card .bc-formats li { padding-top: .5rem; grid-template-columns: 6.5rem minmax(0, 1fr); gap: .75rem; }
+.bc-empty-card .bc-empty-cta { margin-bottom: .25rem; }
+.bc-empty-card [data-hint-never-slot] { margin-bottom: 1.25rem; }
+.bc-empty-card { position: relative; pointer-events: auto; max-width: 46rem; padding: 1.25rem 1.5rem; background: var(--sheet-2); border: var(--pen-2) solid var(--ink); border-radius: var(--radius); }
 .bc-empty-h { font-size: var(--fs-2xl); margin: 0 0 .5rem; }
 .bc-empty-lede { font-size: var(--fs-md); color: var(--ink-2); margin: 0 0 1.25rem; }
 .bc-empty-cta { margin: 0 0 2rem; display: flex; flex-wrap: wrap; gap: .75rem; }
@@ -800,6 +812,10 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
 /* New building dialog (0.5 part 3; bimcraft.js "New building") */
 .bc-new .bc-new-field { display: grid; gap: .25rem; margin: 0 0 .75rem; }
 .bc-new .bc-new-field input { width: 100%; padding: .35rem .5rem; color: var(--ink); background: var(--sheet); border: var(--pen-1) solid var(--line); border-radius: var(--radius); }
+.bc-new .bc-new-field select { width: 100%; padding: .35rem .5rem; color: var(--ink); background: var(--sheet); border: var(--pen-1) solid var(--line); border-radius: var(--radius); }   /* 0.10 BK.74: the wall type list */
+.bc-new .bc-new-starts { margin: 0 0 .75rem; }
+.bc-new .bc-new-policy { font-style: italic; }
+.bc-new .bc-new-starts .bc-new-policy { display: inline; }   /* 0.10 DP.1: "from your Default Policies" beside a value a policy set */
 .bc-new .bc-new-err:empty { display: none; }
 .bc-new .bc-new-err { color: var(--layer-red); margin: 0 0 .75rem; }
 
@@ -1054,3 +1070,102 @@ dialog.bc-recover-float { position: fixed; inset: auto 1rem 1rem auto; margin: 0
 .bc-place-menu .dropdown-item { display: flex; align-items: center; gap: .4rem; color: var(--ink); background: transparent; }
 .bc-place-menu .dropdown-item:hover, .bc-place-menu .dropdown-item:focus-visible { background: var(--sheet); color: var(--ink); }
 .bc-lib-actions-top .bc-place-split { flex: 0 0 auto; }
+/* 0.10 BK.7 / BK.16 (bk-typeswap-10): the Swap type list (wall-typeswap-ui.js). It lives inside the picked walls' block in Properties (a wide row), so the panel that holds Properties lays it out. */
+.bc-swap { display: flex; flex-direction: column; gap: .4rem; min-width: 0; padding: .5rem .55rem; font-size: var(--fs-sm); color: var(--ink); background: var(--sheet-2); border: var(--pen-1) solid var(--line); border-radius: var(--radius); }
+.bc-swap .bc-input { width: 100%; max-width: none; }
+.bc-swap-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.bc-swap-title { margin: 0; font-size: 1rem; font-weight: 600; }
+.bc-swap-picked { margin: 0; color: var(--ink-2, inherit); }
+.bc-swap-list { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 0 0 auto; max-height: 15rem; background: var(--sheet); border: var(--pen-1) solid var(--line); border-radius: var(--radius); }
+.bc-swap-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: baseline; gap: .1rem .6rem; width: 100%; padding: .35rem .5rem; text-align: left; font: inherit; color: var(--ink); background: transparent; border: 0; border-bottom: var(--pen-1) solid var(--line); cursor: pointer; }
+.bc-swap-row:hover:not(:disabled), .bc-swap-row:focus-visible { background: var(--sheet-2); outline: var(--pen-1) solid var(--action); outline-offset: -1px; }
+.bc-swap-name { overflow-wrap: anywhere; }
+.bc-swap-row:disabled { cursor: default; opacity: .65; }
+.bc-swap-row.is-current .bc-swap-name { font-weight: 600; }
+.bc-swap-t { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bc-swap-lod { padding: 0 .35rem; border: var(--pen-1) solid var(--line); border-radius: var(--radius); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bc-swap-lod.is-specific { border-color: var(--action); }
+.bc-swap-lod.is-none { border-style: dashed; opacity: .7; }
+.bc-swap-cur { grid-column: 1 / -1; font-size: .85em; opacity: .8; }
+.bc-swap-report { flex: 0 0 auto; padding-top: .3rem; border-top: var(--pen-1) solid var(--line); }
+.bc-swap-h { margin: 0 0 .2rem; font-size: 1em; font-weight: 600; }
+.bc-swap-report ul { margin: 0; padding-left: 1.1rem; }
+/* 0.9.1 (#1499): the Pipe specs manager and the manufacturers' families dialogs (mep/pipe-specs-ui.js, mep/oem-families-ui.js). */
+.bc-dialog.bc-pspec, .bc-dialog.bc-oem { max-width: min(72rem, calc(100vw - 2rem)); }
+.bc-pspec-cols { display: grid; grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.bc-pspec-list { list-style: none; margin: 0; padding: 0; max-height: 14rem; overflow: auto; border: var(--pen-1) solid var(--line); border-radius: var(--radius); }
+.bc-pspec-item { display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: .35rem .55rem; color: inherit; text-align: left; background: none; border: 0; border-bottom: var(--pen-1) solid var(--line); }
+.bc-pspec-item.is-on { background: color-mix(in srgb, var(--layer-blue, #1c7ed6) 14%, transparent); font-weight: 600; }
+.bc-pspec-item:hover, .bc-pspec-item:focus-visible { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.bc-pspec-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: .45rem .75rem; align-items: end; }
+.bc-pspec-f { display: flex; flex-direction: column; gap: .15rem; margin: 0; font-size: .9em; }
+.bc-pspec-f .bc-input, .bc-pspec-f .bc-mb-select { width: 100%; }
+.bc-pspec-f.bc-pspec-wide { grid-column: span 2; }
+.bc-pspec-f.bc-pspec-inline { flex-direction: row; align-items: center; gap: .4rem; }
+.bc-pspec-sys { display: flex; flex-wrap: wrap; gap: .2rem .9rem; margin: .6rem 0 0; padding: .35rem .6rem; border: var(--pen-1) solid var(--line); border-radius: var(--radius); font-size: .9em; }
+.bc-pspec-sys legend { float: none; width: auto; margin: 0; padding: 0 .3rem; font-size: 1em; }
+.bc-pspec-sys label { margin: 0; white-space: nowrap; }
+.bc-pspec-check { margin: 0 0 .5rem; padding: .3rem .55rem; border: var(--pen-1) solid var(--layer-orange, #e8590c); border-radius: var(--radius); font-size: .9em; }
+.bc-pspec-src { overflow-wrap: anywhere; }
+.bc-pspec-scroll { max-height: 16rem; overflow: auto; }
+.bc-pspec-table td { padding: .12rem .2rem; vertical-align: middle; }
+.bc-pspec-table .bc-input { width: 100%; min-width: 3.2rem; }
+.bc-pspec-x { display: inline-flex; align-items: center; justify-content: center; width: 1.35rem; height: 1.35rem; padding: 0; color: var(--ink-2); background: none; border: 0; border-radius: var(--radius); }
+.bc-pspec-x:hover, .bc-pspec-x:focus-visible { color: var(--ink); background: color-mix(in srgb, var(--ink) 10%, transparent); }
+.bc-pspec-paste { width: 100%; font-family: var(--font-mono, monospace); font-size: .85em; }
+.bc-oem-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(10rem, 16rem); gap: 1rem; align-items: start; margin-bottom: .6rem; }
+.bc-oem-view { width: 100%; height: 11rem; border: var(--pen-1) solid var(--line); border-radius: var(--radius); background: var(--paper, transparent); }
+.bc-oem-hull { fill: color-mix(in srgb, var(--ink) 7%, transparent); stroke: var(--ink); }
+.bc-oem-port { fill: var(--layer-orange, #e8590c); }
+.bc-oem-axis { stroke: var(--layer-orange, #e8590c); }
+.bc-oem-label { fill: var(--ink); }
+.bc-oem-xyz, .bc-oem-axis3 { white-space: nowrap; }
+.bc-oem-xyz .bc-input, .bc-oem-axis3 .bc-input { width: 4.4rem; min-width: 0; display: inline-block; }
+.bc-oem-axis3 .bc-input { width: 2.8rem; }
+.bc-oem-acts { white-space: nowrap; }
+.bc-oem-acts .btn-line { margin-right: .25rem; }
+@media (max-width: 52rem) { .bc-pspec-cols, .bc-oem-top { grid-template-columns: 1fr; } .bc-pspec-f.bc-pspec-wide { grid-column: auto; } }
+/* 0.10 BK.39 / BK.149 / BK.142 / BK.29 / BK.47 (bk-r3-schedules-10): schedule layouts, set-ups and exports; room finishes; the specification */
+.bc-sched-layout { display: grid; gap: .3rem; margin: 0 0 .5rem; font-size: var(--fs-sm); }
+.bc-sched-row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem; }
+.bc-sched-row .bc-input { flex: 1 1 8rem; width: auto; min-width: 0; }
+.bc-sched-ctl { display: flex; align-items: center; gap: .3rem; flex: 1 1 9rem; min-width: 0; }
+.bc-sched-ctl .bc-mb-select { flex: 1 1 auto; min-width: 0; }
+.bc-msched .bc-sch-group th { position: static; background: var(--sheet-2); font-weight: 700; border-top: var(--pen-1) solid var(--ink); }
+.bc-msched .bc-sch-sub td { font-weight: 700; }
+.bc-msched td[data-fig] { cursor: pointer; }
+.bc-msched td[data-fig]:hover { background: var(--sheet-2); }
+.bc-msched .bc-sch-title { margin: 0 0 .25rem; }
+.bc-fin-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin: 0 0 .5rem; }
+.bc-fin-table th, .bc-fin-table td { padding: .15rem .25rem; text-align: left; vertical-align: middle; border-bottom: var(--pen-1) solid var(--line); }
+.bc-fin-table .bc-input { width: 100%; min-width: 3.5rem; }
+.bc-fin-dlg h3, .bc-spec-dlg h3 { margin: .7rem 0 .25rem; font-size: 1rem; }
+.bc-fin-alert { color: var(--red, #b00020); font-weight: 700; margin: .4rem 0; }
+.bc-row-x { padding: 0 .3rem; line-height: 1.2; }
+.bc-spec-sec { margin: 0 0 .7rem; padding: 0 0 .5rem; border-bottom: var(--pen-1) solid var(--line); }
+.bc-spec-sec ul { margin: .1rem 0 .3rem 1.1rem; padding: 0; font-size: var(--fs-sm); }
+.bc-spec-head { margin: 0; }
+.bc-dialog-actions { display: flex; justify-content: flex-end; gap: .4rem; margin-top: .6rem; }
+
+/* 0.10 BK.44: massing options kept in the model (mass-options-ui.js) */
+.bc-massopt { margin-top: .75rem; border-top: 1px solid var(--line, #c9d1da); padding-top: .5rem; }
+.bc-massopt-set { font-size: .9375rem; margin: .75rem 0 .25rem; }
+.bc-massopt-scroll { overflow-x: auto; }
+.bc-massopt-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
+.bc-massopt-table th, .bc-massopt-table td { text-align: left; padding: .2rem .4rem .2rem 0; border-bottom: 1px solid var(--line, #c9d1da); vertical-align: top; white-space: nowrap; }
+.bc-massopt-table tr.is-current td:first-child { font-weight: 600; }
+.bc-massopt-acts .bc-linkbtn { margin-right: .5rem; }
+
+/* 0.10 SU.1814 (bim-part-link-10): the Part links card (part-link-ui.js) */
+.bc-badge { display: inline-block; min-width: 1.1rem; padding: 0 .3rem; margin-left: .25rem; font-size: .75rem; line-height: 1.1rem; text-align: center; color: var(--sheet); background: var(--layer-orange, #d9822b); border-radius: 999px; }
+.bc-badge[hidden] { display: none; }
+.bc-partlink { position: fixed; right: 1rem; top: 4rem; left: auto; margin: 0; max-height: calc(100vh - 6rem); overflow: auto; box-shadow: 0 .5rem 1.5rem rgb(0 0 0 / .25); }
+.bc-pl-h { margin: .75rem 0 .25rem; font-size: 1rem; }
+.bc-pl-list { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
+.bc-pl-row { padding: .5rem .6rem; border: var(--pen-1) solid var(--line); border-radius: var(--radius); }
+.bc-pl-actions { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 0; }
+.bc-pl-chip { display: inline-block; padding: 0 .45rem; font-size: .8rem; border: var(--pen-1) solid var(--line); border-radius: 999px; }
+.bc-pl-chip.is-changed { color: var(--sheet); background: var(--layer-orange, #d9822b); border-color: transparent; }
+.bc-pl-chip.is-accepted { border-color: var(--layer-green, #3c8d5a); }
+.bc-pl-change { margin: .35rem 0 0; }
+.bc-pl-stale { color: var(--layer-red, #c0392b); }

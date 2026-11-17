@@ -26,7 +26,8 @@ export function cobieSection(host, ctx) {
     S.busy = true;
     try {
       const [C, X] = await load();
-      const sheets = C.cobieWorkbook(ctx.assets(), C.gatherFacility(host.W, e.api, e.mid), { createdBy: S.by });
+      const H = await import('./handover-docs.js');   // BK.114: the project's handover documents go on the Document sheet too
+      const sheets = C.cobieWorkbook(ctx.assets(), C.gatherFacility(host.W, e.api, e.mid), { createdBy: S.by, documents: (o) => H.handoverRows(H.readHandover(e.api, e.mid), o) });
       const base = String(host.fileName() || 'model').replace(/\.ifc$/i, '');
       host.download(base + ' COBie.xlsx', await X.writeXlsx(sheets, { title: base + ' COBie' }), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       const n = sheets.find((s) => s.name === 'Component').rows.length - 1;

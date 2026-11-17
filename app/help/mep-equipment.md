@@ -30,6 +30,9 @@ This is a drafting and coordination aid, sized by an engineer. The equipment is 
 | Diffuser | face, neck, system | its neck (air in) |
 | Grille | face width and height, neck width and height, system | its neck (air out to the return or exhaust duct) |
 | Tank | diameter, height, pipe size, system | inlet on top, outlet near the bottom |
+| Radiator | length, height, depth, pipe size, system | flow in at the top of one end, return out at the bottom of the other |
+| Convector / panel heater | length, height, depth, pipe size, system | flow in at one end, return out at the other |
+| Manufacturer's family | the family (see [Pipe specs, valves, dampers and manufacturers' families](topic:pipe-specs)) | the ports its family was given |
 
 3. Set **At**, the height of its base above the level. A diffuser's or grille's height is its face: type the ceiling height.
 4. Type a **Tag** if you want one (`AHU-1`); the next piece of the same kind gets the next number.

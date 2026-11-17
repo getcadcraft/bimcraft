@@ -81,7 +81,9 @@ export function faceAt(plan, p) {
 export function dormerGeometry(plan, f, spec0) {
   const s = { ...DORMER_DEFAULTS, ...spec0 };
   if (!DORMER_KINDS.includes(s.kind)) return { error: 'comforts.err.dormerkind' };
-  if (!(s.width >= 600 && s.width <= 12000) || !(s.height >= 300 && s.height <= 4000) || !(s.overhang >= 0 && s.overhang <= 1000) || !(s.wall >= 50 && s.wall <= 400)) return { error: 'comforts.err.dormersize' };
+  // 0.10 BK.73: refused only when it cannot be built: no width, height or wall (under 10 mm), an overhang below 0, or cheeks that meet
+  // (width not over twice the wall: the hole in the roof would turn inside out). The usual sizes are advice (draw-advice.js USUAL.dormer)
+  if (!(s.width >= 10 && s.height >= 10 && s.wall >= 10 && s.overhang >= 0 && s.width > 2 * s.wall + 10) || !(s.width <= 100000 && s.height <= 100000 && s.overhang <= 100000)) return { error: 'comforts.err.dormersize' };
   const sm = 1 / f.speed, sd = Math.tan(s.pitch * D2R);
   if (!(s.pitch > 1 && s.pitch < 80)) return { error: 'model.err.pitch' };
   if (s.kind === 'shed' && !(sd < sm - 0.05)) return { error: 'comforts.err.shedpitch' };

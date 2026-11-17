@@ -20,6 +20,7 @@ import { ModelWriter } from '../model-write.js';
 import { fmtLen, parseLen } from '../model-units.js';
 import { el } from '../ui-util.js';
 import { ACR_MM } from './tables-acr.js';   // 0.8 SU.888 (sx-mep): refrigerant ports are ACR tube, named by OD
+import { modelFamilies } from './oem-families.js';   // 0.9.1 #1499: a manufacturer's family placed as equipment (mep/equip-more.js kind 'oem')
 
 const D2R = Math.PI / 180;
 
@@ -91,7 +92,7 @@ export function mountEquipment(modelUi) {
     if (!kSel.dataset.bound) {
       kSel.dataset.bound = '1';
       kSel.replaceChildren(...EQUIPMENT_KINDS.map((k) => el('option', { value: k }, kindName(k))));
-      kSel.addEventListener('change', () => { Q.kind = kSel.value; Q.values = equipmentDefaults(Q.kind); Q.tag = ''; Q.z = ['diffuser', 'grille'].includes(Q.kind) ? 2700 : 0; bindRow(); A.drawOverlay(); });
+      kSel.addEventListener('change', () => { Q.kind = kSel.value; Q.values = equipmentDefaults(Q.kind); Q.tag = ''; Q.z = EQUIPMENT[Q.kind].z ?? (['diffuser', 'grille'].includes(Q.kind) ? 2700 : 0); bindRow(); A.drawOverlay(); });
       const z = q('[data-eq-z]');
       z?.addEventListener('change', () => { const mm = parseLen(z.value, A.units()); if (Number.isFinite(mm)) Q.z = mm; else A.host.status(t('model.err.length'), true); bindRow(); });
       const tag = q('[data-eq-tag]');
@@ -123,6 +124,7 @@ export function mountEquipment(modelUi) {
     if (type === 'sys:pipe') return Object.keys(PIPE_SYSTEMS).map((k) => [k, systemLabel('pipe', k)]);
     if (type === 'sys:duct') return Object.keys(DUCT_SYSTEMS).map((k) => [k, systemLabel('duct', k)]);
     if (type.startsWith('choice:')) return type.slice(7).split(',').map((c) => [c, t('mep.eq.c.' + c)]);
+    if (type === 'fam') return [['', t('mep.oem.choose')], ...modelFamilies().filter((f) => f.role === 'equipment').map((f) => [f.id, f.name])];   // 0.9.1
     return [];
   }
   /** What the bar would place now, or null with the reason on the status line. */
@@ -133,7 +135,7 @@ export function mountEquipment(modelUi) {
     let vals;
     try { vals = equipmentValues(Q.kind, Q.values); } catch (e) { A.host.status(t(e.key || 'mep.eq.err.value', { what: t('mep.eq.f.' + String(e.fill?.what || '').toLowerCase()) }), true); return; }
     try { buildEquipment(Q.kind, vals); } catch (e) { A.host.status(t(e.key || 'mep.eq.err.fit'), true); return; }
-    const name = kindName(Q.kind);
+    const name = Q.kind === 'oem' ? modelFamilies().find((f) => f.id === vals.family)?.name || kindName(Q.kind) : kindName(Q.kind);   // 0.9.1: a family is placed under its own name
     A.commit(placeEquipment({ storey: levelGuid(), kind: Q.kind, values: vals, x: p[0], y: p[1], z: Q.z, rot: Q.rot, tag: Q.tag, name }), { label: name, verb: t('model.verb.placed') });
     // the next one gets the next number when the tag ends in one (AHU-1 → AHU-2)
     const m = /^(.*?)(\d+)$/.exec(Q.tag);
@@ -162,11 +164,11 @@ export function mountEquipment(modelUi) {
     kit.field(t('mep.eq.rot'), kit.button(t('mep.eq.turn'), 'data-mp-eqturn', () => run({ rot: ((e.rot || 0) + 90) % 360 })), el('span', { className: 'bc-sub' }, Math.round(e.rot || 0) + '°'));
     for (const q of e.ports) {
       const open = Q.free.has(e.id + '#' + q.name);
-      const size = q.kind === 'pipe' && (q.system === 'refl' || q.system === 'refg') && ACR_MM[q.nominal] ? 'Ø' + ACR_MM[q.nominal] + ' (' + q.nominal + '")' : q.kind === 'pipe' ? (A.units() === 'mm' ? 'DN' + (STEEL[q.nominal]?.[3] ?? '') : q.nominal + '"') : q.shape === 'round' ? 'Ø' + L(q.size) : L(q.size) + ' × ' + L(q.h);   // i18n-ignore: size marks (0.8 SU.888 sx-mep: + the ACR mark)
+      const size = e.kind === 'oem' ? (q.nominal || (q.shape === 'round' ? 'Ø' + L(q.size) : L(q.size) + ' × ' + L(q.h))) : q.kind === 'pipe' && (q.system === 'refl' || q.system === 'refg') && ACR_MM[q.nominal] ? 'Ø' + ACR_MM[q.nominal] + ' (' + q.nominal + '")' : q.kind === 'pipe' ? (A.units() === 'mm' ? 'DN' + (STEEL[q.nominal]?.[3] ?? '') : q.nominal + '"') : q.shape === 'round' ? 'Ø' + L(q.size) : L(q.size) + ' × ' + L(q.h);   // i18n-ignore: size marks (0.8 SU.888 sx-mep: + the ACR mark)
       kit.rows.push(el('dt', {}, portName(q.name)), el('dd', { className: open ? 'bc-input-err' : 'bc-muted', 'data-mp-eqport': q.name },
         t(open ? 'mep.eq.port.open' : 'mep.eq.port.joined', { size, sys: systemLabel(q.kind, q.system), dir: t('mep.eq.dir.' + q.direction) })));
     }
-    kit.rows.push(el('dt', {}, ''), el('dd', { className: 'bc-sub' }, t('mep.eq.generic')));
+    kit.rows.push(el('dt', {}, ''), el('dd', { className: 'bc-sub' }, t(e.kind === 'oem' ? 'mep.oem.asplaced' : 'mep.eq.generic')));
     return { title: (e.tag ? e.tag + ' ' : '') + kindName(e.kind) };
   }
 
@@ -185,6 +187,7 @@ export function mountEquipment(modelUi) {
     if (i.code === 'kind') { f.a = t('mep.kind.' + f.a); f.b = t('mep.kind.' + f.b); }
     if (f.system) f.system = systemLabel(i.fill.kind === 'duct' ? 'duct' : 'pipe', f.system);
     if (f.port) f.port = portName(f.port);
+    if (i.code === 'spec-fitting') f.what = t('mep.fit.' + i.fill.what);   // 0.9.1
     if (f.end) f.end = t('mep.chk.end.' + f.end);
     return t(i.key, f);
   }
@@ -209,7 +212,7 @@ export function mountEquipment(modelUi) {
     tools: ['equip'],
     hint: () => 'mep.hint.equip',
     typed: () => false,
-    classes: /^Ifc(UnitaryEquipment|Fan|Pump|Boiler|AirTerminalBox|AirTerminal|Tank|EnergyConversionDevice|FlowMovingDevice|FlowStorageDevice|FlowTerminal)$/,
+    classes: /^Ifc(UnitaryEquipment|Fan|Pump|Boiler|AirTerminalBox|AirTerminal|Tank|SpaceHeater|EnergyConversionDevice|FlowMovingDevice|FlowStorageDevice|FlowTerminal)$/,
     move(p, e) { if (A.S.tool === 'equip') Q.hover = A.snapFrom(p, e, null).p; },
     click(p, e) { if (A.S.tool === 'equip') place(A.snapFrom(p, e, null).p); },
     key(e, low) { if (A.S.tool === 'equip' && low === 'r') { Q.rot = (Q.rot + 90) % 360; A.drawOverlay(); return true; } return false; },

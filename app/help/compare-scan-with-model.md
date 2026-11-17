@@ -27,7 +27,7 @@ With a 4D schedule loaded (see [4D schedule](topic:4d-schedule)), the result als
 
 ## The table and the model
 
-Click a row to select the element. {{ui:Colour the model}} paints elements green (built), amber (partly), red (missing) or grey (not reached); {{ui:Own colours}} puts them back. {{ui:Save CSV}} writes the table.
+Click a row to select the element. {{ui:Colour the model}} paints elements green (built), amber (partly), red (missing) or grey (not reached); {{ui:Own colours}} puts them back. {{ui:Save CSV}} writes the table. {{ui:Mark the matching elements as field-verified}} marks every element seen as built and within the tolerance as field-verified (LOD 500, method scan), in one step you can undo. See [Mark elements as checked or field-verified](topic:verification).
 
 :::warning
 This compares the box of each element with scan points within a tolerance. It is **not a survey, a quantity take-off or a basis for payment**. An element hidden against a scanned one (a wall behind a lining, a slab under a floor finish) shares its surface and can read as built; a curved or sloping element has a box larger than its body and can read as partly or missing. Look at the list before you act on it. Permit comments and progress notes are not part of this: they stay in the columns you keep them in.

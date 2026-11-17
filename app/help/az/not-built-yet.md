@@ -1,0 +1,89 @@
+---
+title: Hələ hazır olmayanlar
+summary: Bu BimCraft versiyasının hələ nə etmədiyi və bu gün onun əvəzinə nə istifadə etmək lazım olduğu.
+keywords: çatışmayan, məhdudiyyətlər, limitlər, dəstəklənmir, yol xəritəsi, müəlliflik, modelləşdirmə, kəsiklər, ölçmə, toqquşma, bcf, bulud, masaüstü, ixrac
+from: 87777dcc
+---
+
+BimCraft bu gün oxuyucu, yoxlayıcı və IFC məlumat redaktorudur, bina çəkməyə isə başlayıb: divarlar, qapılar və pəncərələr, otaqlar, döşəmələr, tavanlar və damlar (bax [Divar çək](topic:draw-walls), [Qapılar və pəncərələr](topic:doors-and-windows) və [Otaqlar, döşəmələr, tavanlar və damlar](topic:floors-and-roofs)). Aşağıda hələ etmədiyi işlərin dürüst siyahısı və onların əvəzinə nə etmək lazım olduğu var.
+
+## Modelləşdirmə və müəlliflik
+
+| Hələ yox | Bu gün əvəzinə |
+|---|---|
+| Tir çəkmək; polad kəsikli sütunlar | Müəlliflik proqramınızdan istifadə edin, sonra onun IFC ixracını buradan açın. Düzbucaqlı və dairəvi sütunlar burada yerləşdirilir (bax [Şəbəkələr və sütunlar](topic:grids-and-columns)); düz, L, U, dönən və spiral pilləkənlər və məhəccərlər burada çəkilir (bax [Pilləkənlər və məhəccərlər](topic:stairs-and-railings)) |
+| Mansardın önündə pəncərə; dam müstəvilərində əl ilə çəkilmiş mansardlar; əyri damlar; vizuallaşdırılmış dam örtüyünün teksturası | Künclərindən çəkilmiş dam müstəvisi və hər divar üçün meyl: bax [Damlar: hər divar üçün meyl, fronton, şed və dam müstəvisi](topic:roofs) |
+| Başqa proqramın yaratdığı divarların, qapıların və ya pəncərələrin dəyişdirilməsi | Müəlliflik proqramınız; çəkmə alətləri yalnız çəkdikləri şeyi dəyişir |
+| Çıxıntı və ya deşiklərli divar profilləri; düzbucaqlı olmayan divar açıqları; 3D görünüşdə divar profili nöqtələrinin əlavə edilməsi və ya silinməsi | Profil, birləşdirmə, meyl və açıqlar Xassələrdə, fasad və kəsiklərdə, divarın üz görünüşündə və 3D-də tutacaqlarla işləyir, düz və əyri divarlar üçün: bax [Divarın formasını verin: birləşdirmə, profil, meyl və açıqlar](topic:wall-shape) |
+| Əyri divarlarda: {{ui:Kəsin / uzadın}} və {{ui:Künc}}, karkas, avtomatik plan ölçüləri, qövs boyunca tutulma (uclarına və qövsün ortasına tutulur) | Bunlar üçün divarı düz çəkin və ya düz seqmentlər istifadə edin. Əyri divarlar [Divar çək](topic:draw-walls) bölməsindədir |
+| 3D görünüşdə yerləşdirilmiş kitabxana elementini sürükləmək | Planda sürükləyin, ya da {{ui:Xassələr}}-də X, Y və Fırlanma yazın: bax [Kitabxanadan avadanlıq və mebel yerləşdirin](topic:place-from-library) |
+| CivilCraft-ın Landscape iş sahəsinin bitki kitabxanasından bitkilər yerləşdirmək | Bitkiləri CivilCraft-da əkin, ya da kitabxananın ətraf elementlərindən ağac və kollar yerləşdirin: bax [Kitabxanadan avadanlıq və mebel yerləşdirin](topic:place-from-library) |
+| Plant əlavəsində (açana qədər söndürülüb): modelə marşrutlu xətt çəkmək, onun izometriklərində makara nömrələri, kitabxanadan yerləşdirilmiş avadanlığın plan yoxlaması | {{ui:Boru}} ilə xətti çəkin (bax [Borular və kanallar](topic:pipes-and-ducts)); plan yoxlaması əlavənin öz avadanlıq cədvəlini oxuyur |
+| Tək çəkilmiş divarları, qapıları və pəncərələri fırlatmaq, güzgü əksi almaq və ya massivləmək (divarlar {{ui:Sürüşdür}}, ofset və qutu ilə uzatma ilə sürüşdürülür və kopyalanır: bax [Divar formaları, bölmə, ofset, uzatma və kilid](topic:wall-tools)); əyri divar və ya üç və daha çox divarla künclərdə birləşmə üslubu (butt, square off) (bax [Divar formaları, bölmə, ofset, uzatma və kilid](topic:wall-tools)); Mətn aləti; pərdə divarları | Səviyyədə hər şeyi {{ui:Bu səviyyəni kopyala…}} ilə kopyalayın (bax [Divar çək](topic:draw-walls#levels)); əks halda onları yenidən çəkin |
+| Planda və kəsikdə çəkilən divar quruluşu təbəqələri; kəsik və fasadlarda ölçülər; qapılara, pəncərələrə və digər komponentlərə istinad ölçüləri; cədvəl və miqdarlarda quruluşlar və membranlar; layihələr arasında paylaşılan material kitabxanası; kəsik, fasad və 3D-də təbəqə prioriteti və üç və daha çox divarın qovşaqlarında (planda künclər, T birləşmələr və iki divarın kəsişmələri təbəqə prioriteti ilə təmizlənir: bax [Divar formaları, bölmə, ofset, uzatma və kilid](topic:wall-tools)); sarılmış və ya dəyişən təbəqələr; başqa proqramın yaratdığı divarın quruluşunun redaktəsi | Təbəqələr divarın tipində və onun önbaxışındadır ({{ui:Divar quruluşları…}}); divarlar bir zərf kimi ölçülür: bax [Divar quruluşları və istinad ölçüləri](topic:wall-assemblies) |
+| Elementin formasını və ya ölçüsünü dəyişmək (burada çəkilən divarlar, qapılar və pəncərələr və ailədən yerləşdirilən elementlər istisna olmaqla) | Müəlliflik proqramınız. Silmə, kəsmə, kopyalama və yapışdırma burada işləyir: bax [Bina elementlərini silin, kəsin, kopyalayın və yapışdırın](topic:edit-elements) |
+| Mərtəbələri, məkanları, binaları və ya sahəni silmək | Onlardakı elementləri silin |
+| Bina elementlərini başqa modelə yapışdırmaq | Modeldə kopyalayın və yapışdırın; yerləşdirilmiş kitabxana elementləri istənilən modelə yapışdırılır |
+| Yeni xassələr və ya xassə dəstləri əlavə etmək | Mövcud dəyərləri burada doldurun, ya da parametri müəlliflik proqramınızda əlavə edib yenidən ixrac edin |
+| Miqdarları, siyahıları, sadalamaları redaktə etmək | Müəlliflik proqramınız |
+| Başqa proqramların layihə fayllarını saxlamaq | BimCraft IFC saxlayır (və öz ailə faylları: bax [Ailələr və onların ölçüləri](topic:families)) |
+| Ailələr: planda yerləşdirilən və layihələr arasında paylaşılan ailə kitabxanası (Kitabxana); yerləşdirilmiş elementin 3D görünüşündə sürüklənən hotspot (onlar ailə redaktorunun önbaxışında və planda sürüklənir); görünüşə görə seçilən detal səviyyələri (layihə üçün bir səviyyə; vərəqlər miqyasa görə seçir); başqa ailə içində şaquli müstəvidə fırlanma (dörddə bir dönüşlə); öz plan simvolu olan qapı və pəncərələr (onlar öz başlanğıcının simvolunu çəkir) | Tipli parametrlərlə, düsturlarla, öz plan simvolu ilə, hotspotlarla, təkrarlarla, detal səviyyələri ilə, ailələr içində ailələrlə, cədvəldən ölçülərlə və elementə görə parametrlərlə ailələr burada yaradılır: bax [Ailəni redaktə edin](topic:family-editor) və [Ailələr və onların ölçüləri](topic:families). Başlamaq üçün ailənin nüsxəsini çıxarın |
+| Başqa proqramların tiplərini ailə kimi redaktə etmək; kitabxana elementini ailəyə çevirmək | Başqa proqramların tipləri siyahıda göstərilir, təxmini qruplaşdırılır və elementləri seçilir. Kitabxana elementləri olduğu kimi yerləşdirilir |
+| Makerlərin fitinqləri, klapanları və avadanlığı (tutumlar, çəkilər, makerlərin birləşmə ölçüləri); ASME B16.9 tee və reduktor uzunluqları polad makaralarda; fitinqlərdə təzyiq itkiləri, axınlar və balanslaşdırma; spreylər; kabel tavaları; qurğu vahidləri ilə stəklərin və havalandırmaların ölçüsü; xəttin künclərini sürükləmək; divarlarda və döşəmələrdə açıqların kəsilməsi; xəttin portda bağlı sonunu buraxmaq (avadanlığı silməkdən başqa); Kitabxana panelindən yerləşdirilən kitabxana elementlərində portlar; fitinq çəkiləri; kanal tikişləri, qalınlıqları və birləşdiriciləri | Xətlər və kanallar ümumi standart fitinqlərlə, sistemlər, planlar, cədvəllər və miqdar hesabı burada çəkilir: bax [Borular və kanallar](topic:pipes-and-ducts). Portları olan ümumi avadanlıq, bağlı xətlər və Qoşulma yoxlaması: [Portlu MEP avadanlığı](topic:mep-equipment), [Boru və kanalları avadanlığa qoşun](topic:mep-connections). Toqquşma dəstləri, təmizliklər və açıqlar siyahısı: [Boru və kanalları konstruksiyaya qarşı yoxlayın](topic:mep-against-structure). Polad boru makaraları və makara vərəqləri, kanal kəsmə siyahısı: [Polad boru makaraları və makara vərəqləri](topic:pipe-spools). Makerlərin elementlərini MEP proqramınızdan IFC kimi gətirin |
+| Qaynaqlanmış I-kəsiklərin, IFC profili rolled W, S, IPE, HEA və ya HEB ölçüsü kimi adlandırılmayan I-kəsiklərin, boruların, bucaqların və kanalların dizayn normasının yoxlanması (yoxlanılmır kimi qayıdır); burkulma və ya dinamik cavab (təbii tezliklər Sonlu elementlər blokundadır) (ikinci tərtib yalnız P-Delta-dır: elastik, əyilmə, sərtlik azalması yoxdur); analizdə divarlar və döşəmələr; sahələrdən yaranan yüklər (bir beton döşəmədə bir təzyiqdən başqa) | {{ui:Analiz}} vərəqi birinci tərtib analizi ilə tirlərin, sütunların və çarpazların qüvvələrini, reaksiyalarını və əyilmələrini verir və rolled I-kəsikləri yoxlayır — mühəndis nəzərdən keçirənə qədər köməkçi: bax [Konstruksiya çərçivəsinin analizi](topic:frame-analysis#design-checks) |
+
+## Modelə baxış
+
+| Hələ yox | Bu gün əvəzinə |
+|---|---|
+| Layihə fayllarından 3D | IFC ixrac edin və açın. Bax: [Layihə faylını IFC vasitəsilə 3D-ə gətirin](topic:rvt-to-ifc) |
+| Yaradılmış çertyoj dəstində daxili fasadlar (otağın Xassələrindən və öz vərəqlərinizdə qurulur); fasad və kəsiklərdə öz ölçüləriniz (səviyyə işarələri, hündürlüklər, en və qapı/pəncərə etiketləri çəkilir; qeydlər görünüşdə yazılır: bax [Fasad və kəsiklərdə redaktə edin](topic:edit-in-elevations)); fasadda divar çəkmək (onlar kəsiyin müstəvisində çəkilir); Studio vasitəsilə komanda şablonları | Modeldən yaradılan çertyoj dəsti: bax [Fasadlar, kəsiklər və vərəqlər](topic:sheets). İstənilən IFC modeli üçün: bir {{ui:Kəsik}} müstəvisi və ya kəsik qutusu; bax [IFC modelini kəsik müstəvisi ilə kəsin](topic:section-plane) |
+| Çağırış görünüşləri, detal görünüşləri, çertyoj görünüşləri və legendalar; görünüşdə çəkilən çertyoj xətləri və ştrixləmə; fasad və ya kəsiyi kəsmək; fasad, kəsik, tavan planı və 3D görünüşlər üçün görünüş şablonları; yaradılmış çertyoj dəstində tavan planları; öz vərəqlərinizin bütün dəstini bir PDF-də | Planlarda və tavan planlarında görünüş diapazonları, kəsmə sahəsi, miqyas və altlıq var (planlarda şablonlar da var), öz vərəqləriniz isə planları, tavan planlarını, fasadları, kəsikləri və cədvəlləri qəbul edir və hər biri ayrıca PDF kimi saxlanılır: bax [Görünüşlər, görünüş diapazonları və öz vərəqləriniz](topic:views-and-sheets) |
+| Yerləşdirilmiş işığı sonradan tavana qaldırmaq; meylli və pilləli tavanlar; beş şəbəkədən başqa tavan naxışları; işığın tavan planında öz simvolu | Yerləşdirin **Montaj: Tavanda** ilə; tavan planı armaturu elementin öz formasından çəkir: bax [Kitabxanadan avadanlıq və mebel yerləşdirin](topic:place-from-library) |
+| Axtarış dəstlərini başqaları ilə paylaşmaq; IFC faylının içindəki dəstlər | Dəstlər bu brauzerdə qalır; bax [Elementləri sinif, ad və ya xassə ilə tapın](topic:find) |
+| Bucaqları və ya bir neçə nöqtəli yol boyunca ölçmək | Hər hissəni {{ui:Ölç}} ilə ölçün: bax [3D-də məsafələri, səth sahələrini və yerləri ölçün](topic:measure) |
+| Canlı 3D görünüşdə teksturalar | Boyanmış materiallar görünüşdə öz rəngini, render şəkillərində isə teksturasını göstərir: bax [Modelin şəklini render edin](topic:render) |
+| İstənilən iki dəst arasında təmizlik (yumşaq) toqquşmaları, toqquşma qrupları, toqquşma nəticələrinin saxlanması | {{ui:Toqquşma yoxlaması}} işlədin və vacib olanlardan məsələlər yaradın: bax [Toqquşmaları yoxlayın](topic:clash-check). Boru və kanallar konstruksiyaya qarşı {{ui:Təmizlikləri yoxla}} ilə yoxlanır: bax [Boru və kanalları konstruksiyaya qarşı yoxlayın](topic:mep-against-structure) |
+| Bir neçə modeli bir dəst kimi saxlamaq, ya da iki modeli eyni anda redaktə etmək | Hər dəfə bir modeli redaktə edin; hər biri öz faylını saxlayır |
+| Məsələlərə məsul şəxs, son tarix, etiket təyin etmək; hər məsələyə bir neçə baxış nöqtəsi; məsələni redaktə etmək | Hər məsələ üçün bir görünüş; bax [Məsələlər və BCF fayllar](topic:issues-bcf) |
+| `.ifczip` və `.ifcxml` | Arxivi açın və ya təmiz `.ifc` ixrac edin |
+| Xəritə çevrilməsi olmayan model üçün və ya çertyojun görünüşlərində xəritə təbəqələri | Modeli koordinatları ilə ixrac edin: bax [Modelin altındakı yer xəritəsi](topic:map-layers) |
+| 6 milyon nöqtədən və ya 512 MB-dan böyük E57 skanları; skaner istehsalçılarının öz faylları (RCP, RCS, FLS, LGS, TZF, ZFS); çertyojun 3D görünüşündə nöqtə buludları; buludun yerinin modellə birlikdə saxlanması | Skanı LAS və ya LAZ kimi ixrac edin və IFC modelinin yanında açın: bax [Nöqtə buludu formatları](topic:point-cloud-formats) və [Modelin yanında nöqtə buludunu göstərmək](topic:point-clouds) |
+| Skanların qeydiyyatı: skanın özündə hədəflərin (kürələr, şahmat taxtaları) tapılması, bütün skanların birlikdə həlli (bundle adjustment), miqyas, modelə qarşı qeydiyyat | Uyğun nöqtələri seçin və ya hədəf koordinatlarını yazın, sonra hər dəfə bir skanı ICP ilə dəqiqləşdirin: bax [Bir neçə skanı birə qeydə alın](topic:register-scans) |
+| `.pln`, `.pla`, `.tpl` və `.bpn` layihə fayllarını açmaq | Onlardan IFC və DWG ixrac edin, ya da layihə paketi: bax [.pln və .pla layihə fayllarını açın](topic:pln-project-files) və [Layihə paketini açın](topic:open-project-bundle) |
+| Növünə görə seçmək üçün {{ui:Elementlər}} siyahısını açmaq | {{ui:Model ağacı}}-nda növ qrupuna klikləyin: bax [Model ağacı ilə yolunuzu tapın](topic:model-tree) |
+| VR-də məsələyə şərh və ya başlıq yazmaq, səs qeydləri, VR-də kəsik müstəvisini əllə sürüşdürmək, VR-də kəsik qutusu | VR-də məsələni yerləşdirin, sonra sözlərini Məsələlər vərəqində əlavə edin; kəsik müstəvisini və ya qutusunu VR-ə girməzdən əvvəl 3D görünüşdə təyin edin: bax [Modeli VR qulaqlığında nəzərdən keçirin](topic:vr-review) |
+| VR-də masada olan insanları görmək (yalnız VR-də olanlar görünür), VR gəzintisini yazmaq | Onlardan VR-ə qoşulmağı xahiş edin, ya da 3D görünüşdə izləyin |
+| Gün işığı simulyasiyası (iqlimə əsaslanan gün işığı, parıltı, günəş saatları); dam pəncərələri gün işığı əmsalında; BS EN 17037 və ya yaşıl bina sxemləri üzrə yoxlamalar; ISO 52016-1 enerji metodu, saatlıq enerji simulyasiyası, istilik kütləsi və körpülər, iqlim faylları | Dizayn vasitələri: orta gün işığı əmsalı, hər pəncərənin şaquli səma komponenti, pəncərələrdən keçən günəş bir tarixdə və gün işığı əmsalı şəbəkədə ([Hər otaqda gün işığını qiymətləndirin](topic:daylight-factor)); istilik itkisi, dərəcə-gün ili və hər otaq üçün soyutma piki ([İstilik və soyutma yüklərini qiymətləndirin](topic:heating-and-cooling-loads)). Uyğunluq üçün simulyasiya proqramından istifadə edin |
+| Yerləşdirilmiş bina əkizi: BimCraft bağlı olanda göstəricilər saxlanır və xəbərdarlıqlar e-poçtla göndərilir, təmir vaxtı e-poçtları; MQTT 5; COBie tapşırıqlarını geri oxumaq | CSV-dən və ya birbaşa öz brokerinizdən və ya ünvanınızdan göstəricilər model açıq olduqda; aktivləri işarələyən limitlər, sənədlər, COBie çıxış və giriş: bax [Aktiv məlumatlarını və təmir qeydini modeldə saxlayın](topic:assets-and-maintenance) |
+| Enscape, Twinmotion və ya digər vizuallaşdırma proqramları üçün plagin və ya canlı keçid; FBX və ya Datasmith faylları; hər element üçün bir obyekt, saxlanmış görünüşlər və gəzintilər .glb-də | glTF oxuyan render proqramları üçün .glb saxlayın; USD faylı (hər element üçün bir obyekt, IFC məlumatları ilə: bax [Modeli USD kimi ixrac edin](topic:usd)); və ya başqa dizayn proqramının içində işləyənlər üçün IFC: bax [Modeli render proqramına göndərin](topic:model-for-rendering) və [Səhnəni başqa proqramda açın](topic:render-open-in) |
+| Render-mühərrik əlavəsi olmadan Render şəklini çəkən başqa proqram (CadCraft heç vaxt GNU GPL lisenziyası altında proqram işə salmır); başqa proqram vasitəsilə panorama və ya stereo kameralar və göy şəkli; Unreal Engine plagini (fayllar yazılır, onları açan plagin buraxılmayıb) | Öz Fast və Path tracer mühərriklərimiz; əlavənin mühərriki ([şəkli başqa proqramla çəkin](topic:render-other-program)); Mühərriklər siyahısından istənilən proqrama aparmaq üçün USD, glTF və ya Unreal qovluq faylı |
+| Canlı görünüşdə: bitki və qayaların səpilməsi, panoramaların paylaşılması, tur, oflayn baxış vasitəsi və ya video | ModelCraft-ın canlı görünüşündə var; burada render şəkilləri və 360° panoramalar: bax [Canlı görünüş](topic:live-view) və [Modelin şəklini render edin](topic:render) |
+
+## Çertyojlar
+
+| Hələ yox | Bu gün əvəzinə |
+|---|---|
+| DWG və DXF-i redaktə etmək, ölçmək və ya saxlamaq | CadCraft çertyoj tətbiqi (2D görünüşdə {{ui:CadCraft-da redaktə et}}) |
+| PDF çap etmək və ya ixrac etmək | Çertyojun hazırlandığı proqramdan çap edin; əvvəlcə {{ui:Çap görünüşü}} ilə yoxlayın |
+| Çap üslubları və qələm cədvəlləri | {{ui:Çap görünüşü}} xətt qalınlığı ilə sadə qara göstərir |
+| R13-dən köhnə DWG faylları və ikili DXF (BimCraft birini açanda bunu deyir) | Çertyoju yeni DWG kimi və ya ASCII DXF kimi yenidən saxlayın |
+| Bağlı çertyojların içində bağlanmış çertyojlar | Onları birbaşa açın |
+| TIFF şəkilləri | Eyni adla PNG və ya JPEG nüsxə saxlayın və əlavə edin |
+| DGN çertyojları | Yalnız qovluq hesabatlarında göstərilir |
+| **Hələ çəkilməyib** altında siyahıya alınmış obyektlər | Çertyoju onu yaradan proqramda baxın |
+| ACIS bərk cisimləri, gövdələr, bölgələr və səthlər, və 3D-də subdivision torları | Çertyoju yaradan proqramdan IFC və ya 3D üzləri ixrac edin |
+| Çertyojun 3D görünüşündə şəkillər, çoxlu nişanlar və vərəqlər | {{ui:Model}} vərəqində və vərəqlərdə baxın |
+| Çertyojun 2D görünüşündə obyektləri seçmək | {{ui:3D}}-yə keçin və obyektə orada klikləyin: bax [DWG və ya DXF çertyojunu 3D-də baxın](topic:dwg-in-3d) |
+| `KCL-ITEM` etiketi olmayan çertyojlardan avadanlıq cədvəlləri | Mövcud deyil |
+| Avadanlıq cədvəli XLSX və ya PDF kimi | {{ui:CSV yüklə}} edin və elektron cədvəldə açın |
+
+## Fayllar və platformalar
+
+| Hələ yox | Bu gün əvəzinə |
+|---|---|
+| Bulud saxlanması | Kompüterinizdə və ya ofis serverində nüsxələr saxlayın. Bulud saxlanması hələ mövcud deyil |
+| Firefox və Safari-də qovluqları yadda saxlamaq | Qovluğu yenidən seçin, ya da sürükləyin |
+| Saxladıqdan sonra Geri qaytar | Orijinal faylı yenidən açın ki, yenidən başlayasınız |
+| Kəsilmiş layihə faylının çatışmayan hissəsini doldurmaq | Orijinalı yenidən kopyalayın; qovluqda BimCraft ən yeni tam ehtiyat nüsxəsini oxuyur |
+| Açıq olan faylları yenidən açmaq | Saxlanmamış dəyişikliklər geri qayıdanda «İşinizi bərpa edək?» kimi təklif olunur; faylları siyahıdan yenidən açın |

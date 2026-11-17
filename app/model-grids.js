@@ -30,7 +30,7 @@
  *   gridDims(axes, fmt) → [{ a, b, offPx, text, grid: true }]   0.9 D9.2 (Discord ask, 2026-11-03): the spacing between
  *                              neighbouring parallel lines of each family and the overall size, as two rows of dimensions
  *                              past the bubbles at the lines' start ends; shown when the grid's CadCraft_Grid Dims is true
- *   Errors: model.err.grid.tag (a label already used), model.err.grid.short (a line under 100 mm), model.err.grid.none.
+ *   Errors: model.err.grid.tag (a label already used), model.err.grid.short (a line under 10 mm), model.err.grid.none.
  */
 import { op } from './model-ops.js';
 import { afterGridMove, afterGridRemove } from './wall-tools.js';   // 0.9 WT.7: walls locked to grid lines
@@ -206,7 +206,7 @@ function isRectangular(axes) {
   const par = (p, q) => Math.abs(p[0] * q[1] - p[1] * q[0]) < 1e-6;
   return U.every((d) => par(d, U[0])) && V.every((d) => par(d, V[0])) && Math.abs(U[0][0] * V[0][0] + U[0][1] * V[0][1]) < 1e-6;
 }
-const short = (x) => Math.hypot(x.b[0] - x.a[0], x.b[1] - x.a[1]) < 100;
+const short = (x) => Math.hypot(x.b[0] - x.a[0], x.b[1] - x.a[1]) < 10;   // 0.10 BK.73: was 100 mm (practice); under 10 mm there is no line to label. Under 100 mm is advice (draw-advice.js)
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
 
 /** Storey plan points → world mm. */

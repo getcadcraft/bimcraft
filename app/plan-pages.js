@@ -8,7 +8,8 @@
  *   pdfPageParts(vec, { mmPerPt })        → { segs: [[x1, y1, x2, y2]], arcs: [{ cx, cy, r, a0, sweep }], bounds, curves }   straight
  *       pieces of every shape (a filled wall's edges too) and the circular arcs the page's Bézier curves are (a door's swing); the
  *       page is in PDF points, y up, so only the scale is applied
- *   scanParts(result, { mmPerPx, hPx })   → the same (+ source: 'scan'), from a trace result (raster/trace.js: pixels, y down)
+ *       + labels: [{ name, at, h }] (0.10 BK.64: roomLabels: the page's words that can name a room, tallest first)
+ *   scanParts(result, { mmPerPx, hPx })   → the same (+ source: 'scan'; no labels: a scan has no text), from a trace result (raster/trace.js: pixels, y down)
  *   mmPerUnit(a, b, distMm)               → millimetres a unit is, from two picked points and the true distance between them
  *   wallsFromPlan(parts, opts)            → { walls: [{ a, b, t }], openings: [{ wall, kind: 'door' | 'window', offset, width, face }], report }
  *       'pairs' mode first (two parallel lines are a wall's two faces), then the gaps in a wall: two collinear walls with a gap
@@ -87,7 +88,27 @@ export function pdfPageParts(vec, { mmPerPt = 1 } = {}) {
   const k = mmPerPt;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   const S = segs.map((q) => { const r = [q[0] * k, q[1] * k, q[2] * k, q[3] * k]; x0 = Math.min(x0, r[0], r[2]); x1 = Math.max(x1, r[0], r[2]); y0 = Math.min(y0, r[1], r[3]); y1 = Math.max(y1, r[1], r[3]); return r; });
-  return { source: 'pdf', segs: S, arcs: arcs.map((a) => ({ cx: a.cx * k, cy: a.cy * k, r: a.r * k, a0: norm(a.a0), sweep: a.sweep })), bounds: Number.isFinite(x0) ? { x0, y0, x1, y1 } : null, curves };
+  return { source: 'pdf', segs: S, arcs: arcs.map((a) => ({ cx: a.cx * k, cy: a.cy * k, r: a.r * k, a0: norm(a.a0), sweep: a.sweep })), bounds: Number.isFinite(x0) ? { x0, y0, x1, y1 } : null, curves,
+    labels: roomLabels(vec.texts, { k }) };   // 0.10 BK.64: the page's words that can name a room
+}
+
+/**
+ * 0.10 BK.64 (bk-r3-checks-10): the words on a page that can be a room's name. texts = pdf-vector.js's [{ s, x, y, h, rot, w }].
+ * Kept: text with at least two letters and not mostly digits (a dimension, a scale "1:100", a sheet number are left out), at most
+ * 40 characters, lying flat or upright. Runs on one baseline close together are one label ("LIVING" + "ROOM"). → [{ name, at: [x, y]
+ * (the middle of the text), h }] in the page's units × k, tallest first (so the largest lettering in a room names it).
+ * A scan has no text: no labels, and its rooms keep the names the program gives them.
+ */
+export function roomLabels(texts, { k = 1 } = {}) {
+  const ok = (s) => { const t = s.trim(); const letters = (t.match(/\p{L}/gu) || []).length, digits = (t.match(/\d/g) || []).length; return t.length <= 40 && letters >= 2 && letters > digits && !/^\d+\s*[:/]\s*\d+$/.test(t); };
+  const flat = (texts || []).filter((t) => t && typeof t.s === 'string' && t.s.trim() && Number.isFinite(t.x) && Number.isFinite(t.y) && t.h > 0 && Math.abs(Math.sin(t.rot || 0)) < 0.1)
+    .map((t) => ({ s: t.s.trim(), x: t.x, y: t.y, h: t.h, w: t.w > 0 ? t.w : t.s.trim().length * t.h * 0.55 })).sort((a, b) => b.y - a.y || a.x - b.x);
+  const runs = [];
+  for (const t of flat) {
+    const r = runs.find((q) => Math.abs(q.y - t.y) < 0.5 * q.h && Math.abs(q.h - t.h) < 0.25 * q.h && t.x >= q.x && t.x - (q.x + q.w) < 1.5 * q.h);
+    if (r) { r.s += ' ' + t.s; r.w = t.x + t.w - r.x; } else runs.push({ ...t });
+  }
+  return runs.filter((r) => ok(r.s)).map((r) => ({ name: r.s.replace(/\s+/g, ' ').slice(0, 40), at: [(r.x + r.w / 2) * k, (r.y + r.h * 0.35) * k], h: r.h * k })).sort((a, b) => b.h - a.h).slice(0, 400);
 }
 
 export function scanParts(res, { mmPerPx = 1, hPx = 0 } = {}) {

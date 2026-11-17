@@ -168,6 +168,8 @@ export function planPdf(scene, { title = '', lines = [], paper = 'letter', units
     pen(d.pen?.w ? penMm(d.pen.w) : d.kind === 'hatch' ? 0.18 : 0.25, 0, penDash(d.pen?.dash)); for (const l of d.lines || []) if (l.length > 1) path(l, !!d.closed); ops.push('S');
     if (rgb) ops.push('0 G');
   }
+  // BK.104: labels along lines (scene.labels [{ p, rot (degrees), text }]: building lines and servitudes, model-site-constraints-ui.js)
+  for (const lb of scene.labels || []) { const q = P(lb.p); text(String(lb.text || ''), q[0], q[1], 6, { rot: (lb.rot || 0) * Math.PI / 180 }); }
   // dimensions: line, ticks, text above
   for (const d of scene.dims || []) {
     const L = Math.hypot(d.b[0] - d.a[0], d.b[1] - d.a[1]);

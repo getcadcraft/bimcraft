@@ -143,11 +143,16 @@ export function mountPicture(modelUi, host = {}) {
       return;
     }
     const box = [pv.cx - pv.w / 2 / pv.scale, pv.cy - pv.h2 / 2 / pv.scale, pv.cx + pv.w / 2 / pv.scale, pv.cy + pv.h2 / 2 / pv.scale];
-    const patch = P.fitTo(P.makePicture({ w: info.w, h: info.h }), box);
+    let patch = P.fitTo(P.makePicture({ w: info.w, h: info.h }), box);
+    // 0.10 BK.8 (units on import): a picture has no units; Scale by two points IS the question. A picture whose file was scaled before
+    // comes in at that size (the shell's per-file memory: the picture's width in mm) and says so; otherwise it is only fitted to the view
+    const kept = window.ccImportUnits?.recallSize(file) || null;
+    if (kept) patch = { ...patch, mmPerPx: kept / info.w, scaled: true };
     R.seen = new Set(R.pics.map((p) => p.guid));
     R.want = 'new';
     run(addPicture({ storey: lv, bytes: r.bytes, name: file.name, patch }), file.name, t('pic.verb.placed'));
-    say(r.reduced ? 'pic.placed.reduced' : 'pic.placed', { name: file.name }, false);
+    if (kept) say('pic.placed.remembered', { name: file.name, width: lenMark(kept, A.S.units) }, false);
+    else say(r.reduced ? 'pic.placed.reduced' : 'pic.placed', { name: file.name }, false);
     A.setTool('picture');
   }
 
@@ -168,6 +173,7 @@ export function mountPicture(modelUi, host = {}) {
     try { patch = P.scaleByPoints(c, pt[0], pt[1], mm); } catch (e) { say(e.key || 'pic.err.distance', {}, true); return; }
     R.mode = null; R.pts = []; R.pending = null;
     run(changePicture(c.guid, patch), t('pic.scale'));
+    window.ccImportUnits?.rememberSize(c.name, patch.mmPerPx * c.w);   // 0.10 BK.8: the size given to this file is offered the next time it is placed
     hint('pic.hint');
     fill();
   }
@@ -422,11 +428,16 @@ export function mountPicture(modelUi, host = {}) {
     });
   }
   /** Before Save as IFC writes: null (nothing is kept outside the file) | { cancel } | { bytes, name, mime, types, notice }. */
-  async function beforeSave(editor, ifcName) {
+  async function beforeSave(editor, ifcName, { handover = [] } = {}) {   // handover: BK.114, the attached handover files that are loaded ([{ loc, bytes }])
     const w = new ModelWriter(editor.W, editor.api, editor.mid);
     const o = outside(w);
     const base = String(ifcName || 'model').replace(/\.ifc$/i, '');
     let choice = R.preferBundle ? 'bundle' : null;
+    if (!choice && handover.length) {   // BK.114: attached handover files live in a bundle, never in a plain .ifc: ask which file to write
+      const c = await ask(t('handover.save.title'), [t('handover.save.text', { n: handover.length })], [{ value: 'bundle', label: t('handover.save.bundle'), primary: true }, { value: 'plain', label: t('handover.save.plain') }, { value: 'cancel', label: t('dialog.cancel') }]);
+      if (c === 'cancel') return { cancel: true };
+      if (c === 'bundle') choice = 'bundle';
+    }
     if (!choice && !o.n && !o.lost) return null;
     if (!choice) {
       if (o.n && o.small === o.n && !o.lost) choice = 'embed';   // all fit in the file as before: no question
@@ -441,8 +452,8 @@ export function mountPicture(modelUi, host = {}) {
       const tr = transient(editor, (ww) => { const m = migrateFor()(ww); return { ...m, files: bundleFiles(ww) }; });
       let ifc, files;
       try { ifc = editor.save(); files = tr.result.files; } finally { tr.undo(); }
-      const zip = await makeBundle({ ifc, modelFile: base + '.ifc', name: base, schema: editor.api.GetModelSchema?.(editor.mid) || '', pictures: files, deflate: deflateRaw });
-      return { bytes: zip, name: base + '.ccbundle', mime: 'application/zip', types: [{ description: 'CadCraft project bundle', extensions: ['.ccbundle'] }], notice: t('pic.save.bundled', { n: files.length }) };   // i18n-ignore: a file type label
+      const zip = await makeBundle({ ifc, modelFile: base + '.ifc', name: base, schema: editor.api.GetModelSchema?.(editor.mid) || '', pictures: files, handover, deflate: deflateRaw });
+      return { bytes: zip, name: base + '.ccbundle', mime: 'application/zip', types: [{ description: 'CadCraft project bundle', extensions: ['.ccbundle'] }], notice: t('pic.save.bundled', { n: files.length }) + (handover.length ? ' ' + t('handover.save.bundled', { n: handover.length }) : '') };   // i18n-ignore: a file type label
     }
     const tr = transient(editor, embedFor(P.LIMITS.embedBytes));
     let bytes;
@@ -520,5 +531,7 @@ export function mountPicture(modelUi, host = {}) {
   }
   /** After a model opened: the 3D planes. */
   function attach() { reread(); ensure3d(); load(); R.p3?.later(); }
-  return { ext: A, beforeSave, pdfImages, snapshotBytes, attach, wantBundle: () => R.preferBundle, paste, areaWins, wantsKey };
+  /** BK.114: Save, as a project bundle whatever the model holds (the handover list's own button). */
+  const saveBundle = () => { R.preferBundle = true; return Promise.resolve(host.save?.()).finally(() => { R.preferBundle = false; }); };
+  return { ext: A, beforeSave, saveBundle, pdfImages, snapshotBytes, attach, wantBundle: () => R.preferBundle, paste, areaWins, wantsKey };
 }

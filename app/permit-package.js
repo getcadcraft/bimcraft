@@ -13,8 +13,10 @@
  *       rows = ccRegsReportData().rows (strings for the report plus raw: { id, ok, req, found, op, unit }); a row without raw is read from its strings
  *       borderline = meets a '<='/'>=' rule within `margin` (5 %) of the limit, the side where one more inch fails it
  *   problemComments(problems, { skip = ['regulation'] }) → [{ kind: 'problem', where, text, source }]   non-regulation Problems, one per message, counted
- *   permitMarkdown({ project, comments, problems, report, sheets, forms, files }, t?) → markdown   the cover + checklist + comments
+ *   permitMarkdown({ project, comments, problems, report, sheets, forms, files, checklist }, t?) → markdown   the cover + checklist + comments
+ *       checklist = the supporting-documents section already in Markdown (BK.109, permit-checklist.js); advisory, it never stops the package
  *   commentsCsv(comments) → CSV (formula cells neutralised)
+ *   packageEntries(list) → [{ name, data }]   the one packager (0.10 BK.49): the permit and the handover package both go through it
  *   packageFiles({ cover, comments, ifc, reportPdf, extra }) → [{ name, data: Uint8Array }]   for bcf.js zip()
  *   manifest(files) → [{ name, bytes, sha256 }] is left to the caller (SubtleCrypto); names are fixed here: 00-cover.md, 01-review-comments.csv, 02-regulation-report.pdf, 03-model.ifc
  */
@@ -61,7 +63,7 @@ export function problemComments(problems, { skip = ['regulation'] } = {}) {
   return [...by.values()].map((b) => ({ ...b, text: b.n > 1 ? b.text + ' (' + b.n + ' elements)' : b.text })).sort((a, b) => b.n - a.n);
 }
 
-export function permitMarkdown({ project = {}, comments = [], problems = [], report = null, sheets = [], forms = [], files = [] } = {}, t = (k, v) => k) {
+export function permitMarkdown({ project = {}, comments = [], problems = [], report = null, sheets = [], forms = [], files = [], checklist = '' } = {}, t = (k, v) => k) {
   const L = [];
   L.push('# ' + (esc(project.name) || 'Permit package'), '');
   L.push([project.address && 'Address: ' + esc(project.address), project.applicant && 'Applicant: ' + esc(project.applicant), project.date && 'Date: ' + esc(project.date)].filter(Boolean).join('  \n'), '');
@@ -77,6 +79,7 @@ export function permitMarkdown({ project = {}, comments = [], problems = [], rep
     L.push('');
   }
   if (problems.length) { L.push('## Other problems in the model', '', ...problems.map((p) => '- ' + esc(p.text) + (p.source ? ' (' + esc(p.source) + ')' : '')), ''); }
+  if (checklist) L.push(String(checklist).trim(), '');   // BK.109: the authority's supporting documents, each with what satisfies it (permit-checklist.js checklistMarkdown)
   L.push('## Sheets', '');
   L.push(...(sheets.length ? sheets.map((s) => '- [' + (s.included ? 'x' : ' ') + '] ' + esc(s.name) + (s.note ? ' — ' + esc(s.note) : '')) : ['None listed.']), '');
   L.push('## Forms', '');
@@ -91,12 +94,30 @@ export function commentsCsv(comments) {
   return [head, ...comments.map((c) => [c.kind, c.where, c.rule, c.clause, c.required, c.found, c.source, c.text, c.fix])].map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';
 }
 
-export const NAMES = { cover: '00-cover.md', comments: '01-review-comments.csv', report: '02-regulation-report.pdf', ifc: '03-model.ifc' };
-export function packageFiles({ cover, comments, ifc = null, reportPdf = null, extra = [] }) {
+export const NAMES = { cover: '00-cover.md', comments: '01-review-comments.csv', report: '02-regulation-report.pdf', ifc: '03-model.ifc', documents: '04-supporting-documents.csv' };
+/**
+ * 0.10 BK.49 (bk-r3-checks-10): the ONE packager. A package is a list of files for bcf.js zip(); the permit package (packageFiles
+ * below) and the handover package (handover-docs.js handoverPackage, asbuilt.js) both build theirs through it, so both treat names
+ * and contents the same way: text becomes UTF-8, an entry with no name or no data (null) is left out, a name is a relative path with
+ * forward slashes ('handover/x.pdf'; no '..', no leading slash, no control characters), and a name used twice keeps both files.
+ *   packageEntries([{ name, data: Uint8Array | string } | null…]) → [{ name, data: Uint8Array }]
+ */
+export function packageEntries(list) {
   const enc = (s) => new TextEncoder().encode(s);
-  const out = [{ name: NAMES.cover, data: enc(cover) }, { name: NAMES.comments, data: enc(comments) }];
-  if (reportPdf) out.push({ name: NAMES.report, data: reportPdf });
-  if (ifc) out.push({ name: NAMES.ifc, data: ifc });
-  for (const e of extra || []) if (e?.name && e.data) out.push({ name: String(e.name).replace(/[^A-Za-z0-9._ -]/g, '_').slice(0, 80), data: e.data });
+  const out = [], seen = new Map();
+  for (const e of list || []) {
+    if (!e || e.data === null || e.data === undefined) continue;
+    const data = typeof e.data === 'string' ? enc(e.data) : e.data;
+    let name = String(e.name ?? '').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\\/g, '/').split('/').map((p) => p.trim()).filter((p) => p && p !== '.' && p !== '..').join('/').slice(0, 200);
+    if (!name) continue;
+    const n = (seen.get(name.toLowerCase()) || 0) + 1;
+    seen.set(name.toLowerCase(), n);
+    if (n > 1) name = name.replace(/(\.[^./]+)?$/, ' (' + n + ')$1');
+    out.push({ name, data });
+  }
   return out;
+}
+export function packageFiles({ cover, comments, ifc = null, reportPdf = null, extra = [] }) {
+  return packageEntries([{ name: NAMES.cover, data: cover }, { name: NAMES.comments, data: comments }, reportPdf ? { name: NAMES.report, data: reportPdf } : null, ifc ? { name: NAMES.ifc, data: ifc } : null,
+    ...(extra || []).map((e) => (e?.name && e.data ? { name: String(e.name).replace(/[^A-Za-z0-9._ -]/g, '_').slice(0, 80), data: e.data } : null))]);
 }

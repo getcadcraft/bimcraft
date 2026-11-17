@@ -82,4 +82,14 @@ body.ws-b-palettes main > .bc-right .bc-rtab { flex: 0 0 auto; padding: .3125rem
 body.ws-b-palettes main > .bc-right .bc-rtab:hover { color: var(--ws-ink); background: var(--ws-soft); }
 body.ws-b-palettes main > .bc-right .bc-rtab[aria-selected="true"] { color: var(--ws-ink); font-weight: 600; background: var(--ws-panel-bg); border-bottom-color: var(--ws-blue); }
 body.ws-b-viewtabs .bc-stage.is-plan-only > [data-canvas-wrap] { visibility: hidden; }
+/* 0.10 BT.11 (Tile Views): the plan and the 3D view side by side inside a workspace layout. The shell pins a drawing part (.ws-fill) to the
+   stage's free box with !important, so the app's own split rule (bimcraft.css) never reached them and both lay full width, the plan on top.
+   Here the same split is taken inside that box: --bc-split-f is the plan's share as a number (model-ui.js applyLayout). */
+.ws-stage.is-plan-split { --bc-ws-w: calc(100% - var(--ws-sl, 0px) - var(--ws-sr, 0px)); --bc-ws-h: calc(100% - var(--ws-st, 0px) - var(--ws-vt, 0px) - var(--ws-sb, 0px) - var(--ws-vb, 0px)); }
+.ws-stage.is-plan-split:not(.is-plan-stacked) > .bc-plan.ws-fill { right: calc(var(--ws-sr, 0px) + var(--bc-ws-w) * (1 - var(--bc-split-f, .5))) !important; }
+.ws-stage.is-plan-split:not(.is-plan-stacked) > .bc-canvas.ws-fill { left: calc(var(--ws-sl, 0px) + var(--bc-ws-w) * var(--bc-split-f, .5)) !important; }
+.ws-stage.is-plan-split:not(.is-plan-stacked) > .bc-splitter { left: calc(var(--ws-sl, 0px) + var(--bc-ws-w) * var(--bc-split-f, .5)); top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px)); bottom: calc(var(--ws-sb, 0px) + var(--ws-vb, 0px)); }
+.ws-stage.is-plan-split.is-plan-stacked > .bc-plan.ws-fill { bottom: calc(var(--ws-sb, 0px) + var(--ws-vb, 0px) + var(--bc-ws-h) * (1 - var(--bc-split-f, .5))) !important; }
+.ws-stage.is-plan-split.is-plan-stacked > .bc-canvas.ws-fill { top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px) + var(--bc-ws-h) * var(--bc-split-f, .5)) !important; }
+.ws-stage.is-plan-split.is-plan-stacked > .bc-splitter { top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px) + var(--bc-ws-h) * var(--bc-split-f, .5)); left: var(--ws-sl, 0px); right: var(--ws-sr, 0px); }
 .ws-status-slot .bc-status.is-error { color: var(--layer-red); }

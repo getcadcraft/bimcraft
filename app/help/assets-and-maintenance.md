@@ -3,7 +3,7 @@ title: Keep asset data and a maintenance record in the model
 summary: Use the handed-over IFC model for running the building: maker, model, serial number, warranty and service life for equipment and fixtures, and a record of the maintenance done, all written into the IFC.
 section: tasks
 order: 47
-keywords: assets, asset register, facility management, fm, operations, maintenance, service, warranty, serial number, barcode, maker, manufacturer, model, service life, handover, cobie, digital twin, overdue, due, work order
+keywords: handover, completion certificate, occupancy certificate, as-built, handover package, assets, asset register, facility management, fm, operations, maintenance, service, warranty, serial number, barcode, maker, manufacturer, model, service life, handover, cobie, digital twin, overdue, due, work order
 ---
 
 The {{ui:Assets}} tab in the right panel turns the open IFC model into a record of the building's equipment. Everything is written into the IFC itself, in IFC's own property sets and tasks, so the next program that opens the file reads it too. Nothing is uploaded and no server is needed: save the IFC to keep it.
@@ -88,6 +88,22 @@ There are **no alerts** when BimCraft is closed: limits flag an asset while the 
 A spreadsheet is treated as untrusted: formulas are never read or run (only the value last saved in the cell), a value that would make a warranty end before it starts and a document link that is not a web address or a file name are left out and counted, and very large workbooks are refused. COBie's jobs are a type's planned work, so they are written out but not read back. In the spreadsheet BimCraft writes, text that a spreadsheet could take for a formula (starting with `=`, `+`, `-` or `@`) is marked as text.
 
 The workbook is checked in our tests against an independent spreadsheet reader; it has not been through a COBie validator. If a receiving team runs one, tell us what it says.
+
+## Handover documents
+
+The papers that go to the owner with the finished building belong to the project, not to one asset. On the {{ui:Assets}} tab, open {{ui:Handover documents}}:
+
+1. {{ui:Add a document}}, choose its kind (completion certificate, occupancy certificate, warranty, manual, as-built drawings, other), and type its title, date of issue, who issued it and its reference number.
+2. Say where it is: a web address, a file name kept beside the IFC, or {{ui:Attach a file}}.
+3. {{ui:Add to the list}}. {{ui:Edit}} and {{ui:Remove}} change the list; each is one step you can undo.
+
+{{ui:Build the handover package}} downloads one zip: a cover page listing every document, the same list as a spreadsheet, the COBie workbook (the documents are on its Document sheet, as rows about the Facility), the model, and each attached file. A completion or occupancy certificate that is not in the list yet is named on the cover; the package is built all the same.
+
+The model in the package is the **as-built model**: it states which elements were measured on site. With it, in the folder `as-built`: the statement, a list of every element with its verification state, the drawing set as it is now as one PDF (the as-built drawings), and the drawing changelog when the model has issued sets. See [Mark elements as checked or field-verified](topic:verification).
+
+- In the IFC file each document is an IfcDocumentInformation tied to the project (IfcRelAssociatesDocument), with its title, reference, date, issuer and place, so other programs list it.
+- An attached file is recorded by name, size and SHA-256. To keep the file itself with the project, use {{ui:Save the project as a bundle}} (a .ccbundle holds the model and the attached files; opening it gives them back, each checked against its record). An ordinary save asks which you want.
+- A plain .ifc keeps the record, not the file: after opening it, use {{ui:Attach the file again}}. The same file is recognised; a different one replaces the record.
 
 ## CSV
 

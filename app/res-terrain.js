@@ -194,15 +194,22 @@ export function gradeSurface(existing, pads, { step = 500 } = {}) {
     lines.push([...pd.poly, pd.poly[0]].map(([x, y]) => ({ x, y, z: pd.z })));
     // rings round the pad out to where the slope can meet the ground
     const reach = Math.max(Math.abs(s.maxZ - pd.z), Math.abs(pd.z - s.minZ)) * pd.slope + step;
-    for (let d = step; d <= reach; d += step) {
-      const ring = offsetOut(pd.poly, d), L = ring.reduce((a, q, i) => a + Math.hypot(ring[(i + 1) % ring.length][0] - q[0], ring[(i + 1) % ring.length][1] - q[1]), 0), n = Math.max(ring.length, Math.ceil(L / step));
+    const edge = new Set();   // ring places (by their share of the way round) that have already met the ground
+    const rs = step * Math.max(1, Math.min(4, pd.slope / 3));   // FX.269: a gentle slope is as flat between rings four times as far apart (1:2, the usual bank, keeps `step`)
+    for (let d = rs; d <= reach; d += rs) {
+      const ring = offsetOut(pd.poly, d), L = ring.reduce((a, q, i) => a + Math.hypot(ring[(i + 1) % ring.length][0] - q[0], ring[(i + 1) % ring.length][1] - q[1]), 0), n = Math.max(ring.length, Math.ceil(L / rs));
       for (let k = 0; k < n; k++) {
         const tt = k / n * L;
         let acc = 0, q = ring[0];
         for (let i = 0; i < ring.length; i++) { const a = ring[i], b = ring[(i + 1) % ring.length], l = Math.hypot(b[0] - a[0], b[1] - a[1]); if (acc + l >= tt) { const f = (tt - acc) / (l || 1); q = [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]; break; } acc += l; }
         const e = existing.elevationAt(q[0], q[1]);
         if (e === null) continue;
-        out.push({ x: q[0], y: q[1], z: gradeAt(q, e, pads) });
+        const g = gradeAt(q, e, pads);
+        // FX.269: past where the slope has met the ground the ground's own points are enough. With gentle slopes the rings ran tens of
+        // metres over untouched ground and a house's terrain grew from 1 MB to 10 MB. One ring of them is kept (`edge`) so the meeting line stays sharp.
+        if (Math.abs(g - e) < 1) { if (!edge.has(k)) { edge.add(k); out.push({ x: q[0], y: q[1], z: g }); } continue; }
+        edge.delete(k);
+        out.push({ x: q[0], y: q[1], z: g });
       }
     }
   }
@@ -420,7 +427,7 @@ export function placePad(spec) {
     if (!s.guid) s.guid = val(w.guid());
     const levels = readLevels(w);
     if (!padShape(w, { level: s.level, seed: s.seed, margin: s.margin, slope: s.slope, depth: s.depth }, levels)) fail('model.err.nobuilding2');
-    if (!(s.slope >= 1 && s.slope <= 10)) fail('res.err.padslope');
+    if (!(s.slope >= 0.1 && s.slope <= 100)) fail('res.err.padslope');
     const site = siteOf(w), sl = w.api.GetLine(w.mid, site, false);
     const nm = w.L(tr('res.pad'));
     const id = w.make('IFCGEOGRAPHICELEMENT', s.guid, w.ownerHistory(), nm, null, w.L('Building pad'), w.H(w.placeAt(sl.ObjectPlacement?.value ?? null, 0, 0, 0, 0)), null, null, 'USERDEFINED');   // i18n-ignore: IFC ObjectType
@@ -439,7 +446,7 @@ export function changePad(guid, ch) {
     const rows = [];
     if (Number.isFinite(ch.margin) && ch.margin >= 0) rows.push(['Margin', 'IFCLENGTHMEASURE', round(w.u(ch.margin))]);
     if (Number.isFinite(ch.depth)) rows.push(['Depth', 'IFCLENGTHMEASURE', round(w.u(ch.depth))]);
-    if (Number.isFinite(ch.slope)) { if (!(ch.slope >= 1 && ch.slope <= 10)) fail('res.err.padslope'); rows.push(['Slope', 'IFCREAL', round(ch.slope, 3)]); }
+    if (Number.isFinite(ch.slope)) { if (!(ch.slope >= 0.1 && ch.slope <= 100)) fail('res.err.padslope'); rows.push(['Slope', 'IFCREAL', round(ch.slope, 3)]); }
     w.upsertPset(pd.id, PAD_PSET, rows);
     const trn = readTerrain(w);
     if (trn) writeTerrain(w, { ...trn, key: '' });
@@ -460,6 +467,38 @@ export function removePads(guids) {
 }
 
 // ---- hardscape ----
+/**
+ * The ground's triangle edges cut to a closed outline (world mm): each piece { pts: [{ x, y, z }, { x, y, z }] } with the ground's height at
+ * both ends, for the paving's surface to follow as breaklines. `box` = the outline's [x0, y0, x1, y1].
+ */
+export function groundEdgesIn(ground, poly, box) {
+  const { pts, faces } = ground.toFaces(), seen = new Set(), out = [], n = poly.length;
+  const [bx0, by0, bx1, by1] = box || poly.reduce((b, [x, y]) => [Math.min(b[0], x), Math.min(b[1], y), Math.max(b[2], x), Math.max(b[3], y)], [Infinity, Infinity, -Infinity, -Infinity]);
+  for (const f of faces) for (let k = 0; k < 3; k++) {
+    const i = f[k], j = f[(k + 1) % 3], key = i < j ? i + '_' + j : j + '_' + i;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const a = pts[i], b = pts[j];
+    if (Math.max(a.x, b.x) < bx0 || Math.min(a.x, b.x) > bx1 || Math.max(a.y, b.y) < by0 || Math.min(a.y, b.y) > by1) continue;
+    // where the edge crosses the outline, as shares of its length; the pieces between that lie inside are kept
+    const dx = b.x - a.x, dy = b.y - a.y, cuts = [0, 1];
+    for (let e = 0; e < n; e++) {
+      const p = poly[e], q = poly[(e + 1) % n], ex = q[0] - p[0], ey = q[1] - p[1], den = dx * ey - dy * ex;
+      if (Math.abs(den) < 1e-9) continue;
+      const t = ((p[0] - a.x) * ey - (p[1] - a.y) * ex) / den, u = ((p[0] - a.x) * dy - (p[1] - a.y) * dx) / den;
+      if (t > 0 && t < 1 && u >= 0 && u <= 1) cuts.push(t);
+    }
+    cuts.sort((m, o) => m - o);
+    const at = (t) => ({ x: a.x + dx * t, y: a.y + dy * t, z: a.z + (b.z - a.z) * t });
+    for (let c = 0; c + 1 < cuts.length; c++) {
+      const t0 = cuts[c], t1 = cuts[c + 1];
+      if ((t1 - t0) * Math.hypot(dx, dy) < 1) continue;   // shorter than a millimetre
+      const m = at((t0 + t1) / 2);
+      if (inPoly(m.x, m.y, poly)) out.push({ pts: [at(t0), at(t1)] });
+    }
+  }
+  return out;
+}
 function writeHardscape(w, h, finished, levels) {
   const lv = levels.find((l) => l.guid === h.level);
   if (!lv || h.points.length < 3) return false;
@@ -473,7 +512,9 @@ function writeHardscape(w, h, finished, levels) {
   for (const [x, y] of world) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
   const step = Math.max(500, Math.sqrt((x1 - x0) * (y1 - y0) / 2000));
   for (let x = x0 + step / 2; x < x1; x += step) for (let y = y0 + step / 2; y < y1; y += step) if (inPoly(x, y, world)) { const z = zAt(x, y); if (z !== null) pts.push({ x, y, z }); }
-  const r = buildSurface({ points: pts, breaklines: [], boundary: world.map(([x, y]) => ({ x, y })) });
+  // FX.268: the ground's own edges inside the outline are the paving's edges too. Sampled on a grid alone, the paving ran straight
+  // between its samples while the ground folded between them (a pad's slopes, a ridge), and the grass came through in patches.
+  const r = buildSurface({ points: pts, breaklines: groundEdgesIn(finished, world, [x0, y0, x1, y1]), boundary: world.map(([x, y]) => ({ x, y })) });
   if (!r.surface) return false;
   const body = closedBody(w, r.surface, 0, 10, h.thickness);
   w.styleItem(body, w.surfaceStyle(tr('res.style.paving.' + h.kind), h.kind === 'driveway' ? [0.62, 0.62, 0.6] : [0.78, 0.76, 0.72], 0));

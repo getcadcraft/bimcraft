@@ -64,6 +64,9 @@ export function legendFromText(text, legend) {
   return out;
 }
 
+/** How tall legendItems' block is (mm): the title, then one line per entry. */
+export const legendHeight = (legend, { size = 7, gap = 3, title = '' } = {}) => (legend && legend.length ? (title ? size + gap + 2 : 0) + legend.length * (size + gap) : 0);
+
 export function legendItems(legend, { x = 16, y = 60, size = 7, gap = 3, title = '' } = {}) {
   const items = [];
   let yy = y;

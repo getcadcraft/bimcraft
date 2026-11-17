@@ -15,21 +15,58 @@
  *
  *   buildTakeoff(input) → Promise<{ pdf, takeoff, standsFor, sheets }>
  *     input = { name, units 'ftin' | 'mm', paper, project, date,
- *               levels: [{ title, scene, runs: [{ item, pts }], areas: [{ item, pts, holes }], counts: [{ item, at }] }]  (plan mm),
- *               items: { key: { name, type linear | area | count, pack?, heightFt?, pitch? (degrees), slope? rake | hip } },
+ *               levels: [{ title, scene, runs: [{ item, pts, opens?: [[width ft, height ft]] (a wall's openings, BK.11) }], areas: [{ item, pts, holes }], counts: [{ item, at }] }]  (plan mm),
+ *               items: { key: { name, type linear | area | count, pack?, heightFt?, pitch? (degrees), slope? rake | hip, typeData?: { name, rate } (BK.40) } },
  *               cutList: [{ item, n, label }] }
  *   ftPerUnit(ratio) — feet per PDF point on a sheet drawn at 1:ratio
  */
 import { planSheet, blankSheet, setPdf, PAPERS } from './res-sheets.js';
 import { PACK_ITEMS } from './res-takeoff-packs.js';
 import { t as tr } from './i18n.js';
-import { isMetric } from './model-units.js';
+import { isMetric, unitMark } from './model-units.js';
+import { unitText, mortarText, MASONRY_BASES } from './quantities/typedata.js';   // 0.10 BK.40 (bk-quantities-10): a wall type's takeoff data rides on its item
+// 0.10 BK.42 (bk-measure-10): the project's measurement method rides on the takeoff; bricks or blocks and mortar are components with quantities
+import { junctionCuts } from './quantities/junctions.js';
+import { masonryOf } from './quantities/masonry.js';
+import { isDefault, methodMasonry, builtinMethods } from './quantities/methods.js';
 
 export const EMBED_NAME = 'takeoff.takeoffcraft.json';
 const PT = 72 / 25.4;
 const COLORS = ['#D9480F', '#1971C2', '#2F9E44', '#9C36B5', '#E8590C', '#0C8599', '#C2255C', '#5C940D', '#3B5BDB', '#F08C00', '#862E9C', '#087F5B'];
 export const ftPerUnit = (ratio) => ratio / 864;   // one point = 25.4 / 72 mm of paper = ratio × that in the building; 304.8 mm a foot
 const r2 = (v) => Math.round(v * 100) / 100;
+const r4 = (v) => Math.round(v * 10000) / 10000;
+/**
+ * A wall type's takeoff data (BK.40) as one component of its item: the name says the unit and the mortar, the quantity is what the rate
+ * is per (the NET wall area, the length, or the number of walls) and the material rate is the type's rate. TakeoffCraft has one currency
+ * setting for the whole takeoff, so the name says which currency the rate was entered in. No unit count, no mortar volume (BK.42).
+ */
+function typeDataComponent(td, itemUnit, cid) {
+  const metric = itemUnit === 'm', own = td.rate && !MASONRY_BASES.includes(td.rate.basis);
+  const basis = own ? td.rate.basis : (metric ? 'm2' : 'ft2');   // a rate per unit, per 1000 or per m³ of mortar is priced on the masonry components below
+  if (!own) td = { ...td, rate: null };
+  const SQM = 0.09290304, M = 0.3048;
+  const [unit, formula] = basis === 'm2' ? ['m²', metric ? 'A' : 'A * ' + SQM] : basis === 'ft2' ? ['SF', metric ? 'A / ' + SQM : 'A']
+    : basis === 'm' ? ['m', metric ? 'L' : 'L * ' + M] : basis === 'ft' ? ['LF', metric ? 'L / ' + M : 'L'] : ['EA', 'N'];
+  return { id: cid, name: String(td.name).slice(0, 200), unit, formula, waste: 0, mat: td.rate ? Math.round(td.rate.amount * 10000) : 0, lab: 0 };
+}
+
+/**
+ * BK.42: the bricks or blocks and the mortar of a wall type as two components with quantities. td.masonry = { units (per m² of
+ * net wall face, all leaves, before waste), wastePct, mortar (m³ per m² of net wall face, or null), unit, mortarName }.
+ * Units to order = ceil(A × units per area × (1 + waste)): a whole number, the same count BimCraft's schedule shows. A rate per
+ * unit, per 1000 units or per m³ of mortar is the component's material rate.
+ */
+function masonryComponents(td, itemUnit, id) {
+  const ms = td.masonry, metric = itemUnit === 'm', SQM = 0.09290304, out = [];
+  if (!ms) return out;
+  const k = (v) => Number((metric ? v : v * SQM).toPrecision(12));
+  const basis = td.rate?.basis, amt = td.rate ? Math.round(td.rate.amount * 10000) : 0;
+  const count = 'ceil(A * ' + k(ms.units) + (ms.wastePct > 0 ? ' * ' + Number((1 + ms.wastePct / 100).toPrecision(12)) : '') + ')';
+  out.push({ id: id('c'), name: String(ms.unitName).slice(0, 200), unit: basis === 'k' ? '1000 EA' : 'EA', formula: basis === 'k' ? count + ' / 1000' : count, waste: 0, mat: basis === 'unit' || basis === 'k' ? amt : 0, lab: 0 });
+  if (ms.mortar !== null) out.push({ id: id('c'), name: String(ms.mortarName).slice(0, 200), unit: 'm³', formula: 'A * ' + k(ms.mortar), waste: 0, mat: basis === 'm3' ? amt : 0, lab: 0 });
+  return out;
+}
 
 async function sha256Hex(bytes) {
   const d = await globalThis.crypto.subtle.digest('SHA-256', bytes);
@@ -56,7 +93,8 @@ export async function buildTakeoff(input) {
       id: id('i'), name: String(d.name || base?.name || k).slice(0, 200), type: d.type, color: COLORS[i % COLORS.length],
       unit: base?.unit || unitFor(d.type, units), heightFt: Number.isFinite(d.heightFt) ? d.heightFt : (base?.heightFt || 0),
       waste: base?.waste || 0, mat: 0, lab: 0,
-      components: (base?.components || []).map((c) => ({ id: id('c'), name: c.name, unit: c.unit, formula: c.formula, waste: c.waste || 0, mat: 0, lab: 0 })),
+      components: [...(base?.components || []).map((c) => ({ id: id('c'), name: c.name, unit: c.unit, formula: c.formula, waste: c.waste || 0, mat: 0, lab: 0 })),
+        ...(d.type === 'linear' && d.typeData ? [typeDataComponent(d.typeData, base?.unit || unitFor(d.type, units), id('c')), ...masonryComponents(d.typeData, base?.unit || unitFor(d.type, units), id)] : [])],
       ...(base?.csi ? { csi: base.csi } : {}),
       ...(d.type !== 'count' && d.pitch > 0 ? { pitch: Math.round(12 * Math.tan(d.pitch * Math.PI / 180) * 10000) / 10000 } : {}),   // TakeoffCraft: rise per 12
       ...(d.type === 'linear' && (d.slope === 'rake' || d.slope === 'hip') ? { slope: d.slope } : {}),
@@ -72,7 +110,7 @@ export async function buildTakeoff(input) {
     if (!sh) return;
     const P = (q) => { const s = sh.place.P(q); return [r2(s[0] * PT), r2(s[1] * PT)]; };
     const marks = [];
-    for (const m of lv.runs || []) if (itemId.has(m.item) && m.pts.length >= 2) marks.push({ item: itemId.get(m.item), kind: 'linear', pts: m.pts.map(P) });
+    for (const m of lv.runs || []) if (itemId.has(m.item) && m.pts.length >= 2) marks.push({ item: itemId.get(m.item), kind: 'linear', pts: m.pts.map(P), ...(m.opens?.length ? { opens: m.opens.map((o) => [r4(o[0]), r4(o[1])]) } : {}), ...(m.junc ? { junc: m.junc.map(r4) } : {}) });   // BK.11: the wall's openings, in feet; BK.42: what junctions take off its face, in square feet
     for (const m of lv.areas || []) if (itemId.has(m.item) && m.pts.length >= 3) marks.push({ item: itemId.get(m.item), kind: 'area', pts: m.pts.map(P), holes: (m.holes || []).filter((h) => h.length >= 3).map((h) => h.map(P)) });
     for (const m of lv.counts || []) if (itemId.has(m.item)) marks.push({ item: itemId.get(m.item), kind: 'count', pts: [P(m.at)] });
     sheets.push(sh); pageMarks.push(marks); scales.push(sh.place);
@@ -105,7 +143,7 @@ export async function buildTakeoff(input) {
     if (scales[i]) sheetMap[key] = { scale: { method: 'preset', ftPerUnit: ftPerUnit(scales[i].ratio), preset: null, label: scales[i].label } };
     for (const m of pageMarks[i]) marks.push({ id: id('m'), sheet: key, ...m });
   });
-  const takeoff = { format: 'takeoffcraft-project', version: 1, name: title, seq, files: [{ hash: standsFor, name, size: plain.length, pages: sheets.length }], sheets: sheetMap, items, marks, areas: [] };
+  const takeoff = { format: 'takeoffcraft-project', version: 1, name: title, seq, ...(input.method ? { method: input.method } : {}), files: [{ hash: standsFor, name, size: plain.length, pages: sheets.length }], sheets: sheetMap, items, marks, areas: [] };
   const payload = new TextEncoder().encode(JSON.stringify({ format: 'takeoffcraft-embedded', version: 1, standsFor, takeoff }));
   const pdf = setPdf(sheets, { paper, title, attach: { name: EMBED_NAME, bytes: payload, mime: 'application/json', desc: 'TakeoffCraft takeoff' } });   // i18n-ignore: file metadata
   return { pdf, takeoff, standsFor, sheets, name };
@@ -124,6 +162,15 @@ const EL_PACK = { 'socket': 'el.receptacle', 'socket.double': 'el.receptacle', '
   'switch.dimmer': 'el.dimmer', 'junction': 'el.junction', 'downlight': 'el.downlight', 'luminaire': 'el.fixture', 'board': 'el.panel' };
 export function modelQuantities(d, t = tr) {
   const items = {}, by = new Map();
+  // BK.42: the project's measurement method (none or the default: the hand-over is what it was before)
+  const method = d.method && !isDefault(d.method) ? d.method : null;
+  const msRule = method ? methodMasonry(method) : null;
+  const cuts = new Map();
+  if (method) {
+    const st = new Map();
+    for (const w of d.walls || []) { if (!st.has(w.storey)) st.set(w.storey, []); st.get(w.storey).push({ id: w.id, a: w.a, b: w.b, t: w.t, height: w.height, curved: !!w.bulge }); }
+    for (const list of st.values()) for (const [id, c] of junctionCuts(list)) cuts.set(id, c);
+  }
   const level = (id) => { if (!by.has(id)) by.set(id, { runs: [], areas: [], counts: [] }); return by.get(id); };
   const def = (key, v) => { if (!items[key]) items[key] = v; return key; };
   const ring = (poly) => [...poly, poly[0]];
@@ -131,8 +178,17 @@ export function modelQuantities(d, t = tr) {
   for (const w of d.walls || []) {
     const hFt = Math.round(w.height / FT * 100) / 100;
     const ext = /^ext-2x6/.test(w.typeKey) ? 'wall.ext.2x6' : /^int-2x4/.test(w.typeKey) ? 'wall.int.2x4.' + nearest(hFt, [8, 9, 10, 12]) : null;
-    const k = def('wall:' + w.typeKey + ':' + hFt, { name: t('res.to.walls', { type: w.typeName || w.typeKey, h: d.fmtLen(w.height) }), type: 'linear', heightFt: hFt, pack: ext });
-    level(w.storey).runs.push({ item: k, pts: [w.a, w.b] });
+    const td = w.assembly?.takeoff || null;   // BK.40: what was entered once on the wall type
+    const lenU = (mm) => d.fmtLen(mm) + (unitMark(d.units) ? ' ' + unitMark(d.units) : '');
+    const tdName = td ? [unitText(td, lenU), td.mortar ? t('res.to.td.mortar', { mortar: mortarText(td, lenU) }) : '', td.rate ? t('res.to.td.rate', { currency: td.rate.currency }) : ''].filter(Boolean).join('; ') : '';
+    // BK.42: bricks or blocks and mortar per m² of net wall face (quantities/masonry.js on 1 m²), for the two masonry components
+    const ms1 = td ? masonryOf({ data: td, layers: w.assembly?.layers || [], netArea: 1e6, waste: msRule?.wastePct != null ? { pct: msRule.wastePct } : null, allowance: msRule?.allowancePct || 0 }) : null;
+    const masonry = ms1 ? { units: ms1.unitsNet, wastePct: ms1.wastePct, mortar: ms1.mortar === null ? null : ms1.mortar / 1e9, unitName: t('res.to.td.units', { unit: td.unit.name }), mortarName: t('res.to.td.mortarvol', { mortar: td.mortar?.name || t('res.to.td.mortarword') }) } : null;
+    const k = def('wall:' + w.typeKey + ':' + hFt, { name: t('res.to.walls', { type: w.typeName || w.typeKey, h: d.fmtLen(w.height) }), type: 'linear', heightFt: Math.round(w.height / FT * 10000) / 10000, pack: ext, ...(td ? { typeData: { name: tdName, rate: td.rate || null, masonry } } : {}) });
+    const c = cuts.get(w.id), junc = c && (c.face.area > 0 || c.overlap.area > 0) ? [c.face.area / (FT * FT), c.overlap.area / (FT * FT)] : null;
+    // BK.11: the run carries the wall's openings (feet), so TakeoffCraft deducts them from the wall area by the same rule as the schedules
+    const opens = (d.openings || []).filter((o) => o.wall === w.id && o.width > 0 && o.height > 0).map((o) => [o.width / FT, o.height / FT]);
+    level(w.storey).runs.push({ item: k, pts: [w.a, w.b], ...(opens.length ? { opens } : {}), ...(junc ? { junc } : {}) });
   }
   // doors and windows: counts at their middles; interior doors take the prehung-door assembly, windows the trim too
   const wallOf = new Map((d.walls || []).map((w) => [w.id, w]));
@@ -191,7 +247,8 @@ export function modelQuantities(d, t = tr) {
   for (const r of d.rooms || []) { const lvName = (d.levels || []).find((l) => l.id === r.storey)?.name || ''; level(r.storey).areas.push({ item: def('floor:' + r.storey, { name: t('res.to.floor', { level: lvName }), type: 'area' }), pts: r.poly, holes: r.holes || [] }); }
   const levels = (d.levels || []).filter((l) => by.has(l.id) && d.scenes?.get(l.id)).map((l) => ({ title: t('res.sh.plan', { level: l.name }), scene: d.scenes.get(l.id), ...by.get(l.id) }));
   const cutList = (d.lumber || []).map((r) => ({ item: def('lumber:' + r.size + ':' + Math.round(r.stock), { name: t('res.to.lumber', { size: r.size, len: d.fmtLen(r.stock) }), type: 'count' }), n: r.count, label: t('res.to.lumberrow', { size: r.size, len: d.fmtLen(r.stock), n: r.count }) }));
-  return { name: d.name, units: d.units, levels, items, cutList, project: d.name, date: d.date || '' };
+  const own = method && !builtinMethods().some((m) => m.id === method.id);
+  return { name: d.name, units: d.units, levels, items, cutList, project: d.name, date: d.date || '', ...(method ? { method: { id: method.id, name: method.name, ...(own ? { file: method } : {}) } } : {}) };
 }
 /** The width of a ring: the distance between its outer and inner outlines (both parallel insets of one outline). */
 function polyPerimeterGap(outer, inner) {

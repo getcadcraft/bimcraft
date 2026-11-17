@@ -18,6 +18,7 @@ import { readCloudInfo, loadCloud, LIMITS } from './pointcloud.js';
 import { CLOUD_ACCEPT, isCloudFile } from './cloud-types.js';
 import { writeLas, writeE57 } from './scan-export.js';
 import { el } from './ui-util.js';
+import { PadDetector } from './wheel-pad.js';   // D7.56: a trackpad's two-finger swipe pans
 import { t } from './i18n.js';
 
 const DISPLAY_POINTS = 30000;
@@ -167,8 +168,10 @@ export function installRegister(host = {}) {
       if (drag.moved) { cam.cx = drag.cx - dx / cam.s; cam.cy = drag.cy + dy / cam.s; draw(); }
     });
     cv.addEventListener('pointerup', (e) => { const d = drag; drag = null; if (d && !d.moved) clicked(e); });
+    const pad = new PadDetector();
     cv.addEventListener('wheel', (e) => {
       e.preventDefault();
+      if (pad.isSwipe(e)) { cam.cx += e.deltaX / cam.s; cam.cy -= e.deltaY / cam.s; draw(); return; }   // D7.56: two fingers pan, a pinch and a mouse wheel zoom
       const r = cv.getBoundingClientRect(), f = Math.exp(-e.deltaY * 0.0015), mx = e.clientX - r.left - r.width / 2, my = e.clientY - r.top - r.height / 2;
       cam.cx += mx / cam.s * (1 - 1 / f); cam.cy -= my / cam.s * (1 - 1 / f); cam.s *= f; draw();
     }, { passive: false });

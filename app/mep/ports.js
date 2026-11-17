@@ -20,6 +20,7 @@
  */
 import { ids, val } from '../ifc-util.js';
 import { sectionOf } from '../mep-model.js';
+import { syncMepData } from './pipe-specs-model.js';   // 0.9.1 #1499: a run's size may come from the model's own pipe specs
 
 export const PORT_PSET = 'CadCraft_Port';
 const RUN_PSET = 'CadCraft_MepRun';
@@ -33,6 +34,7 @@ const enumOf = (v) => { const x = val(v); return x === null || x === undefined ?
 export function readPorts(w) {
   const portIds = lines(w, 'IFCDISTRIBUTIONPORT');
   if (!portIds.length) return [];
+  syncMepData(w);
   // owners: nested (IFC4) or the IFC2X3 port-to-element relation
   const owner = new Map();
   for (const rid of lines(w, 'IFCRELNESTS')) { const r = line(w, rid); for (const h of r?.RelatedObjects || []) owner.set(h.value, r.RelatingObject?.value); }

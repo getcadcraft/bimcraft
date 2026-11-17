@@ -104,15 +104,22 @@ export function installClouds(host) {
     await host.frame();
     const nfo = await readCloudInfo(f);
     if (nfo.crs === null && nfo.code === null && nfo.las) { /* las.js has said why in crsNote */ }
+    // 0.10 BK.8 (units on import): a cloud whose file states no unit is asked about before it is loaded and placed (the shell's one
+    // dialog, remembered per file); it was read as meters with a note. The Units list in the bar still changes it afterwards.
+    let said = null;
+    if (!nfo.unit && window.ccImportUnits) {
+      said = await window.ccImportUnits.resolve({ file: f, format: t('pc.units.format'), stated: null, choices: ['m', 'ft', 'usft'], suggest: 'm' });
+      if (!said) { host.status(t('pc.units.notgiven', { file: f.name }), true); return; }
+    }
     abort?.abort();
     abort = new AbortController();
     const t0 = performance.now();
     const c = await loadCloud(f, nfo, { budget: pref.budget, signal: abort.signal, progress: (p) => host.status(t('pc.loading', { file: f.name, pct: Math.round(p * 100) })) });
     abort = null;
     file = f; info = nfo; cloud = c;
-    unit = c.unit;
+    unit = c.unit || (said ? (said.unit === 'usft' ? 'ftUS' : said.unit) : null);
     notes = [...c.notes];
-    if (!unit) notes.push(t('pc.units.assumed'));
+    if (said) notes.push(said.text); else if (!unit) notes.push(t('pc.units.assumed'));
     if (!layer) layer = new CloudLayer({ renderer: v.renderer, camera: () => v.camera, parent: v.root, render: () => v.render(), patch: (m) => v.clipped(m) });
     layer.setPixelRatio(v.renderer.getPixelRatio());
     layer.set(c, M4.I());

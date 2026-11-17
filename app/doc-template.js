@@ -24,6 +24,8 @@
  *   where: <field> = | != | ~ (contains) | !~ | > | < | >= | <= <value>, or <field> has | hasnot; joined with `and`; "quotes" keep words
  *   <field>: a built-in (name, type, storey, level, class, material, mark = IFC Tag, longname, objecttype, predefined, guid), tag:<Name>
  *     or a defined tag's name, Set.Property, or a bare property / quantity name (quantity sets first)
+ *   {{schedule <key or set-up name>}} {{specification}}   0.10 BK.47: fields other modules give (doc-fields.js): a model schedule in the
+ *                                         office layout, the project's specification; only outside an each
  *   \{{ prints {{ . A field that cannot be read prints [?…] and adds a warning.
  *
  *   docSource({ ixs: [ix…], defs, units, unitMm, project, file, date }) → src     units { length, area, volume } symbols
@@ -71,10 +73,10 @@ export function projectUnits(api, mid) {
 }
 
 /** A source over one or more property indexes (elements, and the spaces' own index when given). */
-export function docSource({ ixs = [], defs = [], units = { length: 'mm', area: 'm²', volume: 'm³' }, unitMm = 1, project = {}, file = '', date = '' } = {}) {
+export function docSource({ ixs = [], defs = [], units = { length: 'mm', area: 'm²', volume: 'm³' }, unitMm = 1, project = {}, file = '', date = '', fields = null } = {}) {
   const els = [];
   for (const ix of ixs) if (ix) for (const id of ix.ids) els.push({ ix, id, key: ix.keyBase + id });
-  return { ixs: ixs.filter(Boolean), els, defs, units, unitMm, project, file, date };
+  return { ixs: ixs.filter(Boolean), els, defs, units, unitMm, project, file, date, fields };   // fields: 0.10 BK.47, { word: (argument) → Markdown } from doc-fields.js
 }
 
 const tagDef = (src, name) => src.defs.find((d) => d.name.toLowerCase() === String(name).trim().toLowerCase()) || null;
@@ -341,6 +343,8 @@ export function render(template, src, { decimals = 2 } = {}) {
           const f = BUILTIN[cmd] ? { id: BUILTIN[cmd] } : resolveField(src, s, [ctx.el]);
           if (f) { const v = valueOf(src, ctx.el, f); return esc(show(f.id === 'cls' ? String(v).replace(/^Ifc/, '') : v)); }
         }
+        // 0.10 BK.47 (doc-fields.js): a field another module gives ({{schedule doors}}, {{specification}}); its Markdown is its own
+        if (!ctx.el && typeof src.fields?.[cmd] === 'function') { let md = null; try { md = src.fields[cmd](join(rest)); } catch (e) { md = null; } if (typeof md === 'string') return md; }
         warn(w('sx.su889.warn.unknown', { text: s }));
         return missing(s);
       }

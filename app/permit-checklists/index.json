@@ -1,0 +1,13 @@
+{
+ "format": "cadcraft-submission-checklist-index",
+ "version": 1,
+ "packs": [
+  {
+   "id": "generic",
+   "file": "generic.json",
+   "name": "Generic submission checklist",
+   "country": "",
+   "region": ""
+  }
+ ]
+}

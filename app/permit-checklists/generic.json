@@ -1,0 +1,196 @@
+{
+ "format": "cadcraft-submission-checklist",
+ "version": 1,
+ "id": "generic",
+ "name": "Generic submission checklist",
+ "jurisdiction": {
+  "country": "",
+  "region": "",
+  "name": "Any place"
+ },
+ "authority": "None: a general list",
+ "submission": "A statutory submission of drawings",
+ "review": "generic",
+ "note": "A general list, not any authority's. Choose your authority's list when there is one, and check its own published requirements.",
+ "sources": [],
+ "items": [
+  {
+   "id": "form",
+   "title": "Application form",
+   "detail": "The authority's own application form, filled in and signed.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "supplied": true
+  },
+  {
+   "id": "ownership",
+   "title": "Proof of ownership or authority to apply",
+   "detail": "A title deed, ownership certificate or the owner's written authority, as the authority asks.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "supplied": true
+  },
+  {
+   "id": "fee",
+   "title": "Application fee",
+   "detail": "The fee or proof that it was paid.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "supplied": true
+  },
+  {
+   "id": "site-plan",
+   "title": "Site plan",
+   "detail": "The site with its boundaries, north, the street, and the proposed and existing buildings.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "satisfy": [
+    {
+     "words": [
+      "site plan",
+      "site layout",
+      "block plan"
+     ]
+    }
+   ],
+   "site": true
+  },
+  {
+   "id": "floor-plans",
+   "title": "Floor plans",
+   "detail": "A plan of each level.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "satisfy": [
+    {
+     "view": [
+      "plan"
+     ]
+    },
+    {
+     "words": [
+      "floor plan"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "elevations",
+   "title": "Elevations",
+   "detail": "Each outside face of the building.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "satisfy": [
+    {
+     "view": [
+      "elevation"
+     ]
+    },
+    {
+     "words": [
+      "elevation"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sections",
+   "title": "Sections",
+   "detail": "At least one section through the building.",
+   "clause": "",
+   "when": "always",
+   "source": 0,
+   "satisfy": [
+    {
+     "view": [
+      "section"
+     ]
+    },
+    {
+     "words": [
+      "section"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "door-schedule",
+   "title": "Door schedule",
+   "detail": "The doors with their sizes and types.",
+   "clause": "",
+   "when": "if-applicable",
+   "source": 0,
+   "satisfy": [
+    {
+     "schedule": [
+      "doors"
+     ]
+    },
+    {
+     "words": [
+      "door schedule"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "window-schedule",
+   "title": "Window schedule",
+   "detail": "The windows with their sizes and types.",
+   "clause": "",
+   "when": "if-applicable",
+   "source": 0,
+   "satisfy": [
+    {
+     "schedule": [
+      "windows"
+     ]
+    },
+    {
+     "words": [
+      "window schedule"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "structural",
+   "title": "Structural drawings",
+   "detail": "Foundations, framing and structural details where the authority asks for them.",
+   "clause": "",
+   "when": "if-applicable",
+   "source": 0,
+   "satisfy": [
+    {
+     "words": [
+      "structural",
+      "foundation",
+      "framing"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "drainage",
+   "title": "Drainage drawings",
+   "detail": "Drains and connections where the authority asks for them.",
+   "clause": "",
+   "when": "if-applicable",
+   "source": 0,
+   "satisfy": [
+    {
+     "words": [
+      "drainage",
+      "plumbing"
+     ]
+    }
+   ]
+  }
+ ]
+}

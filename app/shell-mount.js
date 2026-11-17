@@ -201,6 +201,8 @@ export function mountBimShell(a) {
     askContext: () => ({ file: a.name(), selection: host.selection() }),
   };
   mountShellModules(host);
+  // BK.147: the model's undo list, oldest first, for "Why did this happen?" (assets/js/app-ai-assist.js reads it at each use)
+  window.ccHistorySource = { steps: () => (a.editor() ? a.editor().changes.map((c) => String(c.label || c.kind || '')) : []) };
   /** Reads the model's sheets and hands them to the modules when the file (or an undo / redo) moved them. */
   const changed = () => {
     if (window.ccLessons) ccLessons.emit('model', {});
@@ -215,6 +217,7 @@ export function mountBimShell(a) {
     if (window.ccReasons) ccReasons.load(now.reasons);
     if (window.ccDocInfo) ccDocInfo.load(now.docinfo);
     if (first) host.fileOpened?.('A file was opened.');
+    if (first && window.ccAssist) window.ccAssist.history.reset('A model was opened.');
     if (window.ccTotals) { if (first) ccTotals.reset(); else ccTotals.invalidate(); }
   };
   document.addEventListener('cc-calc-ready', changed, { once: true });

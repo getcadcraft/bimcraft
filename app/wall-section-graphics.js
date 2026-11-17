@@ -8,6 +8,7 @@ import { layerPrimitives, PLAN_DETAILS } from './wall-plan-graphics.js';
 import { readWalls } from './model-walls.js';
 import { readOpenings } from './model-openings.js';
 import { mul4, inv4 } from './ifc-util.js';
+import { isSketchWall, SKETCH_BAND } from './wall-plan-graphics.js';   // 0.10 BK.15
 import { segDist } from './model-plan.js';
 
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
@@ -126,8 +127,11 @@ export function wallSectionGraphics(view, walls, openings, materials, {dir,cut,d
     };
     const loops=spans.map(([a,b])=>cropRect(c-wall.t/2,c+wall.t/2,a,b)).filter(Boolean);
     const row={key,guid:wall.guid,cls:'IfcWall',loops,source:'authored-wall',detail,scale,layers:undefined,boundaries:[]};
-    if(!valid) warn('unavailable-layers');
-    if(valid && detail!=='coarse') {
+    // 0.10 BK.15 (bk-r3-types-10): a sketch-stage wall (its type tagged LOD 100 or 200) is ONE hatched band in a section too, at every detail level
+    const sketch=isSketchWall(wall);
+    if(sketch) { row.sketch=true; row.layers=[{index:0,materialId:null,kind:'material',core:true,thickness:wall.t,from:c-wall.t/2,to:c+wall.t/2,polys:loops,fill:SKETCH_BAND.fill,color:SKETCH_BAND.color,fillColor:SKETCH_BAND.fillColor,hatch:loops.flatMap(p=>hatchSegments(p,[],'diagonal',SKETCH_BAND.spacing*(scale||50)/75))}]; }
+    if(!valid && !sketch) warn('unavailable-layers');
+    if(valid && !sketch && detail!=='coarse') {
       row.layers=[];let off=sign*wall.t/2;
       const boundaries=new Map();
       for(const [index,l] of layers.entries()) {

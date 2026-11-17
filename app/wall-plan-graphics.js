@@ -7,6 +7,9 @@
 import { wallMap } from './model-arcs.js';
 import { wallPieces, inPoly, segDist } from './model-plan.js';
 import { hatchSegments } from './drafting.js';
+import { layerBands, cleanJunction, subtractConvex, segmentOutside } from './walls/layerjoin.js';   // 0.9 WT.5 (walls-join-10): layer priority at junctions
+import { deriveJoins } from './walls/joins.js';
+import { lodBand } from './walls/lod.js';   // 0.10 BK.15 (bk-r3-types-10): the LOD-driven sketch display
 
 export const PLAN_DETAILS = ['coarse', 'medium', 'fine'];
 // Rendering chord error, not a model tolerance. Analytic layer offsets are exact.
@@ -75,14 +78,29 @@ function mappedPath(points, map, closed = false) {
 
 /** Returns scene wall rows; invalid/unknown recipes keep the envelope only and
  * carry a diagnostic. No defaults stand in for an unsupported authored record.
+ * `priority` (0.9 WT.5; off unless asked, the plan asks for it): clean the layers at junctions by layer priority (cleanLayerJoins below).
  */
-export function wallPlanGraphics(walls, outlines, openings, materials, { detail = 'coarse', cutZ = 1200, scale = 50, keyBase = 0 } = {}) {
+/** 0.10 BK.15: the look of a sketch-stage wall (its type tagged LOD 100 or 200): ONE band, white, diagonal hatch. Not a material. */
+export const SKETCH_BAND = { fill: 'diagonal', color: '#ffffff', fillColor: '#555555', spacing: 2 };
+export const isSketchWall = (wall) => lodBand(wall?.assembly?.lod) === 'generic';
+export function wallPlanGraphics(walls, outlines, openings, materials, { detail = 'coarse', cutZ = 1200, scale = 50, keyBase = 0, priority = false, sketch = true } = {}) {
   if (!PLAN_DETAILS.includes(detail)) throw new Error('Invalid plan detail')   // i18n-ignore: a programming error (callers pass PLAN_DETAILS);
   const byMaterial = new Map((materials || []).map(m => [m.id, m]));
-  return walls.map(wall => {
+  const hatchOf = (polys, fill) => detail === 'fine' && ['diagonal', 'crosshatch'].includes(fill) ? polys.flatMap(p => hatchSegments(p, [], fill === 'crosshatch' ? 'cross' : 'diagonal', (scale || 50) / 75)) : [];
+  const rows = walls.map(wall => {
     const poly = outlines.get(wall.guid) || [], ops = openings.filter(o => o.wall === wall.id);
     const row = { key: keyBase + wall.id, guid: wall.guid, poly, pieces: poly.length ? wallPieces(wall, poly, ops, cutZ) : [] };
     const layers = wall.assembly?.layers;
+    // 0.10 BK.15: a sketch-stage wall is one hatched band at every detail level: no layers, no layer lines, whatever its type holds.
+    // Geometry light, data complete: the wall, its type, its thickness and its quantities are the same element as ever.
+    if (sketch && poly.length && isSketchWall(wall)) {
+      const polys = row.pieces.filter(p => p?.length >= 3);
+      row.sketch = true;
+      row.layers = [{ index: 0, materialId: null, kind: 'material', thickness: wall.t, from: wall.t / 2, to: -wall.t / 2, polys, fill: SKETCH_BAND.fill, color: SKETCH_BAND.color, fillColor: SKETCH_BAND.fillColor,
+        hatch: polys.flatMap(p => hatchSegments(p, [], 'diagonal', SKETCH_BAND.spacing * (scale || 50) / 75)) }];
+      row.boundaries = [];
+      return row;
+    }
     if (detail === 'coarse' || !poly.length) return row;
     if (!materials || !layers?.length || layers.some(l => !Number.isFinite(l.t) || l.t < 0 || (l.kind !== 'cavity' && !byMaterial.has(l.materialId))) || Math.abs(layers.reduce((s, l) => s + l.t, 0) - wall.t) > 0.005) {
       row.graphicWarning = 'unavailable'; return row;
@@ -105,7 +123,7 @@ export function wallPlanGraphics(walls, outlines, openings, materials, { detail 
       const end = off - sign * layer.t, material = byMaterial.get(layer.materialId);
       const polys = layer.t === 0 ? [] : pieces.map(p => clip(clip(p, 1, Math.min(off, end), 1), 1, Math.max(off, end), -1)).filter(p => p.length >= 3).map(p => mappedPath(p, map, true));
       const fill = layer.kind === 'cavity' ? 'none' : material.fill;
-      const hatch = detail === 'fine' && ['diagonal', 'crosshatch'].includes(fill) ? polys.flatMap(p => hatchSegments(p, [], fill === 'crosshatch' ? 'cross' : 'diagonal', (scale || 50) / 75)) : [];
+      const hatch = hatchOf(polys, fill);
       row.layers.push({ index, materialId: layer.materialId, kind: layer.kind, thickness: layer.t, from: off, to: end, polys, fill, color: material?.color, fillColor: material?.fillColor, hatch });
       if (index > 0 && layer.t > 0 && !boundaries.has(off)) boundaries.set(off, { offset: off });
       if (layer.t === 0) boundaries.set(off, { offset: off, membrane: true, color: material.fillColor });
@@ -120,6 +138,61 @@ export function wallPlanGraphics(walls, outlines, openings, materials, { detail 
     }
     return row;
   });
+  if (priority && detail !== 'coarse') cleanLayerJoins(rows, walls, outlines, hatchOf);
+  return rows;
+}
+
+/**
+ * 0.9 WT.5 (walls-join-10): layer priority at junctions (walls/layerjoin.js, shared with CadCraft plan walls): at an L, T or X of two
+ * straight walls whose layers are drawn, the stronger layer cuts the weaker, so cores join to cores and a finish stops against the
+ * stronger layer. Display only: the envelope (row.poly, row.pieces), the join record and the model are not touched. Each row's layer
+ * polygons lose what another wall's layer took (`cuts`) and gain what its own layers took (`adds`); its boundary lines are interrupted
+ * inside the cuts; the junction's own lines come as one more entry of row.boundaries ({ join: true, paths }), so the screen, the plan PDF and
+ * the sheets draw them like every other layer line. Left as before: junctions with a curved wall, nodes of three walls or more, walls whose
+ * layers are not drawn (graphicWarning), membranes (lines of no thickness: only interrupted, never carried on).
+ * Rows that take part say so: row.layerJoins = how many junctions were cleaned at this wall.
+ */
+function cleanLayerJoins(rows, walls, outlines, hatchOf) {
+  const rowOf = new Map(rows.map(r => [r.guid, r])), wallOf = new Map(walls.map(w => [w.guid, w]));
+  const can = g => { const w = wallOf.get(g), r = rowOf.get(g), poly = outlines.get(g); return !!(w && r?.layers && !r.sketch && !w.bulge && poly?.ends && w.assembly?.layers); };
+  // the joins: the file's records when the walls carry them (readWalls), else what the geometry says (a file with no records yet)
+  const recs = new Map();
+  if (walls.some(w => w.joins)) {
+    for (const w of walls) for (const j of w.joins || []) if (!recs.has(j.key)) recs.set(j.key, { key: j.key, kind: j.kind, a: { guid: w.guid, pos: j.pos }, b: { guid: j.other, pos: j.otherPos }, through: j.style ? (j.through ? w.guid : j.other) : null });
+  } else for (const r of deriveJoins(walls.map(w => ({ guid: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge, joinOff: w.joinOff })))) recs.set(r.key, { ...r, through: null });
+  // an end that takes part in more than one join is a node of three walls or more (or a corner on another wall's side): left alone
+  const endUse = new Map();
+  for (const r of recs.values()) for (const x of [r.a, r.b]) if (x.pos !== 'mid') endUse.set(x.guid + ':' + x.pos, (endUse.get(x.guid + ':' + x.pos) || 0) + 1);
+  const side = (x) => {
+    const w = wallOf.get(x.guid), end = x.pos === 'start' ? 'a' : x.pos === 'end' ? 'b' : null, poly = outlines.get(x.guid);
+    return { key: w.guid, a: w.a, b: w.b, bands: layerBands(w.assembly.layers, w.extSide), body: poly, end, face: end ? poly.ends[end] : null };
+  };
+  const cuts = new Map(), touched = new Set();
+  for (const r of recs.values()) {
+    if (!can(r.a.guid) || !can(r.b.guid)) continue;
+    if ([r.a, r.b].some(x => x.pos !== 'mid' && endUse.get(x.guid + ':' + x.pos) !== 1)) continue;
+    const A = wallOf.get(r.a.guid), B = wallOf.get(r.b.guid);
+    const through = r.kind !== 'X' ? null : r.through || (B.t > A.t + 1e-6 ? B.guid : A.guid);   // an X: the stored continuous wall, else the thicker, else the first
+    const j = cleanJunction({ kind: r.kind, walls: [side(r.a), side(r.b)], through });
+    if (!j.adds.length && !j.cuts.length && !j.lines.length) continue;
+    for (const c of j.cuts) { if (!cuts.has(c.wall)) cuts.set(c.wall, []); cuts.get(c.wall).push(c.poly); }
+    for (const g of [r.a.guid, r.b.guid]) { const row = rowOf.get(g); row.layerJoins = (row.layerJoins || 0) + 1; touched.add(g); }
+    const first = rowOf.get(r.a.guid);
+    if (j.lines.length) { let b = first.boundaries.find(x => x.join); if (!b) { b = { join: true, paths: [] }; first.boundaries.push(b); } b.paths.push(...j.lines); }
+    for (const a of j.adds) { const row = rowOf.get(a.wall), layer = row.layers.find(l => l.index === a.band); if (layer) (layer.added ||= []).push(a.poly); }
+  }
+  for (const g of touched) {
+    const row = rowOf.get(g), mine = cuts.get(g) || [];
+    for (const layer of row.layers) {
+      for (const c of mine) layer.polys = layer.polys.flatMap(p => subtractConvex(p, c));
+      if (layer.added) { layer.polys.push(...layer.added); delete layer.added; }
+      layer.hatch = hatchOf(layer.polys, layer.fill);
+    }
+    if (mine.length) for (const b of row.boundaries) {
+      if (b.join) continue;
+      b.paths = b.paths.flatMap(path => { let segs = [path]; if (path.length !== 2) return segs; for (const c of mine) segs = segs.flatMap(s => segmentOutside(s, c)); return segs; });
+    }
+  }
 }
 
 // Shared primitives for every output. Cavities and fill:none emit no paint.

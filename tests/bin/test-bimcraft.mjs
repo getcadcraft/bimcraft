@@ -214,8 +214,11 @@ if (args.includes('--mep')) process.exit(await (await import(path.join(ROOT, 'to
 // 0.7 LC.9 (session mep-07): add-on API 1.1, equipment with ports, connected runs, clash sets, spools — tools/bimcraft-test/mep07-test.mjs
 if (args.includes('--mep07')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/mep07-test.mjs'))).mep07Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 SU.888 (session sx-mep): split, VRF and fan-coil equipment, refnets, line sets — tools/bimcraft-test/hvac-test.mjs
+if (args.includes('--pipespecs')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/pipespecs-test.mjs'))).pipeSpecsMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.9.1 #1499 / #1493: pipe specs, in-line components, families, radiators
 if (args.includes('--hvac')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/hvac-test.mjs'))).hvacMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));
 // 0.8 round 2 EG.1–EG.4 (session mep_PART_2): sizing + pressure drop, tray / conduit fill, IES / LDT lighting, sprinkler libraries — tools/bimcraft-test/eg-mep-test.mjs
+// 0.10 MEP.1 (suggestion #1556): the 3D MEP router — an air handler to three diffusers, IFC4 out and back — tools/bimcraft-test/autoroute-test.mjs
+if (args.includes('--autoroute')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/autoroute-test.mjs'))).autorouteMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));
 if (args.includes('--eg')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eg-mep-test.mjs'))).egMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
 // 0.8 round 2 EG.13 (session energy_PART_2): the EnergyPlus step — IDF writer, engine harness, readers — tools/bimcraft-test/eg-energy-test.mjs
 if (args.includes('--ep')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eg-energy-test.mjs'))).epMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
@@ -259,8 +262,44 @@ if (args.includes('--gh3')) process.exit(await (await import(path.join(ROOT, 'to
 if (args.includes('--symbols')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/symbols-test.mjs'))).symbolsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 if (args.includes('--elecagents')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/elec-agents-test.mjs'))).elecAgentsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.9 GH.10 (bim-hosts-09): electrical devices for the assistant
 if (args.includes('--walltools')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-tools-test.mjs'))).wallToolsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.9 WT.2-WT.7, FX.65-67 (walls-09): the wall tool + the spec's nine tests
+if (args.includes('--handover')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/handover-test.mjs'))).handoverMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.114 (bk-stages-10): the project's handover documents, COBie Document rows, the handover package
+if (args.includes('--localreqs')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/local-reqs-test.mjs'))).localReqsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 BK.67/156/157 (bk-r3-regs): approval process, submission format, drawing conventions and standard notes as pack data
+if (args.includes('--pack')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/pack-test.mjs'))).packMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.63 / BK.170 (bk-r3-stages-10): client pack fields, options compared on area and cost
+if (args.includes('--issues')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/issue-set-test.mjs'))).issuesMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.46 / BK.48 (bk-r3-stages-10): issued sets, changes since, the drawing changelog
+if (args.includes('--permitchecklist')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/permit-checklist-test.mjs'))).permitChecklistMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.109 (bk-stages-10): the authority's supporting documents linked to sheets and schedules
+if (args.includes('--massoptions')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/mass-options-test.mjs'))).massOptionsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 BK.44 (bk-r3-stages-10): massing option sets, the site check on the current option, ModelCraft massing in
+if (args.includes('--super-links')) process.exit(await (await import(path.join(ROOT, 'tools/super-test/links-model.mjs'))).superLinksMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // Super 0.1 BK.132 / BK.133 (bk-r4-links-10): takeoff follows a moved wall; massing solid -> elements -> links back
+if (args.includes('--siteconstraints')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/site-constraints-test.mjs'))).siteConstraintsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.104 (bk-stages-10): building lines, servitudes, the crossing warning
+if (args.includes('--qtymethod')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/measure-test.mjs'))).measureMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 BK.42 (bk-measure-10): the project's measurement method; bricks, blocks and mortar
+if (args.includes('--quantities')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/quantities-test.mjs'))).quantitiesMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 BK.84 / BK.11 / BK.40 (bk-quantities-10): gross / deductions / net, one measuring rule, takeoff data on wall types
+// 0.10 BK.94 / BK.96 / BK.97 (session bk-content-10): classification codes, every element has an IFC class, type packs
+if (args.includes('--classify')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/classify-test.mjs'))).classifyMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+if (args.includes('--ifcclass')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ifc-class-test.mjs'))).ifcClassMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+if (args.includes('--eltypes')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/eltypes-test.mjs'))).elTypesMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 BK.15 / BK.24 / BK.22 / BK.23 (bk-r3-types-10): generic starter types, the sketch band, layered floor / roof / ceiling types, per-layer quantities, room lookup, symbol links
+if (args.includes('--libkinds')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/library-kinds-test.mjs'))).libraryKindsMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 BK.21 / BK.98 / BK.153 / BK.154 (bk-r3-library-10)
+if (args.includes('--typepack')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/type-pack-test.mjs'))).typePackMode({ APP, ROOT, WebIFC, IfcModel, quiet }));
+if (args.includes('--joinstyle')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-joinstyle-test.mjs'))).joinStyleMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.9 WT.5 (walls-join-10): join style, layer priority
+if (args.includes('--schedules')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/schedules-test.mjs'))).schedulesMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.39 / BK.29 / BK.149 / BK.61 / BK.142 / BK.47 (bk-r3-schedules-10): schedule set-ups, the office standard, finishes, exports, specifications
+if (args.includes('--typeswap')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-typeswap-test.mjs'))).typeSwapMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.7 / BK.16 (bk-typeswap-10): type swap, the what-moved report, LOD tag
 if (args.includes('--joins')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-joins-test.mjs'))).joinsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.9 FX.60: the stored join record
 if (args.includes('--wallshape')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/wall-shape-test.mjs'))).wallShapeMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.9 WT.6: attach, profile, slant, wall openings
+if (args.includes('--tools-b')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/tools-b-test.mjs'))).toolsBMode({ APP, ROOT, WebIFC, IfcModel, quiet }));   // 0.10 bk-tools-b-10: curtain systems, the work plane, reference planes, model lines and text
+if (args.includes('--toolsa')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/tools-a-test.mjs'))).toolsAMode({ APP, ROOT, WebIFC, IfcModel, quiet }).then((r) => (typeof r === 'number' ? r : r.bad ? 1 : 0)));   // 0.10 (bk-tools-a-10): rooms, separators, areas, tags, shafts, vertical openings, model groups
+if (args.includes('--instep')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/instep-test.mjs'))).instepMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.129: one wall moved, plan + section + elevation + schedule + sheet in step
+// 0.10 BK.4 / BK.80 (bk-r3-scale-10): write THE small house of the release check (tools/bimcraft-test/make-small-house.mjs)
+if (args.includes('--make-small-house')) {
+  const nx = args[args.indexOf('--make-small-house') + 1];
+  const out = path.resolve(nx && !nx.startsWith('--') ? nx : path.join(ROOT, 'fixtures/bimcraft/small-house.ifc'));
+  const r = await (await import(path.join(ROOT, 'tools/bimcraft-test/make-small-house.mjs'))).makeSmallHouse({ APP, WebIFC, IfcModel, quiet, out });
+  console.log('wrote ' + out + ': ' + JSON.stringify(r));
+  process.exit(0);
+}
+// 0.10 BK.65 / BK.20 / BK.49 / BK.64 (bk-r3-checks-10): the audit, LOD 350 interface rules, the verification state, the as-built statement
+if (args.includes('--checks10')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/checks10-test.mjs'))).checks10Run({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+if (args.includes('--house')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/house-test.mjs'))).houseMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.4 / BK.80 / BK.10: the small house checked without a page (plan numbers, four elevations, two sections, the drawing set, annotation sizes)
+if (args.includes('--defaults')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/defaults-test.mjs'))).defaultsMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 DP.1 (bk-defaults-10): Default Policies: a new building starts the way the policies say; nothing set = as before
+if (args.includes('--dayone')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/dayone-test.mjs'))).dayOneMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.74: a new building's defaults and its first sheet
+if (args.includes('--assistsame')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/assist-same-test.mjs'))).assistSameMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.10 BK.83: assistant tools = the person's commands, one undo step each; no AI in the apps
 if (args.includes('--modify')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/modify-test.mjs'))).modifyMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 if (args.includes('--ops')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/ops-test.mjs'))).opsMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.7 LC.12 / LC.20 (bim-ops)
 if (args.includes('--extra2')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/extra2-test.mjs'))).extra2Mode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.6 DC.22 / LC.12 / LC.20 (bim-extra_PART_2)
@@ -268,6 +307,7 @@ if (args.includes('--shell')) process.exit(await (await import(path.join(ROOT, '
 if (args.includes('--photo')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/photo-material-test.mjs'))).photoMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.8 EG.62 BimCraft half (material from a photo)
 if (args.includes('--render')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/render-test.mjs'))).renderMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));   // 0.5 RC.7 / RC.11 (session render)
 // 0.5 part 4 track IP.1: menu styles, keys and mouse — tools/bimcraft-test/input-test.mjs
+if (args.includes('--stages')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/stages-test.mjs'))).stagesMode({ APP, ROOT, WebIFC, IfcModel, quiet, args }));   // 0.10 W1.10 (stages-10): brief, options against the brief, type links, shop drawings, site instructions
 if (args.includes('--input')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/input-test.mjs'))).inputMode({ APP, ROOT }));
 if (args.includes('--edit')) process.exit(await editMode(args.filter((a) => !a.startsWith('--')).map((a) => path.resolve(a))));
 const explicitTarget = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--build');
@@ -2979,7 +3019,8 @@ async function newMode() {
   console.log('== Refusals');
   const lv = (n, h) => N.stackLevels(n, h, (i) => 'Level ' + (i + 1));
   ok(N.levelsProblem([]) === 'new.err.levels' && N.levelsProblem(lv(201, 3000)) === 'new.err.levels', 'no levels, or more than 200');
-  ok(N.levelsProblem(lv(2, NaN)) === 'new.err.height' && N.levelsProblem(lv(2, 500)) === 'new.err.height' && N.levelsProblem(lv(2, 200000)) === 'new.err.height', 'height not a number, under 1 m, over 100 m');
+  ok(N.levelsProblem(lv(2, NaN)) === 'new.err.height' && N.levelsProblem(lv(2, 5)) === 'new.err.height' && N.levelsProblem(lv(2, 2e7)) === 'new.err.height', 'height not a number, under 10 mm, over 10 km: refused');
+  ok(N.levelsProblem(lv(2, 500)) === '' && N.levelsProblem(lv(2, 200000)) === '', '0.10 BK.73: a level 500 mm or 200 m tall is made (Drawing advice, not a refusal)');
   ok(N.levelsProblem(lv(3, 3000)) === '', '3 levels of 3000 mm are fine');
   let threw = ''; try { N.newBuilding({ name: 'x', levels: [] }); } catch (e) { threw = e.key; }
   ok(threw === 'new.err.levels', 'newBuilding refuses bad levels with the key');

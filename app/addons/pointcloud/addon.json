@@ -7,6 +7,7 @@
   ],
   "api": "1.4",
   "license": "Apache-2.0",
+  "imports": { "node": ["fs/promises", "path", "worker_threads"] },
   "entry": "./main.js",
   "permissions": [
     "panel",
@@ -14,7 +15,7 @@
     "storage",
     "objects"
   ],
-  "description": "Opens a LAS, LAZ, E57, PLY, PCD, PTX, XYZ or PTS point cloud, tiles it into this browser's own storage, and lets you look at all of it in BimCraft's 3D view, clean it, sort it into ground, vegetation and buildings and cut a section through it. The file and the cloud never leave this computer. Results are numbers from your data, not a certificate.",
+  "description": "Opens a LAS, LAZ, E57, PLY, OBJ, USDZ, PCD, PTX, XYZ or PTS point cloud or scan, tiles it into this browser's own storage, and lets you look at all of it in BimCraft's 3D view, clean it, sort it into ground, vegetation and buildings and cut a section through it. The file and the cloud never leave this computer. Results are numbers from your data, not a certificate.",
   "author": "CadCraft",
   "lang": "./lang/",
   "default": "off",

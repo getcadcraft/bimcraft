@@ -74,7 +74,15 @@ export function mountTrace(modelUi, o) {
       model = await o.readDrawing(bytes, /\.dxf$/i.test(file.name) ? 'dxf' : 'dwg');
     } catch (e) { body.replaceChildren(el('p', { className: 'bc-input-err', role: 'alert' }, t('model.trace.unread', { why: e.message || e }))); return; }
     R.file = file; R.model = model;
-    render(body, dlg, 0);
+    // 0.10 BK.8 (units on import): a drawing that states no units is asked about before its lines are read as walls (the shell's one
+    // dialog, remembered per file); it was read as millimeters. The Drawing units list below still changes it.
+    let unitMm = 0;
+    if (!(model.header?.INSUNITS > 0) && window.ccImportUnits) {
+      const a = await window.ccImportUnits.resolve({ file, format: /\.dxf$/i.test(file.name) ? 'DXF' : 'DWG', stated: null, choices: UNIT_CHOICES.filter((c) => c[0]).map((c) => c[0]), say: (s) => A.host.status(s) });
+      if (!a) { body.replaceChildren(el('p', { className: 'bc-input-err', role: 'alert' }, t('model.trace.nounits', { name: file.name }))); return; }
+      unitMm = UNIT_CHOICES.find((c) => c[0] === a.unit)?.[1] || 0;
+    }
+    render(body, dlg, unitMm);
   }
 
   function render(body, dlg, unitMm) {
@@ -145,7 +153,7 @@ export function mountTrace(modelUi, o) {
       const hgt = A.S.data.levels.find((l) => l.id === A.S.level)?.height || 3000;
       A.commit(traceDrawing({ storey: levelGuid(), walls: p.walls, openings: p.openings, typeKey: p.typeKey, topLevel: top.value === 'level' && above ? above.guid : '', height: hgt, underlay: p.underlay }),
         { label: R.file.name, verb: t('model.verb.made') });
-      A.host.status(t('model.trace.done', { w: p.walls.length, o: p.openings.length, name: R.file.name }), false, true);
+      A.host.status(t('model.trace.done', { w: p.walls.length, o: p.openings.length, name: R.file.name }) + ' ' + t('verify.recognised'), false, true);   // 0.10 BK.64
     });
   }
   const unitLabel = (mm) => (UNIT_CHOICES.find((x) => x[1] === mm)?.[0]) || String(mm) + ' mm';

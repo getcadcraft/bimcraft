@@ -41,7 +41,7 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Visibility, batchIndex, batchEdges, edgeIndex, boundsOf, boundsMapOf, SOLID } from './ifc-vis.js';
+import { Visibility, batchIndex, batchEdges, batchEdgesAsync, edgeIndex, boundsOf, boundsMapOf, SOLID } from './ifc-vis.js';
 import { KEY_SPAN } from './ifc-model.js';
 import { runOf, runEdges, faceRegion, snapTo } from './measure.js';
 import { cleanVolume, cellPlanes, polyhedron, modelSpec, capSpec, specKey, clipGlsl } from './section-volume.js';
@@ -273,10 +273,11 @@ export class Viewer3D {
       } else {
         L.box.union(geo.boundingBox);
         if (drawEdges) {
-          const ed = batchEdges(b, 30);
+          // 0.10 PERF.8: the edge lines are worked out after the model is on screen, a slice at a time (setModel used to hold the page for 1.5 s at
+          // 683k triangles): the line object starts empty and gets its edges when its batch is done
+          const ed = { positions: new Float32Array(0), ids: new Uint32Array(0), s0: new Uint32Array(0), sn: new Uint32Array(0) };
           const eg = new THREE.BufferGeometry();
           eg.setAttribute('position', new THREE.BufferAttribute(ed.positions, 3));
-          eg.computeBoundingSphere();
           const lines = new THREE.LineSegments(eg, [
             this.clipped(new THREE.LineBasicMaterial({ color: this.colors.edge, transparent: true, opacity: 0.55 })),
             this.clipped(new THREE.LineBasicMaterial({ color: this.colors.edge, transparent: true, opacity: 0.08, depthWrite: false })),
@@ -285,15 +286,61 @@ export class Viewer3D {
           lines.visible = this.edgesOn;
           g.add(lines);
           L.edges.push(lines);
+          (L.edgeJobs ||= []).push({ lines, b });
         }
       }
     }
+    this.fillEdges(L);
+    this.prepareHits(L);
     this.relist();
     this.applyVisibility(false);
     if (this.colorMap) this.setColors(this.colorMap);   // a rebuild keeps Color by
     if (this.clip.length) this.updateCaps();
     if (cam) { this.camera.position.copy(cam.p); this.controls.target.copy(cam.t); this.controls.update(); this.render(); }
     else this.view('iso');
+  }
+
+  /** The edge lines of a model's batches, one batch at a time between frames (0.10 PERF.8). Stops when the layer was replaced or removed. */
+  async fillEdges(L) {
+    const jobs = L.edgeJobs || [];
+    L.edgeJobs = null;
+    if (!jobs.length) return;
+    const yieldFn = () => new Promise((r) => (typeof requestAnimationFrame === 'function' ? setTimeout(r, 0) : r()));
+    const alive = () => this.layers.get(L.mi) === L;
+    L.edgesReady = false;
+    for (const { lines, b } of jobs) {
+      await yieldFn();
+      if (!alive()) return;
+      const ed = await batchEdgesAsync(b, 30, { yieldFn, alive });
+      if (!ed || !alive()) return;
+      lines.geometry.setAttribute('position', new THREE.BufferAttribute(ed.positions, 3));
+      lines.geometry.computeBoundingSphere();
+      lines.userData.edges = ed;
+    }
+    L.edgesReady = true;
+    this.applyVisibility(false);
+    this.render();
+    this.onEdgesReady?.(L);
+  }
+
+  /**
+   * 0.10 PERF.37: a bounding-volume tree (three-mesh-bvh, indirect: the index buffer is not reordered, so faceIndex and triIds stay as they are) per
+   * batch, built one batch at a time between frames after the model is shown. hitAt then walks the tree instead of every triangle (47 to 133 ms at
+   * 683k triangles, 180 to 508 ms at 2.26 M, on every hover). A batch with no tree yet (or whose index just changed) is raycast as before.
+   */
+  async prepareHits(L) {
+    let B;
+    try { B = this._bvh || (this._bvh = await import('three-mesh-bvh')); } catch (e) { return; }   // not mapped (a host page without it): the plain raycast stays
+    const yieldFn = () => new Promise((r) => setTimeout(r, 0));
+    for (const m of L.meshes) {
+      await yieldFn();
+      if (this.layers.get(L.mi) !== L) return;
+      this.treeFor(m, B);
+    }
+  }
+  treeFor(m, B = this._bvh) {
+    if (!B || m.geometry.boundsTree) return;
+    try { m.geometry.boundsTree = new B.MeshBVH(m.geometry, { indirect: true, maxLeafSize: 12 }); m.raycast = B.acceleratedRaycast; } catch (e) { /* the plain raycast */ }
   }
 
   /** Take one model out of the scene. */
@@ -516,7 +563,12 @@ export class Viewer3D {
       const b = m.userData.batch;
       const idx = m.geometry.index.array;
       const nSolid = m.userData.nSolid ?? idx.length / 3;
-      const sel = stencilIndex(idx, nSolid, m.userData.triIds, b ? b.openIds : new Set());
+      // 0.10 PERF.37: the closed elements' triangles of a batch depend only on its index, its solid count, its element ids and the open set: kept
+      // until one of them changes, so moving a section plane (updateCaps on every step) does not walk every triangle again
+      const open = b ? b.openIds : null, c = m.userData.stencil;
+      let sel;
+      if (c && c.idx === idx && c.nSolid === nSolid && c.triIds === m.userData.triIds && c.open === open) sel = c.sel;
+      else { sel = stencilIndex(idx, nSolid, m.userData.triIds, open || new Set()); m.userData.stencil = { idx, nSolid, triIds: m.userData.triIds, open, sel }; }
       if (!sel.length) continue;
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', m.geometry.getAttribute('position'));
@@ -848,7 +900,7 @@ export class Viewer3D {
     for (const m of this.meshes) {
       const r = batchIndex(m.userData.batch, this.vis);
       const geo = m.geometry;
-      if (geo.index.array !== r.index) geo.setIndex(new THREE.BufferAttribute(r.index, 1));
+      if (geo.index.array !== r.index) { geo.setIndex(new THREE.BufferAttribute(r.index, 1)); if (geo.boundsTree) { geo.boundsTree = null; m.raycast = THREE.Mesh.prototype.raycast; m.userData.treeStale = true; } }   // the tree is of the old index: rebuilt below
       geo.clearGroups();
       geo.addGroup(0, r.nSolid * 3, 0);
       if (r.nGhost) geo.addGroup(r.nSolid * 3, r.nGhost * 3, 1);
@@ -863,6 +915,7 @@ export class Viewer3D {
       geo.addGroup(0, r.nSolid * 2, 0);
       if (r.nGhost) geo.addGroup(r.nSolid * 2, r.nGhost * 2, 1);
     }
+    if (this._bvh && this.meshes.some((m) => m.userData.treeStale)) setTimeout(() => { for (const m of this.meshes) if (m.userData.treeStale) { m.userData.treeStale = false; this.treeFor(m); } }, 0);
     if (this.selection.size) this.select([...this.selection].filter((k) => this.vis.state(k) === SOLID));
     else if (render) this.render();
   }
@@ -1142,6 +1195,37 @@ export class Viewer3D {
       pts.renderOrder = 32; g.add(pts);
     }
     this.measureGroup = g;
+    this.scene.add(g);
+    this.render();
+  }
+
+  /**
+   * Named overlays other tools keep in the scene (0.10 bk-tools-b-10: the work plane, reference planes, model lines), in world
+   * points. o = { lines: [[a, b] …], dashed: [[a, b] …], faces: [Float32Array of world triangles …], color: '#rrggbb',
+   * opacity (of the faces), onTop (drawn over the model) } or null to remove it. They are not part of a model: a reload keeps them.
+   */
+  setOverlay(name, o) {
+    this.overlays = this.overlays || new Map();
+    const old = this.overlays.get(name);
+    if (old) { old.traverse((x) => { x.geometry?.dispose(); x.material?.dispose(); }); old.removeFromParent(); this.overlays.delete(name); }
+    if (!o) { this.render(); return; }
+    const g = new THREE.Group(), col = new THREE.Color(o.color || this.colors.pick), top = !!o.onTop;
+    for (const f of o.faces || []) {
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(f, 3));
+      const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: o.opacity ?? 0.18, side: THREE.DoubleSide, depthWrite: false, depthTest: !top }));
+      m.renderOrder = 20; g.add(m);
+    }
+    const seg = (list, dashed) => {
+      if (!list?.length) return;
+      const geo = new THREE.BufferGeometry().setFromPoints(list.flat().map((p) => new THREE.Vector3(...p)));
+      const mat = dashed ? new THREE.LineDashedMaterial({ color: col, dashSize: o.dash || 0.25, gapSize: o.gap || 0.15, depthTest: !top }) : new THREE.LineBasicMaterial({ color: col, depthTest: !top });
+      const ls = new THREE.LineSegments(geo, mat);
+      if (dashed) ls.computeLineDistances();
+      ls.renderOrder = 21; g.add(ls);
+    };
+    seg(o.lines, false); seg(o.dashed, true);
+    g.userData.overlay = name; g.userData.counts = { lines: o.lines?.length || 0, dashed: o.dashed?.length || 0, faces: o.faces?.length || 0 };
+    this.overlays.set(name, g);
     this.scene.add(g);
     this.render();
   }

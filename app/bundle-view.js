@@ -5,6 +5,7 @@
 // goes through el() (text nodes): a bundle is untrusted.
 import { el, bytes, num } from './ui-util.js';
 import { adoptFromBundle } from './picture-store.js';   // 0.8 D8.8 round 3
+import { adoptHandover } from './handover-docs.js';   // 0.10 BK.114: the bundle's handover/ files
 import { t } from './i18n.js';
 import { getDisplayUnits, fmtPaper } from './model-units.js';   // GH.3-A: a layout's size in the display unit
 import { openBundle, layerIndex, viewPlan, viewTree, storeyGuids } from './bundle-open.js';
@@ -50,6 +51,7 @@ export function mountBundle(ctx) {
     let data;
     try { data = await b.index.read(b.manifest.model.file); } catch (e) { throw Object.assign(new Error(bundleError(e, b.file.name)), { userFacing: true }); }
     try { await adoptFromBundle(b.index); } catch (e) { /* pictures missing: Problems says so */ }   // 0.8 D8.8: the bundle's pictures/ files, before the model reads its references
+    try { await adoptHandover(b.index); } catch (e) { /* a handover file missing: its record says it is not loaded */ }   // 0.10 BK.114
     await ctx.openModel(data, new File([data], b.manifest.model.file.split('/').pop()));
   }
 

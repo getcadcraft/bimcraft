@@ -25,6 +25,10 @@ Pick the line to change it in **Properties**: its letter, **Flip the view** to l
 3. Choose the **Paper**: Letter, Tabloid (11 × 17), Arch D (24 × 36), A3 or A1. The paper keeps its standard name and its size is written in the {{ui:Units}} you chose, for example *Letter · 8.5 × 11 in* or *A3 · 297 × 420 mm*.
 4. Click {{ui:Download the set as PDF}}: one page per sheet.
 
+## Standard notes from a regulation pack
+
+In a sheet, {{ui:Standard notes}} lets you place notes from a regulation pack (by discipline) in the sheet's right-hand column. Each note keeps the pack and clause it came from, and the printed sheet says when that pack is unverified. The notes are a starting point: the person responsible for the drawing decides what they say. They need the Building regulations add-on.
+
 ## What is on the sheets
 
 - **Plans** show walls, doors, windows, rooms with their areas, dimensions and section lines, at the largest standard scale that fits: 1/4" = 1'-0" or smaller (1:50 or smaller in millimetres).

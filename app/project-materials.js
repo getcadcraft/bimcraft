@@ -22,10 +22,21 @@ const starters = [
   ['plaster','Plaster','Finish',10,'#e5dfd0','solid'],
   ['membrane','Membrane','Membrane',0,'#6b747a','solid'],
 ];
+// 0.10 BK.15 / BK.24 (bk-r3-types-10): the generic material of the generic starter types, and what the floor, roof and ceiling starter
+// types are built of. NOT part of a new project's library (a project that uses none of them is written exactly as before): each joins
+// the project's library the first time a type that uses it is used or opened in the type editor.
+const extras = [
+  ['generic','Generic (not yet chosen)','Generic',200,'#ececec','diagonal'],
+  ['flooring','Floor finish','Finish',15,'#c9b08a','solid'],
+  ['screed','Screed','Finish',50,'#c4c0b6','solid'],
+  ['roofing','Roof covering','Cladding',20,'#7d6a5d','diagonal'],
+  ['ceilingtile','Ceiling tile','Board',15,'#eeeeea','solid'],
+];
 // i18n-ignore-end
 export const STARTER_MATERIALS = starters.map(([legacyName,name,category,defaultThickness,color,fill])=>({id:'material-'+legacyName,legacyName,name,category,defaultThickness,color,fill,fillColor:'#555555',notes:'Generic starting value; verify the product and assembly before use.'}));
+export const EXTRA_MATERIALS = extras.map(([legacyName,name,category,defaultThickness,color,fill])=>({id:'material-'+legacyName,legacyName,name,category,defaultThickness,color,fill,fillColor:'#555555',notes:'Generic starting value; verify the product and assembly before use.'}));
 export function legacyMaterialId(name) {
-  return STARTER_MATERIALS.find(m=>m.legacyName===name)?.id || 'material-legacy-'+Array.from(new TextEncoder().encode(name),b=>b.toString(16).padStart(2,'0')).join('');
+  return [...STARTER_MATERIALS,...EXTRA_MATERIALS].find(m=>m.legacyName===name)?.id || 'material-legacy-'+Array.from(new TextEncoder().encode(name),b=>b.toString(16).padStart(2,'0')).join('');
 }
 export function normalizeLayer(layer) {
   const cavity=layer.kind==='cavity' || (layer.kind==null && layer.mat==='air');
@@ -74,8 +85,10 @@ export function readMaterials(w, additionalLayers=[]) {
     if(l.kind==='cavity' || materials.some(m=>m.id===l.materialId)) continue;
     // Only known legacy names can create a fallback. Broken explicit references must remain visible.
     if(l.materialId!==legacyMaterialId(l.mat)) continue;
+    // 0.10 BK.15: one of the extra starter materials comes in as what it is (name, colour, hatch), not as an imported one
+    const starter=EXTRA_MATERIALS.find(m=>m.id===l.materialId);
     // i18n-ignore: a note stored in the project's material record
-    materials.push(validateMaterial({id:l.materialId,legacyName:l.mat,name:l.mat,category:'Imported',defaultThickness:l.t,color:'#d8d3c4',fill:'solid',fillColor:'#555555',notes:'Preserved from an existing wall assembly.'}));
+    materials.push(starter?structuredClone(starter):validateMaterial({id:l.materialId,legacyName:l.mat,name:l.mat,category:'Imported',defaultThickness:l.t,color:'#d8d3c4',fill:'solid',fillColor:'#555555',notes:'Preserved from an existing wall assembly.'}));
   }
   return materials;
 }

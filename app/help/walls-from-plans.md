@@ -23,7 +23,8 @@ Start a model from the plans you have on paper: a PDF (drawn as lines, or a scan
 - **Walls** come from pairs of parallel lines up to 600 mm apart (the two faces of a wall); the wall is as thick as the gap. Hatching and lettering are left out.
 - **Doors and windows.** A gap in a wall (500 to 2600 mm) with a door swing drawn beside it is a door, hinged at one end of the gap and opening to the side of the swing. A gap or a wall with sill lines in it is a window. A gap with neither is a door up to 1300 mm and a window above that.
 - **A scan** is squared first when it was scanned crooked (the dialog says so), made black and white, cleaned of specks and traced; a **PDF page that is a picture** is drawn first and then treated the same way. The trace finds the centre of each stroke and fits straight lines and arcs to it, and it uses no network and no trained model.
-- **Rooms** follow by themselves from the closed loops the walls make.
+- **Rooms** follow by themselves from the closed loops the walls make. When the PDF has text, a room takes its name from the lettering inside it (the largest; a dimension, a scale or a sheet number is not a name). A scan has no text, so its rooms keep the names the program gives them.
+- **Everything read from the page is marked unverified**: each wall, door, window and room has a dashed box and a "?" in the plan until you check it. Pick what you have checked and use {{ui:Tools}} › {{ui:Mark as checked}}. See [Mark elements as checked or field-verified](topic:verification).
 
 ## What you should see
 

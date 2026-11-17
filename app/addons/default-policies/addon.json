@@ -1,0 +1,19 @@
+{
+  "id": "default-policies",
+  "name": "Default Policies",
+  "version": "0.1.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.5",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "settings",
+    "storage"
+  ],
+  "description": "Say once what a new project starts with and what new things get: the first wall type for metric and for imperial projects, the LOD tag wall types carry, the first sheet, the levels, the tool that is active after Create, and the units. Save the policies as a small open file to share across an office. A policy you do not set leaves the app's own default as it is.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

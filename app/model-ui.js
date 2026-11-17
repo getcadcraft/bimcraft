@@ -34,6 +34,7 @@ import { wallGeom, wallMap, arcMid, arcLength, bulgeThrough, bulgeFromHeight, ar
 import { snapPoint, closesChain, loopSide, wallPath } from './model-tools.js';
 import { fmtLen, parseLen, parseTyped, fmtAngle, fmtArea, parsePitch, fmtPitch, getDisplayUnits, setDisplayUnits, isMetric, fillUnitSelect, unitMark, lenMark } from './model-units.js';
 import { onUnitsChange } from './unit-prefs.js';   // 0.7 UNITS: Settings › General › Units
+import { endDrag } from './walls/reline.js';   // FX.63: an end grip keeps the joined walls' direction
 import { squareMove, squareDistance, squareUp, squareSnap, setAngle, angleOf, setLength, lengthFrom, roomSize, setRoomSize, moveOutward, MEASURE_FROM, setLengthGrow, fixedPoint, GROW } from './wall-square.js';   // 0.9 FX.22; FX.67 grow from
 import { newLevelBelow, copyLevel, drawWallPath, drawWalls, changeWall, changeWalls, changeWallsBy, removeWalls, newLevel, changeLevel, snapshotModel, placeOpening, placeLibraryOpening, changeOpening, changeOpenings, removeElements, placeFloor, placeCeiling, placeRoof, changeDerived, loopsOf } from './model-ops.js';
 import { loopAt, labelPoint, planLoops } from './model-rooms.js';
@@ -48,6 +49,9 @@ import { ModelWriter } from './model-write.js';
 import { openingFamilies, readFamilies, setFamilySize, familyWriter } from './family-ops.js';   // 0.6 DC.114: families and their sizes
 import { familyFor, sizeValues, sizeKey } from './family-model.js';
 import { placementReference, placementPath } from './wall-placement.js';
+import { isLod, lodLabel } from './walls/lod.js';   // 0.10 BK.16: the LOD tag beside a wall type's name
+import { setAnnoRatio, sceneAnno } from './anno-scale-bim.js';   // 0.10 BK.10: annotations sized from paper heights at the view's scale
+const lodTag = (type) => (isLod(type?.lod) ? ' [' + lodLabel(type.lod) + ']' : '');
 
 const CUT = 1200;   // mm above the level: where the plan cuts (4'-0")
 const RCP_CUT = 2300;   // 0.6 DC.117: where a ceiling plan cuts and looks up from (about 7'-6")
@@ -131,6 +135,7 @@ export function mountModel(host) {
     st.classList.toggle('is-plan-only', S.on && S.layout === 'plan');
     stackSplit();
     st.style.setProperty('--bc-split', S.split + '%');
+    st.style.setProperty('--bc-split-f', String(S.split / 100));   // the same share as a plain number: the workspace layouts' split (workspace/bimcraft-workspace.css, 0.10 BT.11)
     syncLayoutGroup();
     ui.splitter.hidden = !(S.on && S.layout === 'split');
     ui.splitter.setAttribute('aria-valuenow', String(S.split));
@@ -283,6 +288,7 @@ export function mountModel(host) {
   /** The plan scene of the level shown (also for the sheets: api.sceneFor). */
   function makeScene() {
     const vr = viewRange();
+    setAnnoRatio(vr.scale || 0);   // 0.10 BK.10: plan symbols and tags of this view are sized for its scale
     const walls = wallsHere().filter((w) => !hiddenOwn(vr, 'IfcWall', w.guid));
     S.outlines = wallOutlines(walls.map((w) => ({ key: w.guid, a: w.a, b: w.b, t: w.t, bulge: w.bulge, off: w.joinOff })));
     const k = kb(), own = ownKeys(), allOps = openingsHere(), ops = allOps.filter((o) => !hiddenOwn(vr, o.kind === 'window' ? 'IfcWindow' : 'IfcDoor', o.guid));
@@ -292,13 +298,13 @@ export function mountModel(host) {
     try { materials = readMaterials(new ModelWriter(ed().W, ed().api, ed().mid)); } catch { /* F02: preserve unsupported library; envelope only. */ }
     const scene = {
       through,
-      walls: wallPlanGraphics(walls, S.outlines, allOps, materials, { detail: vr.detail || 'coarse', cutZ: vr.cut, scale: vr.scale || 50, keyBase: k }),
+      walls: wallPlanGraphics(walls, S.outlines, allOps, materials, { detail: vr.detail || 'coarse', cutZ: vr.cut, scale: vr.scale || 50, keyBase: k, priority: S.layerPriority !== false, sketch: S.lodSketch !== false }),   // 0.9 WT.5: layer priority at junctions (Settings › BimCraft › Walls)
       symbols: ops.filter((o) => byWall.has(o.wall) && (!S.drag || S.drag.op.guid !== o.guid)).map((o) => ({ key: k + o.id, guid: o.guid, ...openingSymbol(o, byWall.get(o.wall)) })),
       rooms: hiddenOwn(vr, 'IfcSpace', '') ? [] : roomsScene(), dims: [],
       cut: (S.cut?.cut || []).filter((c) => !own.has(c.key)),
       below: (S.cut?.below || []).filter((c) => !own.has(c.key)),
       above: (S.cut?.above || []).filter((c) => !own.has(c.key)),
-      cutZ: vr.cut, crop: vr.crop || null, scale: vr.scale || 0, detail: vr.detail || 'coarse',   // 0.6 DC.117: the view's crop region and scale (sheets, print)
+      cutZ: vr.cut, crop: vr.crop || null, scale: vr.scale || 0, anno: sceneAnno(vr.scale || 0), detail: vr.detail || 'coarse',   // 0.6 DC.117: the view's crop region and scale (sheets, print)
     };
     scene.graphicWarnings = scene.walls.filter(w => w.graphicWarning).map(w => w.guid);
     if (scene.graphicWarnings.length) host.status(t('model.pv.layers.unavailable'), true);
@@ -405,7 +411,7 @@ export function mountModel(host) {
     const loops = new Map();
     for (const l of S.data?.levels || []) if ((S.data.derived?.spaces || []).some((x) => x.storey === l.id)) loops.set(l.id, l.id === S.level && S.loops ? S.loops : loopsOf(ed(), l.id));
     const all = schedules(S.data, loops, { fmtLen: (mm) => fmtLen(mm, S.units), fmtArea: (mm2) => fmtArea(mm2, S.units), t, unit: unitMark(S.units), countBy: readStyle().count });   // 0.9 D8.12-C
-    if (ed()) Object.assign(all, assemblySchedules(new ModelWriter(ed().W, ed().api, ed().mid)));
+    if (ed() && ed().mid != null) Object.assign(all, assemblySchedules(new ModelWriter(ed().W, ed().api, ed().mid)));   // tests-10: an editor with no IFC model open yet (mid null) has no assemblies to list; the writer threw "No IFC model is open with id null" on every scene build
     // 0.8 REG.1: the model against the building regulations a regulations add-on says are in force (core knows none)
     {
       const levelName = (id) => S.data?.levels.find((l) => l.id === id)?.name || '';
@@ -413,6 +419,7 @@ export function mountModel(host) {
       if (sc && typeof sc.key === 'string') all[sc.key] = sc;
     }
     for (const x of exts) Object.assign(all, x.schedules?.() || {});   // extensions' schedules (res-ui.js: the lumber cut list)
+    for (const x of exts) x.scheduleColumns?.(all);   // 0.10 BK.94: optional classification columns (classify-ui.js)
     return all;
   }
   function renderSchedule() {
@@ -451,12 +458,14 @@ export function mountModel(host) {
       dlg.addEventListener('close',()=>dlg.remove());dlg.addEventListener('keydown',e=>e.stopPropagation());host.root.append(dlg);dlg.showModal();
     }},t('model.sch.full')):null;
     ui.sched.replaceChildren(...(sc.note?[el('p',{className:'bc-muted','data-schedule-note':''},sc.note)]:[]),...(expand?[expand]:[]), sc.rows.length ? table : el('p', { className: 'bc-muted' }, t('model.sch.none')));
+    for (const x of exts) x.scheduleRendered?.(S.sched, sc, ui.sched);   // 0.10 BK.149 / BK.142 (schedule-layouts-ui.js): the office layout, set-ups, figure links
   }
   ui.schedCsv?.addEventListener('click', () => {
     if (!S.data) return;
     const sc = scheduleData()[S.sched];
     const base = String(host.fileName?.() || 'model').replace(/\.ifc$/i, '');
-    host.download(base + ' ' + (sc.title || t('model.sch.' + S.sched)).toLowerCase() + '.csv', '\ufeff' + scheduleCsv(sc), 'text/csv');   // i18n-ignore: a file name
+    const laidCsv = exts.map((x) => x.scheduleCsv?.(S.sched, sc)).find((v) => typeof v === 'string') || null;   // 0.10 BK.149: the CSV follows the layout shown (schedule-layouts-ui.js)
+    host.download(base + ' ' + (sc.title || t('model.sch.' + S.sched)).toLowerCase() + '.csv', '\ufeff' + (laidCsv ?? scheduleCsv(sc)), 'text/csv');   // i18n-ignore: a file name
   });
   ui.print?.addEventListener('click', async () => {
     if (!pv || !S.data) return;
@@ -526,7 +535,7 @@ export function mountModel(host) {
       };
       commitOn(name, (v) => { if (!v.trim()) return false; commit(changeLevel(l.guid, { name: v.trim() }), { label: l.name, verb: t('model.verb.changed') }); });
       commitOn(elev, (v) => { const mm = parseLen(v, S.units); if (!Number.isFinite(mm)) { host.status(t('model.err.length'), true); return false; } commit(changeLevel(l.guid, { elevation: mm, shiftAbove: true }), { label: l.name, verb: t('model.verb.moved') }); });
-      commitOn(ht, (v) => { const mm = parseLen(v, S.units); if (!(mm >= 1000 && mm <= 100000)) { host.status(t('new.err.height'), true); return false; } commit(changeLevel(l.guid, { height: mm, shiftAbove: true }), { label: l.name, verb: t('model.verb.changed') }); });
+      commitOn(ht, (v) => { const mm = parseLen(v, S.units); if (!(mm >= 10 && mm <= 1e7)) { host.status(t('new.err.height'), true); return false; } commit(changeLevel(l.guid, { height: mm, shiftAbove: true }), { label: l.name, verb: t('model.verb.changed') }); });
       return el('li', { className: 'bc-level' + (l.id === S.level ? ' is-current' : ''), 'data-level': l.guid },
         el('label', { className: 'bc-level-pick' }, pick), name, elev, ht);
     };
@@ -636,10 +645,10 @@ export function mountModel(host) {
     if (!ui.wallType) { if (ui.wallH && document.activeElement !== ui.wallH) ui.wallH.value = fmtLen(S.wall.height, S.units); return; }
     const types = wallTypes(famW());
     if (!types.some(x => x.key === S.wall.typeKey)) S.wall.typeKey = types[0].key;
-    const signature = types.map(x => x.key + ':' + typeName(x) + ':' + typeThickness(x)).join('|');
+    const signature = types.map(x => x.key + ':' + typeName(x) + ':' + typeThickness(x) + ':' + (x.lod || '')).join('|');
     if (ui.wallType.dataset.signature !== signature) {
       ui.wallType.dataset.signature = signature;
-      ui.wallType.replaceChildren(...types.map((x) => el('option', { value: x.key, selected: x.key === S.wall.typeKey }, typeName(x) + ' (' + fmtLen(typeThickness(x), S.units) + ')')));
+      ui.wallType.replaceChildren(...types.map((x) => el('option', { value: x.key, selected: x.key === S.wall.typeKey }, typeName(x) + ' (' + fmtLen(typeThickness(x), S.units) + ')' + lodTag(x))));   // 0.10 BK.16: + the type's LOD tag
     }
     if (document.activeElement !== ui.wallType) ui.wallType.value = S.wall.typeKey;
     if (ui.wallType.dataset.bound) { if (ui.wallH && document.activeElement !== ui.wallH) ui.wallH.value = fmtLen(S.wall.height, S.units); return; }
@@ -799,8 +808,8 @@ export function mountModel(host) {
   }
   function placeSlab(h, tool) {
     const st = level().guid;
-    if (tool === 'floor') { const f = S.slab.floor; commit(placeFloor({ storey: st, seed: h.seed, mode: f.mode, kind: f.kind, thickness: f.thickness }), { label: t('model.floor.' + f.kind), verb: t('model.verb.placed') }); }
-    else if (tool === 'ceiling') { const c = S.slab.ceiling; commit(placeCeiling({ storey: st, seed: h.seed, mode: c.mode, height: c.height, thickness: c.thickness }), { label: t('model.ceiling'), verb: t('model.verb.placed') }); }
+    if (tool === 'floor') { const f = S.slab.floor; commit(placeFloor({ storey: st, seed: h.seed, mode: f.mode, kind: f.kind, thickness: f.thickness, typeKey: api.ask('newElementType', 'floor') || '' }), { label: t('model.floor.' + f.kind), verb: t('model.verb.placed') }); }
+    else if (tool === 'ceiling') { const c = S.slab.ceiling; commit(placeCeiling({ storey: st, seed: h.seed, mode: c.mode, height: c.height, thickness: c.thickness, typeKey: api.ask('newElementType', 'ceiling') || '' }), { label: t('model.ceiling'), verb: t('model.verb.placed') }); }
     else {
       const rf = S.slab.roof, g = roofEdges(h.loop.poly, rf.ends, h.seed);
       if (g === null) { host.status(t('model.err.gable4'), true); return; }
@@ -808,7 +817,7 @@ export function mountModel(host) {
       // (2026-10-24: a hip roof and a gable roof on the same walls cut through each other — fascia, gables, stray lines).
       const had = S.data?.derived?.roofs.find((r) => r.walls === st && r.seed && inPoly(r.seed[0], r.seed[1], h.loop.poly));
       if (had) { commit(changeDerived(had.guid, { pitch: rf.pitch, overhang: rf.overhang, edges: g, gables: [], ...roofOpts(rf) }), { label: t('model.roof'), verb: t('model.verb.changed') }); return; }
-      commit(placeRoof({ storey: st, seed: h.seed, pitch: rf.pitch, overhang: rf.overhang, edges: g, ...roofOpts(rf) }), { label: t('model.roof'), verb: t('model.verb.placed') });
+      commit(placeRoof({ storey: st, seed: h.seed, pitch: rf.pitch, overhang: rf.overhang, edges: g, ...roofOpts(rf), typeKey: api.ask('newElementType', 'roof') || '' }), { label: t('model.roof'), verb: t('model.verb.placed') });
     }
   }
   /**
@@ -965,7 +974,12 @@ export function mountModel(host) {
     const fixed = d.end === 'a' ? w.b : w.a;
     let s1 = snapPoint(p, others, { tol: pv.pxToMm(SNAP_PX), from: fixed, ortho: !!e?.shiftKey, step: 15, round: round() });
     if (!e?.shiftKey && (s1.kind === 'free' || s1.kind === 'angle')) s1 = squareSnap(S.data.walls, w, fixed, p, { round: round() }) || s1;   // 0.9 FX.22: square to the wall it is joined to, whatever way the building turns
-    return d.end === 'a' ? { a: s1.p, b: w.b, snap: s1 } : { a: w.a, b: s1.p, snap: s1 };
+    const free = d.end === 'a' ? { a: s1.p, b: w.b, snap: s1 } : { a: w.a, b: s1.p, snap: s1 };
+    if (e?.altKey) return { ...free, disjoin: true };   // Alt: the joins at this wall break, as on the middle grip (FX.67)
+    if (e?.ctrlKey || e?.metaKey || w.bulge) return free;   // Ctrl: a free drag, the joined wall's end comes with it (it turns)
+    // FX.63 (wall tool spec, solver step 2): the joined walls keep their direction; their ends slide along their own lines to this wall's new line
+    try { const plan = endDrag(S.data.walls, w.guid, d.end, s1.p), m = plan.get(w.guid); if (m) return { a: m.a, b: m.b, snap: s1, plan, reline: { end: d.end, to: s1.p } }; } catch (err) { /* no square answer: the free drag below */ }
+    return free;
   }
   /** 0.9 FX.22: the middle grip's move, square to the wall: other walls' points and parallel faces still catch it, else round steps. */
   function gripSquare(d, p) {
@@ -994,12 +1008,14 @@ export function mountModel(host) {
     if (!len) { host.status(t('model.grip.nodir'), true); return null; }
     const q = [from[0] + v[0] / len * mm, from[1] + v[1] / len * mm];
     if (d.end === 'mid') { const dx = q[0] - w.a[0], dy = q[1] - w.a[1]; return { a: q, b: [w.b[0] + dx, w.b[1] + dy] }; }
+    if (at.reline) { try { const plan = endDrag(S.data.walls, w.guid, d.end, q), m = plan.get(w.guid); if (m) return { a: m.a, b: m.b, plan, reline: { end: d.end, to: q } }; } catch (err) { /* the free result below */ } }   // FX.63
     return d.end === 'a' ? { a: q, b: w.b } : { a: w.a, b: q };
   }
   function gripCommit(d, m) {
     if (Math.hypot(m.b[0] - m.a[0], m.b[1] - m.a[1]) < 10) { host.status(t('model.err.short'), true); drawOverlay(); return; }
     if (d.end === 'bend') { commit(changeWall(d.wall.guid, { bulge: m.bulge }), { label: t('model.wall'), verb: t('model.verb.changed'), select: [d.key] }); return; }
     const meta = { label: t('model.wall'), verb: t('model.verb.moved'), select: [d.key] };
+    if (m.reline) { const { end, to } = m.reline; commit(changeWallsBy(d.wall.guid, (walls) => endDrag(walls, d.wall.guid, end, to)), meta); return; }   // FX.63
     if (m.plan) { const by = m.by; commit(changeWallsBy(d.wall.guid, (walls) => squareMove(walls, d.wall.guid, by)), meta); return; }
     if (m.disjoin) { commit(changeWall(d.wall.guid, { a: m.a, b: m.b }, { carryJoined: false }), { ...meta, verb: t('walls.verb.disjoined') }); return; }   // 0.9 FX.67: joins broken, the wall keeps its id
     commit(changeWall(d.wall.guid, d.end === 'a' ? { a: m.a } : d.end === 'b' ? { b: m.b } : { a: m.a, b: m.b }), meta);
@@ -1268,8 +1284,9 @@ export function mountModel(host) {
       for (const q of pts) o.points.push(q);
       if (lst) {
         const b = lst.snap.p, L = Math.hypot(b[0] - a[0], b[1] - a[1]);
-        if (L >= 1) {
-          const type = projectWallType(S.wall.typeKey), seg = { a, b, t: typeThickness(type) };
+        const type0 = projectWallType(S.wall.typeKey);   // 0.10 FX.190: a just-saved type is not readable while the model reloads: no preview that frame
+        if (L >= 1 && type0) {
+          const type = type0, seg = { a, b, t: typeThickness(type) };
           const path = root.classList.contains('ws-active') || S.wall.reference.startsWith('core') ? placementPath([...pts, b], type, S.wall.reference, S.wall.side) : wallPath([...pts, b], seg.t, S.wall.reference, S.wall.side);
           o.walls.push(previewOutline(path.at(-1) || seg));
           const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
@@ -1277,7 +1294,7 @@ export function mountModel(host) {
           o.dims.push({ a, b, off: seg.t / 2 + pv.pxToMm(18), text: fmtLen(L, S.units) });
         }
       }
-    } else if (S.tool === 'wall' && lst) o.hud = { p: lst.snap.p, text: t('model.hud.start') };
+    } else if (S.tool === 'wall' && lst?.snap) o.hud = { p: lst.snap.p, text: t('model.hud.start') };   // lst.snap: the Door / Window tool leaves a last point with no snap (0.10 bk-r3-shell: switching from it to Wall threw here)
     if (S.hover && (S.tool === 'door' || S.tool === 'window')) openingPreview(S.hover, { kind: S.tool, ...S.open[S.tool] }, o);
     if (S.hover && (S.tool === 'floor' || S.tool === 'ceiling' || S.tool === 'roof')) slabPreview(S.hover, S.tool, o);
     if (S.hover && S.drag?.kind === 'opening') openingPreview(S.hover, { ...S.drag.op }, o);
@@ -1366,7 +1383,7 @@ export function mountModel(host) {
    *  asked (meta.onError, 0.6 DC.114) shows it itself, also when the change waited for a reload. */
   function refused(e, meta) {
     const k = e.key || e.message;
-    const ours = !!(k && /^(model|fam|comforts|pic|tji|res\.err|walls\.err|wshape\.err)\./.test(k));   // 0.9 walls-09: the wall tool's refusals
+    const ours = !!(k && /^(model|fam|comforts|pic|tji|res\.err|walls\.err|wshape\.err|spaces\.err)\./.test(k));   // 0.9 walls-09: the wall tool's refusals
     if (!ours) console.error(e);
     const why = ours ? t(k, e.fill || {}) : t('model.err.failed', { why: e.message || e });
     if (meta.onError) meta.onError(e, why); else host.status(why, true);
@@ -1413,6 +1430,21 @@ export function mountModel(host) {
       if (p.count && p.count === selectedKeys().length && !passesEdit(p)) { e.preventDefault(); e.stopImmediatePropagation(); deletePicked(p); }
     }
   }, true);
+  // 0.10 FX.188 (bim-core-10): in the ribbon layouts the handler above is off (ws-active) and the layout's Esc ends the tool, so the older sketch tools
+  // (Floor by outline, Ramp, Site, Wall chains, ...) could only be finished by clicking their first corner. Enter, Backspace and a first Esc now reach
+  // the tool that owns the sketch, as in classic. The space tools of spaces-ui.js have their own listener (it runs first and stops the key).
+  window.addEventListener('keydown', (e) => {
+    if (!S.on || !root.classList.contains('ws-active') || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.isComposing) return;
+    if (e.key !== 'Enter' && e.key !== 'Backspace' && e.key !== 'Escape') return;
+    const tgt = e.target;
+    if (tgt === ui.typed || tgt.closest?.('input, textarea, select, [contenteditable="true"], dialog, [data-help-panel], [data-app-settings]') || document.querySelector('dialog[open]')) return;   // i18n-ignore: CSS selectors
+    const x = extTool(S.tool);
+    let did = false;
+    if (e.key === 'Escape') did = x ? !!x.escape?.() : (S.tool === 'wall' && !!S.chain && (endChain(), true));
+    else if (x) did = !!x.key?.(e, e.key.toLowerCase());
+    else if (S.tool === 'wall' && S.chain && e.key === 'Enter') { endChain(); did = true; }
+    if (did) { e.preventDefault(); e.stopImmediatePropagation(); drawOverlay(); }
+  }, true);
   let overPlan = false;
   ui.canvas.addEventListener('pointerenter', () => { overPlan = true; });
   ui.canvas.addEventListener('pointerleave', () => { overPlan = false; });
@@ -1454,7 +1486,7 @@ export function mountModel(host) {
       const sp = (D.spaces || []).find((x) => k + x.id === key);
       if (sp) { derived.push({ kind: 'room', ...sp }); label = sp.name || sp.number; continue; }
       const fl = (D.floors || []).find((x) => k + x.id === key);
-      if (fl) { derived.push({ kind: 'floor', ...fl }); label = t('model.floor.' + fl.kind); continue; }
+      if (fl) { derived.push({ ...fl, kind: 'floor', floorKind: fl.kind }); label = t('model.floor.' + fl.kind); continue; }
       const ce = (D.ceilings || []).find((x) => k + x.id === key);
       if (ce) { derived.push({ kind: 'ceiling', ...ce }); label = t('model.ceiling'); continue; }
       const rf = (D.roofs || []).find((x) => k + x.id === key || x.parts.some((p) => k + p === key));
@@ -1510,10 +1542,11 @@ export function mountModel(host) {
       const w0 = walls[0], many = walls.length > 1, guids = walls.map((w) => w.guid);
       title = many ? t('model.walls', { n: walls.length }) : t('model.wall');
       const sameType = walls.every((w) => w.typeKey === w0.typeKey);
-      const typeOpts = wallTypes(famW()).map((x) => [x.key, typeName(x)]);
+      const typeOpts = wallTypes(famW()).map((x) => [x.key, typeName(x) + lodTag(x)]);   // 0.10 BK.16: the type's LOD tag
       if (sameType && !typeOpts.some((x) => x[0] === w0.typeKey) && projectWallType(w0.typeKey)) typeOpts.unshift([w0.typeKey, typeName(projectWallType(w0.typeKey))]);
       if (!sameType) typeOpts.unshift(['', t('model.prop.changetype')]);
-      field(t('model.wall.type'), select(typeOpts, sameType ? w0.typeKey : '', 'data-mp-type', (v) => { if (v) commit(many ? changeWalls(guids, { typeKey: v }) : changeWall(w0.guid, { typeKey: v }), one(title)); }));
+      field(t('model.wall.type'), select(typeOpts, sameType ? w0.typeKey : '', 'data-mp-type', (v) => { if (v && !api.ask('swapType', guids, v, one(title))) commit(many ? changeWalls(guids, { typeKey: v }) : changeWall(w0.guid, { typeKey: v }), one(title)); }));   // 0.10 BK.7: wall-typeswap-ui.js swaps and reports what moved
+      { const sw = api.ask('typeSwapBlock', guids); if (sw) rows.push(el('dt', { className: 'bc-mp-wide' }, ''), el('dd', { className: 'bc-mp-wide' }, sw)); }   // the Swap type list and its report (wall-typeswap-ui.js)
       if (sameType) field('', button(t('assembly.open'), 'data-mp-assembly', () => api.ask('openAssembly', w0.typeKey, guids)));
       const above = (w) => { const i = levels.findIndex((l) => l.id === w.storey); return i >= 0 ? levels[i + 1] || null : null; };
       if (!many) {
@@ -1641,18 +1674,20 @@ export function mountModel(host) {
         i.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } if (e.key === 'Escape') { i.value = i.defaultValue; i.blur(); } });
         return i;
       };
+      for (const x of exts) { try { x.derivedProps?.(d, { rows, field, select, button, el, run }); } catch (e) { console.error(e); } }   // 0.10 BK.24 (bk-r3-types-10): the Type row of a floor, ceiling or roof (element-types-ui.js)
       if (d.kind === 'room') {
         title = t('model.room');
         const loops = loopsOf(ed(), d.storey), loop = loopAt(loops.rooms, d.seed);
         field(t('model.room.longname'), text(d.name, 'data-mp-rname', (v) => run({ name: v })));
         field(t('model.room.number'), text(d.number, 'data-mp-rnum', (v) => run({ number: v })));
         if (loop) { rows.push(el('dt', {}, t('model.room.area')), el('dd', { 'data-mp-rarea': '' }, fmtArea(loop.area, S.units)), el('dt', {}, t('model.room.perimeter')), el('dd', {}, fmtLen(loop.perimeter, S.units))); }
+        for (const x of exts) { try { x.roomProps?.(d, { rows, el, loop, button }); } catch (e) { console.error(e); } }   // bk-tools-a-10: the room's volume and its tag (spaces-ui.js)
         // 0.6 round 2 (comforts-ui.js): the room's four walls as interior elevations, with their dimensions and tags
         const ie = exts.find((x) => x.openInterior);
         if (ie && loop) field('', button(t('comforts.ie.open'), 'data-mp-intel', () => ie.openInterior(d)));
       } else if (d.kind === 'floor') {
-        title = t('model.floor.' + (FLOOR_KINDS.some((k) => k.key === d.kind) ? d.kind : 'wood'));
-        field(t('model.fl.kind'), select(FLOOR_KINDS.map((k) => [k.key, t('model.floor.' + k.key)]), d.kind, 'data-mp-flkind', (v) => run({ kind: v })));
+        title = t('model.floor.' + (FLOOR_KINDS.some((k) => k.key === d.floorKind) ? d.floorKind : 'wood'));   // bk-r3-types-10: the floor's own kind (wood | concrete) is floorKind; `kind` says it is a floor
+        field(t('model.fl.kind'), select(FLOOR_KINDS.map((k) => [k.key, t('model.floor.' + k.key)]), d.floorKind, 'data-mp-flkind', (v) => run({ kind: v })));
         field(t('model.prop.thickness'), lenInput(d.thickness, 'data-mp-flthick', (mm) => run({ thickness: mm }), { min: 10 }));
         field(t('model.fl.offset'), lenInput(d.offset, 'data-mp-floff', (mm) => run({ offset: mm }), { any: true }));
       } else if (d.kind === 'ceiling') {
@@ -1786,7 +1821,7 @@ export function mountModel(host) {
     sceneFor(levelId, kind = 'plan', callout = null) {
       const keep = { level: S.level, kind: S.kind, callout: S.callout, loops: S.loops, outlines: S.outlines, cut: S.cut, cutFor: S.cutFor };
       try { S.level = levelId; S.kind = kind === 'rcp' ? 'rcp' : 'plan'; S.callout = callout || null; S.loops = loopsOf(ed(), levelId); S.cutFor = null; cutPlan(); return makeScene(); }
-      finally { Object.assign(S, keep); }
+      finally { Object.assign(S, keep); setAnnoRatio(viewRange().scale || 0); }
     },
     schedules: () => scheduleData(),
     /** 0.6 DC.117: a level's placement in model mm (4×4), to move one level's plan into another's (the underlay). */
@@ -1826,7 +1861,7 @@ export function mountModel(host) {
       // a reload this module did not start (Undo, Redo, a placement): what was clicked meanwhile goes in now
       if (!S.busy && S.queue.length) { const q = S.queue.splice(0); for (const [run, meta] of q) apply0(run, meta); scheduleRebuild(null); }
     },
-    picked() { if (pv && S.on) { pv.setSelection(selectedKeys()); drawOverlay(); } },
+    picked() { if (pv && S.on) { pv.setSelection(selectedKeys()); drawOverlay(); } for (const x of exts) { try { x.picked?.(); } catch (e) { console.error(e); } } },   // walls-shape-10: extensions hear a pick (the Shape tools' grips in 3D)
     /** The project origin / survey markers changed (coords-ui.js): draw the plan again. */
     coordsChanged() { if (pv && S.on) { pv.markers = host.coords?.()?.planMarkers(S.planM) || []; pv.render(); } },
     /** A tool that works in the 3D view (Paint, Views, Render) is starting: the plan-only layout goes to Split (0.6 BIM-F5). */
@@ -1834,6 +1869,11 @@ export function mountModel(host) {
     /** 0.9 D9.3: only the plan is shown (no 3D view): M opens the plan's Measure instead of the 3D one. */
     planOnly() { return !!(S.on && S.layout === 'plan'); },
     useTool(name) { if (S.on) setTool(name); },
+    /** 0.10 DP.1 (bk-defaults-10): the wall types' tags changed outside the model (a Default Policies LOD policy): fill the lists again. */
+    refreshTypes() { if (S.on) { fillWallOpts(); renderProps(); } },
+    /** 0.10 BK.74: the type the Wall tool draws with (the New building dialog shows it and can change it). */
+    wallDefault() { return S.wall.typeKey; },
+    setWallDefault(key) { if (key && wallType(key)) { S.wall.typeKey = key; if (ui.wallType && [...ui.wallType.options].some((o) => o.value === key)) ui.wallType.value = key; } },
     show,
     placeLibrary,
     /** The view mode ('plan' | 'split' | 'model') and the plan-side hooks of placing a Library item (bimcraft.js startPlacing). */

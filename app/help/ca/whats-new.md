@@ -1,76 +1,167 @@
 ---
-title: Novetats de la 0.8 i la 0.8.1
-summary: BimCraft afegeix persones que caminen per l'edifici, acústica de sales que pots escoltar, reproducció d'inundacions, vent i terratrèmols, una vista del cicle de vida de cinquanta anys, comprovacions amb un IDS, etiquetes i calendaris, Mou, Alinea i Distribueix, imatges sota el plànol, murs a partir d'un escaneig, plànols de panells, energia solar, sistemes dividits i VRF, dimensionat de canonades i cables, comprovacions de formigó i sísmiques, qualsevol projecció de mapa, una opció de motor de renderitzat i desfer a Studio; la 0.8.1 corregeix les eines en gris de la disposició de cinta.
-keywords: novetats, notes de la versió, registre de canvis, canvis, 0.8, 0.8.1, versió, noves funcions, evacuació, persones, cues, acústica, reverberació, resposta a l'impuls, inundació, vent, terratrèmol, risc, cicle de vida, vida útil, ids, etiquetes, calendaris, mou, alinea, distribueix, imatge, fons, escaneig a murs, lloc des de civilcraft, plànols de panells, entramat, solar, fv, dividit, vrf, ventiloconvector, dimensionat de canonades, safata de cables, il·luminància, formigó, sísmic, compara escaneig, epsg, projecció, documents, plantilla, carboni, cost, energyplus, motor de renderitzat, obre en, usd, glb, unreal, desfer, complements, pcf, símbols, plantes, calca, plomes, cinta, navegador de projectes, disposició
-from: 87b03056
+title: Novetats de la versió 0.9
+summary: Formes de mur, divisió, desplaçament, estirament i bloqueig a la graella, nivells sota terra, cotes de graella i Mesura a la planta, vistes duplicades amb estils de treball i taules de plomes, Informa com a, exportació Collada i Google Earth, Scan to BIM, anàlisi de vent i sísmica, complements d'impressió amb resina.
+keywords: novetats, 0.9, notes de la versió, formes de mur, rectangle, polígon, arc, tria línies, calca el contorn, desplaçament, unió, estirament per caixa, alinea i bloqueja, divideix mur, interval, torna a unir, bloqueja a la graella, creix des de, mesura des de, afegeix un nivell per sota, planta, ordre de nivell, sòl, graella, cotes de graella, mesura a la planta, estil de treball, còpia de vista, còpia pròpia, vista enllaçada, taula de plomes, imprimeix tal com es veu, informa com a, escala, importa svg, col·loca a la planta, col·loca al model, collada, dae, kmz, google earth, scan to bim, càrrega de vent, sísmica, elements finits, panell de documents, impressió amb resina, novetats, registre de canvis, canvis, 0.8, 0.8.1, versió, noves funcions, evacuació, persones, cues, acústica, reverberació, resposta impulsiva, inundació, vent, terratrèmol, perill, cicle de vida, vida útil, ids, etiquetes, taules, mou, alinea, distribueix, imatge, fons, escaneig a murs, lloc des de civilcraft, plànols de panells, entramat, solar, fv, divideix, vrf, fan coil, dimensionat de canonades, safata de cables, il·luminació, formigó, sísmica, compara escaneig, epsg, projecció, documents, plantilla, carboni, cost, energyplus, motor de render, obre a, usd, glb, unreal, desfer, complements, pcf, símbols, plantes, calc, plomes, cinta, navegador del projecte, disposició
+from: 5624fe88
 ---
 
-Això és el que ha canviat a BimCraft 0.8 (2026-11-01) i 0.8.1 (2026-11-02), en comparació amb la 0.7. BimCraft ara pot respondre preguntes sobre un edifici i provar-lo, amb persones, so, aigua, vent i terratrèmols, i dibuixar-lo amb més eines; la 0.8.1 és una versió de correccions.
+Això és el que ha canviat a BimCraft 0.9, en comparació amb la 0.8.1. Els dos grans temes són una veritable eina de mur i vistes que es comporten com la gent que ve dels grans programes BIM espera. A més hi ha l'exportació Collada, assistents que poden col·locar dispositius elèctrics, Scan to BIM, i anàlisi de vent, sísmica i elements finits a la pestanya {{ui:Anàlisi}}.
 
-## Novetats
+## Nou
 
-### Prova l'edifici
+### Murs
 
-- **Persones a l'edifici.** La secció {{ui:People in the building}} del panell esquerre fa caminar una evacuació o les arribades d'un dia normal pels teus espais, portes i escales. Veus les cues on l'edifici s'estreny, el recorregut més llarg fins a una sortida des de cada sala i quant triga la darrera persona. Activa {{ui:Shut}} en una porta per veure què canvia, i activa {{ui:Show the people in the 3D view}} per veure els caminants. Les troballes van a Problemes. És un model de multitud aproximat per a decisions de disseny, no un certificat de seguretat contra incendis. Vegeu [Fes caminar persones per l'edifici](topic:people-in-the-building).
-- **Acústica de sales, i sentir-la.** La secció {{ui:Room acoustics}} dóna el temps de reverberació de cada sala per banda d'octava (Sabine i Eyring) a partir de la seva mida i dels acabats que triïs, i amb un objectiu propi indica quanta absorció caldria per complir-lo. {{ui:Play it in this room}} reprodueix una veu, un aplaudiment, notes pinçades o el teu propi fitxer de so a través d'una resposta a l'impuls calculada per a la sala. Les xifres d'absorció són valors publicats típics perquè els substitueixis. Vegeu [Acústica de sales](topic:room-acoustics).
-- **Reproducció d'inundacions, vent i terratrèmols.** {{ui:Hazard playback}} reprodueix l'aigua que puja per les sales, la pressió del vent a cada planta i un terratrèmol que sacseja les plantes, en un plànol o un alçat amb un control lliscant de temps. Models senzills amb les seves hipòtesis al panell; no és una comprovació normativa. Vegeu [Reprodueix una inundació, vent o un terratrèmol](topic:hazard-playback).
-- **Què es desgasta en cinquanta anys.** {{ui:Life-cycle view}} enumera les finestres, portes, acabats i la coberta amb una vida útil cadascun, els anys en què se substitueixen i, quan escrius un cost per unitat, el cost per any i el seu valor actual. {{ui:Save the schedule (CSV)}} el desa en un fitxer. Les vides útils són xifres de planificació. Vegeu [Mira què es desgasta en cinquanta anys](topic:life-cycle-view).
-- **Comprovacions de formigó i sísmiques.** Els blocs {{ui:Concrete members}} i {{ui:Seismic loads}} de la pestanya {{ui:Analysis}} comproven bigues i pilars de formigó segons ACI 318-19 i calculen forces laterals equivalents segons ASCE 7-22 en forjats rígids, amb la deriva entre plantes. Perquè un enginyer ho verifiqui. Vegeu [Comprova elements de formigó i calcula càrregues sísmiques](topic:concrete-and-seismic).
+- **Dibuixa formes senceres.** A {{ui:Dibuixa}}, obre {{ui:Formes}} (o tria una forma a la llista Forma de la fila del {{ui:Mur}}) per a un rectangle, un rectangle girat, un polígon de 3 a 64 costats, un arc per centre, un arc tangent, murs sobre línies triades, o murs al voltant d'una àrea tancada on fas clic a dins. Un rectangle són quatre murs amb quatre cantonades unides i un sol pas de desfer. Consulta [Formes de mur, divisió, desplaçament, estirament i bloqueig](topic:wall-tools).
+- **Fixa abans de dibuixar, canvia després.** La fila del {{ui:Mur}} té {{ui:Desplaçament}} i {{ui:Unió}} (desmarca per dibuixar murs exempts). Després, usa {{ui:Desplaçament}}, {{ui:Estirament per caixa}} i {{ui:Alinea i bloqueja}} en murs dibuixats. Un mur mogut o estirat conserva les seves portes, finestres i cotes. Cada recepta és un sol pas de desfer.
+- **Talla murs.** {{ui:Divideix}}, {{ui:Interval}}, {{ui:Extrems lliures}}, {{ui:Suprimeix tram}} i {{ui:Torna a unir}} tallen un mur en un clic o on hi creua un altre mur. Un tall per una porta es rebutja. Consulta [Formes de mur, divisió, desplaçament, estirament i bloqueig](topic:wall-tools).
+- **Bloqueja murs a les línies de graella.** Selecciona un mur al llarg d'una línia de graella i marca {{ui:Bloqueja a la quadrícula}} a {{ui:Propietats}}. Amb l'eina {{ui:Graella}} activada, escriu una distància a {{ui:Mou per}} per a una línia triada, i els murs bloquejats la segueixen en un sol pas de desfer.
+- **Dona forma a un mur.** A {{ui:Propietats}} d'un mur pots adjuntar la seva part superior o la base a una coberta, un forjat o un sostre, editar el seu contorn d'alçat, inclinar-lo, o tallar una obertura de mur sense porta ni finestra. Consulta [Forma del mur](topic:wall-shape).
+- **La llargada diu quin extrem es manté.** {{ui:Creix des de}} fixa si l'inici, el final o el centre es queden quiets quan canvies la llargada.
+- **La llargada i la cota de planta coincideixen.** {{ui:Mesura des de}} (eix central, cara interior o cara exterior) governa tant el camp Llargada com les cotes de mur de la planta. Comença a l'eix central, de manera que les cotes de mur de la planta ara llegeixen l'eix central on abans llegien la cara exterior. Canvia-ho a la fila del {{ui:Mur}}, a {{ui:Propietats}} o a {{ui:Configuració}} › {{ui:BimCraft}} › {{ui:Murs}}.
 
-### Comprova i informa
+### Nivells, graelles i mesura
 
-- **Comprova amb un IDS.** Carrega el fitxer `.ids` que t'ha donat un client i veu a Problemes cada element que no el compleix, abans de lliurar l'IFC. Obre {{ui:Check against an IDS}} sota {{ui:Model checks}}. Vegeu [Comprova un model amb l'IDS d'un client](topic:check-against-ids).
-- **Etiquetes i calendaris.** Defineix les teves pròpies etiquetes, assigna-les a molts elements alhora i crea calendaris les columnes, filtres i grups dels quals les llegeixin; les etiquetes es guarden a l'IFC. Vegeu [Etiquetes i calendaris](topic:tags-and-schedules).
-- **Documents a partir del model.** {{ui:Documents from the model}} omple una plantilla d'especificació a partir de l'IFC obert i la desa com a PDF, document de Word o Markdown. Vegeu [Documents a partir del model](topic:documents-from-the-model).
-- **Compara un escaneig amb el model.** Amb un núvol de punts obert, {{ui:Compare}} jutja cada element com a construït, parcialment construït, que falta o no assolit, i mostra el percentatge construït. Vegeu [Compara un escaneig amb el model](topic:compare-scan-with-model).
-- **Carboni i cost.** El panell Carboni suma el carboni incorporat a partir d'una taula de factors que pots editar, i el panell Cost reparteix els preus pel calendari 4D. Els factors que vénen amb BimCraft són genèrics i estan marcats com a no verificats. Vegeu [Carboni incorporat i cost](topic:embodied-carbon-and-5d-cost).
-- **Qualsevol projecció de mapa.** {{ui:Measure}} › {{ui:Coordinate system…}} accepta un número EPSG, una zona UTM, un nom o la teva pròpia definició de projecció. Vegeu [Georeferència amb qualsevol projecció](topic:georeference-any-projection).
+- **Afegeix un nivell per sota.** {{ui:Afegeix un nivell per sota}} al panell {{ui:Nivells}} afegeix un nivell sota el més baix, de la mateixa alçada, a una elevació negativa (Nivell -1, Nivell -2). Res més es mou. {{ui:Afegeix nivells…}} accepta ara alçades negatives. Escriure LEVEL, LEVELS, STOREY o STOREYS a la línia d'ordres obre {{ui:Afegeix nivells…}}, i hi ha un botó {{ui:Nivells}} als menús i a les pestanyes de la cinta. Consulta [Llocs, edificis i nivells](topic:site-building-and-levels).
+- **Cotes de graella a la planta.** Amb l'eina {{ui:Graella}} activada, marca {{ui:Dimensions}} per dibuixar l'espaiat entre les línies veïnes i la mida global més enllà de les bombolles, a la planta de cada nivell. Consulta [Acota una graella](topic:grid-dimensions).
+- **Mesura a la planta.** {{ui:Mesura}} al grup {{ui:Dibuixa}} dona una distància amb les diferències X i Y entre dos clics. No es desa res al model. Consulta [Mesura a la planta](topic:measure-on-the-plan).
+- **Canvia diverses columnes a la vegada.** Tria columnes juntament amb un mur i la llista mostra cada tipus amb {{ui:Mantén només aquests}}. Un clic manté les columnes i mostra els seus camps comuns.
+- **Una unitat de visualització a tot arreu.** Les coordenades, els mesuraments, les seccions, les escales de full, les càrregues i els resultats de la pestanya de marc i el text dels Problemes segueixen la unitat que triïs. Les exportacions es mantenen en SI.
 
-### Dibuixa i edita
+### Vistes, fulls i impressió
 
-- **Mou, Alinea i Distribueix.** Sota {{ui:Build}}; {{key:Shift+M}} inicia Mou (la {{key:M}} sola segueix sent Mesura). Mou copia mentre avances amb {{key:C}}, cada pas és un desfer i viatja en una sessió de Live TeamWork. Vegeu [Mou, copia, alinea i distribueix](topic:move-align-distribute).
-- **Imatges sota el plànol.** {{ui:Build}} › {{ui:Picture}} col·loca un PNG, JPEG o WebP sota el plànol d'una planta o en un pla vertical. Fixa l'escala amb dos punts i mou-la, gira-la, esvaeix-la i bloqueja-la. Una àrea copiada a MarkupCraft s'enganxa a l'escala del seu full. Vegeu [Posa una imatge sota el plànol](topic:pictures-as-backgrounds).
-- **Murs a partir d'un escaneig.** Amb un escaneig obert, els murs, portes i sales arriben com a propostes que tu mantens o refuses una a una, en un sol pas de desfer. Només es troben murs en dues direccions perpendiculars. Vegeu [Converteix un escaneig en murs](topic:scan-to-walls).
-- **Calca, plomes i croquis d'escala.** {{ui:Trace}} mostra una altra planta en traç discontinu sota el plànol, {{ui:Pens}} dóna als murs, portes i finestres el seu propi gruix de línia en una sola vista, i {{ui:Sketch stair}} converteix una línia de recorregut en una escala. S'obre una malla Wavefront OBJ. Vegeu [Calca una planta, plomes i una escala a partir d'un croquis](topic:trace-pens-stairs-obj).
-- **Edificis al voltant d'una adreça.** Els edificis i la parcel·la que va trobar l'eina Adreça a lloc de CivilCraft arriben com a suggeriments; marques els que vols afegir. Vegeu [Comença des del lloc de CivilCraft](topic:site-from-civilcraft).
-- **Plànols de panells.** {{ui:Build}} › {{ui:Panel drawings}} emmarca murs, forjats i cobertes de fusta o d'acer de perfil lleuger, i desa una llista de talls en CSV i els plànols de taller en PDF. Són valors de partida, no un disseny estructural. Vegeu [Plànols de panells](topic:panel-drawings).
-- **Símbols i plantes.** {{ui:Build}} › {{ui:Symbol palette}} troba símbols elèctrics i de fontaneria pel nom; la font {{ui:Plants}} de la {{ui:Library}} enumera unes 400 plantes amb símbols de planta. Vegeu [Paleta de símbols](topic:symbol-palette) i [Col·loca una planta](topic:plant-list).
+- **Estil de treball.** {{ui:Configuració}} › BimCraft › {{ui:Estil de treball}} tria entre que cada vista tingui les seves pròpies anotacions i taules de plomes, o que les comparteixi. Consulta [Estil de treball, vistes duplicades, plomes al paper, Informa com a i plantilles](topic:working-style).
+- **Duplica una vista.** Les plantes, les plantes de sostre, els punts de vista, els alçats i les seccions es poden duplicar com a {{ui:Còpia pròpia}} o {{ui:Enllaçat}}; {{ui:Fes una còpia pròpia}} fa independent una vista enllaçada. Consulta [Estil de treball, vistes duplicades, plomes al paper, Informa com a i plantilles](topic:working-style).
+- **Imprimeix tal com es veu, o amb una taula de plomes.** Les substitucions de ploma es desen a l'IFC amb la vista, i els fulls i els PDF les dibuixen com les dibuixa la pantalla. El mateix tema cobreix les taules de plomes.
+- **{{ui:Informa com a}}.** {{ui:Informa com a}} a {{ui:Propietats}} escriu una lloseta dibuixada com una carretera, un mur com un panell o una coberta com una rampa a l'IFC com la classe que triïs, i la compta així en les taules, quantitats, Cerca, Color per i Problemes.
+- **Edita en alçats i seccions.** Dibuixa i mou murs, obertures, nivells, cotes i notes directament en un alçat o una secció, amb les teves pròpies mides de full i caixetins. Consulta [Edita en alçats i seccions](topic:edit-in-elevations).
+- **Fulls.** Cada full pot ser horitzontal o vertical. Una caixa {{ui:Escriviu una escala}} es troba al costat de la llista d'escales a cada vista col·locada (1:64, 2:1, 1/4" = 1'). Pots arrossegar un dibuix col·locat o moure'l amb les tecles de fletxa, i {{ui:Formats…}} › {{ui:Importa SVG…}} converteix el teu propi disseny de full en un caixetí amb camps escrits per full.
+- **Crèdits de biblioteca en un full.** Un conjunt de dibuixos amb elements de biblioteca té una taula de crèdits de biblioteca que pots col·locar en qualsevol full. Consulta [Crèdits de biblioteca](topic:library-credits).
 
-### Canonades, conductes i energia
+### Biblioteca: col·locació
 
-- **Dividit, VRF i ventiloconvectors.** Unitats interiors i exteriors amb les seves connexions, i línies dimensionades a partir d'una taula de valors d'exemple típics que pots canviar. Vegeu [Dividit, VRF i ventiloconvectors](topic:split-vrf-fan-coils).
-- **Càlculs.** El panell Càlculs comprova la mida de les canonades i dels conductes amb la caiguda de pressió, encamina els cables per safates i conduïts i mostra'n l'ocupació, i calcula la il·luminància a partir de fitxers IES o EULUMDAT. Els valors per defecte estan etiquetats; escriu els valors de la teva normativa. Vegeu [Càlculs de canonades, conductes, cables i llum](topic:mep-calculations).
-- **Fitxers PCF.** L'ordre **Exporta PCF** de l'eina Canonada escriu els trams per a programes d'anàlisi de tensions de canonades i per a programes isomètrics, i un fitxer PCF llegit de nou dibuixa la seva canonada. Vegeu [Fitxers de components de canonada](topic:piping-pcf).
-- **Fotovoltaica (PV).** Col·loca matrius en teulades o al terreny, ombreja-les amb el model, estima l'energia anual, comprova les cadenes i crea dades per a un esquema unifilar. El mòdul inicial i les pèrdues són genèrics. Vegeu [Fotovoltaica](topic:solar-pv).
-- **Fitxer d'EnergyPlus.** El panell Comprova amb EnergyPlus escriu el model com a IDF per executar-lo al teu propi EnergyPlus. Executar-lo al navegador necessita una compilació que allotges tu i on escrius l'adreça; BimCraft no la porta. Vegeu [Comprova la calefacció i la refrigeració amb EnergyPlus](topic:check-with-energyplus).
+- **La col·locació segueix la vista.** A la vista de Planta, la {{ui:Biblioteca}} mostra {{ui:Col·loca al plànol}}; en 3D mostra {{ui:Col·loca al model}}; en Divisió mostra un botó dividit amb {{ui:Col·loca al plànol}} com a acció principal. Les dues maneres escriuen el mateix element IFC. També pots arrossegar una targeta de la {{ui:Biblioteca}} a la planta o a la vista 3D; amb un llapis o un dit, prem i mantén, i després arrossega. Consulta [Col·loca des de la Biblioteca](topic:place-from-library).
 
-### Imatges i fitxers
+### Fitxers i assistents
 
-- **Tria el motor de renderitzat.** {{ui:Render}} té una opció {{ui:Engine}}. Els nostres dos motors integrats (Fast i Path tracer) continuen sent els predeterminats. **Obre en** desa l'escena com a fitxer USD o glTF, i una carpeta de projecte d'Unreal com a .zip; a CadCraft Studio un complement pot afegir un motor. El connector d'Unreal que obre el projecte no s'ha publicat. Vegeu [Tria quin programa dibuixa la imatge](topic:render-engines).
-- **Desfer a Studio.** Dins de CadCraft Studio, BimCraft comunica a Studio cada pas acabat perquè Studio pugui desfer el teu darrer pas en la finestra que hagis usat per últim. Vegeu [Desfer entre aplicacions](topic:undo-across-apps).
-- **Complements al fitxer.** Un IFC registra quins complements hi han escrit, i n'ofereix els que no tens quan l'obres. Vegeu [Complements al fitxer](topic:add-ons-in-your-file).
+- **{{ui:Collada}} i Google Earth.** {{ui:Collada}} a la barra d'eines (menú Fitxer en els estils de menú) escriu un .dae, o un .kmz col·locat on és el model al mapa. Consulta [Exporta el model com a Collada o per a Google Earth](topic:collada).
+- **Els assistents poden col·locar dispositius elèctrics.** El teu assistent connectat té eines noves per afegir, llistar, canviar i suprimir dispositius, i per fixar llums. Els assistents estan desactivats fins que els activis a {{ui:Configuració}}. Consulta [Deixa que un assistent d'IA treballi amb el teu model](topic:assistants).
+- **Scan to BIM (complement).** Desactivat per defecte i necessita el complement Núvols de punts. Proposa lloses, murs, portes i finestres a partir d'un escaneig amb la desviació mesurada de cadascun; acceptar-los és un sol pas de desfer.
 
-### En totes les aplicacions
+### Anàlisi
 
-- **Connecta la teva IA.** El teu propi assistent pot manegar BimCraft a través de la connexió de Studio i respondre preguntes sobre el model, com quines sales són sota una àrea donada. Studio no té IA pròpia. Vegeu [Deixa que un assistent d'IA treballi amb el teu model](topic:assistants).
-- **Files de la barra d'eines.** {{ui:Settings}} › {{ui:General}} › {{ui:Toolbar rows}} ofereix Ajustat, 2 files o 1 fila; Ajustat continua sent el predeterminat.
-- **Dispositius d'entrada.** La configuració de trackpad, llapis, ratolí 3D, comandament i MIDI és compartida per totes les aplicacions.
-- **Problemes i Live.** El panell d'avisos i les sessions de Live funcionen com abans, i les noves comprovacions de dalt alimenten Problemes.
-- **Idiomes.** 54 idiomes, deu dels quals són nous. Els que no són l'anglès són esborranys automàtics que encara no ha revisat cap parlant nadiu; els temes d'ajuda són majoritàriament en anglès.
+- **Dades de vent i sísmiques del lloc.** A la pestanya {{ui:Anàlisi}}: càrregues de vent segons ASCE 7-10 o 7-16 per a un edifici rígid tancat, amb una força a cada planta com a casos de càrrega, i dades sísmiques del lloc amb una consulta USGS i l'espectre de disseny.
+- **Seguiment estructural i elements finits.** Comprovacions de formigó segons ACI 318-19, forces laterals equivalents segons ASCE 7-22, deriva de planta, lloses i murs com a plaques, i combinacions de càrrega d'ASCE 7 i EN 1990. El nostre propi motor d'elements finits fa closques, tetraedres i anàlisi modal. Consulta [Comprova elements de formigó i fes càrregues sísmiques](topic:concrete-and-seismic) i [Anàlisi de marcs](topic:frame-analysis).
 
-## Corregit a la 0.8.1
+### Altres complements i documents
 
-- **Disposició de cinta + Navegador de projectes.** Insereix › Importa CAD, Insereix › Imatge i Gestiona › Unitats del projecte deien "Encara no implementat a BimCraft". Imatge ara obre l'eina Imatge, Importa CAD obre {{ui:Build}} › {{ui:From a drawing…}} (DWG, DXF, PDF o un escaneig), i Unitats del projecte obre {{ui:Settings}} › {{ui:Global}} › {{ui:Units}}. Mou i Alinea executen les eines Mou i Alinea, Nivell obre {{ui:Add levels…}}, Fases obre la secció de fases de reforma i Materials obre la biblioteca de materials.
-- **Secció de classes de DWG.** Es llegia com un tipus incorrecte; corregit a BimCraft i a les altres aplicacions que llegeixen DWG.
-- **Idioma en execució.** Studio i les edicions empaquetades ja poden canviar d'idioma sense reiniciar. Encara no s'ha provat a totes les plataformes; digues-nos si l'idioma no canvia.
-- **Script de paquet d'Archicad.** `archicad_bundle.py`, una descàrrega separada, ara troba el camí d'Archicad, vigila la carpeta fins a 20 segons i torna a intentar-ho al costat del paquet.
+- **Il·luminació interior (complement).** Col·loca lluminàries i escriu el lux com a números a la planta de cada nivell, amb una estimació d'enlluernament i un informe imprimible.
+- **Panell de documents.** {{ui:Fitxer}} › {{ui:Documents…}} té retirada i devolució amb un fitxer de bloqueig, lletres de revisió, estats de publicació i historial.
+- **Regions i acer.** Paquets de dibuix i de normativa de construcció sud-africans al complement de Normatives, i 976 mides d'acer britàniques a la taula de seccions compartida.
+- **Complements d'impressió 3D amb resina, gratuïts.** Tallador, suports i base, prova d'exposició, i els formats de fitxer GOO, SL1, Chitubox i Anycubic, tots desactivats per defecte.
 
-## Encara no és en aquesta versió
+## En totes les aplicacions
 
-- **Eines de seguretat i de disseny.** Persones a l'edifici no té un límit de distància de recorregut d'un codi d'edificació (l'introdueixes tu) i no s'ha verificat a mà en un plànol real. Les xifres d'acústica, de cicle de vida i de risc són valors de planificació, no una comprovació normativa.
-- **Escenaris climàtics i EnergyPlus.** No hi ha escenaris climàtics integrats: pots carregar un fitxer d'escenari per a la simulació d'inundació. L'execució d'EnergyPlus al navegador no forma part d'aquesta versió.
-- **Disposició de cinta.** Amidament de materials continua "Encara no implementat" perquè BimCraft no té una llista de quantitats de materials, i 54 altres eines de cinta en gris encara no tenen cap eina de BimCraft al darrere.
-- **Signatura i plataformes.** Els instal·ladors de Windows i el .dmg de macOS no estan signats, així que SmartScreen mostra {{ui:More info}} i després {{ui:Run anyway}}, i macOS necessita clic dret i després {{ui:Open}}. La compilació per a iPad i iPhone no s'ha tornat a compilar per a la 0.8.1.
-- **Proves de pàgina real.** Algunes proves més antigues del navegador de BimCraft continuen fallant a la nostra pàgina de prova, com abans de la 0.8.1.
+- Passar el ratolí per sobre d'un botó o control mostra una indicació emergent de Bootstrap.
+- La indicació d'inici a una àrea de dibuix buida té un botó de tancament; BimCraft recorda que s'ha tancat.
+- La franja de pestanyes d'un panell que no hi cap ara es desplaça en lloc de quedar tallada.
+- Amb un document obert, la pestanya del navegador diu «<document> - BimCraft | CadCraft».
+- A {{ui:Configuració}} › {{ui:General}} › {{ui:Disposició}} les disposicions són una llista desplegable d'opcions de dues línies.
+- La llista d'idiomes de {{ui:Configuració}} ofereix més idiomes que a la 0.8; els idiomes diferents de l'anglès són esborranys de màquina.
 
-Tot el demés és a [Què no està encara implementat](topic:not-built-yet). Els canvis anteriors són a [Novetats de la 0.7](topic:whats-new-0-7).
+## Corregit
+
+- **Mou funciona a les escales,** i a les rampes, baranes, plans de coberta, dispositius exempts, imatges i camins.
+- **Arrossegar un mur ja no torça la sala.** La nansa central mou el mur perpendicular a si mateix i les seves cantonades llisquen al llarg dels murs units. Mantén premut {{key:Mod}} per al moviment lliure antic; {{ui:Escaira}} torna els 90 graus.
+- **Un canvi de gruix o de tipus en un node unit** ara manté la cantonada tancada en una L, una T, un node de tres murs i al costat d'un mur corbat.
+- **Moure o copiar un grup de sales** manté tancats els murs units que queden fora del grup.
+- **Refer conserva la identitat de la cota d'un mur.**
+- **Triar un mur amb {{ui:Dibuixa}} desactivat** ja no produeix cap error a {{ui:Propietats}}.
+- **{{ui:Renderitza}} torna a WebGL** quan la GPU no pot arrencar, en lloc d'aturar-se.
+- **La comprovació d'EnergyPlus es pot tornar a activar.**
+- **Documents s'obre com un diàleg centrat.** {{key:Esc}}, la X o un clic a la pàgina atenuada el tanquen.
+- **Els botons {{ui:Planta}}, {{ui:Divideix}} i {{ui:3D}} es mostren** tan bon punt hi ha un model obert, no només després que {{ui:Dibuixa}} s'hagi activat una vegada.
+
+## Límits honestos
+
+- No s'ha imprès res en maquinari real. Els suports de resina són nous i encara no s'han provat.
+- Els resultats de vent, sísmica, formigó i elements finits són ajuts de verificació per a un enginyer, comprovats contra solucions tancades, no contra un edifici real.
+- Scan to BIM s'ha provat en un edifici sintètic, no en un escaneig real, i només troba sales rectilínies.
+- Collada no s'ha obert aquí a Blender ni a Google Earth.
+- L'estimació d'il·luminació es comprova contra el nostre propi traçat, no contra altres programes d'il·luminació.
+- Les xifres sud-africanes no estan verificades.
+- Els estils d'unió de murs (topada, inglet, talla en escaire) i la prioritat de capa no estan implementats; les cantonades són en inglet.
+- Els idiomes diferents de l'anglès són esborranys de màquina.
+
+Tot el que queda és a [Què encara no està implementat](topic:not-built-yet). Els canvis anteriors són a les notes de la 0.8 i 0.8.1 més avall en aquesta pàgina.
+
+## Anteriors: 0.8 i 0.8.1
+
+Això és el que ha canviat a BimCraft 0.8 (2026-11-01) i 0.8.1 (2026-11-02), en comparació amb la 0.7. BimCraft ara pot respondre preguntes sobre un edifici i provar-lo, amb persones, so, aigua, vent i terratrèmols, i dibuixar-lo amb més eines; la 0.8.1 és una versió de correcció.
+
+### Nou
+
+**Prova l'edifici**
+
+- **Persones a l'edifici.** La secció {{ui:Persones a l'edifici}} del panell esquerre fa caminar una evacuació o les arribades d'un dia normal per les teves sales, portes i escales. Veus les cues on l'edifici s'estreny, el recorregut més llarg fins a una sortida des de cada sala i quant triga la darrera persona. Marca {{ui:Tancada}} en una porta per veure què canvia, i marca {{ui:Mostra les persones a la vista 3D}} per veure els vianants. Les conclusions van als Problemes. És un model de multitud aproximat per a decisions de disseny, no un certificat de seguretat contra incendis. Consulta [Fes caminar persones per l'edifici](topic:people-in-the-building).
+- **Acústica de sales, i escolta-ho.** La secció {{ui:Acústica de sales}} dona el temps de reverberació de cada sala per banda d'octava (Sabine i Eyring) a partir de la seva mida i els acabats que triïs, i amb un objectiu propi diu quina absorció caldria per complir-lo. {{ui:Reprodueix-lo en aquesta sala}} reprodueix una veu, un aplaudiment, notes puntejades o el teu propi fitxer de so a través d'una resposta impulsiva calculada per a la sala. Les xifres d'absorció són valors publicats típics per a què les reemplacis. Consulta [Acústica de sales](topic:room-acoustics).
+- **Reproducció d'inundacions, vent i terratrèmols.** {{ui:Reproducció de risc}} reprodueix l'aigua que puja per les sales, la pressió del vent a cada planta i un terratrèmol que sacseja les plantes, en una planta o un alçat amb un control lliscant de temps. Models simples amb les seves suposicions al panell; no és una comprovació de codi. Consulta [Reprodueix una inundació, vent o terratrèmol](topic:hazard-playback).
+- **Què es desgasta en cinquanta anys.** {{ui:Vista del cicle de vida}} llista les finestres, portes, acabats i la coberta amb una vida útil cadascun, els anys en què es reemplacen i, quan escrius un cost per unitat, el cost per any i el seu valor present. {{ui:Desa el calendari (CSV)}} l'escriu. Les vides útils són xifres de planificació. Consulta [Mira què es desgasta en cinquanta anys](topic:life-cycle-view).
+- **Comprovacions de formigó i sísmiques.** Els blocs {{ui:Elements de formigó}} i {{ui:Càrregues sísmiques}} de la pestanya {{ui:Anàlisi}} comproven bigues i pilars de formigó segons ACI 318-19 i fan forces laterals equivalents segons ASCE 7-22 en forjats rígids, amb deriva de planta. Perquè un enginyer les revisi. Consulta [Comprova elements de formigó i fes càrregues sísmiques](topic:concrete-and-seismic).
+
+**Comprova i informa**
+
+- **Comprova contra un IDS.** Carrega el fitxer `.ids` que t'ha donat un client i veu cada element que no el compleix als Problemes, abans de lliurar l'IFC. Obre {{ui:Verifica amb un IDS}} sota {{ui:Comprovacions del model}}. Consulta [Comprova un model contra l'IDS d'un client](topic:check-against-ids).
+- **Etiquetes i taules.** Defineix les teves pròpies etiquetes, posa-les a molts elements alhora i fes taules les columnes, filtres i grups de les quals les llegeixin; les etiquetes es desen a l'IFC. Consulta [Etiquetes i taules](topic:tags-and-schedules).
+- **{{ui:Documents del model}}.** {{ui:Documents del model}} omple una plantilla d'especificació a partir de l'IFC obert i la desa com a PDF, document de Word o Markdown. Consulta [Documents a partir del model](topic:documents-from-the-model).
+- **Compara un escaneig amb el model.** Amb un núvol de punts obert, {{ui:Compara}} jutja cada element com a construït, parcialment construït, absent o no assolit, i mostra el percentatge construït. Consulta [Compara un escaneig amb el model](topic:compare-scan-with-model).
+- **Carboni i cost.** El panell Carboni suma el carboni incorporat a partir d'una taula de factors que pots editar, i el panell Cost reparteix els preus pel calendari 4D. Els factors que vénen amb BimCraft són genèrics i marcats com a no comprovats. Consulta [Carboni incorporat i cost](topic:embodied-carbon-and-5d-cost).
+- **Qualsevol projecció de mapa.** {{ui:Mesura}} › {{ui:Sistema de coordenades…}} accepta un número EPSG, una zona UTM, un nom o la teva pròpia definició de projecció. Consulta [Georeferencia amb qualsevol projecció](topic:georeference-any-projection).
+
+**Dibuixa i edita**
+
+- **Mou, Alinea i Distribueix.** Sota {{ui:Compilació}}; {{key:Shift+M}} inicia Mou (només {{key:M}} continua sent {{ui:Mesura}}). Mou copia mentre avances amb {{key:C}}, cada pas és un sol desfer, i viatja en una sessió de Live TeamWork. Consulta [Mou, copia, alinea i distribueix](topic:move-align-distribute).
+- **Imatges sota la planta.** {{ui:Compilació}} › {{ui:Imatge}} col·loca un PNG, JPEG o WebP sota la planta d'un nivell o en un pla vertical. Fixa l'escala amb dos punts, i mou, gira, esvaeix i bloqueja-la. Una àrea copiada a MarkupCraft s'enganxa a l'escala del seu full. Consulta [Posa una imatge sota la planta](topic:pictures-as-backgrounds).
+- **Murs a partir d'un escaneig.** Amb un escaneig obert, els murs, les portes i les sales arriben com a propostes que mantens o rebutges una a una, en un sol pas de desfer. Només es troben murs en dues direccions perpendiculars. Consulta [Converteix un escaneig en murs](topic:scan-to-walls).
+- **{{ui:Calca}}, {{ui:Plomes}} i escala d'esbós.** {{ui:Calca}} mostra un altre nivell en línies discontínues sota la planta, {{ui:Plomes}} dona als murs, portes i finestres el seu propi gruix de línia en una sola vista, i {{ui:Croquis d'escala}} converteix una línia de passeig en una escala. S'obre una malla Wavefront OBJ. Consulta [Calca un nivell, plomes i una escala a partir d'un esbós](topic:trace-pens-stairs-obj).
+- **Edificis al voltant d'una adreça.** Els edificis i la parcel·la que va trobar Adreça a lloc de CivilCraft arriben com a suggeriments; marques els que vols afegir. Consulta [Comença des del lloc de CivilCraft](topic:site-from-civilcraft).
+- **{{ui:Plànols de panells}}.** {{ui:Compilació}} › {{ui:Plànols de panells}} emmarca murs, forjats i cobertes en fusta o acer de calibre lleuger i desa una llista de talls com a CSV i els plànols de taller com a PDF. Valors inicials, no un disseny estructural. Consulta [Plànols de panells](topic:panel-drawings).
+- **{{ui:Paleta de símbols}} i plantes.** {{ui:Compilació}} › {{ui:Paleta de símbols}} troba símbols elèctrics i de fontaneria pel nom; la font {{ui:Plantes}} de la {{ui:Biblioteca}} llista unes 400 plantes amb símbols de planta. Consulta [Paleta de símbols](topic:symbol-palette) i [Col·loca una planta](topic:plant-list).
+
+**Canonades, conductes i energia**
+
+- **Split, VRF i fan coils.** Unitats interiors i exteriors amb les seves connexions, i línies de conjunt dimensionades a partir d'una taula de valors d'exemple típics que pots canviar. Consulta [Split, VRF i fan coils](topic:split-vrf-fan-coils).
+- **Càlculs.** El panell de Càlculs comprova la mida de les canonades d'alimentació i de conductes amb la pèrdua de pressió, fa passar cables per safates i canalitzacions i mostra el seu ompliment, i calcula la il·luminació a partir de fitxers IES o EULUMDAT. Els valors per defecte estan etiquetats; escriu els valors del teu codi. Consulta [Càlculs de canonades, conductes, cables i llum](topic:mep-calculations).
+- **Fitxers PCF.** L'**Exporta PCF** de l'eina de canonada escriu els recorreguts per a programes d'esforç de canonades i isomètrics, i un fitxer PCF llegit de nou dibuixa la seva canonada. Consulta [Fitxers de components de canonada](topic:piping-pcf).
+- **Fotovoltaica.** Col·loca matrius a les cobertes o al terra, ombreja-les a partir del model, estima l'energia anual, comprova les cadenes i fa dades d'esquema unifilar. El mòdul inicial i les pèrdues són genèrics. Consulta [Fotovoltaica](topic:solar-pv).
+- **Fitxer EnergyPlus.** El panell Comprova amb EnergyPlus escriu el model com un IDF per executar al teu propi EnergyPlus. Executar-lo al navegador necessita una versió que allotgis tu i l'adreça de la qual escrius; BimCraft no la porta. Consulta [Comprova la calefacció i la refrigeració amb EnergyPlus](topic:check-with-energyplus).
+
+**Imatges i fitxers**
+
+- **Tria el motor de render.** {{ui:Renderitza}} té una opció {{ui:Motor}}. Els nostres dos motors integrats (Ràpid i Traçador de camins) es mantenen per defecte. **Obre a** desa l'escena com a fitxer USD o glTF, i una carpeta de projecte Unreal com a .zip; a CadCraft Studio un complement pot afegir un motor. El connector d'Unreal que obre el projecte no està publicat. Consulta [Tria quin programa dibuixa la imatge](topic:render-engines).
+- **Desfer a Studio.** Dins de CadCraft Studio, BimCraft diu a Studio cada pas acabat perquè Studio pugui desfer el teu darrer pas a la finestra que hagis fet servir per últim. Consulta [Desfer entre aplicacions](topic:undo-across-apps).
+- **Complements al teu fitxer.** Un IFC registra quins complements hi han escrit, i quan l'obres ofereix els que no tens. Consulta [Complements al teu fitxer](topic:add-ons-in-your-file).
+
+**A totes les aplicacions**
+
+- **Connecta la teva IA.** El teu propi assistent pot conduir BimCraft a través de la connexió de Studio i respondre preguntes sobre el model, com quines sales hi ha sota una àrea donada. Studio no té cap IA pròpia. Consulta [Deixa que un assistent d'IA treballi amb el teu model](topic:assistants).
+- **Barres de la barra d'eines.** {{ui:Configuració}} › {{ui:General}} › {{ui:Files de la barra d'eines}} ofereix Ajustar, 2 files o 1 fila; Ajustar es manté com a opció per defecte.
+- **Dispositius d'entrada.** La configuració del ratolí tàctil, la ploma, el ratolí 3D, el comandament i el MIDI és compartida per totes les aplicacions.
+- **Problemes i Live.** El panell d'avisos i les sessions Live funcionen com abans, i les noves comprovacions anteriors alimenten els Problemes.
+- **Idiomes.** 54 idiomes, deu d'ells nous. Els que no són anglès són esborranys de màquina que encara no ha llegit un parlant natiu; els temes d'ajuda són majoritàriament en anglès.
+
+### Corregit a la 0.8.1
+
+- **Disposició de la cinta + navegador de projecte.** Insereix › Importa CAD, Insereix › Imatge i Gestiona › Unitats del projecte deien «Encara no implementat a BimCraft». Imatge ara obre l'eina Imatge, Importa CAD obre {{ui:Compilació}} › {{ui:Des d'un dibuix…}} (DWG, DXF, PDF o un escaneig), i Unitats del projecte obre {{ui:Configuració}} › {{ui:Global}} › {{ui:Unitats}}. Move i Align executen les eines Move i Align, Nivell obre {{ui:Afegeix nivells…}}, Fases obre la secció de fases de reforma, i Materials obre la biblioteca de materials.
+- **Secció de classes DWG.** Es llegia com el tipus equivocat; corregit a BimCraft i a les altres aplicacions que llegeixen DWG.
+- **Idioma en execució.** Studio i les edicions empaquetades ara poden canviar d'idioma sense reiniciar. Encara no s'ha provat en totes les plataformes; digues-nos si l'idioma no canvia.
+- **Script de paquet d'Archicad.** `archicad_bundle.py`, una descàrrega a part, ara troba la ruta d'Archicad, vigila la carpeta durant fins a 20 segons i reintenta al costat del paquet.
+
+### Encara no en aquesta versió
+
+- **Eines de seguretat i de disseny.** Persones a l'edifici no té un límit de distància de recorregut d'un codi de construcció (tu escrius el límit) i no s'ha comprovat a mà en un plànol real. Les xifres d'acústica, de cicle de vida i de perill són valors de planificació, no una comprovació de codi.
+- **Canvi climàtic i EnergyPlus.** No hi ha futurs climàtics integrats: pots carregar un fitxer d'escenari per a l'execució d'inundació. L'execució d'EnergyPlus al navegador no forma part d'aquesta versió.
+- **Disposició de la cinta.** Material Takeoff continua com «Encara no implementat» perquè BimCraft no té una llista de quantitats de materials, i 54 altres eines de cinta en gris no tenen encara cap eina de BimCraft al darrere.
+- **Signatura i plataformes.** Els instal·ladors de Windows i el .dmg de macOS no estan signats, de manera que SmartScreen mostra {{ui:Més informació}} i després {{ui:Executa igualment}}, i macOS necessita clic dret i després {{ui:Obre}}. La versió per a iPad i iPhone no es va reconstruir per a la 0.8.1.
+- **Proves de pàgina real.** Algunes proves antigues del navegador de BimCraft continuen fallant a la nostra pàgina de prova, com abans de la 0.8.1.
+
+Tot el que queda és a [Què encara no està implementat](topic:not-built-yet). Els canvis anteriors són a [Novetats de la versió 0.7](topic:whats-new-0-7).

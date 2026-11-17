@@ -8,9 +8,11 @@
  * as a card at the corner: the person can start a new building, open a file, or press Recover when ready. The shared module is not edited
  * (a byte-identical copy in every app); the one call that makes the dialog is told to open it non-modal.
  *
- * offerRecovery({ autosave, onRecover, status, t }) → the offer's promise ({recovered, discarded, kept}).
+ * offerRecovery({ autosave, onRecover, status, t, statusText }) → the offer's promise ({recovered, discarded, kept}).
+ * 2026-11-12 (owner: "why doesn't it clear??"): when the card closes (Later, the x, Discard, the last Recover) the "listed at the corner" line goes too,
+ * unless something else has written to the status line since (statusText() reads it back).
  */
-export function offerRecovery({ autosave, onRecover, status, t }) {
+export function offerRecovery({ autosave, onRecover, status, t, statusText }) {
   const proto = typeof HTMLDialogElement !== 'undefined' ? HTMLDialogElement.prototype : null;
   const run = async () => {
     const list = await autosave.orphans();
@@ -30,8 +32,9 @@ export function offerRecovery({ autosave, onRecover, status, t }) {
       return modal.call(this);
     };
     try { promise = autosave.offer({ list, onRecover: wrapped }); } finally { proto.showModal = modal; }
-    status(t('recover.pending', { n: list.length }));
-    return promise;
+    const pending = t('recover.pending', { n: list.length });
+    status(pending);
+    return promise.then((res) => { if (typeof statusText === 'function' && statusText() === pending) status(''); return res; });
   };
   return run();
 }

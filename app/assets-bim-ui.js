@@ -13,6 +13,7 @@ import { el } from './ui-util.js';
 import { t } from './i18n.js';
 import { KEY_SPAN } from './ifc-model.js';
 import { cobieSection } from './assets-bim-cobie-ui.js';
+import { handoverSection } from './handover-docs-ui.js';   // 0.10 BK.114 (bk-stages-10)
 import { SENSORS, sensorSection, readingCell, sensorDetail, paintModel } from './assets-bim-sensors-ui.js';
 import { liveSection } from './assets-bim-live-ui.js';
 import { FIELDS, DOC_KINDS, readAssets, trackOp, untrackOp, assetDataOp, addEntryOp, editEntryOp, removeEntryOp, addDocOp, removeDocOp, openable, assetsCsv } from './assets-bim.js';
@@ -166,6 +167,7 @@ export function mountAssets(host) {
       el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-as-track': '', onclick: track, title: t('assets.track.title') }, t('assets.track')),
       el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-as-csv': '', disabled: !all.length, onclick: csv }, t('assets.btn.csv'))));
     out.push(cobieSection(host, { assets, commit, render }));   // 0.7 LC.12 item 2: COBie out and in
+    out.push(handoverSection(host, { assets, commit, render }));   // 0.10 BK.114: the project's handover documents and the handover package
     out.push(sensorSection(host, { assets, commit, render }));   // 0.7 LC.12 item 3: sensor readings from a CSV
     out.push(liveSection(host, { assets, commit, render, soft }));   // 0.7 LC.12 item 4: live feeds from the person's own broker
     const readings = SENSORS.store.guids().length > 0;

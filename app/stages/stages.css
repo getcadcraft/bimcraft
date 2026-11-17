@@ -1,0 +1,21 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* The Project stages section (0.10 W1.10, session stages-10). Colours from the app's own tokens; form fields stay white (owner's rule). */
+.bc-stages .st-body { padding: .35rem 0 .5rem .75rem; }
+.bc-stages .st-sec { margin: .25rem 0; }
+.bc-stages .st-sec > summary { cursor: pointer; font-weight: 600; }
+.bc-stages h5 { margin: .75rem 0 .25rem; font-size: var(--fs-sm); }
+.bc-stages .st-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .4rem .6rem; margin-bottom: .4rem; }
+.bc-stages .st-field { display: flex; flex-direction: column; gap: .15rem; margin-bottom: .3rem; }
+.bc-stages .bc-input, .bc-stages select, .bc-stages textarea { width: 100%; background: #fff; color: #111; }
+.bc-stages .st-scroll { overflow-x: auto; }
+.bc-stages .st-table { width: 100%; font-size: var(--fs-sm); }
+.bc-stages .st-table th, .bc-stages .st-table td { padding: .2rem .35rem; vertical-align: top; text-align: left; }
+.bc-stages .st-n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bc-stages .st-chip { display: inline-block; padding: 0 .45rem; border-radius: .6rem; font-size: var(--fs-sm); border: 1px solid currentColor; white-space: nowrap; }
+.bc-stages .st-ok { color: #1b6e3a; } .bc-stages .st-warn { color: #8a5a00; } .bc-stages .st-bad { color: #a12b1f; } .bc-stages .st-none { color: #546e7a; }
+.bc-stages .st-find { font-size: var(--fs-sm); } .bc-stages .st-find-warn { color: #8a5a00; } .bc-stages .st-find-note { color: #546e7a; }
+.bc-stages .st-x { border: 0; background: transparent; cursor: pointer; font-size: .9rem; line-height: 1; padding: 0 .25rem; color: #78909c; }
+.bc-stages .st-x:hover { color: #a12b1f; }
+.bc-stages .st-link { border: 0; background: transparent; color: inherit; text-decoration: underline; cursor: pointer; padding: 0; }
+.bc-stages .st-figure { overflow-x: auto; margin: .3rem 0; } .bc-stages .st-figure svg { max-width: 100%; height: auto; }
+.bc-stages .st-msg { margin-top: .5rem; } .bc-stages .st-err { color: #a12b1f; }

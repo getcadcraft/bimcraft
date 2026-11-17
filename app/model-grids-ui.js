@@ -188,7 +188,7 @@ export function mountGrids(modelUi) {
         R.pick = null; R.a = q; bindRows(); hintNow(); return;
       }
       const a = R.a; R.a = null;
-      if (Math.hypot(q[0] - a[0], q[1] - a[1]) < 100) { A.host.status(t('model.err.grid.short'), true); hintNow(); return; }
+      if (Math.hypot(q[0] - a[0], q[1] - a[1]) < 10) { A.host.status(t('model.err.grid.short'), true); hintNow(); return; }   // 0.10 BK.73: 10 mm, as model-grids.js
       A.commit(placeGrid({ storey: levelGuid(), axes: [{ a, b: q }] }), { label: t('model.grid'), verb: t('model.verb.drew') });
       hintNow();
     },

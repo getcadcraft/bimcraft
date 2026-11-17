@@ -24,7 +24,7 @@ import { op, afterWallMoveFor, settleFor } from './model-ops.js';
 import { readWalls, updateWall } from './model-walls.js';
 import { readOpenings, deleteOpenings } from './model-openings.js';
 
-const MIN = 50;   // mm: no wall is trimmed shorter than this
+const MIN = 1;   // mm: a wall under 1 mm cannot exist (model-walls.js). 0.10 BK.73: was 50 mm (practice); a wall left under 50 mm is advice now
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
 const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1];

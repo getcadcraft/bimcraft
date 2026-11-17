@@ -34,6 +34,7 @@ Change what you drew: pick a wall, door or window, then type a new number in **P
 When one wall is picked, it shows three grips: a square at each end and a circle in the middle.
 
 - Drag an end to make the wall longer, shorter or turn it. It snaps like the Wall tool, and catches square to the wall joined at its other end when you are within 3 degrees; {{key:Shift}} keeps it on the plan's axes.
+- The walls joined at the end you drag keep their angle: their ends slide along their own lines to meet the wall's new line, so nothing goes sloped. Hold {{key:Mod}} for a free drag (the joined wall's end comes with yours and that wall turns), or {{key:Alt}} to break the joins at this wall.
 - Drag the middle to move the whole wall square to itself, whichever way you drag. Its corners slide along the joined walls, so those walls keep their angle.
 - Hold {{key:Mod}} while dragging the middle for a free move, when you do want to break the angle. {{ui:Square up}} brings it back.
 - While a grip is held, type a distance and press {{key:Enter}} (or let go): the wall goes exactly that far, the way you were dragging. {{key:Esc}} drops the move.

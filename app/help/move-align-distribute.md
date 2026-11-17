@@ -33,3 +33,5 @@ Pick two or more elements, choose {{ui:Align}}, then a side (left, centre, right
 ## Distribute
 
 Pick three or more elements, choose {{ui:Distribute}}, then a direction (across or down) and the spacing: equal gaps between them or equal centres. The two at the ends stay where they are.
+
+Walls that Align or Distribute moves keep their joins, as with Move: a wall joined to a moved wall slides its end along its own line to stay joined, partitions butting into it come with it, and two joined walls that are both moved keep their corner where their new lines meet. Rooms stay closed. It is one step in **Changes**.

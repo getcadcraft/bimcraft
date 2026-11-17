@@ -15,6 +15,8 @@
  *   sunDisc(dir, i, degrees) → dir     a direction inside the sun's small cone for pass i (soft shadow edges)
  *   colorKey(c) → '#rrggbb' | null     a colour as the looks table keys it
  *   NIGHT, LIGHT_SCALE, SHADOW_LAMPS, lampCandela(L), lampAt(L, i)   lamps and the night (RC.11 (d))
+ *   SCENES, SCENE_KEYS, applyScene(key, settings, {lat}) → settings, sceneOf(settings) → key | '', nightSun(lat),
+ *   viewHints(scene, aspect) → {section, inside}, defaultScene(hints) → key      scene presets (0.10 BK.12): one click, no settings to learn
  */
 import { cleanMix, MAX_PRESETS } from './pt-mix.js';
 import { cleanPost, POST_DEFAULTS } from './pt-post.js';
@@ -253,6 +255,62 @@ export function cleanSettings(obj) {
   }
   return s;
 }
+
+/**
+ * Scene presets (0.10 BK.12): a good picture in one click. A preset is nothing but values of the settings above (the sky, the
+ * brightness, the ground, the edge lines, the quality and this render's sun), so every setting stays editable underneath and no
+ * preset name is stored: sceneOf() says which preset the settings ARE, '' once a person changed one of its values.
+ * Left alone on purpose: the engine and mode, the size, the materials, the camera, the lamps and everything after the render.
+ *   exterior  the clear sky and the model's own sun (the values a fresh dialog always had)
+ *   interior  the overcast sky (even light through every window, no hard sun patches) and half a stop brighter
+ *   section   the white studio, no ground plane, edge lines on (the fast render draws them): a cut model reads as a drawing
+ *   night     the sun down (midnight on the winter solstice of the site's hemisphere), 1 stop brighter; the lamps light it
+ */
+export const SCENES = Object.freeze({
+  exterior: Object.freeze({ sky: 'clear', exposure: 0, ground: true, edges: false, quality: 'good', sun: null }),
+  interior: Object.freeze({ sky: 'overcast', exposure: 0.5, ground: true, edges: false, quality: 'good', sun: null }),
+  section: Object.freeze({ sky: 'white', exposure: 0, ground: false, edges: true, quality: 'good', sun: null }),
+  night: Object.freeze({ sky: 'clear', exposure: 1, ground: true, edges: false, quality: 'good', sun: 'night' }),
+});
+export const SCENE_KEYS = Object.keys(SCENES);
+/** A date and time with the sun down wherever the polar day does not reach: midnight on the hemisphere's winter solstice. */
+export function nightSun(lat = 0) { return { month: Number(lat) < 0 ? 6 : 12, day: 21, hour: 0 }; }
+const isNightSun = (s) => !!s && s.hour === 0 && s.day === 21 && (s.month === 12 || s.month === 6);
+/** The settings with a preset's values on top (cleaned); an unknown key changes nothing. */
+export function applyScene(key, settings, { lat = 0 } = {}) {
+  const p = Object.prototype.hasOwnProperty.call(SCENES, key) ? SCENES[key] : null;
+  if (!p) return cleanSettings(settings);
+  return cleanSettings({ ...(settings && typeof settings === 'object' ? settings : {}), ...p, sun: p.sun === 'night' ? nightSun(lat) : null });
+}
+/** Which preset these settings are, '' when none (a person's own settings, or a preset with a value changed). */
+export function sceneOf(settings) {
+  const s = cleanSettings(settings);
+  for (const k of SCENE_KEYS) {
+    const p = SCENES[k];
+    if (s.sky === p.sky && s.exposure === p.exposure && s.ground === p.ground && s.edges === p.edges && s.quality === p.quality && (p.sun === 'night' ? isNightSun(s.sun) : s.sun === null)) return k;
+  }
+  return '';
+}
+/**
+ * What the view is, read from the scene an adapter hands the renderer: `section` = a section cut is on; `inside` = a perspective
+ * camera stands inside the model's box (a parallel view has no standing point). A camera hovering inside the box of an L-shaped
+ * building but outside its walls counts as inside: the box is all this knows.
+ */
+export function viewHints(scene, aspect = 1.5) {
+  const out = { section: false, inside: false };
+  if (!scene || typeof scene !== 'object') return out;
+  out.section = Array.isArray(scene.clip) && scene.clip.length > 0;
+  try {
+    const c = scene.camera ? scene.camera(aspect) : null, b = scene.bounds;
+    if (c && b && c.proj && c.proj[15] === 0) {
+      const e = [c.world[12], c.world[13], c.world[14]];
+      out.inside = [0, 1, 2].every((i) => e[i] >= b.min[i] && e[i] <= b.max[i]);
+    }
+  } catch { /* a scene without a camera: outside */ }
+  return out;
+}
+/** The preset for a view with no settings yet: a cut model → section, a camera inside → interior, else exterior. */
+export function defaultScene({ section = false, inside = false } = {}) { return section ? 'section' : inside ? 'interior' : 'exterior'; }
 
 /** The material for a colour: its chosen look (settings.looks), else its own (the adapter's), else matte. `key` is '#rrggbb' or 'default'. */
 export function lookFor(key, settings, fallbackColor = '#e6e3dc', ownLook = null) {

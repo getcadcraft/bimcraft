@@ -3,7 +3,7 @@ title: Wall shapes, split, offset, stretch and lock
 summary: Draw walls as a rectangle, polygon, arc, on picked lines or round an outline; split them, take a piece out, offset, box stretch, line them up and lock them to each other, to a dimension or to a grid line. Every change keeps the walls joined and is one undo step.
 section: tasks
 order: 17
-keywords: rectangle, rotated rectangle, polygon, inscribed, circumscribed, arc, centre, center, tangent arc, pick lines, tab, trace, outline, magic wand, split, split with gap, gap, delete segment, rejoin, offset, copy, box stretch, marquee, stretch, align, lock, padlock, constraint, lock dimension, edit dimension, grid, lock to grid, move grid line, placement offset, join off, free-standing, grow from, measure from, centre line, inside face, outside face, disjoin, alt
+keywords: swap type, change type, retype, what moved, lod, level of development, join style, mitre, miter, butt, square off, wall joins, next, runs through, disallow join, allow join, layer priority, core, priority, junction, rectangle, rotated rectangle, polygon, inscribed, circumscribed, arc, centre, center, tangent arc, pick lines, tab, trace, outline, magic wand, split, split with gap, gap, delete segment, rejoin, offset, copy, box stretch, marquee, stretch, align, lock, padlock, constraint, lock dimension, edit dimension, grid, lock to grid, move grid line, placement offset, join off, free-standing, grow from, measure from, centre line, inside face, outside face, disjoin, alt
 ---
 
 ## What you'll do
@@ -42,6 +42,35 @@ Open {{ui:Walls}} in the Edit group.
 - **Delete segment**: click where the piece starts and where it ends. A door in the piece goes with it.
 - **Rejoin**: click the two parts of one wall (in line, the same type). They become one wall again, the first one you clicked, with the doors of both.
 
+## Join style, Disallow join, layer priority
+
+Open {{ui:Walls}} in the Edit group.
+
+- **Join style**: click a corner where two straight walls end. Each click goes to the next style: **Mitre** (both ends cut on the line from the inner to the outer corner, what every corner starts as), **Butt** (one wall runs through to the outer face of the other, which stops against its side) and **Square off** (as butt, and the wall that runs through ends square; at a right angle it looks like butt). **Next**, or {{key:Tab}}, makes the other wall the one that runs through. The **Style** list in the bar shows the corner you clicked last. The same two choices are in **Properties** of one wall: **Join style at start / at end** and **Runs through**. Each change is one step in **Changes**. The plan, the 3D body, the rooms and the quantities follow.
+- At a T the wall whose side is met always runs through. Where two walls cross, a click (or **Continuous where it crosses** in Properties) says which of the two is continuous; that decides which wall's layers are drawn through the crossing.
+- The style belongs to the join: it stays when the walls move and goes only when the join goes (the wall is deleted, split at that end, or the end gets Disallow join). A corner with a curved wall, or where three or more walls meet, keeps the mitre. A corner sharper than about 30 degrees, or flatter than about 150, also falls back to the mitre.
+- **Disallow join**: click near a wall end. That end is freed: it joins nothing, wherever the wall goes, until you click it again. Free ends are marked with a cross while the tool is on. The same switch is **Join at start / Join at end** in Properties.
+- **Layer priority**: where walls with layers meet, the stronger layer cuts the weaker, so cores join to cores and a finish stops against the stronger layer. Each layer has a priority from 0 to 999; by default it comes from the layer's function (structure 800, substrate 600, insulation 400, membrane 300, finish 200, a cavity 100). {{ui:Layer priority}} opens the wall assembly, where the **Priority** column sets a layer's own number. Layers of equal priority stop against each other, and a line is drawn only between different materials. You see it on plans with **Medium** or **Fine** detail, at corners, T joins and crossings of two straight walls; Settings › BimCraft › Walls › **Clean wall layers where walls meet** switches it off. It changes what is drawn inside the walls only: the walls' outlines and quantities stay as the join style gives them.
+
+## Swap the type of many walls
+
+Going from sketch plans to working drawings is mostly a change of type: a generic wall becomes the specific build-up. You do not redraw anything.
+
+1. Pick the walls (one, or many with {{key:Ctrl}} or {{key:Shift}}).
+2. In Properties, press **Swap type…** under Wall type (or open {{ui:Walls}} in the Edit group and choose {{ui:Swap type}}, which opens the same list). The list opens inside Properties, in the picked walls' own block. It is not a dialog and it covers nothing: the plan, the 3D view and the pick keep working while it is open, and it follows the walls you pick.
+3. The list shows every wall type with its thickness and its LOD tag, for example "Wall 230 generic, LOD 200" and "230 clay brick, plastered both sides, LOD 300". The types the picked walls have now are marked. Type in **Find** to narrow it: a name, a thickness, or `lod 300`.
+4. Click a type. Every picked wall changes to it in one step, so one {{ui:Undo}} takes the whole swap back. The small x closes the list.
+
+Each wall keeps its location line. A wall on its centre line grows to both sides; a wall whose location line is a face keeps that face and grows the other way, and the walls joined to it follow at the corners. Walls locked to a swapped wall follow it too. Doors and windows stay in their walls and are cut again for the new thickness.
+
+After the swap the list shows **What moved**: how many walls changed and to what, the thickness and LOD before and after, the walls that moved sideways to keep their location line, the joined walls that followed, the doors and windows hosted again, and each room whose area changed with its area before and after. The status bar says the same in one line. The report only tells you; it never stops a swap. Choosing a type in **Properties › Wall type** does the same swap and gives the same report.
+
+Two things do stop a swap, and then nothing is changed at all: a door or window that would no longer fit in its wall (a wall gets shorter where a corner follows; make the door narrower or move it away from the corner first), and a lock the swap would break (a wall locked to a grid line by its centre line while its location line is a face; unlock it or put its location line back on the centre line).
+
+An assistant connected to BimCraft can do the same swap (tools `wall_types_list` and `walls_swap_type`) and gets the same report back.
+
+The LOD tag of a type is set in the wall assembly editor: see [Wall assemblies](topic:wall-assemblies).
+
 ## Offset and box stretch
 
 - **Offset**: click a wall, then the side to move it to, or type the distance. The wall moves square to itself and the walls joined to it stretch. Tick **Copy** for a parallel copy instead (it is not joined to the original).
@@ -67,7 +96,8 @@ Pick a wall that runs along a grid line, or whose end sits on one, and choose th
 
 ## Good to know
 
-- These recipes are the wall tool specification's (pages 4 to 9); join style (butt, mitre, square off) and layer priority are not built yet: corners are mitred.
+- These recipes are the wall tool specification's (pages 4 to 9). Join style and layer priority are built for straight walls; layer priority shows on the plan only (not in sections, elevations or 3D, where a wall is one body), not at nodes of three walls or more, and membranes are not carried on.
+- A join's style is stored in its record in the IFC file (the name of the `IfcRelConnectsPathElements`, for example `CadCraft join L butt 1`), so other programs still read the join and an older file opens with mitres.
 - The locks and the joins are stored in the IFC file (the locks as `CadCraft_WallHolds` on the project, the joins as `IfcRelConnectsPathElements`), so they are there when you open the file again.
 - Curved walls can be split, rejoined and have a piece taken out; they are not offset or locked.
 - See also [Draw walls](topic:draw-walls), [Change a wall, door or window](topic:change-a-wall-or-door) and [Shape a wall](topic:wall-shape).

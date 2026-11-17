@@ -13,6 +13,7 @@ import { el } from './ui-util.js';
 import { t } from './i18n.js';
 import { zip } from './bcf.js';
 import { reviewComments, problemComments, permitMarkdown, commentsCsv, packageFiles, NAMES } from './permit-package.js';
+import { mountChecklist } from './permit-checklist-ui.js';   // 0.10 BK.109 (bk-stages-10): the authority's supporting documents, linked to sheets and schedules
 
 const KEY = 'bimcraft.permit';
 const lines = (s) => String(s || '').split(/\r?\n/).map((x) => x.trim()).filter(Boolean).slice(0, 200);
@@ -29,6 +30,7 @@ export function mountPermit(host) {
   const problems = () => { try { return window.ccProblems?.report?.()?.rows || []; } catch (e) { return []; } };
   const comments = () => { const d = reportData(); return { data: d, list: [...reviewComments(d?.rows || []), ...problemComments(problems())] }; };
 
+  const checklist = mountChecklist(host, { changed: () => { if (box.isConnected && host.root.querySelector('[data-eg44-details]')?.open) render(); } });
   function render() {
     const { data, list } = comments();
     const field = (k, label, ta = false) => el('label', { className: 'bc-4d-grouplabel' }, el('span', {}, label),
@@ -40,6 +42,7 @@ export function mountPermit(host) {
       data ? el('p', { 'data-eg44-sum': '' }, t('eg44.sum', n)) : el('p', { className: 'bc-note', 'data-eg44-noregs': '' }, t('eg44.noregs')),
       field('name', t('eg44.name')), field('address', t('eg44.address')), field('applicant', t('eg44.applicant')), field('sheets', t('eg44.sheets'), true), field('forms', t('eg44.forms'), true),
       list.length ? el('ul', { className: 'bc-checks-res', 'data-eg44-list': '' }, list.slice(0, 40).map((c) => el('li', { 'data-eg44-kind': c.kind }, el('div', { className: 'bc-check-head' }, el('span', {}, c.text), el('span', { className: c.kind === 'fail' ? 'n' : 'ok' }, t('eg44.kind.' + c.kind))), el('span', { className: 'bc-muted' }, c.fix || '')))) : null,
+      checklist.el(),
       el('div', { className: 'bc-find-row' }, el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-eg44-build': '', onClick: () => build() }, t('eg44.build'))));
   }
   async function build() {
@@ -50,13 +53,15 @@ export function mountPermit(host) {
     let pdf = null;
     try { pdf = window.ccRegsReportPdf ? window.ccRegsReportPdf().bytes : null; } catch (err) { pdf = null; }
     const ifc = e.save();
-    const files = [{ name: NAMES.cover }, { name: NAMES.comments, note: t('eg44.f.comments') }, ...(pdf ? [{ name: NAMES.report, note: t('eg44.f.report') }] : []), { name: NAMES.ifc, note: t('eg44.f.ifc') }];
+    const cl = checklist.forPackage();   // BK.109: advisory, a missing document never stops the package
+    const files = [{ name: NAMES.cover }, { name: NAMES.comments, note: t('eg44.f.comments') }, ...(pdf ? [{ name: NAMES.report, note: t('eg44.f.report') }] : []), { name: NAMES.ifc, note: t('eg44.f.ifc') }, ...(cl ? [{ name: NAMES.documents, note: t('permit.cl.f.csv') }] : [])];
     const cover = permitMarkdown({ project: { name: S.name || host.fileName(), address: S.address, applicant: S.applicant, date: new Date().toISOString().slice(0, 10) }, comments: reg, problems: other,
-      report: data, sheets: lines(S.sheets).map(todo), forms: lines(S.forms).map(todo), files });
-    const out = zip(packageFiles({ cover, comments: commentsCsv(list), ifc, reportPdf: pdf }));
+      report: data, sheets: lines(S.sheets).map(todo), forms: lines(S.forms).map(todo), files, checklist: cl?.markdown || '' });
+    const out = zip(packageFiles({ cover, comments: commentsCsv(list), ifc, reportPdf: pdf, extra: cl ? [{ name: NAMES.documents, data: new TextEncoder().encode('\ufeff' + cl.csv) }] : [] }));
     host.download((host.fileName() || 'model').replace(/\.ifc$/i, '') + '-permit-package.zip', out, 'application/zip');
-    host.status(t('eg44.built', { n: list.length }));
+    const miss = cl ? cl.rows.filter((r) => r.status === 'missing').length : 0;
+    host.status(t('eg44.built', { n: list.length }) + (cl ? ' ' + t('permit.cl.built', { n: miss }) : ''));
   }
   render();
-  return { build, comments: () => comments().list, render };
+  return { build, comments: () => comments().list, render, checklist };
 }

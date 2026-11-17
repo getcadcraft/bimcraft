@@ -13,11 +13,17 @@
  *            no-source   a run whose connected network has no equipment port that supplies it (out or both); drains,
  *                        storm and vents are not checked for this — their water comes from fixtures (warn)
  *            fixed-gone  a run end fixed to a port that is no longer in the model (error)
+ *            spec-fitting  (0.9.1) a tee or reducer on a run whose pipe spec says it has none (warn)
+ *            family-size   (0.9.1) a manufacturer's family on a run of another size: it is drawn at its own size, never stretched (warn)
+ *            family-gone   (0.9.1) a run names a family that is no longer in the model (error)
  *     key / fill  the language key of the line and its values; ids = express ids to select; at = plan mm of the place
  */
 import { readPorts } from './ports.js';
 import { readRuns, PIPE_SYSTEMS } from '../mep-model.js';
 import { readEquipment, EQUIPMENT } from './equipment.js';
+import { specOfMaterial } from './pipe-specs.js';   // 0.9.1 #1499: a spec says whether it has tees and reducers
+import { familyById, sizeFits } from './oem-families.js';
+import { sectionOf } from '../mep-model.js';
 
 const NO_SOURCE_CHECK = new Set(['san', 'storm', 'vent']);
 
@@ -52,6 +58,21 @@ export function checkConnections(w) {
     const e = eqByGuid.get(f.eq);
     if (!e || !EQUIPMENT[e.kind] || !portNames(e).includes(f.port)) push('fixed-gone', 'error', { ...runName(r), end: k ? 'end' : 'start', port: f.port }, r.parts.slice(0, 1), r.points[k ? r.points.length - 1 : 0], r.storey);
   });
+  // 0.9.1 #1499: what a run's pipe spec does not make, and families that are not the run's size
+  for (const r of runs) {
+    const sp = r.kind === 'pipe' ? specOfMaterial(r.mat) : null;
+    if (sp && (!sp.tees || !sp.reducers)) for (const id of r.parts) {
+      const f = w.readPset(id, 'CadCraft_MepFitting'), k = f ? String(f.Kind || '') : '';
+      if ((k === 'tee' && !sp.tees) || (k === 'reducer' && !sp.reducers)) push('spec-fitting', 'warn', { name: sp.name, what: k, size: String(f.Size || '') }, [id], r.points[0], r.storey);
+    }
+    for (const v of r.valves || []) {
+      if (!v.fam) continue;
+      const fam = familyById(v.fam), sec = sectionOf(r);
+      if (!fam) { push('family-gone', 'error', { ...runName(r), family: v.fam }, r.parts.slice(0, 1), r.points[0], r.storey); continue; }
+      const fit = sec ? sizeFits(fam, sec) : { ok: true };
+      if (!fit.ok) push('family-size', 'warn', { name: fam.name, have: fit.nominal || String(fit.have), want: sec.label }, r.parts.filter((id) => w.readPset(id, 'CadCraft_Valve')?.FamilyId === fam.id), r.points[0], r.storey);
+    }
+  }
   // networks: elements joined through their ports (a run's parts are one); a run with no supplying equipment port in its network
   const parent = new Map();
   const find = (x) => { while (parent.has(x) && parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x)) ?? parent.get(x)); x = parent.get(x); } return x; };

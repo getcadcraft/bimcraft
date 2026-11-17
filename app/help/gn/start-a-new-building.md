@@ -1,31 +1,35 @@
 ---
-title: Ñemoĩ edificio pyahu
-summary: Peteĩ edificio modelo vacío ojapo niveles ndive, pared ojapo, biblioteca-gui ítems omoĩ ha IFC-pe guarda.
-keywords: nuevo, edificio nuevo, vacío, en blanco, comenzar de cero, plantilla, niveles, pisos, crear, modelo
-from: 546b8ae8
+title: Emboguatĩ edificio nuevo
+summary: Emboguatĩ un modelo de edificio en blanco con sus niveles, dibujá sus muros, colocá ítems de la biblioteca y guardalo como IFC.
+keywords: nuevo, edificio nuevo, en blanco, vacío, empezar desde cero, plantilla, niveles, pisos, crear, modelo
+from: 68786865
 ---
 
-## Mba'épa ereíta
+## Mba'épa oñemboguáta
 
-Ojepyrũ edificio modelo mba'e'ỹ ndive ojeabri nomoĩri. BimCraft IFC modelo vacío ojapo proyecto, sitio, edificio ha ijeregua niveles. Equipo ha mobiliario niveles-pe biblioteca-gui emoĩ ikatu ha IFC archivo-pe guarda ikatu.
+Emboguatĩ un modelo de edificio desde cero en vez de abrir uno. BimCraft hace un modelo IFC en blanco con un proyecto, un sitio, el edificio y sus niveles. Podés colocar equipos y muebles de la biblioteca en los niveles y guardarlo como archivo IFC.
 
 :::note
-Paredes ko'ẽrõ ojapo ikatu: ehecha [Draw walls](topic:draw-walls). Puertas, ventanas, pisos ha techos upe rire ojapo.
+Los muros ya se pueden dibujar: ver [Draw walls](topic:draw-walls). Puertas, ventanas, pisos y techos se están preparando.
 :::
 
 ## Pasos
 
-1. Oprimi {{ui:Edificio nuevo}} **Abrir un archivo o carpeta** ári, térã ñepyrũ páginá ári.
-2. Emoĩ **Building name**.
-3. Eheka cuántos **Levels** oguereko (1 gui 200).
-4. Emoĩ **Level height**, piso gui piso: ejemplo `10'-0"`, `10'6"` térã `3000 mm`. Número simple Estados Unidos-pe pie, ambue tenda-pe milímetro.
-5. Oprimi {{ui:Crear}}. Niveles 0 gui oñemoĩ, peteĩ nivel altura ári ambue ári, ha Level 1, Level 2 ha upéi oñeñe'ẽ. Modelo árbol-pe ohechauka, ha Level 1 plano {{ui:Dibujar}} oñemboguejy ha 3D vista apytépe oñemboguejy.
-6. Pared ojapo: ehecha [Draw walls](topic:draw-walls). **Niveles** panel-pe nivel réra térã altura ojemoambue.
-7. Ítems omoĩ: ehecha [Place equipment and furniture from the library](topic:place-from-library). Emplazamiento barra opa nivel ohechauka.
-8. Oprimi {{ui:Guardar como IFC}}. Archivo edificio réra ojeguarda, ejemplo `Smith's house.ifc`.
+1. Haga clic en {{ui:Edificio nuevo}} debajo de **Abrir un archivo o carpeta**, o en la página de inicio.
+2. Escribí el **Nombre del edificio**.
+3. Elegí cuántos **Niveles** tiene (1 a 200).
+4. Escribí la **Altura del nivel**, de piso a piso: por ejemplo `10'-0"`, `10'6"` o `3000 mm`. Un número sin unidad es pies en EE. UU., y milímetros en otros lugares.
+5. Todos los campos ya están completos, así que podés dejarlos como están. Debajo, el recuadro indica con qué empezás: las unidades, el **Tipo de muro** que dibuja primero la herramienta Muro (elegí otro de la lista si querés) y la primera hoja.
+6. Haga clic en {{ui:Crear}}. Los niveles se apilan desde 0, cada uno a una altura de nivel por encima del anterior, y se llaman Nivel 1, Nivel 2 y así sucesivamente. Aparecen en el {{ui:Árbol del modelo}}, y el plano del Nivel 1 se abre junto a la vista 3D con {{ui:Dibujar}} activado.
+7. Dibujá los muros: haga clic en {{ui:Muro}} y dos puntos. Ver [Draw walls](topic:draw-walls). Podés renombrar niveles o cambiar sus alturas en el panel **Niveles**.
+8. Colocá ítems: ver [Place equipment and furniture from the library](topic:place-from-library). La barra de colocación lista todos los niveles.
+9. Haga clic en {{ui:Guardar como IFC}}. El archivo toma el nombre del edificio, por ejemplo `Smith's house.ifc`.
 
-## Ojeporu porã
+## Para tener en cuenta
 
-- Modelo milímetro-pe ojeguarda, IFC4 ramo. Ambue BIM aplicación ojeabri.
-- **Pisos** ky'ai panel-pe ohechauka mba'e oiko nivel ryepý; modelo árbol-pe opa nivel ohechauka.
-- Ndejeguarda peve, edificio pyahu ojeguarda ndojejapo mba'e. BimCraft pregunta ambue archivo oabri térã ho'a mboyve, ha ko navegador-pe copia oguarda pestaña ho'a ramo.
+- El modelo se guarda en milímetros, como IFC4. Otros programas BIM lo pueden abrir.
+- Un edificio nuevo trae una hoja, **A-101**, que contiene el plano del nivel más bajo: A3 a 1:100 si trabajás en unidades métricas, Tabloid a 1/8" = 1'-0" en otro caso. Está vacía hasta el primer muro y después muestra el plano a medida que dibujás. Abrila en **Hojas** del explorador del proyecto para cambiar su papel, escala o título, agregar vistas o borrarla. Un edificio creado desde una plantilla trae las hojas de la plantilla.
+- Para cambiar lo que empieza cada edificio nuevo (el tipo de muro en proyectos métricos, los niveles, la primera hoja, la herramienta activa después de Crear), ver [Default Policies](topic:default-policies).
+- No hace falta configurar nada antes del primer muro. El tipo de muro, las alturas de los niveles, las unidades y la hoja se pueden cambiar después.
+- **Pisos** en el panel izquierdo lista solo los niveles que tienen algo; el árbol del modelo los lista todos.
+- Hasta que guardes, el edificio nuevo cuenta como trabajo sin guardar. BimCraft pregunta antes de abrir otro archivo o salir, y guarda una copia en este navegador por si se cierra la pestaña.

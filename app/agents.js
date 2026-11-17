@@ -29,7 +29,8 @@
  *   phase_describe  read    existing / demolish / new counts and GlobalIds (EG.59)
  *   phase_set       edit    mark elements existing / demolish / new, or clear; hosted doors and windows follow (EG.59)
  *   massing_describe read   massing options for a room program (EG.58)
- *   massing_add     edit    levels, walls and slabs for one of them (EG.58)
+ *   massing_add     edit    levels, walls and slabs for one of them (EG.58); keep: true keeps it as an option instead (0.10 BK.44)
+ *   massing_option  edit    a kept massing option: make current, rename, develop, remove (0.10 BK.44, mass-options.js)
  *   furniture_add   edit    starter furniture in a room by rules, clear of doors and windows; what does not fit is listed (EG.60)
  *   element_set     edit    an element's Name / Description / ObjectType / Tag, or one property value (its own set; a type's
  *                           set only with type: true — every element of the type follows); IfcEditor's copy-on-write
@@ -37,6 +38,10 @@
  *                           module (rooms and joins follow), any other element with its parts and openings; one undo step
  *   elements_move   edit    elements by GlobalId by [dx, dy, dz] mm (their placement; hosted parts follow); a BimCraft-
  *                           drawn wall moves through wall_change, a door or window along its wall through opening_change
+ *   schedule_list / _read (read) · schedule_setup / _arrange / _remove (edit) · schedule_export (export) · finishes_get (read) · finishes_set (edit):
+ *                           schedule set-ups in the office layout and room finishes (0.10 BK.61, BK.39, BK.29; schedule-agents.js)
+ *   wall_types_list read    the wall types with thickness and LOD tag; walls_swap_type (edit): many walls to one type in one undo step,
+ *                           returns what moved (0.10 BK.7 / BK.16, wall-typeswap-agents.js)
  *   wall_change     edit    a drawn wall's ends or type; opening_change: a door's or window's offset, size, sill or type
  *   (live only) app_info, selection_get (read) · selection_set, undo (edit) · model_save (save) · usd_export (export, 0.7 AS.6)
  *   · render_still, render_queue (export, 0.7 AS.6, session assistants-gaps: render-tools.js, a copy of ModelCraft's; only in the
@@ -46,6 +51,7 @@ import { getHost, toolResult, undoRollback, peekUndo, ToolError } from './host.j
 import { renderTools } from './render-tools.js';
 import { snapshotModel, drawWalls, placeOpening, loopsOf, op, changeWall, changeOpening, removeElements } from './model-ops.js';
 import { readDerived } from './model-slabs.js';
+import { movables, moveElements } from './model-modify.js';   // 0.10 BK.83: what the Move tool moves, moved by the Move tool's own command
 import { EDITABLE_ATTRS } from './ifc-edit.js';
 import { ids as idsOf } from './ifc-util.js';
 import { WALL_TYPES, readWalls } from './model-walls.js';
@@ -66,6 +72,8 @@ import { carbonTools } from './carbon-agents.js';
 import { cost5dTools } from './cost5d-agents.js';
 import { pvTools } from './pv-agents.js';
 import { simTools } from './sim-agents.js';   // 0.8 EG.48 / EG.49 (bim-sim_PART_2): people in the building, escape distances, room acoustics
+import { typeSwapTools } from './wall-typeswap-agents.js';   // 0.10 BK.7 / BK.16 (bk-typeswap-10): wall_types_list, walls_swap_type
+import { scheduleTools } from './schedule-agents.js';   // 0.10 BK.61 / BK.39 / BK.29 (bk-r3-schedules-10): schedule_list, _setup, _arrange, _read, _export, _remove, finishes_get, finishes_set
 import { autodimTools } from './autodim-agents.js';   // 0.8 EG.20
 import { narrationTools } from './narration-agents.js';   // 0.8 EG.50
 import { scanTools } from './scan-agents.js';
@@ -73,6 +81,7 @@ import { scanProgressTools } from './scan-progress-agents.js';   // 0.8 EG.39 (b
 import { elecTools } from './elec-agents.js';   // 0.9 GH.10 (bim-hosts-09): devices_add, device_change, lights_set, devices_delete, devices_list
 import { mepTools } from './mep-agents.js';   // 0.8 EG.1–EG.4 (mep_PART_2's line 1)
 import { massingOptions, buildOption } from './program-mass.js';   // 0.8 EG.58 (bim_PART_2)
+import { readOptionSets, addMassOption, setCurrentOption, renameOption, removeMassOption, developOption } from './mass-options.js';   // 0.10 BK.44: massing options kept in the model
 import { askTools } from './ask-tools.js';   // 0.8 AC.8 ★ (bim_PART_2): walls_find, rooms_find, elements_above_find
 
 const LIMIT = 1000;
@@ -200,6 +209,8 @@ export function modelTools(env) {
   const E = () => { const ed = env.ed(); if (!ed) throw new Error('No IFC model is open in BimCraft.'); return ed; };
   /** One undo step; a model op's refusal comes back as its sentence (nothing changed). */
   const edit = async (label, op) => { try { return await env.apply(label, op); } catch (e) { throw new Error(said(e)); } };
+  // 0.10 BK.44: the massing options kept in the open model, by set (none open: an empty list)
+  const keptOptions = () => { const ed = env.ed(); if (!ed) return []; try { return readOptionSets(new ModelWriter(ed.W, ed.api, ed.mid)).map((s) => ({ set: s.set, options: s.options.map((o) => ({ guid: o.guid, name: o.option, current: o.current, floors: o.floors, height_mm: o.height, footprint_m2: o.footprint_m2, gross_m2: o.gross_m2, volume_m3: o.volume_m3, envelope_m2: o.envelope_m2, simplified: o.simplified })) })); } catch (e) { return []; } };
   const guidsOf = (r) => [...(r?.made?.keys?.() || [])];
   return [
     {
@@ -321,30 +332,48 @@ export function modelTools(env) {
     },
     {
       name: 'massing_describe', group: 'read', title: 'Massing options for a room program', untrusted: true,
-      description: 'Works out building massing options for a room program: total net and gross area, then footprints (bar, block, tower) that fit the buildable outline under an optional height cap, each with its floors, coverage and which rooms go on which floor. Changes nothing; massing_add builds one.',
+      description: 'Works out building massing options for a room program: total net and gross area, then footprints (bar, block, tower) that fit the buildable outline under an optional height cap, each with its floors, coverage and which rooms go on which floor. Changes nothing; massing_add builds one or keeps it as an option. With a model open the answer also lists `kept`: the massing options kept in the model by set, with which is current (massing_option changes them).',
       inputSchema: obj(MASSING_ARGS, ['program']),
       run: (a) => {
         const r = massingFor(a);
         if (r.error) throw new Error(r.notes[r.notes.length - 1]);
-        return { totals: r.totals, envelope_m2: r.envelope_m2, options: r.options.map((o) => ({ key: o.key, name: o.name, floors: o.floors, height_mm: o.height, footprint_m2: o.footprint_m2, gross_m2: o.gross_m2, surplus_m2: o.surplus_m2, coverage: o.coverage, fits: o.fits, stack: o.stack, notes: o.notes })), notes: r.notes };
+        return { totals: r.totals, envelope_m2: r.envelope_m2, options: r.options.map((o) => ({ key: o.key, name: o.name, floors: o.floors, height_mm: o.height, footprint_m2: o.footprint_m2, gross_m2: o.gross_m2, surplus_m2: o.surplus_m2, coverage: o.coverage, fits: o.fits, stack: o.stack, notes: o.notes })), notes: r.notes, kept: keptOptions() };
       },
     },
     {
       name: 'massing_add', group: 'edit', rollbackPreview: true, title: 'Build a massing option',
       description: 'Builds one massing option from massing_describe as levels, walls round the footprint on every level and a floor slab, in one undo step. Pass the same program and outline plus the option key. The result is a starting mass for the design, not a finished building.',
-      outputSchema: { type: 'object', properties: { option: { type: 'string' }, floors: { type: 'integer' }, footprint_m2: { type: 'number' }, gross_m2: { type: 'number' }, note: { type: 'string' } } },
-      inputSchema: obj({ ...MASSING_ARGS, option: { type: 'string', minLength: 2, maxLength: 20, description: 'The option key from massing_describe, for example block2.' } }, ['program', 'option']),
+      outputSchema: { type: 'object', properties: { option: { type: 'string' }, floors: { type: 'integer' }, footprint_m2: { type: 'number' }, gross_m2: { type: 'number' }, note: { type: 'string' }, kept: { type: 'array', items: { type: 'object' } } } },
+      inputSchema: obj({ ...MASSING_ARGS, option: { type: 'string', minLength: 2, maxLength: 20, description: 'The option key from massing_describe, for example block2.' }, keep: { type: 'boolean', description: 'true = keep it as a massing option in the model (a building mass beside the other options) instead of building walls now.' }, set: { type: 'string', maxLength: 80, description: 'With keep: the option set\'s name (options of one set are alternatives; one is current).' } }, ['program', 'option']),
       run: async (a) => {
         const r = massingFor(a);
         const o = r.options.find((x) => x.key === a.option);
         if (!o) throw new Error('No option "' + a.option + '". The options for this program are: ' + (r.options.map((x) => x.key).join(', ') || 'none (see massing_describe notes)') + '.');
+        if (a.keep) {   // 0.10 BK.44: kept beside the others as a building mass; nothing is built
+          await edit('keep massing option ' + o.key, addMassOption({ set: a.set || '', name: o.name, pts: o.pts, floors: o.floors, floorHeight: o.floorHeight }));
+          return { option: o.key, floors: o.floors, footprint_m2: o.footprint_m2, gross_m2: o.gross_m2, note: 'Kept as a massing option (a building mass); no walls yet. massing_option develops it or makes it current.', kept: keptOptions() };
+        }
         await edit('build massing ' + o.key, buildOption(o));
         return { option: o.key, floors: o.floors, footprint_m2: o.footprint_m2, gross_m2: o.gross_m2, note: 'Walls and slabs only; no roof, stairs or rooms yet.' };
+      },
+    },
+    {
+      name: 'massing_option', group: 'edit', rollbackPreview: true, title: 'Change a kept massing option',
+      description: 'Changes one massing option kept in the model (see `kept` in massing_describe): make it the current option of its set (its floors count as the floor areas; it is checked against the site boundary, building lines and servitudes), rename it, develop it into levels, walls and floor slabs, or remove it. One undo step.',
+      inputSchema: obj({ guid: { type: 'string', minLength: 22, maxLength: 22, description: 'The option\'s GlobalId from `kept`.' }, action: { type: 'string', enum: ['current', 'rename', 'develop', 'remove'], description: 'What to do.' }, name: { type: 'string', minLength: 1, maxLength: 80, description: 'The new name, for rename.' } }, ['guid', 'action']),
+      outputSchema: { type: 'object', properties: { action: { type: 'string' }, kept: { type: 'array', items: { type: 'object' } } } },
+      run: async (a) => {
+        if (a.action === 'rename' && !String(a.name || '').trim()) throw new Error('Give the new name.');
+        const o = a.action === 'current' ? setCurrentOption(a.guid) : a.action === 'rename' ? renameOption(a.guid, { name: a.name }) : a.action === 'develop' ? developOption(a.guid) : removeMassOption(a.guid);
+        await edit('massing option: ' + a.action, o);
+        return { action: a.action, kept: keptOptions() };
       },
     },
     ...scanTools({ ...env, scan: () => (typeof window !== 'undefined' ? window.bimcraftScan?.state?.slice : null), levels: () => snapshotModel(env.ed()).levels }),   // spikes_PART_4: EG.37 phone scan to walls
     ...scanProgressTools({ ...env, progress: () => (typeof window !== 'undefined' ? window.bimcraftScanProgress : null) }),   // EG.39: the scan against the model and the 4D schedule
     ...autodimTools({ ...env, levels: () => snapshotModel(env.ed()).levels }),   // bim-model_PART_4: EG.20 dimension a plan by rules
+    ...typeSwapTools(env),   // bk-typeswap-10: swap many walls' type in one step, with the what-moved report (BK.7, BK.16)
+    ...scheduleTools(env),   // bk-r3-schedules-10: schedule set-ups in the office layout, filled by the engine, exported; room finishes (BK.61, BK.39, BK.29)
     ...narrationTools(env),   // bim-model_PART_4: EG.50 narrated walkthroughs
     ...elecTools(env),   // bim-hosts-09: electrical devices for the assistant (GH.10)
     ...mepTools(env),   // mep_PART_2: pipe, duct, cable and lighting calculations (EG.1–EG.4)
@@ -399,7 +428,7 @@ export function modelTools(env) {
     },
     {
       name: 'elements_move', group: 'edit', rollbackPreview: true, title: 'Move elements',
-      description: 'Move elements (by GlobalId) by [dx, dy, dz] millimetres in the model\'s axes (x east, y north, z up on an unturned model), as one undo step; what is hosted on them or placed relative to them moves along. A wall drawn with BimCraft\'s tools moves with wall_change (its ends), a door or window along its wall with opening_change.',
+      description: 'Move elements (by GlobalId) by [dx, dy, dz] millimetres in the model\'s axes (x east, y north, z up on an unturned model), as one undo step; what is hosted on them or placed relative to them moves along. A floor, stair, ramp, railing or other element drawn with BimCraft\'s tools moves as the Move tool moves it, in its level\'s plan ([dx, dy] only). A wall drawn with BimCraft\'s tools moves with wall_change (its ends), a door or window along its wall with opening_change.',
       inputSchema: obj({ guids: { description: 'GlobalIds of the elements to move.', type: 'array', items: { type: 'string', minLength: 1, maxLength: 64 }, minItems: 1, maxItems: 10000 }, by: { description: 'Movement [dx, dy] or [dx, dy, dz] in millimetres.', type: 'array', items: { type: 'number', minimum: -1e7, maximum: 1e7 }, minItems: 2, maxItems: 3 } }, ['guids', 'by']),
       run: async (a) => {
         const ed = E(), k = drawnKinds(ed);
@@ -408,6 +437,17 @@ export function modelTools(env) {
         const d = [a.by[0], a.by[1], a.by[2] || 0], P = productIds(ed);
         const unknown = a.guids.filter((g) => !P.has(g));
         if (unknown.length) throw new Error('No element with GlobalId ' + unknown.slice(0, 10).join(', ') + '. Nothing moved.');
+        // 0.10 BK.83: what the Draw tools keep as a drawn outline, path or spot (a floor by outline, a stair, a ramp, a railing, a roof plane, a
+        // device, hardscape, a picture) is moved by the Move tool's own command, so its outline moves with its body. Moving only the
+        // placement (below) left the outline where it was: the next change drew the element back at its old place.
+        const spec = new Map(movables(writer(ed)).filter((e) => !['wall', 'item', 'column'].includes(e.kind)).map((e) => [e.guid, e.kind]));
+        const own = a.guids.filter((g) => spec.has(g));
+        if (own.length) {
+          if (own.length < a.guids.length) throw new Error('These mix elements drawn with BimCraft\'s tools (' + [...new Set(own.map((g) => spec.get(g)))].join(', ') + ') and other elements: move them in two calls.');
+          if (d[2]) throw new Error('A ' + spec.get(own[0]) + ' drawn with BimCraft\'s tools moves in its level\'s plan: give [dx, dy] only (its height is a property of its own).');
+          const r = await edit('move ' + own.length + (own.length === 1 ? ' element' : ' elements'), moveElements(own.map((g) => ({ guid: g, dx: d[0], dy: d[1] }))));
+          return { moved: (r?.ids || []).length || own.length, by: d };
+        }
         const r = await edit('move ' + a.guids.length + (a.guids.length === 1 ? ' element' : ' elements'), movePlacements(a.guids.map((g) => ({ guid: g, id: P.get(g) })), d));
         return { moved: (r?.ids || []).length, by: d };
       },
@@ -536,7 +576,8 @@ export function installAgents(modelUi, app) {
   ];
   // after an edit outside the Draw module (element_set): the Properties panel shows the new value
   const refresh = () => { try { app.select([...(app.selection() || [])]); } catch (e) { /* nothing selected */ } };
-  for (const def of [...live.slice(0, 1), ...modelTools({ ed, apply, refresh, busy: () => app.busy?.() || null, index: () => app.ask?.index?.() ?? null, tasks: () => app.tasks?.() || [], frameModel: () => app.frameModel?.() || null }), ...live.slice(1)]) C.tool(def);
+  for (const def of [...live.slice(0, 1), ...modelTools({ ed, apply, refresh, busy: () => app.busy?.() || null, index: () => app.ask?.index?.() ?? null, tasks: () => app.tasks?.() || [], frameModel: () => app.frameModel?.() || null,
+    schedules: () => A.schedules(), units: () => A.units(), download: app.download ? (name, data, type) => app.download(new Blob([data], { type }), name, type) : null }), ...live.slice(1)]) C.tool(def);   // schedules / units / download: bk-r3-schedules-10 (schedule-agents.js)
   // 0.8 AC.8 ★ (bim_PART_2; ask-tools.js): "show me every 2-hour wall", "rooms under 70 sq ft", "what's above this ceiling". `app.ask` brings the model, the
   // property indexes, per-element boxes and the 3D highlight; without it (the contract checker, the headless core) the definitions are listed and answer "not open".
   for (const d of askTools(app.ask || { index: () => null, name: () => '' })) C.tool(d);

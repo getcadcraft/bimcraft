@@ -129,6 +129,9 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
 
   // ---- Doc's ribbon on BimCraft's tools ----
   const works = (id) => commands.ids.includes(id) || !!ENGINE[id];
+  // 0.10 BK.175: the Duncan layout's tool rows list every Draw tool of the build (nothing removed, only arranged), as the toolbox layout does. A tool with a
+  // command of its own keeps running through it; one without (Grid, Column, Ramp, Trim, Pipe, Duct and the rest of the Draw bar) is the Draw bar's own button.
+  const viaBar = (id, block) => block === 'toolbox' || (block === 'toolrows' && !works(id) && !!src(id));
   const ribbon = () => catalog.ribbon.map((r) => ({ tab: r.tab, label: T('ws.tab.' + r.tab), context: !!r.context,
     groups: r.groups.map((g) => ({ id: g.group, label: T('ws.grp.' + g.group), large: g.large, stacks: g.stacks })) }));
   const isWall = () => snapshot().selection.length === 1 && !!props.querySelector('[data-mp-height]');
@@ -136,7 +139,7 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
   const adapter = {
     app: 'bimcraft', root, stage, panels: { left: root.querySelector('.bc-left'), right: root.querySelector('.bc-right') }, status: statusEl,
     t: T, say: status, actions: ['open', 'save', 'undo', 'redo', 'select', 'clear', 'fit'],
-    hide: ['[data-modelbar]', '[data-model-hint]', '[data-model-splitter]'],
+    hide: ['[data-modelbar]', '[data-model-hint]'],   // 0.10 BT.11: the plan / 3D divider stays (model-ui.js shows it only while the two are side by side: Tile Views)
     fill: ':is(.bc-canvas, .bc-plan, .bc-dwg)', flow: ':is(.bc-card, .bc-empty)',   // i18n-ignore: selectors
     state() {
       const c = current(), s = snapshot();
@@ -151,13 +154,14 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
       const extra = [...new Set([...root.querySelectorAll('[data-modelbar] [data-mtool]')].map((b) => b.dataset.mtool))].filter((k) => !known.has(k));
       return [...GROUPS, ['more', extra]].map(([g, tools]) => ({ id: g, label: T('tbx.grp.' + g), tools }));
     },
+    source: (id) => src(id) || null,   // 0.10 BK.33: the Draw bar's own button behind a layout tool (two-stage tooltips read its command)
     tool(id, block) {
-      if (block === 'toolbox') { const s = src(id); return { label: labelOf(s) || id, icon: s?.querySelector('i.bi')?.className.replace(/^bi\s+/, '') || 'bi-square', built: !!s }; }
+      if (viaBar(id, block)) { const s = src(id); return { label: labelOf(s) || id, icon: s?.querySelector('i.bi')?.className.replace(/^bi\s+/, '') || 'bi-square', built: !!s }; }
       const t = catalog.tools[id] || { icon: id === 'fit' ? 'eye' : 'pointer' };
       return { label: T('ws.tool.' + id), icon: icon(t.icon), built: works(id) || ['fit', 'clear'].includes(id) };
     },
     can(id, block) {
-      if (block === 'toolbox') {
+      if (viaBar(id, block)) {
         const s = src(id), ifc = !!current().editor;
         if (!ifc) return { enabled: false, reason: T('tbx.why.ifc') };
         const off = !s || s.disabled || s.getAttribute('aria-disabled') === 'true';
@@ -166,7 +170,7 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
       return availability(id, commands, snapshot(), { root, t: T });
     },
     async run(id, block) {
-      if (block === 'toolbox') {
+      if (viaBar(id, block)) {
         needDraw();
         if (A.S.layout === '3d') root.querySelector('[data-model-layout="plan"]')?.click();
         const s = src(id); if (!s) return;
@@ -178,7 +182,7 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
       if (commands.ids.includes(id)) return commands.execute(id);
       if (ENGINE[id]) return engineRun(root, ENGINE[id], { activatePlan: () => api.activatePlan(), showModel: () => ctx?.palette('panel'), state: snapshot });
     },
-    pressed: (id, block) => block === 'toolbox' && src(id)?.getAttribute('aria-pressed') === 'true' && drawOn(),
+    pressed: (id, block) => viaBar(id, block) && src(id)?.getAttribute('aria-pressed') === 'true' && drawOn(),
     options(s) {
       if (s.other) return { title: T('ws.modify'), text: T('ws.opt.other') };
       const w = walls.metadata(), wallCtx = isWall(), toolOn = A.S.tool && A.S.tool !== 'select' && A.S.tool !== 'wall';

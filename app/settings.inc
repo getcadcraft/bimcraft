@@ -107,6 +107,15 @@
     <label><input type="radio" name="bcWallFrom" value="outside"> <?= Lang::e('model.from.outside') ?></label>
   </div>
   <p class="shell-hint-text"><?= Lang::e('walls.set.hint') ?></p>
+  <?php /* 0.9 WT.5 (walls-join-10): layer priority at junctions on the plan (wall-joinstyle-ui.js; same localStorage record, `prio`) */ ?>
+  <label class="shell-check"><input type="checkbox" name="bcWallPrio" checked> <?= Lang::e('walls.set.prio') ?></label>
+  <p class="shell-hint-text"><?= Lang::e('walls.set.prio.hint') ?></p>
+  <?php /* 0.10 BK.16 (bk-typeswap-10): the type's LOD tag as a column of the Walls by type schedule (wall-typeswap-ui.js; same localStorage record, `lodcol`) */ ?>
+  <label class="shell-check"><input type="checkbox" name="bcWallLodCol"> <?= Lang::e('typeswap.set.lodcol') ?></label>
+  <p class="shell-hint-text"><?= Lang::e('typeswap.set.lodcol.hint') ?></p>
+  <?php /* 0.10 BK.15 (bk-r3-types-10): sketch-stage walls (type tagged LOD 100 or 200) as one hatched band (element-types-ui.js; same localStorage record, `lodsketch`) */ ?>
+  <label class="shell-check"><input type="checkbox" name="bcWallLodSketch" checked> <?= Lang::e('eltype.set.sketch') ?></label>
+  <p class="shell-hint-text"><?= Lang::e('eltype.set.sketch.hint') ?></p>
 </fieldset>
 <fieldset class="shell-set">
   <legend><?= Lang::e('set.snap.legend') ?></legend>

@@ -2,7 +2,7 @@
 title: Yeni bir yapıya başlayın
 summary: Katlarıyla boş bir yapı modeli oluşturun, duvarlarını çizin, kütüphaneden öğeler yerleştirin ve IFC olarak kaydedin.
 keywords: yeni, yeni yapı, boş, sıfırdan başla, şablon, katlar, döşemeler, oluştur, model
-from: 546b8ae8
+from: 68786865
 ---
 
 ## Yapacağınız şey

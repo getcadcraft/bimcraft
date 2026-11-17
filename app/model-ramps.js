@@ -27,6 +27,7 @@ import { readLevels } from './model-levels.js';
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
 import { t as tr } from './i18n.js';
+import { FLOOR, rampAdvice, advise } from './draw-advice.js';   // 0.10 BK.73
 
 export const RAMP_PSET = 'CadCraft_Ramp';
 const IN = 25.4;
@@ -87,7 +88,8 @@ function riseOf(w, r) {
 
 /** The ramp's parts again (its flights and landings), its sets and quantities. */
 function writeRamp(w, r) {
-  if (!(r.width >= 300)) refuse('model.err.ramp.width');
+  if (!(r.width >= FLOOR)) refuse('model.err.ramp.width');   // 0.10 BK.73: under 300 mm is unusual, not impossible: made, with a warning
+  advise('ramp', rampAdvice(r), r.guid ? { id: r.guid, label: 'Ramp' } : null);   // i18n-ignore: an IFC name
   const rise = riseOf(w, r);
   if (!(rise >= 10)) refuse('model.err.ramp.rise');
   const L = rampLayout(r, rise);

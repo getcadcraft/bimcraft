@@ -45,7 +45,8 @@ import { CEILING_PATTERNS } from './model-slabs.js';
 import { loopAt, labelPoint } from './model-rooms.js';
 import { readViews } from './views-bim.js';
 import { buildLegend, legendToText, legendFromText, parseKeynoteFile } from './keynotes.js';
-import { composeSheet, arrangeSheet, setPdf, sheetSvg, PAPERS, scalesFor, readSectionLines, isPortrait, baseKey, portraitKey, parseScale } from './res-sheets.js';
+import { mountNotesPicker } from './sheet-notes-ui.js';   // 0.10 BK.157: standard notes from a regulation pack
+import { composeSheet, arrangeSheet, setPdf, sheetSvg, PAPERS, scalesFor, readSectionLines, sectionTitle, isPortrait, baseKey, portraitKey, parseScale } from './res-sheets.js';
 import { openTitleDesigner } from './title-designer.js';   // 0.9 D8.17: draw your own title block
 import { ModelWriter } from './model-write.js';
 import { mul4, inv4 } from './ifc-util.js';
@@ -297,7 +298,7 @@ export function mountViewsBim(modelUi, o = {}) {
   function anyName(key) {
     const m = /^(elevation|section):(.+)$/.exec(key || '');
     if (m?.[1] === 'elevation') return t('res.sh.elev.' + m[2]);
-    if (m?.[1] === 'section') { let n = ''; try { n = readSectionLines(W()).find((x) => x.guid === m[2])?.name || ''; } catch (e) { n = ''; } return t('res.sec.name', { name: n }); }
+    if (m?.[1] === 'section') { let n = ''; try { n = readSectionLines(W()).find((x) => x.guid === m[2]) || null; } catch (e) { n = null; } return sectionTitle(n); }
     return viewName(key);
   }
   const dupButton = (key) => el('button', { type: 'button', className: 'bc-pb-ic', 'data-pb-dup': key, title: t('model.dup.button.title', { name: anyName(key) }), 'aria-label': t('model.dup.button.title', { name: anyName(key) }), onClick: () => askDuplicate(key) }, icon('bi-copy'));
@@ -392,7 +393,9 @@ export function mountViewsBim(modelUi, o = {}) {
     const elevs = ['north', 'east', 'south', 'west'].map((s) => row({ 'data-pb-elev': s }, t('res.sh.elev.' + s), openSet,graphicButton('elevation:'+s), dupButton('elevation:' + s), A.ask('elevationEditButton', 'elevation:' + s)));
     let secs = [];
     try { const w = W(); secs = w ? readSectionLines(w) : []; } catch (e) { secs = []; }
-    const sections = secs.map((s) => row({ 'data-pb-section': s.guid }, t('res.sec.name', { name: s.name }), openSet,graphicButton('section:'+s.guid), dupButton('section:' + s.guid), A.ask('elevationEditButton', 'section:' + s.guid)));
+    const secRow = (s) => row({ 'data-pb-section': s.guid, 'data-pb-elevmarker': s.kind === 'elevation' ? s.name : null }, sectionTitle(s), openSet,graphicButton('section:'+s.guid), dupButton('section:' + s.guid), A.ask('elevationEditButton', 'section:' + s.guid));
+    const sections = secs.filter((s) => s.kind !== 'elevation').map(secRow);
+    elevs.push(...secs.filter((s) => s.kind === 'elevation').map(secRow));   // 0.10 BT.10: the elevations you placed, after the four sides
     let views3d = [];
     try { const ed = A.ed(); views3d = ed ? readViews(ed.api, ed.mid).views : []; } catch (e) { views3d = []; }
     const v3 = views3d.map((v) => row({ 'data-pb-3d': v.name }, v.name, () => A.root.querySelector('[data-saved-views]')?.click()));
@@ -426,7 +429,7 @@ export function mountViewsBim(modelUi, o = {}) {
       group('sections', t('model.pb.sections'), sections.length, sections.length ? sections : [el('li', { className: 'bc-pb-tag' }, t('model.pb.nosections'))]),
       group('3d', t('model.pb.views3d'), v3.length, v3.length ? v3 : [el('li', { className: 'bc-pb-tag' }, t('model.pb.no3d'))]),
       group('sched', t('model.pb.schedules'), schedules.length, schedules),
-      group('sheets', t('model.pb.sheets'), sheets.length, sheets, [small({ 'data-pb-newsheet': '' }, t('model.pb.newsheet'), () => openSheet(null), 'bi-plus-lg'), small({ 'data-pb-set': '' }, t('model.pb.set'), openSet, 'bi-files')]),
+      group('sheets', t('model.pb.sheets'), sheets.length, sheets, [small({ 'data-pb-newsheet': '' }, t('model.pb.newsheet'), () => openSheet(null), 'bi-plus-lg'), small({ 'data-pb-set': '' }, t('model.pb.set'), openSet, 'bi-files'), small({ 'data-pb-anno': '' }, t('model.anno.open'), () => A.ask('openAnnoSizes'), 'bi-fonts')]),   // 0.10 BK.10: the building's paper heights (anno-scale-ui.js)
       group('tpl', t('model.pb.templates'), tpls.length, tpls, [small({ 'data-pb-newtpl': '' }, t('model.pb.newtpl'), () => openTemplate(null), 'bi-plus-lg')]),
       ...(A.ask('browserGroups', { group, row, small, icon }) || []),   // 0.6 DC.114: Families (family-ui.js)
       group('links', t('model.pb.links'), links, [row({ 'data-pb-links': '' }, t('model.pb.linksgo'), () => A.root.querySelector('[data-links-sec]')?.scrollIntoView({ block: 'nearest' }))]),
@@ -687,6 +690,7 @@ export function mountViewsBim(modelUi, o = {}) {
     });
     const keyFileBtn = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-sh-keyfilebtn': '', title: t('model.sh.legend.file.tip') }, icon('bi-file-earmark-text'), ' ' + t('model.sh.legend.fileb'));
     keyFileBtn.addEventListener('click', () => keyFile.click());
+    const notesPick = mountNotesPicker({ D, draw: () => draw(), status: (m, e) => A.host.status(m, e), icon });   // BK.157: Standard notes
     const stage = el('div', { className: 'bc-sh-stage', 'data-sh-stage': '' });
     const selBar = el('div', { className: 'bc-sh-sel', 'data-sh-selbar': '' });
     const srcList = (kind, list, label) => list.length ? [el('h3', {}, label), el('ul', {}, ...list.map((x) => el('li', {}, el('span', { title: x.title }, x.title),
@@ -800,8 +804,8 @@ export function mountViewsBim(modelUi, o = {}) {
     if (have) buttons.push(btn('delete', t('model.sh.delete'), { 'data-sh-delete': '' }));
     buttons.push(btn('cancel', t('model.sh.close')));
     const dlg = dialog({ 'data-sh-dialog': '' }, have ? t('model.sh.edit') : t('model.sh.new'),
-      [el('div', { className: 'bc-sh-head' }, field(t('model.sh.number'), num), field(t('model.sh.titlef'), title), field(t('res.sh.paper'), paper), field(t('sh.orient'), orient), field(t('sf.tb'), tbSel), formatsBtn, arrange, keynotesBtn, keyFileBtn, keyFile), fieldsBox,
-        el('div', { className: 'bc-sh-body' }, src, el('div', {}, stage, selBar, legendBox)), el('p', { className: 'bc-muted' }, t('model.sh.note'))],
+      [el('div', { className: 'bc-sh-head' }, field(t('model.sh.number'), num), field(t('model.sh.titlef'), title), field(t('res.sh.paper'), paper), field(t('sh.orient'), orient), field(t('sf.tb'), tbSel), formatsBtn, arrange, keynotesBtn, keyFileBtn, notesPick.button, keyFile), fieldsBox,
+        el('div', { className: 'bc-sh-body' }, src, el('div', {}, stage, selBar, legendBox, notesPick.panel)), el('p', { className: 'bc-muted' }, t('model.sh.note'))],
       buttons,
       (what, e) => {
         if (what === 'cancel' || !what) return null;

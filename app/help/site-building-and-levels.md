@@ -3,7 +3,7 @@ title: The site, the building on it, and its levels
 summary: Draw the site's outline, place and turn the building on the site, add levels at given heights or split the building's height, and draw on the level you choose.
 section: tasks
 order: 21
-keywords: site, site plan, property line, lot, plot, boundary, building placement, rotate building, place building, levels, storeys, stories, floors, add levels, split height, floor to floor, IfcSite, IfcBuilding, IfcBuildingStorey, spatial structure
+keywords: site, site plan, building line, setback, servitude, easement, right of way, property line, lot, plot, boundary, building placement, rotate building, place building, levels, storeys, stories, floors, add levels, split height, floor to floor, IfcSite, IfcBuilding, IfcBuildingStorey, spatial structure
 ---
 
 ## What you'll do
@@ -23,6 +23,19 @@ Every level's plan shows the site outline as a property line.
 ## Place the building on the site
 
 With {{ui:Site}} on, type the building's **X** and **Y** on the site and its **Turn** in degrees, or click {{ui:Place the building by a click}} and click where the building's origin goes. Everything in the building (levels, walls, grids, all you drew) moves with it; the site and its outline stay. The plans keep showing each level square to the building.
+
+## Building lines and servitudes
+
+Building lines and servitudes (easements, rights of way) are drawn on the site as constraints. They **warn, they never block**: a wall over one is drawn as you asked, and a warning naming the wall and the line or servitude appears in Problems. Move the wall back and the warning clears. A warning can be accepted with a reason (a relaxation the authority granted, for example).
+
+- **Building line from setbacks.** {{ui:Build}} › {{ui:Building line}}, then {{ui:Setbacks}}: type how far the line stands in from each boundary of the site. The boundaries are numbered on the plan while the tool is on. The line is worked out from those distances and follows the site outline if you draw it again with as many boundaries. The distances are yours, read from your title deed or zoning scheme; BimCraft fills in none.
+- **A drawn building line.** With {{ui:Building line}} on, click its points and finish by double-click or {{key:Enter}}. Finish on the first point for a closed line: the area inside is where one may build, and a wall with any part outside it is warned about. An open line warns only about a wall that crosses it.
+- **A servitude.** {{ui:Build}} › {{ui:Servitude}}: choose its kind, type its name, its registered reference and its width, then click its centre line and finish (a strip), or close it on its first point (an area). A wall with any part on it is warned about, on every level.
+- A face exactly on a line is touching, not crossing (the tolerance is 1 mm).
+- The current massing option of each option set is checked the same way as the walls: a mass outside the boundary, over a building line or on a servitude gets a warning. See [Massing options kept side by side](topic:massing-options).
+- Pick one with {{ui:Select}} to change its name, reference, kind or width, move it, or delete it.
+
+They are drawn on every level's plan, on sheets and in the plan PDF: building lines dashed, servitudes dotted, each with its label. In the IFC file each is an annotation (IfcAnnotation, type BuildingLine or Servitude) on the site, with its line as a plain curve other programs can read. The check uses each wall's real outline on the plan, with its joins as drawn; a curved wall is checked by its own thickness about its centre line.
 
 ## Add levels
 

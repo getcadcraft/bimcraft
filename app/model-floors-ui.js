@@ -52,7 +52,7 @@ export function mountFloors(modelUi) {
       const g = R.holeFor; R.holeFor = null;
       A.commit(addFloorOpening(g, pts), { label: t('model.fl.opening'), verb: t('model.verb.added') });
     } else {
-      A.commit(placeDrawnFloor({ storey: levelGuid(), points: pts, kind: R.fl.kind, use: R.fl.use, thickness: thick(), offset: R.fl.top }), { label: t(R.fl.use === 'landing' ? 'model.fl.landing' : 'model.fl.drawn'), verb: t('model.verb.drew') });
+      A.commit(placeDrawnFloor({ storey: levelGuid(), points: pts, kind: R.fl.kind, use: R.fl.use, thickness: thick(), offset: R.fl.top, typeKey: A.ask('newElementType', 'floor') || '' }), { label: t(R.fl.use === 'landing' ? 'model.fl.landing' : 'model.fl.drawn'), verb: t('model.verb.drew') });
     }
     hintNow();
   }
@@ -182,6 +182,7 @@ export function mountFloors(modelUi) {
         const f = R.floors.find((x) => x.guid === it.guid);
         if (!f) return null;
         const run = (ch) => A.commit(changeDrawnFloor(f.guid, ch), kit.one(t('model.fl.drawn')));
+        A.ask('drawnFloorType', f, kit, run);   // 0.10 BK.24 (bk-r3-types-10): the floor's layered type (element-types-ui.js)
         kit.field(t('model.fl.kind'), kit.select([['concrete', t('model.floor.concrete')], ['wood', t('model.floor.wood')]], f.kind, 'data-mp-flkind', (v) => run({ kind: v })));
         kit.field(t('model.fl.use'), kit.select([['floor', t('model.fl.use.floor')], ['landing', t('model.fl.use.landing')]], f.use, 'data-mp-fluse', (v) => run({ use: v })));
         kit.field(t('model.fl.thick'), kit.lenInput(f.thickness, 'data-mp-flthick', (mm) => run({ thickness: mm }), { min: 10 }));

@@ -38,6 +38,7 @@ import { round } from '../model-write.js';
 import { STEEL } from './tables.js';
 import { PSETS } from '../ifc-place.js';
 import { systemForKey, assignToSystem, regenMep, PIPE_SYSTEMS, DUCT_SYSTEMS } from '../mep-model.js';
+import { syncMepData } from './pipe-specs-model.js';   // 0.9.1 #1499: a manufacturer's family placed as equipment is read from the model
 
 export const EQ_PSET = 'CadCraft_MepEquipment';
 export const PORT_PSET = 'CadCraft_Port';
@@ -193,6 +194,9 @@ export const EQUIPMENT = {
   },
 };
 export const EQUIPMENT_KINDS = Object.keys(EQUIPMENT);
+/** 0.9.1: field types a pack adds (type → check(value) → bool), and a kind's own classes by its values (`clsOf(v)`: a family's). */
+export const FIELD_CHECKS = {};
+const clsFor = (kind, v) => EQUIPMENT[kind].clsOf?.(v) || EQUIPMENT[kind].cls;
 const pipe = (name, system, direction, nps, at, axis) => ({ name, kind: 'pipe', system, direction, shape: 'round', size: npsOd(nps), nominal: nps, at, axis });
 const duct = (name, system, direction, shape, w, h, at, axis) => ({ name, kind: 'duct', system, direction, shape, size: w, ...(shape === 'round' ? {} : { h }), at, axis });
 
@@ -212,6 +216,7 @@ export function equipmentValues(kind, values = {}) {
     else if (type === 'nps') { v = String(v); if (!NPS.includes(v)) refuse('mep.eq.err.value', { what: k }); }
     else if (type.startsWith('sys:')) { v = String(v); if (!(type === 'sys:pipe' ? PIPE_SYSTEMS : DUCT_SYSTEMS)[v]) refuse('mep.eq.err.value', { what: k }); }
     else if (type.startsWith('choice:')) { v = String(v); if (!type.slice(7).split(',').includes(v)) refuse('mep.eq.err.value', { what: k }); }
+    else if (FIELD_CHECKS[type]) { v = String(v); if (!FIELD_CHECKS[type](v)) refuse('mep.eq.err.value', { what: k }); }   // 0.9.1: a pack's own field type (mep/equip-more.js 'fam')
     out[k] = v;
   }
   return out;
@@ -264,9 +269,9 @@ export function equipmentItem(kind, values, { name = '' } = {}) {
   return {
     format: 'cadcraft-library-item', format_version: 1, name: name || kind, kind: 'equipment', category: def.category,
     description: 'Generic ' + kind + ' (CadCraft, sized by typed values; not a maker\'s product).',   // i18n-ignore: written into the file as the item's description
-    ifc: { class: IFC4_NAME[def.cls[0]], predefined: def.cls[2] },
+    ifc: { class: IFC4_NAME[clsFor(kind, v)[0]], predefined: clsFor(kind, v)[2] },
     plan: { layers: [{ name: '0' }], entities: b.plan.map((e) => ({ ...e })) },
-    body: meshOf(b.solids),
+    body: b.mesh ? { type: 'mesh', positions: b.mesh.positions, indices: b.mesh.indices } : meshOf(b.solids),   // 0.9.1: a family brings its own mesh
     clearances: [],
     params: { width: round(b.w, 3), depth: round(b.d, 3), height: round(b.h, 3) },
     source_attrs: { 'CC-MEP-KIND': kind, 'CC-MEP-VALUES': JSON.stringify(v) },
@@ -277,7 +282,7 @@ export function equipmentItem(kind, values, { name = '' } = {}) {
     }),
   };
 }
-const IFC4_NAME = { IFCUNITARYEQUIPMENT: 'IfcUnitaryEquipment', IFCFAN: 'IfcFan', IFCPUMP: 'IfcPump', IFCBOILER: 'IfcBoiler', IFCAIRTERMINALBOX: 'IfcAirTerminalBox', IFCAIRTERMINAL: 'IfcAirTerminal', IFCTANK: 'IfcTank', IFCPIPEFITTING: 'IfcPipeFitting' };   // + 0.8 SU.888 (sx-mep): refnet joints
+const IFC4_NAME = { IFCUNITARYEQUIPMENT: 'IfcUnitaryEquipment', IFCFAN: 'IfcFan', IFCPUMP: 'IfcPump', IFCBOILER: 'IfcBoiler', IFCAIRTERMINALBOX: 'IfcAirTerminalBox', IFCAIRTERMINAL: 'IfcAirTerminal', IFCTANK: 'IfcTank', IFCPIPEFITTING: 'IfcPipeFitting', IFCSPACEHEATER: 'IfcSpaceHeater', IFCVALVE: 'IfcValve' };   // + 0.8 SU.888 (sx-mep): refnet joints
 
 /** Where each port of a placed piece sits, in its storey's plan mm, and the way it faces. */
 export function portsAt(eq) {
@@ -289,9 +294,10 @@ export function portsAt(eq) {
 
 // ---- reading ----
 const readJson = (s, d) => { try { const v = JSON.parse(String(s || '')); return v ?? d; } catch (e) { return d; } };
-const EQ_CLASSES = ['IFCUNITARYEQUIPMENT', 'IFCFAN', 'IFCPUMP', 'IFCBOILER', 'IFCAIRTERMINALBOX', 'IFCAIRTERMINAL', 'IFCTANK', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWMOVINGDEVICE', 'IFCFLOWCONTROLLER', 'IFCFLOWTERMINAL', 'IFCFLOWSTORAGEDEVICE', 'IFCPIPEFITTING', 'IFCFLOWFITTING'];   // + 0.8 SU.888 (sx-mep): refnet joints (mep/hvac.js); run fittings carry no CadCraft_MepEquipment and are skipped
+const EQ_CLASSES = ['IFCUNITARYEQUIPMENT', 'IFCFAN', 'IFCPUMP', 'IFCBOILER', 'IFCAIRTERMINALBOX', 'IFCAIRTERMINAL', 'IFCTANK', 'IFCENERGYCONVERSIONDEVICE', 'IFCFLOWMOVINGDEVICE', 'IFCFLOWCONTROLLER', 'IFCFLOWTERMINAL', 'IFCFLOWSTORAGEDEVICE', 'IFCPIPEFITTING', 'IFCFLOWFITTING', 'IFCSPACEHEATER', 'IFCVALVE'];   // + 0.9.1: radiators / convectors (mep/equip-more.js), a manufacturer's valve placed as equipment   // + 0.8 SU.888 (sx-mep): refnet joints (mep/hvac.js); run fittings carry no CadCraft_MepEquipment and are skipped
 export function readEquipment(w) {
   const so = w.storeyOf(), out = [], seen = new Set();
+  syncMepData(w);
   for (const cls of EQ_CLASSES) {
     let list = [];
     try { list = ids(w.api, w.mid, cls); } catch (e) { continue; }
@@ -352,8 +358,8 @@ export function portsOfElement(w, id) {
 
 /** The type for a kind + values (shared by every placement of the same values; found by CadCraft_MepEquipment.Key). */
 function typeFor(w, kind, values, name) {
-  const def = EQUIPMENT[kind], key = kind + ':' + JSON.stringify(values);
-  const tcls = w.v4 ? def.cls[1] : def.cls[4], pre = w.v4 ? def.cls[2] : def.cls[5];
+  const cls = clsFor(kind, values), key = kind + ':' + JSON.stringify(values);
+  const tcls = w.v4 ? cls[1] : cls[4], pre = w.v4 ? cls[2] : cls[5];
   try { for (const x of ids(w.api, w.mid, tcls)) if (w.readPset(x, EQ_PSET)?.Key === key) return x; } catch (e) { /* none yet */ }
   const id = w.make(tcls, w.guid(), w.ownerHistory(), w.L(name), w.X('Generic equipment, sized by typed values (CadCraft).'), null, null, null, null, null, pre);   // i18n-ignore: file content
   w.upsertPset(id, EQ_PSET, [['Key', 'IFCTEXT', key], ['Kind', 'IFCLABEL', kind]]);
@@ -364,7 +370,7 @@ function dropUnusedTypes(w) {
   const used = new Set();
   for (const rid of ids(w.api, w.mid, 'IFCRELDEFINESBYTYPE')) { const r = w.api.GetLine(w.mid, rid, false); if ((r.RelatedObjects || []).length) used.add(r.RelatingType?.value); }
   const gone = [];
-  for (const def of Object.values(EQUIPMENT)) for (const tcls of new Set([def.cls[1], def.cls[4]])) {
+  for (const def of Object.values(EQUIPMENT)) for (const tcls of new Set([def.cls[1], def.cls[4], ...(def.typeClasses || [])])) {
     try { for (const x of ids(w.api, w.mid, tcls)) if (!used.has(x) && w.readPset(x, EQ_PSET) && !gone.includes(x)) gone.push(x); } catch (e) { /* none */ }
   }
   if (gone.length) w.dropProduct(gone);
@@ -382,7 +388,7 @@ function writeBody(w, id, eq, item) {
 }
 function writeSets(w, id, eq, item) {
   w.upsertPset(id, EQ_PSET, [['Kind', 'IFCLABEL', eq.kind], ['Values', 'IFCTEXT', JSON.stringify(eq.values)], ['X', 'IFCLENGTHMEASURE', round(eq.x, 3)], ['Y', 'IFCLENGTHMEASURE', round(eq.y, 3)],
-    ['Z', 'IFCLENGTHMEASURE', round(eq.z || 0, 3)], ['Rotation', 'IFCPLANEANGLEMEASURE', round(eq.rot || 0, 6)], ['Tag', 'IFCLABEL', eq.tag || ''], ['Generic', 'IFCBOOLEAN', true]]);
+    ['Z', 'IFCLENGTHMEASURE', round(eq.z || 0, 3)], ['Rotation', 'IFCPLANEANGLEMEASURE', round(eq.rot || 0, 6)], ['Tag', 'IFCLABEL', eq.tag || ''], ['Generic', 'IFCBOOLEAN', eq.kind !== 'oem']]);   // 0.9.1: a manufacturer's family is not a generic body
   w.upsertPset(id, PSETS.library, w.libraryProps(item, { library: 'cadcraft-generic' }));
   w.upsertPset(id, PSETS.equipment, w.equipmentProps(item));
 }
@@ -400,7 +406,7 @@ export function placeEquipment(spec) {
     const v = equipmentValues(s.kind, s.values);
     const eq = { kind: s.kind, values: v, x: Number(s.x) || 0, y: Number(s.y) || 0, z: Number(s.z) || 0, rot: Number(s.rot) || 0, tag: String(s.tag || '') };
     const item = equipmentItem(s.kind, v, { name: s.name });
-    const def = EQUIPMENT[s.kind];
+    const def = { ...EQUIPMENT[s.kind], cls: clsFor(s.kind, v) };
     const g = w.gid(s.guid); s.guid = g;
     const lp = w.placeAt(w.api.GetLine(w.mid, storey, false).ObjectPlacement.value, eq.x, eq.y, eq.z, eq.rot);
     const objType = def.objectType ? w.L(def.objectType) : null;

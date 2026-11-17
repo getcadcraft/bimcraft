@@ -16,11 +16,22 @@ import * as US from './tables.js';
 import { BR_MATERIALS, BR_CLASSES, BR_DEFAULT_CLASS, brSizesFor, brPipeSize, brDrainSlope, isBrMaterial } from './tables-br.js';
 export { BR_MAX_VELOCITY } from './tables-br.js';
 import { ACR_MATERIAL, ACR_CLASSES, ACR_DEFAULT_CLASS, acrSizesFor, acrPipeSize, isAcrMaterial } from './tables-acr.js';   // 0.8 SU.888 (sx-mep): refrigerant tube by OD
+import { isSpecMaterial, specSizesFor, specPipeSize, specBendRadius, specMaterial, onSpecsChanged, modelSpecs } from './pipe-specs.js';   // 0.9.1 #1499: a person's own pipe specs (material `spec:<id>`, no class)
 
 export const MATERIALS = [...US.MATERIALS, ...BR_MATERIALS, ACR_MATERIAL];   // 0.8 SU.888 (sx-mep): + acr
 export const CLASSES = { ...US.CLASSES, ...BR_CLASSES, ...ACR_CLASSES };
 export const DEFAULT_CLASS = { ...US.DEFAULT_CLASS, ...BR_DEFAULT_CLASS, ...ACR_DEFAULT_CLASS };
 export const standardOf = (mat) => (isBrMaterial(mat) ? 'br' : 'us');
+/** The materials that are tables of this file (never a person's spec). */
+export const TABLE_MATERIALS = MATERIALS.slice();
+// 0.9.1 #1499: the open model's pipe specs join the lists as materials `spec:<id>` with the one class '' (and leave them when the
+// model's specs change), so every picker that lists MATERIALS / CLASSES[mat] offers them with nothing else to learn.
+function useSpecs(specs) {
+  for (let i = MATERIALS.length - 1; i >= 0; i--) if (isSpecMaterial(MATERIALS[i])) { delete CLASSES[MATERIALS[i]]; delete DEFAULT_CLASS[MATERIALS[i]]; MATERIALS.splice(i, 1); }
+  for (const s of specs) { if (!s.sizes.length) continue; const m = specMaterial(s.id); MATERIALS.push(m); CLASSES[m] = ['']; DEFAULT_CLASS[m] = ''; }
+}
+onSpecsChanged(useSpecs);
+useSpecs(modelSpecs());
 
 export const PLUMBING_STANDARDS = ['us', 'br'];
 let PROJECT_STD = null;   // 0.8 SU.955: set from the model by mep/standard.js on every refresh
@@ -38,19 +49,22 @@ export const SYSTEM_MATERIALS = {
 const nominalOf = (mat, cls, s) => { const p = pipeSize(mat, cls, s); return p ? (p.metric ? p.dn : p.nps * 25.4) : Infinity; };
 /** The sizes made in a material and class, smallest first (the US tables list "1", "2" … before "1/2"). */
 export function sizesFor(mat, cls) {
+  if (isSpecMaterial(mat)) return specSizesFor(mat);   // 0.9.1 #1499: only that spec's sizes, smallest first
   if (isBrMaterial(mat)) return brSizesFor(mat, cls);
   if (isAcrMaterial(mat)) return acrSizesFor(cls);   // 0.8 SU.888 (sx-mep)
   return US.sizesFor(mat, cls).slice().sort((a, b) => nominalOf(mat, cls, a) - nominalOf(mat, cls, b));
 }
 export function pipeSize(mat, cls, size) {
+  if (isSpecMaterial(mat)) return specPipeSize(mat, size);   // 0.9.1 #1499
   if (isAcrMaterial(mat)) return acrPipeSize(cls, size);   // 0.8 SU.888 (sx-mep)
   return isBrMaterial(mat) ? brPipeSize(mat, cls, size) : US.pipeSize(mat, cls, size);
 }
 /** The bend radius elbows are drawn with (inches): the US rule; PVC of the Brazilian tables at one outside diameter. */
 export function bendRadius(p) {
+  if (p.spec) return specBendRadius(p);   // 0.9.1 #1499: the spec's elbow factor × OD
   return p.metric ? p.od : US.bendRadius(p);
 }
 export function drainSlope(p) {
-  if (!p || isAcrMaterial(p.mat)) return null;   // 0.8 SU.888 (sx-mep): refrigerant tube is not a drain
+  if (!p || isAcrMaterial(p.mat) || p.spec) return null;   // 0.9.1 #1499: a spec names no plumbing code, so no code minimum   // 0.8 SU.888 (sx-mep): refrigerant tube is not a drain
   return p.metric ? brDrainSlope(p.dn) : US.minDrainSlope(p.nps);
 }

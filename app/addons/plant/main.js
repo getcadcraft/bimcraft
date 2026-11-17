@@ -33,6 +33,7 @@ import * as LIVE from '../../process/live.js';
 import * as CALC from '../../process/calc.js';
 import { planRuns, batchCsv, liveMarkers } from './lib/layoutrun.js';   // 0.8 chem-draw_PART_4: the layout placed with pipes (CH.29), the batch schedule in 4D (CH.6), live values in 3D (XE.9)
 import { mountOptimise } from './lib/optimise-ui.js';   // 0.8 CH.31: optimise overnight, variants solved on other computers
+import { PidLink, describe3d } from './lib/pid-link.js';   // 0.10 SU.1561: one plant graph under the 3D model and the P&ID
 import { mountEngineering, zoneEquip } from './lib/engineering.js';   // 0.8 CH.9/11/12/16/17: the vessel, pipe stress, relief, consequence and area calculators (not engineer-reviewed)
 
 const FIELD = 40;
@@ -309,6 +310,27 @@ export function activate(api) {
     return { ...r, tint };
   }
 
+  // ---------------------------------------------------------------------------------------------- the P&ID from the model (0.10 SU.1561)
+  // One connectivity graph (lib/schematic/plant.js, the host's synced copy) under both views: the 3D model's equipment and pipe runs are read into it, the P&ID
+  // sheets are drawn from it, an edit made on the P&ID is pending in 3D (and the other way round), and one bill of materials comes from the graph.
+  let pidLinkP = null;
+  const pidLink = () => (pidLinkP ||= import('../../schematic/plant.js').then((E) => new PidLink(E, { get: () => api.storage.get('pidgraph'), set: (v) => api.storage.set('pidgraph', v) })));
+  async function pidRead() {
+    const L = await pidLink();
+    let all = []; try { all = typeof api.mep?.runs === 'function' ? api.mep.runs() : []; } catch { all = []; }
+    const runs = all.filter((r) => r.kind === 'pipe');
+    const desc = describe3d({ equipment: equipment(), runs, specOf: (r) => specFor(specs(), r.mat, r.cls)?.id || '', placeEquip, makeEquip: makeEquipment });
+    L.setName((api.model.current()?.name || t('plant.name')).replace(/\.[^.]+$/, ''));
+    const r = L.update(desc);
+    return { L, r };
+  }
+  const pidLabels = () => ({ pending: t('pid.pending'), offsheet: t('pid.offsheet'), open: t('pid.open'), sheet: t('pid.sheet'), of: t('pid.of') });
+  api.files.exporter({ id: 'pid-svg', label: t('export.pid.svg'), extension: 'svg', mime: 'image/svg+xml', write: async () => { const { L } = await pidRead(); return L.svg(0, pidLabels()); } });
+  api.files.exporter({ id: 'pid-bom', label: t('export.pid.bom'), extension: 'csv', mime: 'text/csv', write: async () => { const { L } = await pidRead(); return L.bomCsv(); } });
+  api.commands.add('pid-update', async () => {
+    try { const { L, r } = await pidRead(); say(t('pid.done', { added: r.added, removed: r.removed, changed: r.changed, pending: L.pending('pid').length })); } catch (e) { say(e.message); }
+  }, { label: t('cmd.pid-update') });
+
   // ---------------------------------------------------------------------------------------------- the panel tab
   let lastRoute = null;   // the route the person found last: { ok, points, length, bends, climbs, spec, size, od, a, b }
   api.ui.panelTab({ id: 'plant', title: t('plant.name'), render: (pane) => render(pane) });
@@ -495,7 +517,33 @@ export function activate(api) {
     // Optimise overnight (CH.31, chem-mount_PART_5)
     const optLabel = t('ui.optimise'), optSec = el('details', { class: 'plant-sec', 'data-plant-optimise': '' }, el('summary', {}, optLabel === 'ui.optimise' ? 'Optimise overnight' : optLabel)), optBody = el('div');
     optSec.append(optBody); mountOptimise(optBody, { t, model: processModel });
-    pane.append(el('p', {}, t('plant.intro')), eqSec, ...(routeSec ? [routeSec] : []), specSec, isoSec, procSec, p4Sec, layoutSec, connSec, optSec, engSec, out, writeNote);
+    // P&ID from the model (SU.1561)
+    const pidBody = el('div', {});
+    const pidSec = section(t('sec.pid'), [el('p', {}, t('pid.intro')), pidBody]);
+    const pidShow = async (read) => {
+      pidBody.replaceChildren();
+      try {
+        const L = read ? (await pidRead()).L : await pidLink();
+        const pend3 = L.pending('three'), pendP = L.pending('pid'), b = L.bom().totals;
+        const item = (p) => el('li', {}, t('pid.op.' + p.op) + ' ' + p.label, ' ', el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => { L.acknowledge(p.view, p.id); pidShow(false); } } }, t('pid.done.btn')));
+        const mark = (list, view) => list.map((p) => ({ ...p, view }));
+        const lines = L.lines();
+        const lineSel = el('select', { name: 'line', class: 'select-cc', 'aria-label': t('pid.line'), style: 'width:100%' }, ...lines.map((l) => el('option', { value: l.id }, l.number)));
+        const kindSel = el('select', { name: 'kind', class: 'select-cc', 'aria-label': t('pid.valve.kind') }, ...['gate', 'globe', 'ball', 'check', 'butterfly', 'control', 'psv'].map((k) => el('option', { value: k }, t('pid.valve.' + k))));
+        const instIn = el('input', { type: 'text', maxlength: 6, placeholder: t('pid.inst.ph'), 'aria-label': t('pid.inst'), style: 'width:5rem' });
+        pidBody.append(
+          el('p', {}, t('pid.totals', { equipment: b.equipment, lines: b.lines, valves: b.valves, instruments: b.instruments })),
+          el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => pidShow(true) } }, t('pid.read')), ' ',
+          el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: async () => { try { const { L: l2 } = await pidRead(); download('pid.svg', l2.svg(0, pidLabels()), 'image/svg+xml'); } catch (e) { say(e.message); } } } }, t('pid.btn.svg')), ' ',
+          el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: async () => { try { const { L: l2 } = await pidRead(); download('plant-bom.csv', l2.bomCsv(), 'text/csv'); } catch (e) { say(e.message); } } } }, t('pid.btn.bom')),
+          el('h4', {}, t('pid.pending3d')), pend3.length ? el('ul', { class: 'plant-list' }, ...mark(pend3, 'three').map(item)) : el('p', {}, t('pid.none')),
+          el('h4', {}, t('pid.pendingpid')), pendP.length ? el('ul', { class: 'plant-list' }, ...mark(pendP, 'pid').map(item)) : el('p', {}, t('pid.none')),
+          ...(lines.length ? [el('h4', {}, t('pid.edit')), lineSel, el('div', { style: 'display:flex;gap:0.25rem;margin:0.25rem 0' }, kindSel, el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => { L.addValve(lineSel.value, kindSel.value); pidShow(false); } } }, t('pid.add.valve'))),
+            el('div', { style: 'display:flex;gap:0.25rem' }, instIn, el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => { if (instIn.value.trim()) { L.addInstrument(lineSel.value, instIn.value.trim().toUpperCase().slice(0, 6)); pidShow(false); } } } }, t('pid.add.inst')))] : []));
+      } catch (e) { pidBody.append(el('p', {}, /schematic/.test(String(e && e.message)) || /import/i.test(String(e && e.message)) ? t('pid.noengine') : String(e && e.message || e))); }
+    };
+    pidShow(false);
+    pane.append(el('p', {}, t('plant.intro')), eqSec, pidSec, ...(routeSec ? [routeSec] : []), specSec, isoSec, procSec, p4Sec, layoutSec, connSec, optSec, engSec, out, writeNote);
   }
 
   api.log('Plant ready');   // i18n-ignore (developer log)

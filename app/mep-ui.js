@@ -20,7 +20,7 @@
  * 0.7 LC.9 (session `mep-07`): equipment (mep/equip-ui.js, mounted here). A run started or ended on an equipment port snaps to
  * it, takes its size and system (at its start) and is fixed to it (`ends`), so it follows the equipment when it moves.
  */
-import { readRuns, placeRun, changeRun, removeRuns, addValve, removeValve, mepLayout, planLayout, sectionOf, runVertices, runDefaults, drainMinimum, along, runLength, readFixturePorts, drainPlan, sizeDrains,
+import { inlineFits, readRuns, placeRun, changeRun, removeRuns, addValve, removeValve, mepLayout, planLayout, sectionOf, runVertices, runDefaults, drainMinimum, along, runLength, readFixturePorts, drainPlan, sizeDrains,
   PIPE_SYSTEMS, DUCT_SYSTEMS, VALVE_KINDS, DUCT_SHAPES, systemLabel, pipeForFlow, ductForFlow, ductLoss, runSchedules } from './mep-model.js';
 import { MATERIALS, CLASSES, DEFAULT_CLASS, sizesFor, pipeSize, standardOf, stdFor, projectStandard, setProjectStandard, PLUMBING_STANDARDS, BR_MAX_VELOCITY } from './mep/pipes.js';
 import { readModelStandard, saveModelStandard } from './mep/standard.js';   // 0.8 SU.955 (mep-08)
@@ -31,6 +31,13 @@ import { mountEquipment } from './mep/equip-ui.js';
 import { mountPcf } from './mep/pcf-ui.js';   // 0.8 IND.4: PCF in and out
 import { spooled, sheetsFor, readSpools, ductCutListOf, csvOf, SPOOL_DEFAULT_MAX, DUCT_PIECE_DEFAULT } from './mep/spools.js';
 import { spoolPdf, spoolCsvRows } from './mep/spool-sheet.js';
+// 0.9.1 #1499 / #1493: a person's pipe specs, more in-line components, manufacturers' families, radiators and convectors
+import { isSpecMaterial, specOfMaterial } from './mep/pipe-specs.js';
+import { mountPipeSpecs } from './mep/pipe-specs-ui.js';
+import { INLINE, OEM_KIND } from './mep/inline.js';
+import { modelFamilies, familyById, inlineFrame, sizeFits } from './mep/oem-families.js';
+import { mountOemFamilies } from './mep/oem-families-ui.js';
+import './mep/equip-more.js';
 
 const IN = 25.4;
 const SINGLE_UNDER = 150;   // pipes narrower than this draw as one line
@@ -74,6 +81,15 @@ export function mountMep(modelUi) {
   const imperial = () => !isMetric(A.units());   // GH.3-A: cm and m are metric too
   const sizeLabel = (sec) => (sec.kind === 'pipe' && sec.p?.metric ? sec.label : sec.kind === 'pipe' && !imperial() && sec.p?.dn ? 'DN' + sec.p.dn : sec.kind === 'duct' && imperial() ? (sec.round ? Math.round(sec.w / IN) + '"Ø' : Math.round(sec.w / IN) + '×' + Math.round(sec.h / IN)) : sec.label);   // i18n-ignore: size marks
   const elevOf = (storey) => A.S.data.levels.find((l) => l.id === storey)?.elevation ?? 0;
+  // 0.9.1 #1499: a material that is a pipe spec is named by the spec (marked while its table is still to be checked against the project's standard)
+  const matLabel = (m) => { const sp = specOfMaterial(m); return sp ? t('mep.spec.mat', { name: sp.name }) : isSpecMaterial(m) ? t('mep.spec.gone') : t('mep.mat.' + m); };
+  const clsLabel = (m, c) => { const sp = specOfMaterial(m); return sp ? sp.name : isSpecMaterial(m) ? t('mep.spec.gone') : t('mep.cls.' + m, { c }); };
+  /** An in-line component's name: a built-in kind, or the family ({ kind, fam }). */
+  const valveName = (v) => (v.kind === OEM_KIND ? familyById(v.fam)?.name || t('mep.oem.gone') : t('mep.valve.' + v.kind));
+  /** The Valve tool's choice as { kind, fam }: a built-in kind or 'oem:<family id>'. */
+  const valvePick = () => (String(R.valve).startsWith('oem:') ? { kind: OEM_KIND, fam: R.valve.slice(4) } : { kind: R.valve });
+  const valveChoices = () => [...Object.keys(VALVE_KINDS).map((k) => [k, t('mep.valve.' + k) + (INLINE[k].on === 'duct' ? ' ' + t('mep.valve.onduct') : '')]),
+    ...modelFamilies().filter((f) => f.role === 'inline' && inlineFrame(f).ok).map((f) => ['oem:' + f.id, t('mep.oem.pick', { name: f.name })])];
 
   function read() {
     R.runs = []; R.lay = new Map(); R.fix = [];
@@ -185,7 +201,7 @@ export function mountMep(modelUi) {
       if (DUCT_SYSTEMS[port.system]) D.system = port.system;
       D.shape = port.shape || 'rect'; D.w = port.size; D.h = port.shape === 'round' ? port.size : port.h || port.size;
     }
-    A.host.status(t('mep.port.took', { what: port.kind === 'pipe' ? (imperial() ? R.pipe.size + '"' : 'DN' + (pipeSize(R.pipe.mat, R.pipe.cls, R.pipe.size)?.dn ?? R.pipe.size)) : (R.duct.shape === 'round' ? 'Ø' + L(R.duct.w) : L(R.duct.w) + ' × ' + L(R.duct.h)), sys: systemLabel(port.kind, port.kind === 'pipe' ? R.pipe.system : R.duct.system) }));   // i18n-ignore: size marks
+    A.host.status(t('mep.port.took', { what: port.kind === 'pipe' ? (isSpecMaterial(R.pipe.mat) ? R.pipe.size : imperial() ? R.pipe.size + '"' : 'DN' + (pipeSize(R.pipe.mat, R.pipe.cls, R.pipe.size)?.dn ?? R.pipe.size)) : (R.duct.shape === 'round' ? 'Ø' + L(R.duct.w) : L(R.duct.w) + ' × ' + L(R.duct.h)), sys: systemLabel(port.kind, port.kind === 'pipe' ? R.pipe.system : R.duct.system) }));   // i18n-ignore: size marks
   }
   /** A run started on a connector takes its system and size: the pipe of the bar's material nearest at or above its DN, a round
    *  duct of its diameter. */
@@ -211,7 +227,7 @@ export function mountMep(modelUi) {
     if (pts.length < 2) return;
     const kind = kindNow(), o = opts();
     const spec = kind === 'pipe'
-      ? { storey: levelGuid(), kind, system: o.system, mat: o.mat, cls: o.cls, size: o.size, slope: o.slope, points: pts, ends }
+      ? { storey: levelGuid(), kind, system: o.system, mat: o.mat, cls: o.cls, size: o.size, slope: o.slope, points: pts, ends, insulation: specOfMaterial(o.mat)?.insulation || 0 }   // 0.9.1: a spec's default insulation
       : { storey: levelGuid(), kind, system: o.system, shape: o.shape, w: o.w, h: o.shape === 'round' ? o.w : o.h, flow: o.flow || 0, points: pts, ends };
     A.commit(placeRun(spec), { label: t(kind === 'duct' ? 'mep.run.duct' : 'mep.run.pipe'), verb: t('model.verb.drew') });
   }
@@ -293,9 +309,24 @@ export function mountMep(modelUi) {
           const a = p.a, b = p.b, n = [-p.d[1], p.d[0]], nl = Math.hypot(n[0], n[1]) || 1, hw = Math.max(half(sec) * 1.4, 60), ux = n[0] / nl * hw, uy = n[1] / nl * hw;
           sym.lines.push([a[0] + ux, a[1] + uy, b[0] - ux, b[1] - uy], [a[0] - ux, a[1] - uy, b[0] + ux, b[1] + uy], [a[0] + ux, a[1] + uy, a[0] - ux, a[1] - uy], [b[0] + ux, b[1] + uy, b[0] - ux, b[1] - uy]);
           const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-          if (p.valve.kind === 'ball') sym.arcs.push({ c: m, r: hw * 0.35, a0: 0, a1: Math.PI * 2 });
-          if (p.valve.kind === 'globe') sym.arcs.push({ c: m, r: hw * 0.25, a0: 0, a1: Math.PI * 2 });
-          if (p.valve.kind === 'check') sym.thin.push([m[0] - p.d[0] * hw, m[1] - p.d[1] * hw, m[0] + p.d[0] * hw, m[1] + p.d[1] * hw]);
+          const vk = p.valve.kind;
+          if (vk === 'ball') sym.arcs.push({ c: m, r: hw * 0.35, a0: 0, a1: Math.PI * 2 });
+          if (vk === 'globe') sym.arcs.push({ c: m, r: hw * 0.25, a0: 0, a1: Math.PI * 2 });
+          if (vk === 'check') sym.thin.push([m[0] - p.d[0] * hw, m[1] - p.d[1] * hw, m[0] + p.d[0] * hw, m[1] + p.d[1] * hw]);
+          // 0.9.1: schematic marks of the other kinds — butterfly a bar across with a dot, balancing a circle with a tick, control an
+          // actuator square off the body, strainer a leg at 45°, dampers a blade across the duct (fire: two), a family a box with its name
+          if (vk === 'butterfly') { sym.lines.length = 0; sym.lines.push([m[0] + ux, m[1] + uy, m[0] - ux, m[1] - uy], [a[0], a[1], b[0], b[1]]); sym.arcs.push({ c: m, r: hw * 0.18, a0: 0, a1: Math.PI * 2 }); }
+          if (vk === 'balancing') { sym.arcs.push({ c: m, r: hw * 0.3, a0: 0, a1: Math.PI * 2 }); sym.thin.push([m[0], m[1], m[0] + ux * 1.5, m[1] + uy * 1.5]); }
+          if (vk === 'control') { const c2 = [m[0] + ux * 1.9, m[1] + uy * 1.9], q = hw * 0.45, dx = p.d[0] * q, dy = p.d[1] * q, vx = ux / hw * q, vy = uy / hw * q; sym.thin.push([m[0], m[1], m[0] + ux * 1.45, m[1] + uy * 1.45]); sym.lines.push([c2[0] - dx - vx, c2[1] - dy - vy, c2[0] + dx - vx, c2[1] + dy - vy], [c2[0] + dx - vx, c2[1] + dy - vy, c2[0] + dx + vx, c2[1] + dy + vy], [c2[0] + dx + vx, c2[1] + dy + vy, c2[0] - dx + vx, c2[1] - dy + vy], [c2[0] - dx + vx, c2[1] - dy + vy, c2[0] - dx - vx, c2[1] - dy - vy]); }
+          if (vk === 'strainer') { sym.lines.length = 0; sym.lines.push([a[0] + ux * 0.6, a[1] + uy * 0.6, b[0] + ux * 0.6, b[1] + uy * 0.6], [a[0] - ux * 0.6, a[1] - uy * 0.6, b[0] - ux * 0.6, b[1] - uy * 0.6], [a[0] + ux * 0.6, a[1] + uy * 0.6, a[0] - ux * 0.6, a[1] - uy * 0.6], [b[0] + ux * 0.6, b[1] + uy * 0.6, b[0] - ux * 0.6, b[1] - uy * 0.6], [m[0], m[1], m[0] + p.d[0] * hw + ux * 1.4, m[1] + p.d[1] * hw + uy * 1.4]); }
+          if (vk === 'damper-volume' || vk === 'damper-fire' || vk === OEM_KIND) {
+            const hx = n[0] / nl * half(sec), hy = n[1] / nl * half(sec);
+            sym.lines.length = 0;
+            sym.lines.push([a[0] + ux, a[1] + uy, b[0] + ux, b[1] + uy], [a[0] - ux, a[1] - uy, b[0] - ux, b[1] - uy], [a[0] + ux, a[1] + uy, a[0] - ux, a[1] - uy], [b[0] + ux, b[1] + uy, b[0] - ux, b[1] - uy]);
+            if (vk === OEM_KIND) sym.thin.push([a[0] + ux, a[1] + uy, b[0] - ux, b[1] - uy], [a[0] - ux, a[1] - uy, b[0] + ux, b[1] + uy]);
+            else { sym.lines.push([a[0] + hx, a[1] + hy, b[0] - hx, b[1] - hy]); if (vk === 'damper-fire') sym.lines.push([a[0] - hx, a[1] - hy, b[0] + hx, b[1] + hy]); }
+            (sc.rooms ||= []).push({ key, label: [vk === OEM_KIND ? valveName(p.valve) : t('mep.valve.abbr.' + vk)], at: [m[0] + ux * 1.8, m[1] + uy * 1.8] });
+          }
           sym.poly = [[a[0] + ux, a[1] + uy], [b[0] + ux, b[1] + uy], [b[0] - ux, b[1] - uy], [a[0] - ux, a[1] - uy]];
           sc.symbols.push(sym);
           return;
@@ -394,12 +425,16 @@ export function mountMep(modelUi) {
     }
     fill(q('[data-mep-std]'), [['', t('mep.std.none')], ...PLUMBING_STANDARDS.map((v) => [v, t('mep.std.' + v)])], projectStandard() || '');
     fill(q('[data-mep-sys]'), sysList('pipe'), P.system);
-    fill(q('[data-mep-mat]'), MATERIALS.map((m) => [m, t('mep.mat.' + m)]), P.mat);
-    fill(q('[data-mep-cls]'), CLASSES[P.mat].map((c) => [c, t('mep.cls.' + P.mat, { c })]), P.cls);
+    // 0.9.1 #1499: a spec that left the model (Undo, another file) takes the bar back to the system's usual pipe
+    if (isSpecMaterial(P.mat) && !MATERIALS.includes(P.mat)) { const d0 = runDefaults('pipe', P.system); Object.assign(P, { mat: d0.mat, cls: d0.cls, size: d0.size }); }
+    fill(q('[data-mep-mat]'), MATERIALS.map((m) => [m, matLabel(m)]), P.mat);
+    fill(q('[data-mep-cls]'), (CLASSES[P.mat] || ['']).map((c) => [c, clsLabel(P.mat, c)]), P.cls);
+    const clsRow = q('[data-mep-cls]')?.closest('label'); if (clsRow) clsRow.hidden = isSpecMaterial(P.mat);   // a spec has no classes: its sizes are the whole list
     fill(q('[data-mep-size]'), pipeSizes(P), P.size);
     fill(q('[data-mep-dsys]'), sysList('duct'), D.system);
     fill(q('[data-mep-shape]'), DUCT_SHAPES.map((s) => [s, t('mep.shape.' + s)]), D.shape);
-    fill(q('[data-mep-valve]'), Object.keys(VALVE_KINDS).map((k) => [k, t('mep.valve.' + k)]), R.valve);
+    if (String(R.valve).startsWith('oem:') && !familyById(R.valve.slice(4))) R.valve = 'gate';
+    fill(q('[data-mep-valve]'), valveChoices(), R.valve);
     const set = (sel, v) => { const i = q(sel); if (i && document.activeElement !== i) i.value = v; };
     set('[data-mep-z]', L(P.z)); set('[data-mep-slope]', fmtSlope(P.slope, A.units()));
     set('[data-mep-w]', L(D.w)); set('[data-mep-h]', L(D.h)); set('[data-mep-dz]', L(D.z));
@@ -409,6 +444,8 @@ export function mountMep(modelUi) {
     const ru = q('[data-mep-rateunit]'); if (ru) ru.textContent = t(imperial() ? 'mep.unit.inwg' : 'mep.unit.pam');
     const pc = q('[data-mep-piece]'); if (pc && (!pc.value || pc.dataset.unit !== A.units())) { pc.value = L(DUCT_PIECE_DEFAULT); pc.dataset.unit = A.units(); }   // GH.3-A: follows the display unit
   }
+  /** The kind of run the Valve tool's choice goes on (a family: the kind of its two ports). */
+  function valveRunKind() { const v = valvePick(); return v.kind === OEM_KIND ? (inlineFrame(familyById(v.fam)).kind || 'pipe') : INLINE[v.kind]?.on || 'pipe'; }
   function autoSlope() { const P = R.pipe; if (P.slopeAuto) P.slope = PIPE_SYSTEMS[P.system]?.drain ? drainMinimum(P) || 0 : 0; }
   function sizeDuct() {
     const D = R.duct;
@@ -431,8 +468,12 @@ export function mountMep(modelUi) {
     const run = (ch) => A.commit(changeRun(r.guid, ch), meta);
     kit.field(t('mep.system'), kit.select(sysList(r.kind), r.system, 'data-mp-mepsys', (v) => run(r.kind === 'pipe' ? { system: v, slope: r.slope || (PIPE_SYSTEMS[v]?.drain ? drainMinimum({ ...r, system: v }) || 0 : 0) } : { system: v })));
     if (r.kind === 'pipe') {
-      kit.field(t('mep.material'), kit.select(MATERIALS.map((m) => [m, t('mep.mat.' + m)]), r.mat, 'data-mp-mepmat', (v) => { const c = DEFAULT_CLASS[v], s = sizesFor(v, c); run({ mat: v, cls: c, size: s.includes(r.size) ? r.size : s[0] }); }));
-      kit.field(t('mep.class'), kit.select(CLASSES[r.mat].map((c) => [c, t('mep.cls.' + r.mat, { c })]), r.cls, 'data-mp-mepcls', (v) => { const s = sizesFor(r.mat, v); run({ cls: v, size: s.includes(r.size) ? r.size : s[0] }); }));
+      // a material's nearest size by outside diameter when the run changes table or spec (0.9.1: specs name their sizes their own way)
+      const nearSize = (v, c) => { const s = sizesFor(v, c); if (s.includes(r.size)) return r.size; const od = r.sec?.od || 0; return s.reduce((b, z) => (Math.abs((pipeSize(v, c, z)?.od || 0) * IN - od) < Math.abs((pipeSize(v, c, b)?.od || 0) * IN - od) ? z : b), s[0]); };
+      kit.field(t('mep.material'), kit.select(MATERIALS.map((m) => [m, matLabel(m)]), r.mat, 'data-mp-mepmat', (v) => { const c = DEFAULT_CLASS[v]; run({ mat: v, cls: c, size: nearSize(v, c), ...(specOfMaterial(v)?.insulation && !r.insulation ? { insulation: specOfMaterial(v).insulation } : {}) }); }));
+      const rsp = specOfMaterial(r.mat);
+      if (!isSpecMaterial(r.mat)) kit.field(t('mep.class'), kit.select(CLASSES[r.mat].map((c) => [c, t('mep.cls.' + r.mat, { c })]), r.cls, 'data-mp-mepcls', (v) => { const s = sizesFor(r.mat, v); run({ cls: v, size: s.includes(r.size) ? r.size : s[0] }); }));
+      else if (rsp) kit.rows.push(el('dt', {}, t('mep.spec.one')), el('dd', { className: 'bc-muted', 'data-mp-mepspec': '' }, [rsp.standard, rsp.material, t('mep.spec.joint.' + rsp.joint)].filter(Boolean).join(' · ') + ' · ' + t('mep.spec.wall', { od: r.sec ? Math.round(r.sec.od * 100) / 100 : '', wall: r.sec ? Math.round(r.sec.wall * 100) / 100 : '', id: r.sec ? Math.round(r.sec.id * 100) / 100 : '' }) + (rsp.check ? ' ' + t('mep.spec.check.short') : '')));
       kit.field(t('mep.size'), kit.select(pipeSizes(r), r.size, 'data-mp-mepsize', (v) => run({ size: v })));
       const sl = el('input', { type: 'text', className: 'bc-input bc-num', value: fmtSlope(r.slope, A.units()), 'data-mp-mepslope': '', size: 8 });
       sl.addEventListener('change', () => { const v = parseSlope(sl.value); if (Number.isFinite(v) && v >= 0 && v < 0.2) run({ slope: v }); else { A.host.status(t('mep.err.slope'), true); sl.value = fmtSlope(r.slope, A.units()); } });
@@ -470,7 +511,13 @@ export function mountMep(modelUi) {
       });
       kit.field(t('mep.flow', { unit: t(imperial() ? 'mep.unit.gpm' : 'mep.unit.ls') }), fb, go);
     }
-    r.valves.forEach((v, i) => kit.field(t('mep.valve.at', { kind: t('mep.valve.' + v.kind), at: L(v.s) }), kit.button(t('mep.valve.del'), 'data-mp-mepdelvalve', () => A.commit(removeValve(r.guid, i), meta))));
+    r.valves.forEach((v, i) => {
+      kit.field(t('mep.valve.at', { kind: valveName(v), at: L(v.s) }), kit.button(t('mep.valve.del'), 'data-mp-mepdelvalve', () => A.commit(removeValve(r.guid, i), meta)));
+      // 0.9.1 #1499: a family is drawn at its own size, never stretched; said here when its ports are not the run's size
+      const fam = v.kind === OEM_KIND ? familyById(v.fam) : null, fit = fam && r.sec ? sizeFits(fam, r.sec) : null;
+      if (fit && !fit.ok) kit.rows.push(el('dt', {}, ''), el('dd', { className: 'bc-input-err', 'data-mp-mepfamsize': '' }, t('mep.oem.warn.size', { name: fam.name, have: fit.nominal || fit.have, want: sizeLabel(r.sec) })));
+      else if (v.kind !== OEM_KIND) kit.rows.push(el('dt', {}, ''), el('dd', { className: 'bc-sub' }, t('mep.valve.schematic')));
+    });
     // 0.7 LC.9: steel spools — the rules, the field welds, the sheets
     if (r.kind === 'pipe' && r.mat === 'steel') {
       const on = el('input', { type: 'checkbox', 'data-mp-mepspool': '' });
@@ -549,9 +596,9 @@ export function mountMep(modelUi) {
     const fits = S.fittings.sort((a, b) => (a.kind + a.system + a.what).localeCompare(b.kind + b.system + b.what));
     R.sched = { pipes, ducts, mepfit: fits };
     return {
-      pipes: { head: [t('mep.system'), t('mep.material'), t('mep.size'), t('mep.length'), t('mep.pieces')], rows: pipes.map((x) => [sys('pipe', x.system), t('mep.cls.' + x.mat, { c: x.cls }), sizeName(x.mat, x.cls, x.size), len(x.length), String(x.n)]), total: ['', '', '', len(pipes.reduce((s, x) => s + x.length, 0)), String(pipes.reduce((s, x) => s + x.n, 0))] },   // i18n-ignore: size mark
+      pipes: { head: [t('mep.system'), t('mep.material'), t('mep.size'), t('mep.length'), t('mep.pieces')], rows: pipes.map((x) => [sys('pipe', x.system), clsLabel(x.mat, x.cls), sizeName(x.mat, x.cls, x.size), len(x.length), String(x.n)]), total: ['', '', '', len(pipes.reduce((s, x) => s + x.length, 0)), String(pipes.reduce((s, x) => s + x.n, 0))] },   // i18n-ignore: size mark
       ducts: { head: [t('mep.system'), t('mep.shape'), t('mep.size'), t('mep.length'), t('mep.surface')], rows: ducts.map((x) => [sys('duct', x.system), t('mep.shape.' + x.shape), sizeLabel({ kind: 'duct', round: x.shape === 'round', w: x.w, h: x.h, label: x.label }), len(x.length), area(x.area)]), total: ['', '', '', len(ducts.reduce((s, x) => s + x.length, 0)), area(ducts.reduce((s, x) => s + x.area, 0))] },
-      mepfit: { head: [t('mep.system'), t('mep.fitting'), t('mep.size'), t('mep.count')], rows: fits.map((x) => [sys(x.kind, x.system), x.valve ? t('mep.valve.' + x.what) : t('mep.fit.' + x.what + (x.kind === 'duct' && x.what === 'reducer' ? '.duct' : '')) + (x.angle ? ' ' + Math.round(x.angle) + '°' : ''), x.size, String(x.n)]), total: ['', '', '', String(fits.reduce((s, x) => s + x.n, 0))] },
+      mepfit: { head: [t('mep.system'), t('mep.fitting'), t('mep.size'), t('mep.count')], rows: fits.map((x) => [sys(x.kind, x.system), x.valve ? (x.what === OEM_KIND ? x.name || t('mep.oem.gone') : t('mep.valve.' + x.what)) : t('mep.fit.' + x.what + (x.kind === 'duct' && x.what === 'reducer' ? '.duct' : '')) + (x.angle ? ' ' + Math.round(x.angle) + '°' : ''), x.size, String(x.n)]), total: ['', '', '', String(fits.reduce((s, x) => s + x.n, 0))] },
     };
   }
   function scheduleKeys(kind, i) {
@@ -580,14 +627,14 @@ export function mountMep(modelUi) {
         if (p.kind === 'segment') {
           const pl = Math.hypot(p.b[0] - p.a[0], p.b[1] - p.a[1]);
           if (pl < 1) return;   // risers: a run on a plan cannot measure them
-          const key = r.kind === 'pipe' ? def(['pipe', r.system, r.mat, r.cls, r.size, r.slope ? 's' : ''].join(':'), { name: t('mep.to.pipe', { size: sizeLabel(sec), mat: t('mep.cls.' + r.mat, { c: r.cls }), sys: systemLabel('pipe', r.system) }), type: 'linear', ...(r.slope > 0 ? { slope: 'rake', pitch: Math.atan(r.slope) * 180 / Math.PI } : {}) })
+          const key = r.kind === 'pipe' ? def(['pipe', r.system, r.mat, r.cls, r.size, r.slope ? 's' : ''].join(':'), { name: t('mep.to.pipe', { size: sizeLabel(sec), mat: clsLabel(r.mat, r.cls), sys: systemLabel('pipe', r.system) }), type: 'linear', ...(r.slope > 0 ? { slope: 'rake', pitch: Math.atan(r.slope) * 180 / Math.PI } : {}) })
             : def(['duct', r.system, sec.shape, Math.round(sec.w), Math.round(sec.h)].join(':'), { name: t('mep.to.duct', { size: sizeLabel(sec), shape: t('mep.shape.' + sec.shape), sys: systemLabel('duct', r.system) }), type: 'linear', heightFt: (sec.round ? Math.PI * sec.w : sec.shape === 'oval' ? Math.PI * sec.h + 2 * (sec.w - sec.h) : 2 * (sec.w + sec.h)) / FT });
           lv.runs.push({ item: key, pts: [[p.a[0], p.a[1]], [p.b[0], p.b[1]]] });
         } else {
           const where = p.kind === 'bend' ? p.p0 : p.kind === 'tee' ? p.at : p.a;
-          const what = p.kind === 'valve' ? t('mep.valve.' + p.valve.kind) : t('mep.fit.' + p.kind + (r.kind === 'duct' && p.kind === 'reducer' ? '.duct' : ''));
+          const what = p.kind === 'valve' ? valveName(p.valve) : t('mep.fit.' + p.kind + (r.kind === 'duct' && p.kind === 'reducer' ? '.duct' : ''));
           const sizeText = p.kind === 'reducer' ? sizeLabel(p.from) + ' × ' + sizeLabel(p.to) : p.kind === 'tee' ? sizeLabel(sec) + ' × ' + sizeLabel(p.branchSec) : sizeLabel(sec);
-          const key = def(['fit', r.kind, r.system, p.kind, p.valve?.kind || '', sizeText, p.kind === 'bend' ? Math.round(p.th * 180 / Math.PI) : ''].join(':'), { name: what + ' ' + sizeText + (p.kind === 'bend' ? ' ' + Math.round(p.th * 180 / Math.PI) + '°' : '') + ', ' + systemLabel(r.kind, r.system), type: 'count' });
+          const key = def(['fit', r.kind, r.system, p.kind, p.valve?.kind || '', p.valve?.fam || '', sizeText, p.kind === 'bend' ? Math.round(p.th * 180 / Math.PI) : ''].join(':'), { name: what + ' ' + sizeText + (p.kind === 'bend' ? ' ' + Math.round(p.th * 180 / Math.PI) + '°' : '') + ', ' + systemLabel(r.kind, r.system), type: 'count' });
           lv.counts.push({ item: key, at: [where[0], where[1]] });
         }
       });
@@ -598,9 +645,10 @@ export function mountMep(modelUi) {
     tools: ['pipe', 'duct', 'valve', 'weld'],
     hint: (name) => 'mep.hint.' + name,
     typed: () => false,
-    classes: /^Ifc(PipeSegment|PipeFitting|DuctSegment|DuctFitting|Valve|FlowSegment|FlowFitting|FlowController)$/,
+    classes: /^Ifc(PipeSegment|PipeFitting|DuctSegment|DuctFitting|Valve|Damper|Filter|FlowSegment|FlowFitting|FlowController|FlowTreatmentDevice)$/,
     move(p, e) {
-      if (A.S.tool === 'valve' || A.S.tool === 'weld') { const n = runNear(p, 'pipe', A.pv().pxToMm(12)); R.valveHover = n ? { r: n.r, a: n.a } : null; return; }
+      if (A.S.tool === 'valve') { const n = runNear(p, valveRunKind(), A.pv().pxToMm(12)); R.valveHover = n ? { r: n.r, a: n.a } : null; return; }
+      if (A.S.tool === 'weld') { const n = runNear(p, 'pipe', A.pv().pxToMm(12)); R.valveHover = n ? { r: n.r, a: n.a } : null; return; }
       R.hover = at(p, e);
     },
     click(p, e) {
@@ -612,9 +660,14 @@ export function mountMep(modelUi) {
         return;
       }
       if (A.S.tool === 'valve') {
-        const n = runNear(p, 'pipe', A.pv().pxToMm(12));
-        if (!n) { A.host.status(t('mep.err.nopipe'), true); return; }
-        A.commit(addValve(n.r.guid, n.a.s, R.valve), { label: t('mep.valve.' + R.valve), verb: t('model.verb.placed'), reselect: partKeys(n.r.guid) });
+        // 0.9.1: valves and a strainer go on pipes, dampers on ducts, a family on the kind its two ports are
+        const v = valvePick(), want = valveRunKind();
+        const n = runNear(p, want, A.pv().pxToMm(12));
+        if (!n) { A.host.status(t(want === 'duct' ? 'mep.err.noduct' : 'mep.err.nopipe'), true); return; }
+        if (!inlineFits(n.r, v)) { A.host.status(t(want === 'duct' ? 'mep.err.valve.pipe' : 'mep.err.valve.duct'), true); return; }
+        const fam = v.kind === OEM_KIND ? familyById(v.fam) : null, fit = fam ? sizeFits(fam, n.r.sec) : null;
+        A.commit(addValve(n.r.guid, n.a.s, v.kind, v.fam), { label: valveName(v), verb: t('model.verb.placed'), reselect: partKeys(n.r.guid) });
+        if (fit && !fit.ok) A.host.status(t('mep.oem.warn.size', { name: fam.name, have: fit.nominal || fit.have, want: sizeLabel(n.r.sec) }), true);
         return;
       }
       const q = at(p, e);
@@ -637,7 +690,7 @@ export function mountMep(modelUi) {
     scene,
     overlay(o) {
       if (A.S.tool === 'valve' || A.S.tool === 'weld') {
-        if (R.valveHover) { const q = R.valveHover.a.at; o.snap = { p: [q[0], q[1]], kind: 'mid' }; o.hud = { p: [q[0], q[1]], text: (A.S.tool === 'weld' ? t('mep.tool.weld') : t('mep.valve.' + R.valve)) + '\n' + L(R.valveHover.a.s) }; }
+        if (R.valveHover) { const q = R.valveHover.a.at; o.snap = { p: [q[0], q[1]], kind: 'mid' }; o.hud = { p: [q[0], q[1]], text: (A.S.tool === 'weld' ? t('mep.tool.weld') : valveName(valvePick())) + '\n' + L(R.valveHover.a.s) }; }
         return;
       }
       if (!['pipe', 'duct'].includes(A.S.tool)) return;
@@ -662,6 +715,8 @@ export function mountMep(modelUi) {
   if (schedSel && !schedSel.querySelector('option[value="pipes"]')) schedSel.append(el('option', { value: 'pipes' }, t('model.sch.pipes')), el('option', { value: 'ducts' }, t('model.sch.ducts')), el('option', { value: 'mepfit' }, t('model.sch.mepfit')));
   if (typeof window !== 'undefined') window.bimcraftMep = { state: R, api: A };   // for tests
   EQ = mountEquipment(modelUi);   // 0.7 LC.9: equipment with ports, the Connections check
+  mountPipeSpecs(modelUi);        // 0.9.1 #1499: Build › Pipe specs…
+  mountOemFamilies(modelUi, { changed: () => { const b = A.root.querySelector('[data-eq-fields]'); if (b) b.dataset.kind = ''; bindRows(); } });   // 0.9.1 #1499: Build › Families…
   const dcBtn = A.root.querySelector('[data-mep-ductcut]');
   if (dcBtn && !dcBtn.dataset.bound) { dcBtn.dataset.bound = '1'; dcBtn.addEventListener('click', () => { const m = dcBtn.closest('details'); if (m) m.open = false; ductCut(); }); }
   return { state: R, equipment: EQ };

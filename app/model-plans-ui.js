@@ -104,7 +104,8 @@ export function createPlans(A, { root }) {
     const dpi = nat.unit === 'pt' ? 72 : (R.kind === 'pdf' ? (nat.dpi || s.dpi) : s.dpi);
     return s.ratio * 25.4 / dpi;
   }
-  const scaled = (parts, k) => ({ source: parts.source, segs: parts.segs.map((q) => q.map((v) => v * k)), arcs: parts.arcs.map((a) => ({ ...a, cx: a.cx * k, cy: a.cy * k, r: a.r * k })), bounds: null, curves: parts.curves });
+  const scaled = (parts, k) => ({ source: parts.source, segs: parts.segs.map((q) => q.map((v) => v * k)), arcs: parts.arcs.map((a) => ({ ...a, cx: a.cx * k, cy: a.cy * k, r: a.r * k })), bounds: null, curves: parts.curves,
+    labels: (parts.labels || []).map((l) => ({ name: l.name, at: [l.at[0] * k, l.at[1] * k], h: l.h * k })) });   // 0.10 BK.64: the page's words, for room names
 
   function render(body, dlg) {
     const lv = A.S.data.levels, units = A.units();
@@ -230,13 +231,15 @@ export function createPlans(A, { root }) {
           walls: x.plan.walls.map((w) => ({ a: [w.a[0] - sh[0], w.a[1] - sh[1]], b: [w.b[0] - sh[0], w.b[1] - sh[1]], t: w.t })),
           openings: x.plan.openings.map((o) => ({ ...o, typeKey: o.kind === 'door' ? 'door-single' : 'win-casement' })),
           typeKey: wt.value, topLevel: topGuid, height: exists ? exists.height : hNew,
+          // 0.10 BK.64 (bk-r3-checks-10): what is read from the page is marked unverified; a room takes its name from the page's text inside it
+          source: x.parts.source === 'scan' ? 'scan' : 'pdf', roomNames: (x.parts.labels || []).map((l) => ({ name: l.name, at: [l.at[0] - sh[0], l.at[1] - sh[1]] })),
           underlay: keep.checked ? { name: R.file.name + (R.pages.length > 1 ? ' (' + x.p.n + ')' : ''), units: 'mm', lines: x.parts.segs.map(mv).slice(0, Math.floor(MAX_UNDERLAY_POINTS / 2)) } : null,
         };
       });
       dlg.close();
       const w = pages.reduce((s, p) => s + p.walls.length, 0), d = pages.reduce((s, p) => s + p.openings.filter((o) => o.kind === 'door').length, 0), n = pages.reduce((s, p) => s + p.openings.filter((o) => o.kind === 'window').length, 0);
       A.commit(tracePages(pages), { label: R.file.name, verb: t('model.verb.made') });
-      A.host.status(t('model.trace.plans.done', { w, d, n, name: R.file.name, l: pages.length }), false, true);
+      A.host.status(t('model.trace.plans.done', { w, d, n, name: R.file.name, l: pages.length }) + ' ' + t('verify.recognised'), false, true);
     });
 
     body.replaceChildren(

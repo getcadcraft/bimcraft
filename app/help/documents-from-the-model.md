@@ -44,6 +44,10 @@ Inside `{{#each}}`: `{{name}}`, `{{type}}`, `{{storey}}`, `{{class}}`, `{{materi
 
 A class may be several (`IfcDoor|IfcWindow`) or every element (`*`). Narrow any of them with `where`: `{{#each IfcDoor where Fire rating >= 60}}`, `{{count IfcWall where Wall finish hasnot}}`. The tests are `=`, `!=`, `~` (contains), `>`, `<`, `>=`, `<=`, `has` and `hasnot`; join several with `and`; put a value with spaces in "quotes". `sort Name` orders a loop.
 
+## Schedules and the specification in a document
+
+`{{schedule doors}}` prints a model schedule as a table, in your office layout: `doors`, `windows`, `walls`, `rooms`, `floors`, `roomfinishes`, `wallfinishes`, `zonefinishes`, `finishtotals`, `layers`, or the name of a set-up you saved in Schedules. `{{specification}}` prints the project's specification. The templates **Working drawing schedules** and **Specification** use them. In the preview, click a figure of such a schedule to select the elements it came from. See [Lay out, save and export a schedule](topic:schedule-layouts) and [Write the specification from the model](topic:specification).
+
 ## Good to know
 
 - A field names a built-in (Name, Type, Storey, Class, Material, Mark), a tag (`tag:Fire rating`, or its name), a property (`Pset_WallCommon.FireRating`) or just a property's name (`NetSideArea`, `Width`): a bare name reads each element's own set, quantity sets first, so `Width` on a door is the door's width, not a wall's thickness. Inside `where`, a bare name reads the set most of the chosen elements have.

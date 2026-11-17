@@ -31,6 +31,8 @@ import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 
 export const SITE_PSET = 'CadCraft_Site';
+/** Called at the end of setSiteOutline as fn(w, siteId): what follows the outline (BK.104: the building line from setbacks, model-site-constraints.js). */
+export const siteOutlineHooks = [];
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
 const I4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const worldMm = (w, lp) => (lp ? scaleT(w.api.GetWorldTransformMatrix(w.mid, lp), w.unitMm) : I4);
@@ -120,6 +122,7 @@ export function setSiteOutline({ storey, points }) {
     const A = Math.abs(area(pts)), P = pts.reduce((sum, a, i) => { const b = pts[(i + 1) % pts.length]; return sum + Math.hypot(b[0] - a[0], b[1] - a[1]); }, 0);
     w.upsertQto(sid, 'Qto_SiteBaseQuantities', [['GrossPerimeter', 'length', P], ['GrossArea', 'area', A]]);
     w.upsertPset(sid, SITE_PSET, [['Points', 'IFCTEXT', ptsText(pts.map((q) => [w.u(q[0]), w.u(q[1])]))]]);
+    for (const h of siteOutlineHooks) h(w, sid);
     return { id: sid, ids: [sid] };
   });
 }
@@ -187,7 +190,7 @@ export function splitLevels({ total, count }) {
   const T = Number(total), n = Math.floor(Number(count));
   const guids = [];
   return op((w) => {
-    if (!(T >= 1000 * n) || !(n >= 1) || n > 200) refuse('model.err.lv.split');
+    if (!(T >= 10 * n) || !(n >= 1) || n > 200) refuse('model.err.lv.split');   // 0.10 BK.73: was 1 m a level (practice); under 10 mm there is no level. Under 1 m is advice
     const levels = readLevels(w), order = levels.map((l) => l.guid);   // in their order now: moving one never reorders the rest
     const base = levels.length ? levels[0].elevation : 0, h = T / n;
     const made = new Map(), out = [];

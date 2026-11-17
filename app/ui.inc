@@ -25,6 +25,10 @@ $__detailUrl = $__detailBuild && in_array('handoff', $__detailBuild['manifest'][
 $__takeoff = Catalog::app('takeoffcraft');
 $__takeoffBuild = $__takeoff && Catalog::openIn($__takeoff, $__area['key']) ? AppBuilds::resolve($__takeoff['slug'], $__area['key']) : null;
 $__takeoffUrl = $__takeoffBuild && in_array('handoff', $__takeoffBuild['manifest']['accepts'] ?? [], true) ? $__area['path'] . '/' . $__takeoff['slug'] : '';
+// "Part links" (0.10 BK.179 / SU.1814, bim-part-link-10): send an element to PartCraft and take it back — only when PartCraft is open here and its build takes a link.
+$__part = Catalog::app('partcraft');
+$__partBuild = $__part && Catalog::openIn($__part, $__area['key']) ? AppBuilds::resolve($__part['slug'], $__area['key']) : null;
+$__partUrl = $__partBuild && in_array('partlink', $__partBuild['manifest']['accepts'] ?? [], true) ? $__area['path'] . '/' . $__part['slug'] : '';
 // Project bundles (0.7 BIM-BUNDLE-OPEN): a layout's PDF goes to the markup app, its DWG to the drafting app above — same rule.
 $__markup = Catalog::app('markupcraft');
 $__markupBuild = $__markup && Catalog::openIn($__markup, $__area['key']) ? AppBuilds::resolve($__markup['slug'], $__area['key']) : null;
@@ -162,6 +166,11 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         <summary class="bc-h"><?= Lang::e('eg44.title') ?></summary>
         <div data-eg44></div>
       </details>
+      <?php /* 0.10 BK.46 / BK.48 issues and revisions (session bk-r3-stages-10): issue-ui.js fills it with the shared issue panel. */ ?>
+      <details class="bc-find-details" data-issues-details>
+        <summary class="bc-h"><?= Lang::e('issues.title') ?></summary>
+        <div data-issuelog></div>
+      </details>
       <?php /* 0.8 EG.60 furnish a room and EG.58 room program to massing (session bim_PART_2): design-ui.js fills them. */ ?>
       <details class="bc-find-details" data-eg60-details>
         <summary class="bc-h"><?= Lang::e('eg60.title') ?></summary>
@@ -195,6 +204,11 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         <summary class="bc-h"><?= Lang::e('sx.su889.title') ?></summary>
         <div data-sx-docs></div>
       </details>
+      <?php /* 0.10 BK.63 / BK.170 client pack and stage report (session bk-r3-stages-10): pack-ui.js fills it. */ ?>
+      <details class="bc-find-details" data-pack-details>
+        <summary class="bc-h"><?= Lang::e('pack.title') ?></summary>
+        <div data-pack></div>
+      </details>
     </section>
     <section class="bc-sec" data-4d-sec hidden>
       <?php /* 4D schedule (0.4 B22): built when opened; bimcraft.js "4D schedule", ifc-4d.js. */ ?>
@@ -223,6 +237,13 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         <div data-ids></div>
       </details>
       <button type="button" class="bc-linkbtn" data-ids-open title="<?= Lang::e('ids.menu.title') ?>"><?= Lang::e('ids.menu') ?></button>
+      <?php /* 0.10 BK.65 / BK.20 (bk-r3-checks-10): Audit: ready rule sets as advisory Problems (audit-ui.js, lib/modelaudit); BK.64 / BK.49: Mark as checked (verify-ui.js). */ ?>
+      <details class="bc-find-details" data-audit-details>
+        <summary class="bc-h"><?= Lang::e('audit.title') ?></summary>
+        <div data-audit></div>
+      </details>
+      <button type="button" class="bc-linkbtn" data-audit-open title="<?= Lang::e('audit.menu.title') ?>"><?= Lang::e('audit.menu') ?></button>
+      <button type="button" class="bc-linkbtn" data-verify-mark title="<?= Lang::e('verify.mark.title') ?>"><?= Lang::e('verify.mark') ?></button>
     </section>
     <section class="bc-sec" data-clash-sec hidden>
       <?php /* Clash check (0.4 B17): built when opened; bimcraft.js "Clash check", clash.js in clash-worker.js. */ ?>
@@ -369,6 +390,9 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <button type="button" class="bc-tool" data-paint-open="paint" aria-pressed="false" title="<?= Lang::e('ui.paint.title') ?>"><i class="bi bi-paint-bucket" aria-hidden="true"></i><span><?= Lang::e('ui.paint') ?></span></button>
           <?php /* Views (0.5 RC.7): bimcraft.js "Views" → views-ui-bim.js + views-bim.js (saved cameras and walkthroughs in the IFC). */ ?>
           <button type="button" class="bc-tool" data-saved-views="views" aria-pressed="false" title="<?= Lang::e('ui.views.title') ?>"><i class="bi bi-camera-reels" aria-hidden="true"></i><span><?= Lang::e('ui.views') ?></span></button>
+          <?php if ($__partUrl): ?>
+          <button type="button" class="bc-tool" data-part-link data-part-url="<?= e($__partUrl) ?>" title="<?= Lang::e('partlink.button_title', ['app' => $__part['name']]) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span><?= Lang::e('partlink.button', ['app' => $__part['name']]) ?></span><span class="bc-badge" data-part-link-count hidden></span></button>
+          <?php endif; ?>
           <?php if ($__detailUrl): ?>
           <button type="button" class="bc-tool" data-handoff-ifc data-handoff-url="<?= e($__detailUrl) ?>" data-handoff-app="<?= e($__detail['name']) ?>" title="<?= Lang::e('handoff.ifc.title', ['app' => $__detail['name']]) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span><?= Lang::e('handoff.ifc.button', ['app' => $__detail['name']]) ?></span></button>
           <?php endif; ?>
@@ -488,7 +512,7 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                 <button type="button" class="bc-tool" data-mtool="select" aria-pressed="true" title="<?= Lang::e('model.tool.select.title') ?>"><i class="bi bi-cursor" aria-hidden="true"></i><span><?= Lang::e('model.tool.select') ?></span></button>
                 <?php /* Measure on the plan (0.9 D9.3, model-measure-ui.js): temporary, never saved. */ ?>
                 <button type="button" class="bc-tool" data-mtool="pmeasure" aria-pressed="false" title="<?= Lang::e('model.tool.pmeasure.title') ?>"><i class="bi bi-rulers" aria-hidden="true"></i><span><?= Lang::e('model.tool.pmeasure') ?></span></button>
-                <button type="button" class="bc-tool" data-mtool="wall" aria-pressed="false" title="<?= Lang::e('model.tool.wall.title') ?>"><i class="bi bi-bricks" aria-hidden="true"></i><span><?= Lang::e('model.tool.wall') ?></span></button>
+                <button type="button" class="bc-tool" data-mtool="wall" aria-pressed="false" title="<?= Lang::e('model.tool.wall.title') ?>"><i class="bi bi-bricks" aria-hidden="true" data-ccic="wall"></i><span><?= Lang::e('model.tool.wall') ?></span></button>
                 <?php /* 0.9 WT.2 (walls-09): the wall shapes as tools with the CadCraft icons (wall-tools-ui.js); the Wall row's Shape list holds the same */ ?>
                 <details class="bc-mb-more" data-wall-shapes>
                   <summary class="bc-tool" title="<?= Lang::e('walls.shapes.title') ?>"><i class="bi bi-bounding-box-circles" aria-hidden="true" data-ccic="wallrect"></i><span><?= Lang::e('walls.shapes') ?></span></summary>
@@ -515,6 +539,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                     <?php /* Move, Align, Distribute (0.8 D8.3, bim-08): modify-ui.js. M stays Measure; Move is Shift+M. */ ?>
                     <?php /* The symbol palette (0.8 GH.3-F/G, gh3sym_PART_3): symbols-ui.js; electrical + plumbing symbols, Build › Symbol palette. */ ?>
                     <button type="button" class="bc-tool" data-sym-open aria-haspopup="dialog" title="<?= Lang::e('sym.open.title') ?>"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i><span><?= Lang::e('sym.open') ?></span></button>
+                    <?php /* 0.10 BK.23 (bk-r3-types-10, asset-symbol-ui.js): link a placed element to a symbol; what this view shows */ ?>
+                    <button type="button" class="bc-tool" data-symlink-open title="<?= Lang::e('symlink.open.title') ?>"><i class="bi bi-link-45deg" aria-hidden="true"></i><span><?= Lang::e('symlink.open') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="stairsketch" aria-pressed="false" title="<?= Lang::e('model.tool.stairsketch.title') ?>"><i class="bi bi-bezier2" aria-hidden="true"></i><span><?= Lang::e('model.tool.stairsketch') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="pens" aria-pressed="false" title="<?= Lang::e('model.tool.pens.title') ?>"><i class="bi bi-pencil" aria-hidden="true"></i><span><?= Lang::e('model.tool.pens') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="traceref" aria-pressed="false" title="<?= Lang::e('model.tool.traceref.title') ?>"><i class="bi bi-layers-half" aria-hidden="true"></i><span><?= Lang::e('model.tool.traceref') ?></span></button>
@@ -531,6 +557,9 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                     <button type="button" class="bc-tool" data-mtool="pipe" aria-pressed="false" title="<?= Lang::e('mep.tool.pipe.title') ?>"><i class="bi bi-droplet" aria-hidden="true"></i><span><?= Lang::e('mep.tool.pipe') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="duct" aria-pressed="false" title="<?= Lang::e('mep.tool.duct.title') ?>"><i class="bi bi-wind" aria-hidden="true"></i><span><?= Lang::e('mep.tool.duct') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="valve" aria-pressed="false" title="<?= Lang::e('mep.tool.valve.title') ?>"><i class="bi bi-hourglass" aria-hidden="true"></i><span><?= Lang::e('mep.tool.valve') ?></span></button>
+                    <?php /* 0.9.1 (#1499): the model's own pipe specs and manufacturers' families: mep/pipe-specs-ui.js, mep/oem-families-ui.js. */ ?>
+                    <button type="button" class="bc-tool" data-pspec-open title="<?= Lang::e('mep.spec.tool.title') ?>"><i class="bi bi-list-columns-reverse" aria-hidden="true"></i><span><?= Lang::e('mep.spec.tool') ?></span></button>
+                    <button type="button" class="bc-tool" data-oem-open title="<?= Lang::e('mep.oem.tool.title') ?>"><i class="bi bi-box-seam" aria-hidden="true"></i><span><?= Lang::e('mep.oem.tool') ?></span></button>
                     <?php /* Equipment with ports and the Connections check (0.7 LC.9, mep-07): mep/equip-ui.js. */ ?>
                     <button type="button" class="bc-tool" data-mtool="equip" aria-pressed="false" title="<?= Lang::e('mep.tool.equip.title') ?>"><i class="bi bi-fan" aria-hidden="true"></i><span><?= Lang::e('mep.tool.equip') ?></span></button>
                     <button type="button" class="bc-tool" data-mep-check title="<?= Lang::e('mep.tool.check.title') ?>"><i class="bi bi-diagram-3" aria-hidden="true"></i><span><?= Lang::e('mep.tool.check') ?></span></button>
@@ -541,6 +570,9 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                     <button type="button" class="bc-tool" data-hv-table title="<?= Lang::e('sx.su888.tool.table.title') ?>"><i class="bi bi-table" aria-hidden="true"></i><span><?= Lang::e('sx.su888.tool.table') ?></span></button>
                     <?php /* The site and the building on it (0.6 DF.20, bim-draw): model-site-ui.js. */ ?>
                     <button type="button" class="bc-tool" data-mtool="site" aria-pressed="false" title="<?= Lang::e('model.tool.site.title') ?>"><i class="bi bi-map" aria-hidden="true"></i><span><?= Lang::e('model.tool.site') ?></span></button>
+                    <?php /* Building lines and servitudes on the site (BK.104, bk-stages-10): model-site-constraints-ui.js. A wall over one warns, never blocks. */ ?>
+                    <button type="button" class="bc-tool" data-mtool="bline" aria-pressed="false" title="<?= Lang::e('model.tool.bline.title') ?>"><i class="bi bi-border-outer" aria-hidden="true"></i><span><?= Lang::e('model.tool.bline') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="servitude" aria-pressed="false" title="<?= Lang::e('model.tool.servitude.title') ?>"><i class="bi bi-distribute-horizontal" aria-hidden="true"></i><span><?= Lang::e('model.tool.servitude') ?></span></button>
                     <?php /* Panel shop drawings (0.8 EG.6, bim-build_PART_5): panels-ui.js — wall, floor and roof panels in timber or light-gauge steel, cut lists, PDF. */ ?>
                     <button type="button" class="bc-tool" data-panels-open title="<?= Lang::e('panels.open.title') ?>"><i class="bi bi-columns-gap" aria-hidden="true"></i><span><?= Lang::e('panels.open') ?></span></button>
                     <?php /* Families (0.6 DC.114, bim-families_PART_2): family-ui.js — every family with its sizes, and placing one on a floor. */ ?>
@@ -562,6 +594,7 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                     <button type="button" class="bc-tool" data-mtool="pad" aria-pressed="false" title="<?= Lang::e('res.tool.pad.title') ?>"><i class="bi bi-square" aria-hidden="true"></i><span><?= Lang::e('res.tool.pad') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="paving" aria-pressed="false" title="<?= Lang::e('res.tool.paving.title') ?>"><i class="bi bi-signpost-split" aria-hidden="true"></i><span><?= Lang::e('res.tool.paving') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="section" aria-pressed="false" title="<?= Lang::e('res.tool.section.title') ?>"><i class="bi bi-slash-square" aria-hidden="true"></i><span><?= Lang::e('res.tool.section') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="elevation" aria-pressed="false" title="<?= Lang::e('res.tool.elevation.title') ?>"><i class="bi bi-arrow-up-circle" aria-hidden="true"></i><span><?= Lang::e('res.tool.elevation') ?></span></button>
                   </div>
                 </details>
               </div>
@@ -573,8 +606,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                 <details class="bc-mb-more" data-modify-tools>
                   <summary class="bc-tool" title="<?= Lang::e('model.tools.modify.title') ?>"><i class="bi bi-scissors" aria-hidden="true"></i><span><?= Lang::e('model.tools.modify') ?></span></summary>
                   <div class="bc-mb-menu" role="group" aria-label="<?= Lang::e('model.tools.modify') ?>">
-                    <button type="button" class="bc-tool" data-mtool="trim" aria-pressed="false" title="<?= Lang::e('model.tool.trim.title') ?>"><i class="bi bi-arrows-collapse-vertical" aria-hidden="true"></i><span><?= Lang::e('model.tool.trim') ?></span></button>
-                    <button type="button" class="bc-tool" data-mtool="corner" aria-pressed="false" title="<?= Lang::e('model.tool.corner.title') ?>"><i class="bi bi-bounding-box-circles" aria-hidden="true"></i><span><?= Lang::e('model.tool.corner') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="trim" aria-pressed="false" title="<?= Lang::e('model.tool.trim.title') ?>"><i class="bi bi-arrows-collapse-vertical" aria-hidden="true" data-ccic="wallextto"></i><span><?= Lang::e('model.tool.trim') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="corner" aria-pressed="false" title="<?= Lang::e('model.tool.corner.title') ?>"><i class="bi bi-bounding-box-circles" aria-hidden="true" data-ccic="wallcorner"></i><span><?= Lang::e('model.tool.corner') ?></span></button>
                   </div>
                 </details>
                 <?php /* Walls (0.9 WT.3, WT.4, walls-09): wall-tools-ui.js through model-ui.js extend(); icons from the CadCraft set when it is loaded. */ ?>
@@ -587,6 +620,22 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                     <button type="button" class="bc-tool" data-mtool="woffset" aria-pressed="false" title="<?= Lang::e('walls.tool.offset.title') ?>"><i class="bi bi-distribute-vertical" aria-hidden="true" data-ccic="walloffset"></i><span><?= Lang::e('walls.tool.offset') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="wbox" aria-pressed="false" title="<?= Lang::e('walls.tool.box.title') ?>"><i class="bi bi-bounding-box" aria-hidden="true" data-ccic="wallbox"></i><span><?= Lang::e('walls.tool.box') ?></span></button>
                     <button type="button" class="bc-tool" data-mtool="walign" aria-pressed="false" title="<?= Lang::e('walls.tool.align.title') ?>"><i class="bi bi-lock" aria-hidden="true" data-ccic="wallalignlock"></i><span><?= Lang::e('walls.tool.align') ?></span></button>
+                    <?php /* Join (0.9 WT.5, FX.70; walls-join-10): wall-joinstyle-ui.js. Layer priority opens the wall assembly, where each layer's priority is set. */ ?>
+                    <button type="button" class="bc-tool" data-mtool="wjoinstyle" aria-pressed="false" title="<?= Lang::e('walls.tool.joinstyle.title') ?>"><i class="bi bi-bounding-box-circles" aria-hidden="true" data-ccic="walljoinstyle"></i><span><?= Lang::e('walls.tool.joinstyle') ?></span></button>
+                    <button type="button" class="bc-tool" data-mtool="wdisjoin" aria-pressed="false" title="<?= Lang::e('walls.tool.disjoin.title') ?>"><i class="bi bi-x-diamond" aria-hidden="true" data-ccic="walldisjoin"></i><span><?= Lang::e('walls.tool.disjoin') ?></span></button>
+                    <button type="button" class="bc-tool" data-wall-layerprio title="<?= Lang::e('walls.tool.layerprio.title') ?>"><i class="bi bi-layers" aria-hidden="true" data-ccic="walllayerprio"></i><span><?= Lang::e('walls.tool.layerprio') ?></span></button>
+                    <?php /* Swap type (0.10 BK.7, BK.16; bk-typeswap-10): wall-typeswap-ui.js. A panel that lists the wall types with their LOD tag; a click swaps the picked walls and reports what moved. */ ?>
+                    <button type="button" class="bc-tool" data-wall-swaptype title="<?= Lang::e('typeswap.tool.title') ?>"><i class="bi bi-arrow-left-right" aria-hidden="true" data-ccic="wallswaptype"></i><span><?= Lang::e('typeswap.tool') ?></span></button>
+                    <?php /* Wall finishes (0.10 BK.25-28, BK.130; bim-finishes-10): finishes/finishes-ui.js, a card over the drawing. */ ?>
+                    <button type="button" class="bc-tool" data-wall-finishes title="<?= Lang::e('wfin.open') ?>"><i class="bi bi-grid-3x3-gap" aria-hidden="true"></i><span><?= Lang::e('wfin.open') ?></span></button>
+                  </div>
+                </details>
+                <?php /* Data (0.10 BK.94, BK.97; bk-content-10): the project's classification systems and code lists (classify-ui.js) and type packs (type-pack-ui.js). */ ?>
+                <details class="bc-mb-more" data-data-tools>
+                  <summary class="bc-tool" title="<?= Lang::e('classify.menu.title') ?>"><i class="bi bi-tags" aria-hidden="true"></i><span><?= Lang::e('classify.menu') ?></span></summary>
+                  <div class="bc-mb-menu" role="group" aria-label="<?= Lang::e('classify.menu') ?>">
+                    <button type="button" class="bc-tool" data-cls-open title="<?= Lang::e('classify.tool.title') ?>"><i class="bi bi-tags" aria-hidden="true"></i><span><?= Lang::e('classify.tool') ?></span></button>
+                    <button type="button" class="bc-tool" data-typepack-open title="<?= Lang::e('typepack.tool.title') ?>"><i class="bi bi-box-seam" aria-hidden="true"></i><span><?= Lang::e('typepack.tool') ?></span></button>
                   </div>
                 </details>
                 <?php /* Annotate (0.6 DC.117 (c)(d), bim-views_PART_2): a callout of this view (views-ui.js) and drafting drawn in it (drafting-ui.js). */ ?>
@@ -729,7 +778,7 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         </div>
         <div class="bc-modelbar-row" data-mopts="railing" hidden>
           <label><span class="visually-hidden"><?= Lang::e('res.rl.kind') ?></span><select class="bc-mb-select" data-res-rlkind aria-label="<?= Lang::e('res.rl.kind') ?>">
-            <option value="guard"><?= Lang::e('res.rail.guard') ?></option><option value="handrail"><?= Lang::e('res.rail.handrail') ?></option>
+            <option value="guard"><?= Lang::e('res.rail.guard') ?></option><option value="handrail"><?= Lang::e('res.rail.handrail') ?></option><option value="fence"><?= Lang::e('res.rl.fence') ?></option>
           </select></label>
           <label><span><?= Lang::e('res.rl.height') ?></span> <input type="text" class="bc-input bc-num" data-res-rlheight size="6"></label>
         </div>
@@ -829,6 +878,7 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <label><span class="visually-hidden"><?= Lang::e('mep.size') ?></span><select class="bc-mb-select" data-mep-size aria-label="<?= Lang::e('mep.size') ?>"></select></label>
           <label><span><?= Lang::e('mep.z.short') ?></span> <input type="text" class="bc-input bc-num" data-mep-z size="6" aria-label="<?= Lang::e('mep.z') ?>"></label>
           <label><span><?= Lang::e('mep.slope') ?></span> <input type="text" class="bc-input bc-num" data-mep-slope size="7"></label>
+          <button type="button" class="btn-line btn-sm-cc" data-pspec-open title="<?= Lang::e('mep.spec.tool.title') ?>"><?= Lang::e('mep.spec.tool') ?></button>
           <?php /* 0.8 IND.4: PCF piping component files (mep/pcf-ui.js). */ ?>
           <button type="button" class="btn-line btn-sm-cc" data-mep-pcfout title="<?= Lang::e('mep.pcf.out.title') ?>"><?= Lang::e('mep.pcf.out') ?></button>
           <button type="button" class="btn-line btn-sm-cc" data-mep-pcfin title="<?= Lang::e('mep.pcf.in.title') ?>"><?= Lang::e('mep.pcf.in') ?></button>
@@ -846,6 +896,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
         </div>
         <div class="bc-modelbar-row" data-mopts="valve" hidden>
           <label><span class="visually-hidden"><?= Lang::e('mep.valve.kind') ?></span><select class="bc-mb-select" data-mep-valve aria-label="<?= Lang::e('mep.valve.kind') ?>"></select></label>
+          <button type="button" class="btn-line btn-sm-cc" data-oem-open title="<?= Lang::e('mep.oem.tool.title') ?>"><?= Lang::e('mep.oem.tool') ?></button>
+          <span class="bc-sub"><?= Lang::e('mep.valve.schematic') ?></span>
         </div>
         <?php /* Equipment options (0.7 LC.9): mep/equip-ui.js fills the kind list and the kind's own size fields. */ ?>
         <div class="bc-modelbar-row" data-mopts="equip" hidden>
@@ -863,6 +915,18 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <label><span>Y</span> <input type="text" class="bc-input bc-num" data-site-by size="7" aria-label="<?= Lang::e('model.site.by') ?>"></label><?php /* i18n-ignore: axis letter */ ?>
           <label><span><?= Lang::e('model.site.turn') ?></span> <input type="text" class="bc-input bc-num" data-site-bang size="5"></label>
           <button type="button" class="btn-line btn-sm-cc" data-site-place><?= Lang::e('model.site.place') ?></button>
+        </div>
+        <?php /* BK.104: the Building line and Servitude tools' rows (model-site-constraints-ui.js). */ ?>
+        <div class="bc-modelbar-row" data-mopts="bline" hidden>
+          <label><span><?= Lang::e('site.sc.name') ?></span> <input type="text" class="bc-input" data-sc-bname size="14" maxlength="120"></label>
+          <label><span><?= Lang::e('site.sc.ref') ?></span> <input type="text" class="bc-input" data-sc-bref size="10" maxlength="120" title="<?= Lang::e('site.sc.ref.title') ?>"></label>
+          <button type="button" class="btn-line btn-sm-cc" data-sc-setbacks><?= Lang::e('site.sc.sb.open') ?></button>
+        </div>
+        <div class="bc-modelbar-row" data-mopts="servitude" hidden>
+          <label><span class="visually-hidden"><?= Lang::e('site.sc.kind') ?></span><select class="bc-mb-select" data-sc-kind aria-label="<?= Lang::e('site.sc.kind') ?>"></select></label>
+          <label><span><?= Lang::e('site.sc.name') ?></span> <input type="text" class="bc-input" data-sc-sname size="14" maxlength="120"></label>
+          <label><span><?= Lang::e('site.sc.ref') ?></span> <input type="text" class="bc-input" data-sc-sref size="10" maxlength="120" title="<?= Lang::e('site.sc.ref.title') ?>"></label>
+          <label><span><?= Lang::e('site.sc.width') ?></span> <input type="text" class="bc-input bc-num" data-sc-width size="7"></label>
         </div>
         <div class="bc-modelbar-row" data-mopts="pens" hidden>
           <label><span class="visually-hidden"><?= Lang::e('model.pens.for') ?></span><select class="bc-mb-select" data-pen-scope aria-label="<?= Lang::e('model.pens.for') ?>">
@@ -1032,13 +1096,18 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
     <div class="bc-card bc-folder" data-folder hidden></div>
 
     <div class="bc-empty" data-empty>
+      <div class="bc-empty-card" data-hint>
       <h1 class="bc-empty-h"><?= Lang::e('ui.empty.title') ?></h1>
       <p class="bc-empty-lede"><?= Lang::e('ui.empty.lede') ?></p>
       <p class="bc-empty-cta">
-        <button type="button" class="btn-plot" data-pick><i class="bi bi-file-earmark" aria-hidden="true"></i> <?= Lang::e('ui.choose.file') ?></button>
-        <button type="button" class="btn-line" data-pick-folder><i class="bi bi-folder2-open" aria-hidden="true"></i> <?= Lang::e('ui.open.folder') ?></button>
-        <button type="button" class="btn-line" data-new><i class="bi bi-building-add" aria-hidden="true"></i> <?= Lang::e('new.button') ?></button>
+        <button type="button" class="btn-plot btn-sm-cc" data-pick><i class="bi bi-file-earmark" aria-hidden="true"></i> <?= Lang::e('ui.choose.file') ?></button>
+        <button type="button" class="btn-line btn-sm-cc" data-pick-folder><i class="bi bi-folder2-open" aria-hidden="true"></i> <?= Lang::e('ui.open.folder') ?></button>
+        <button type="button" class="btn-line btn-sm-cc" data-new><i class="bi bi-building-add" aria-hidden="true"></i> <?= Lang::e('new.button') ?></button>
+        <button type="button" class="btn-line btn-sm-cc" data-sample-open><i class="bi bi-lightning-charge" aria-hidden="true"></i> <?= Lang::e('ui.hint.trysample') ?></button>
       </p>
+      <div data-hint-never-slot></div>
+      <details class="bc-fmts">
+        <summary><?= Lang::e('ui.fmt.summary') ?></summary>
       <ul class="bc-formats">
         <li>
           <p class="bc-fmt-name">IFC</p><?php /* i18n-ignore: file format name */ ?>
@@ -1057,7 +1126,9 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <p><?= Lang::e('ui.fmt.folder') ?></p>
         </li>
       </ul>
+      </details>
       <noscript><p class="bc-noscript"><?= Lang::e('ui.noscript') ?></p></noscript>
+      </div>
     </div>
 
     <p class="bc-status" role="status" aria-live="polite" data-status></p>

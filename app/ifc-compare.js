@@ -16,7 +16,7 @@
  *   holds them (numbers compare with a relative 1e-9).
  */
 
-function boxes(model, matrix) {
+export function boxes(model, matrix) {
   const M = matrix, tris = new Map(), box = new Map();
   for (const b of model.batches) {
     const E = b.elems, P = b.positions;

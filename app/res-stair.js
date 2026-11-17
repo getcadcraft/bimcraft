@@ -28,6 +28,7 @@ import { planLoops } from './model-rooms.js';
 import { railingParts, railingItems } from './res-railing.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
+import { FLOOR, CEIL, stairAdvice, spiralAdvice, advise } from './draw-advice.js';   // 0.10 BK.73: unusual sizes are advised, not refused
 
 const IN = 25.4;
 export const STAIR_PSET = 'CadCraft_Stair', WELL_PSET = 'CadCraft_StairWell';
@@ -342,10 +343,14 @@ function rowsOf(w, s) {
 }
 function check(s) {
   if (!STAIR_KINDS.includes(s.kind)) fail('res.err.stairkind');
-  if (!(s.width >= 500 && s.width <= 5000)) fail('res.err.stairwidth');
-  if (!(s.riserMax >= 100 && s.riserMax <= 300) || !(s.tread >= 150 && s.tread <= 600)) fail('res.err.stairsize');
+  // 0.10 BK.73: only what cannot be built is refused (no width, a riser or tread under 10 mm); a stair outside the usual sizes
+  // (500 mm to 5 m wide, risers 100 to 300, treads 150 to 600) is made as asked, with a warning in Problems (draw-advice.js)
+  if (!(s.width >= FLOOR && s.width <= CEIL)) fail('res.err.stairwidth');
+  if (!(s.riserMax >= FLOOR && s.riserMax <= CEIL) || !(s.tread >= FLOOR && s.tread <= CEIL)) fail('res.err.stairsize');
+  advise('stair', stairAdvice(s), s.guid ? { id: s.guid, label: 'Stair' } : null);   // i18n-ignore: an IFC name
   if (!(s.split > 0 && s.split < 1)) fail('res.err.stairsize');
-  if (s.kind === 'spiral' && !(s.post >= 40 && s.post <= 400 && s.tread >= 100)) fail('comforts.err.spiral');
+  if (s.kind === 'spiral' && !(s.post >= FLOOR && s.post <= CEIL)) fail('comforts.err.spiral');   // 0.10 BK.73: a post 40 to 400 mm and treads 100 mm are advice; the wedges are valid for any post
+  if (s.kind === 'spiral') advise('spiral', spiralAdvice(s), s.guid ? { id: s.guid, label: 'Stair' } : null);   // i18n-ignore: an IFC name
 }
 export function placeStair(spec) {
   // a spiral stair takes its own labelled defaults for what the spec leaves out (taller risers, shallower treads, 30" wide)

@@ -35,6 +35,9 @@ export const WINDOW_TYPES = [
   { key: 'win-basement-egress', kind: 'window', width: 36 * IN, height: 48 * IN, sill: 36 * IN, part: 'SINGLE_PANEL', casement: true, well: true, res: true },
   { key: 'win-transom', kind: 'window', width: 36 * IN, height: 12 * IN, sill: 82 * IN, part: 'SINGLE_PANEL', res: true },
 ];
+/** 0.10 BK.15 (bk-r3-types-10): the starter doors and windows are generic kinds (a size and a way of opening, no product): LOD 200. A family or a Library item says its own. */
+export const OPENING_LOD = 200;
+export const openingLod = (type) => (type && (DOOR_TYPES.includes(type) || WINDOW_TYPES.includes(type)) ? OPENING_LOD : null);
 export const openingType = (key) => DOOR_TYPES.find((x) => x.key === key) || WINDOW_TYPES.find((x) => x.key === key) || null;
 export const openingTypeName = (type) => tr((type.res ? 'res.ot.' : 'model.ot.') + type.key);
 /** What the hand (a | b) of a type changes (0.6 BIM-F2): 'hinges' (one swing leaf, a casement), 'slides' (sliding, pocket,

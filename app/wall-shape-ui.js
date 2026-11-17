@@ -10,7 +10,7 @@
  * One undo step each. The plan shows a gap where an opening reaches the plan's cut. The ops are wall-shape.js. Test hook:
  * window.bimcraftWallShape = { bounds(keys), keyOf(id), readShape, readWallOpenings }.
  */
-import { setWallShape, readShape, attachChoices, readWallOpenings, addWallOpening, changeWallOpening, removeWallOpenings } from './wall-shape.js';
+import { setWallShape, readShape, attachChoices, readWallOpenings, addWallOpening, changeWallOpening, removeWallOpenings, planOutline } from './wall-shape.js';
 import { ModelWriter } from './model-write.js';
 import { wallPieces } from './model-plan.js';
 import { wallPlanEdges } from './wall-plan-graphics.js';
@@ -33,16 +33,34 @@ export function mountWallShape(modelUi) {
     tools: [],
     wallProps: (w0, kit) => wallProps(w0, kit),
     // a gap in the plan where a wall opening reaches the cut (the doors' and windows' gaps are cut by model-ui.js already)
+    // walls-shape-10: a slanted wall is drawn where the plan cuts it (its outline moved over by tan(angle) × the cut's height above its
+    // base, a double slant narrower too); its outline at the floor goes with the thin lines of what lies below the cut. Joins, grips
+    // and dimensions stay at the base.
     scene(scene) {
       const ops = openings();
-      if (!ops.length || !scene.walls) return;
+      if (!scene.walls) return;
       const byGuid = new Map((A.S.data?.walls || []).map((w) => [w.guid, w]));
+      const leaning = scene.walls.some((row) => byGuid.get(row.guid)?.shape?.slant);
+      if (!ops.length && !leaning) return;
+      const w = leaning ? writer() : null, shapeCache = {}, cutZ = scene.cutZ ?? 1200;
       let cut = false;
       for (const row of scene.walls) {
         const wall = byGuid.get(row.guid), mine = ops.filter((o) => o.wallGuid === row.guid);
-        if (!wall || !mine.length || !row.pieces?.length) continue;
+        if (!wall) continue;
         const rel = mine.map((o) => ({ offset: o.offset, width: o.width, sill: o.sill, height: o.height }));
-        row.pieces = row.pieces.flatMap((p) => wallPieces(wall, p, rel, scene.cutZ ?? 1200));
+        if (w && wall.shape?.slant && row.poly?.length) {
+          const base = A.S.outlines?.get(wall.guid) || row.poly, at = safe(() => planOutline(w, wall, base, cutZ, shapeCache), base);
+          if (at !== base) {
+            const doors = (A.S.data?.openings || []).filter((o) => o.wall === wall.id).map((o) => ({ offset: o.offset, width: o.width, sill: o.sill, height: o.height }));
+            row.basePoly = base; row.poly = at; row.pieces = wallPieces(wall, at, [...doors, ...rel], cutZ);
+            delete row.layers; delete row.boundaries;   // the layers are worked out at the floor: a leaning wall shows its envelope at the cut
+            (scene.below ||= []).push({ key: row.key, segs: base.flatMap((p, i) => { const q = base[(i + 1) % base.length]; return [p[0], p[1], q[0], q[1]]; }) });
+            cut = true;
+            continue;
+          }
+        }
+        if (!mine.length || !row.pieces?.length) continue;
+        row.pieces = row.pieces.flatMap((p) => wallPieces(wall, p, rel, cutZ));
         cut = true;
       }
       if (cut) scene.wallEdges = wallPlanEdges(scene.walls);
@@ -55,7 +73,6 @@ export function mountWallShape(modelUi) {
     const wall = (A.S.data?.walls || []).find((x) => x.guid === w0.guid) || w0;
     const rows = kit.rows;
     const field = (label, ...kids) => rows.push(el('dt', {}, label), el('dd', {}, ...kids));
-    if (wall.bulge) { rows.push(el('dt', { className: 'bc-mp-wide', 'data-wshape': '' }, el('strong', {}, t('title'))), el('dd', { className: 'bc-mp-wide' }, el('span', { className: 'bc-sub' }, t('curved')))); return; }
     rows.push(el('dt', { className: 'bc-mp-wide', 'data-wshape': '' }, el('strong', {}, t('title'))), el('dd', { className: 'bc-mp-wide' }));
     const sh = readShape(wall), w = writer(), choices = w ? safe(() => attachChoices(w, wall), []) : [];
     const sel = (attr, opts, value, onPick) => { const s = el('select', { className: 'bc-mb-select', [attr]: '' }, ...opts.map(([v, l]) => el('option', { value: v, selected: v === value }, l))); s.addEventListener('change', () => onPick(s.value)); return s; };

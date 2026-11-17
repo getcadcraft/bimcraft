@@ -24,6 +24,7 @@
         "geotiff": "3.0.5",
         "kiri-moto": "4.7.3",
         "laz-perf": "0.0.7",
+        "liberation-sans": "2.1.5",
         "manifold-3d": "3.5.4",
         "noble-ciphers": "2.4.0",
         "noble-curves": "2.4.0",
@@ -41,7 +42,7 @@
     },
     "origin": "https://getcadcraft.com",
     "packed": {
-        "at": "2026-11-09T08:48:03Z",
+        "at": "2026-11-17T04:41:33Z",
         "build": "dev"
     }
 }
