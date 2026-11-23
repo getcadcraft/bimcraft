@@ -2,7 +2,7 @@
 title: Ano ang bago sa 0.7 (mas maaga)
 summary: Nagdaragdag ang BimCraft ng mga pader sa maraming level at Copy this level, mga pader mula sa PDF at scan, sarili mong wall assembly, mas mayayamang family, MEP equipment na may port, clash set, opening at pipe spool, mga dokumento ng asset, COBie at mga sensor reading, sky, araw, daylight sa grid at heating at cooling load, scan registration, live view at path tracing sa graphics card, STEP at USD, library variant, at marami pang para sa AI assistant.
 keywords: whats new 0.7, naunang release, release notes, changelog, mga pagbabago, 0.7, bersyon, bagong feature, walls through levels, copy this level, pdf, scan, trace, walls from plans, wall assemblies, layers, core, membrane, reference dimensions, material library, display units, view style, framing, joists, families, parameters, plan symbol, hotspots, repeat, detail level, nested families, csv sizes, per element, equipment, ports, connections, clearances, openings, spools, spool sheets, field weld, duct cut list, documents, cobie, sensors, mqtt, live feed, vertical sky component, solar gain, daylight grid, heating, cooling, loads, u-value, register scans, icp, e57, live view, path tracing, webgpu, denoise, physical sky, light mixing, render queue, your machine, step, usd, project bundle, develop a mass, variants, assistants, add-on api, plant, electrical, design checks
-from: ef226539
+from: a638080d
 ---
 
 Ito ang mga pagbabago sa BimCraft 0.7, kumpara sa 0.6. Nakapangkat ang listahan ayon sa bahagi, at nauuna ang pinakamahalaga.

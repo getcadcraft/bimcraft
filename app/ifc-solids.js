@@ -18,6 +18,8 @@
  * Units: the numbers are in the file's own length unit (no conversion is done here). Untrusted input: every walk is depth-capped.
  */
 
+import { cross3 as cross, dot3 as dot, len3 as len, sub3 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+import { ringArea as area2 } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 const MAX_DEPTH = 24;
 const MAX_TRIANGLES = 400000;
 
@@ -181,10 +183,6 @@ export function setBooleanOperator(f, id, op) {
 
 // ---- a triangle mesh that is a straight prism ----
 
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const len = (a) => Math.hypot(a[0], a[1], a[2]);
 
 function loops(edges) {
   // edges: [[a, b]] directed; returns closed vertex loops or null when a vertex is touched more than twice
@@ -202,7 +200,6 @@ function loops(edges) {
   return out;
 }
 
-const area2 = (pts) => { let s = 0; for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; s += a[0] * b[1] - b[0] * a[1]; } return s / 2; };
 function inside(poly, p) {
   let c = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {

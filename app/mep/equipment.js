@@ -125,8 +125,8 @@ export const EQUIPMENT = {
     fields: [['diameter', 'len', 560], ['height', 'len', 1500], ['size', 'nps', '3/4'], ['fuel', 'choice:gas,electric', 'gas']],
     build(v) {
       const D = v.diameter, H = v.height, od = npsOd(v.size), gas = v.fuel === 'gas', fl = 100;
-      const solids = [cyl([0, 0, 0], [0, 0, H], D / 2), cyl([-D / 4, 0, H], [-D / 4, 0, H + 75], od / 2), cyl([D / 4, 0, H], [D / 4, 0, H + 75], od / 2)];
-      const ports = [pipe('cold-in', 'cw', 'in', v.size, [-D / 4, 0, H + 75], [0, 0, 1]), pipe('hot-out', 'hw', 'out', v.size, [D / 4, 0, H + 75], [0, 0, 1])];
+      const solids = [cyl([0, 0, 0], [0, 0, H], D / 2), cyl([-D / 4, 0, H], [-D / 4, 0, H + 75], od / 2), cyl([D / 4, 0, H], [D / 4, 0, H + 75], od / 2), cyl([0, D / 2, 400], [0, D / 2 + 75, 400], npsOd('1/2') / 2)];   // + the recirculation return (0.11 MEP.3)
+      const ports = [pipe('cold-in', 'cw', 'in', v.size, [-D / 4, 0, H + 75], [0, 0, 1]), pipe('hot-out', 'hw', 'out', v.size, [D / 4, 0, H + 75], [0, 0, 1]), pipe('hot-return', 'hwr', 'in', '1/2', [0, D / 2 + 75, 400], [0, 1, 0])];
       if (gas) {
         const g = npsOd('1/2');
         solids.push(cyl([0, 0, H], [0, 0, H + 150], fl / 2), cyl([0, -D / 2, 250], [0, -D / 2 - 75, 250], g / 2));

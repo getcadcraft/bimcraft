@@ -36,6 +36,8 @@ import { faceZ } from './res-skeleton.js';
 import { loopAt, inPoly } from './model-rooms.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
+import { cross3, dot3, sub3 } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+import { ringArea as area2 } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const D2R = Math.PI / 180;
 const IN = 25.4;
@@ -172,9 +174,6 @@ function shapeKey(...parts) {
 }
 
 // ------------------------------------------------------------------------------------------------------------ writing
-const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const unit3 = (a) => { const l = Math.hypot(...a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
 /** A planar polygon (3D, the storey's axes) swept straight up by `depth`: the frame on its plane, the profile in it. */
 function planarUp(w, pts, depth) {
@@ -188,7 +187,6 @@ function planarUp(w, pts, depth) {
   const dir = [dot3([0, 0, 1], hx), dot3([0, 0, 1], hy), dot3([0, 0, 1], n)];
   return w.extrudeAt(w.profile(prof), w.axisFrame(o, n, hx), depth, dir);
 }
-function area2(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
 
 function writeDormer(w, d, ctx = {}) {
   const plans = ctx.plans || roofPlans(w);

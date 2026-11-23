@@ -205,6 +205,7 @@
   "draw.done.bim": "모델에 등기구 {n}개를 배치했고, 평면도에 조도 값 획 {lux}개를 그렸습니다.",
   "lum.pole": "일반 기둥형 조명기구",
   "lum.bollard": "일반 볼라드",
+  "map.isolines": "lux 등조도선 (isolines)",
   "f.outdoor": "실외: 부지 조명(천장이나 벽 없음, 지면에 직접 빛이 닿음)",
   "f.cct": "색 온도",
   "f.groundrho": "지면 반사율",

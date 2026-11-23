@@ -279,7 +279,7 @@ function mergeCollinear(lines) {
         }
       }
     }
-    out.push(...list);
+    for (const l of list) out.push(l);   // #1995: a loop, not push(...a): a view of a big model has more items than a call takes arguments ("Maximum call stack size exceeded")
   }
   return out;
 }

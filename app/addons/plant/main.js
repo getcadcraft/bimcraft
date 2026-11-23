@@ -170,7 +170,7 @@ export function activate(api) {
   function writeZones(volumes) {
     if (typeof api.model.write !== 'function' || !api.model.current()) return null;
     let n = 0;
-    api.model.write('Zones (not engineer-reviewed)', (w) => volumes.map((v) => { n++; return placeEquipment(w, { equip: zoneEquip(v), tag: String(v.label || 'Zone').slice(0, 40), desc: 'Safety zone, not engineer-reviewed', x: 0, y: 0, z: 0, rot: 0 }, null, {}).guid; }));
+    api.model.write(t('zones.write'), (w) => volumes.map((v) => { n++; return placeEquipment(w, { equip: zoneEquip(v), tag: String(v.label || 'Zone').slice(0, 40), desc: t('zones.desc'), x: 0, y: 0, z: 0, rot: 0 }, null, {}).guid; }));
     return n;
   }
   api.commands.add('route', () => say(hasMep() ? t('route.hint') : t('need.write')), { label: t('cmd.route') });
@@ -244,6 +244,7 @@ export function activate(api) {
       const todo = PLINK.sizeWrites(m, desc);
       wireNote = change && (change.ln || change.stream) ? t('wire.in', { what: change.ln || change.stream, size: change.size || '', n: todo.length }) : t('wire.in.model', { what: m.name || '', n: todo.length });
       say(wireNote);
+    // i18n-ignore: log text for the developer console, never shown (words-11)
     } catch (e) { api.log('process wire failed', e); }
   } });
   api.onDeactivate?.(() => wire.close());
@@ -259,6 +260,7 @@ export function activate(api) {
     say(t('wire.out', { ln: first.ln || first.stream, size: first.size }));
     return r;
   }
+  // i18n-ignore: log text for the developer console, never shown (words-11)
   api.model?.onChange?.(() => { clearTimeout(wireTimer); wireTimer = setTimeout(() => { threeDChanged().catch((e) => api.log('process 3D change failed', e)); }, 400); });
   plantDesc().then((d) => { if (!lastDesc) lastDesc = d; }).catch(() => {});
   async function applyPidSizes() {
@@ -322,7 +324,7 @@ export function activate(api) {
     const desc = describe3d({ equipment: equipment(), runs, specOf: (r) => specFor(specs(), r.mat, r.cls)?.id || '', placeEquip, makeEquip: makeEquipment });
     L.setName((api.model.current()?.name || t('plant.name')).replace(/\.[^.]+$/, ''));
     const r = L.update(desc);
-    return { L, r };
+    return { L, r, desc };
   }
   const pidLabels = () => ({ pending: t('pid.pending'), offsheet: t('pid.offsheet'), open: t('pid.open'), sheet: t('pid.sheet'), of: t('pid.of') });
   api.files.exporter({ id: 'pid-svg', label: t('export.pid.svg'), extension: 'svg', mime: 'image/svg+xml', write: async () => { const { L } = await pidRead(); return L.svg(0, pidLabels()); } });
@@ -499,22 +501,27 @@ export function activate(api) {
     ]);
     const writeNote = el('p', { class: 'plant-note' }, typeof api.model.write === 'function' ? t('note.write.yes') : t('need.write'));
     // engineering checks (0.8 CH.9/11/12/16/17): the calculators with what only BimCraft can do with their results
+    // i18n-ignore: English shown only when the catalog is not loaded; the key is in lang/en.json (words-11)
     const engSec = el('details', { class: 'plant-sec', 'data-plant-eng': '' }, el('summary', {}, t('eng.title') === 'eng.title' ? 'Engineering checks' : t('eng.title')));
     mountEngineering(engSec, { t, runs: () => { try { return typeof api.mep?.runs === 'function' ? api.mep.runs() : []; } catch { return []; } },
       addEquipment: (it) => { saveEquipment([...equipment(), cleanItem(it)].filter(Boolean)); again(); }, writeZones });
     // Connect to a device + the tag map (XE.9, chem-mount_PART_5): the same panel as the P&ID add-on; readings tint the elements of the equipment table by Tag
-    const liveSource = (() => { try { return api.problems?.available?.() ? api.problems.source({ id: 'live', kind: 'engine', label: 'Live data' }) : null; } catch { return null; } })();
+    const liveSource = (() => { try { return api.problems?.available?.() ? api.problems.source({ id: 'live', kind: 'engine', label: t('live.source') }) : null; } catch { return null; } })();
+    // i18n-ignore: English shown only when the catalog is not loaded; the key is in lang/en.json (words-11)
     const connLabel = t('ui.connect'), connSec = el('details', { class: 'plant-sec', 'data-plant-connect': '' }, el('summary', {}, connLabel === 'ui.connect' ? 'Connect to a device' : connLabel)), connBody = el('div');
     connSec.append(connBody);
     import('../../live/connect-ui.js').then(({ mountConnect }) => {
-      mountConnect(connBody, { t, load: () => api.storage.get('livemap'), save: (v) => api.storage.set('livemap', v),
+      const conn = mountConnect(connBody, { t, load: () => api.storage.get('livemap'), save: (v) => api.storage.set('livemap', v),
         publish: (list) => { try { liveSource?.set(list); } catch { /* no problems host */ } },
         onReadings: (store) => {
           const markers = store.markers().filter((m2) => m2.state !== 'waiting').map((m2) => ({ tag: m2.target.id, text: m2.text, state: m2.state, level: m2.level }));
           if (globalThis.bimcraftTint && typeof globalThis.bimcraftTint.tint === 'function') globalThis.bimcraftTint.tint(markers);
-        } });
+        },
+        drawingTags: () => { try { return equipment().map((q) => q && q.tag).filter(Boolean).map(String); } catch { return []; } } });   // 0.11 IND.12: the equipment table's tags
+      api.onDeactivate?.(() => { try { conn.stop?.(); } catch { /* panel gone */ } });   // 0.11 IND.12: Keep reading ends with the add-on
     }).catch((e) => { connBody.textContent = String(e && e.message || e); });
     // Optimise overnight (CH.31, chem-mount_PART_5)
+    // i18n-ignore: English shown only when the catalog is not loaded; the key is in lang/en.json (words-11)
     const optLabel = t('ui.optimise'), optSec = el('details', { class: 'plant-sec', 'data-plant-optimise': '' }, el('summary', {}, optLabel === 'ui.optimise' ? 'Optimise overnight' : optLabel)), optBody = el('div');
     optSec.append(optBody); mountOptimise(optBody, { t, model: processModel });
     // P&ID from the model (SU.1561)
@@ -535,11 +542,37 @@ export function activate(api) {
           el('p', {}, t('pid.totals', { equipment: b.equipment, lines: b.lines, valves: b.valves, instruments: b.instruments })),
           el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => pidShow(true) } }, t('pid.read')), ' ',
           el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: async () => { try { const { L: l2 } = await pidRead(); download('pid.svg', l2.svg(0, pidLabels()), 'image/svg+xml'); } catch (e) { say(e.message); } } } }, t('pid.btn.svg')), ' ',
+          el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-pid-writesizes': '', on: { click: async () => { try {
+            if (typeof api.mep?.setRunSizes !== 'function') throw new Error(t('need.write'));
+            const todo = L.sizeWrites(); if (!todo.length) { say(t('pid.sizes.none')); return; }
+            await api.mep.setRunSizes(todo.map(({ guid, size }) => ({ guid, size }))); for (const x of todo) L.acknowledge('three', x.id);
+            say(t('pid.sizes.done', { n: todo.length })); pidShow(false);
+          } catch (e) { say(e.message); } } } }, t('pid.sizes.btn')), ' ',
+          // 0.11 (su-finish-11): instruments are stored on the 3D runs; this writes the P&ID's (added, moved off, removed) in one undo step, then reads the model back
+          el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-pid-writeinst': '', on: { click: async () => { try {
+            if (typeof api.mep?.setRunInstruments !== 'function') throw new Error(t('need.write'));
+            const { L: l2, desc } = await pidRead(), plan = l2.instrumentWrites(desc);
+            if (!plan.writes.length) { say(plan.left ? t('pid.inst.norun', { n: plan.left }) : t('pid.inst.none')); return; }
+            await api.mep.setRunInstruments(plan.writes.map(({ guid, instruments }) => ({ guid, instruments })));
+            await pidRead();
+            say(t('pid.inst.done', { n: plan.writes.length }) + (plan.left ? ' ' + t('pid.inst.norun', { n: plan.left }) : '')); pidShow(false);
+          } catch (e) { say(e.message); } } } }, t('pid.inst.btn')), ' ',
           el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: async () => { try { const { L: l2 } = await pidRead(); download('plant-bom.csv', l2.bomCsv(), 'text/csv'); } catch (e) { say(e.message); } } } }, t('pid.btn.bom')),
           el('h4', {}, t('pid.pending3d')), pend3.length ? el('ul', { class: 'plant-list' }, ...mark(pend3, 'three').map(item)) : el('p', {}, t('pid.none')),
           el('h4', {}, t('pid.pendingpid')), pendP.length ? el('ul', { class: 'plant-list' }, ...mark(pendP, 'pid').map(item)) : el('p', {}, t('pid.none')),
           ...(lines.length ? [el('h4', {}, t('pid.edit')), lineSel, el('div', { style: 'display:flex;gap:0.25rem;margin:0.25rem 0' }, kindSel, el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => { L.addValve(lineSel.value, kindSel.value); pidShow(false); } } }, t('pid.add.valve'))),
             el('div', { style: 'display:flex;gap:0.25rem' }, instIn, el('button', { type: 'button', class: 'btn-line btn-sm-cc', on: { click: () => { if (instIn.value.trim()) { L.addInstrument(lineSel.value, instIn.value.trim().toUpperCase().slice(0, 6)); pidShow(false); } } } }, t('pid.add.inst')))] : []));
+        // 0.11 forms: add equipment (pending in 3D), rename a line (pending in 3D)
+        const parseN = (txt, flow) => String(txt || '').split(',').map((x) => x.trim()).filter(Boolean).map((x) => { const [name, size] = x.split(':'); return { name: name.trim(), size: (size || '').trim(), flow }; });
+        const eqKind = el('select', { class: 'select-cc', 'data-pid-eqkind': '', 'aria-label': t('pid.eq.kind') }, ...['pump', 'vessel', 'tank', 'column', 'exchanger', 'other'].map((k) => el('option', { value: k }, t('pid.eq.' + k))));
+        const eqTag = el('input', { type: 'text', maxlength: 24, 'data-pid-eqtag': '', placeholder: t('pid.eq.tag.ph'), 'aria-label': t('pid.eq.tag'), style: 'width:6rem' });
+        const eqIn = el('input', { type: 'text', 'data-pid-eqin': '', placeholder: 'suction:3', 'aria-label': t('pid.eq.in'), style: 'width:7rem' });
+        const eqOut = el('input', { type: 'text', 'data-pid-eqout': '', placeholder: 'discharge:3', 'aria-label': t('pid.eq.out'), style: 'width:7rem' });
+        const newNum = el('input', { type: 'text', maxlength: 40, 'data-pid-newnumber': '', placeholder: '3"-PW-120-CS40', 'aria-label': t('pid.rename.to'), style: 'width:10rem' });
+        const msg = el('p', { 'data-pid-msg': '', role: 'status' }, '');
+        pidBody.append(el('h4', {}, t('pid.eq.add')),
+          el('div', { style: 'display:flex;gap:0.25rem;flex-wrap:wrap' }, eqKind, eqTag, eqIn, eqOut, el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-pid-addeq': '', on: { click: () => { const o = L.addEquipment({ kind: eqKind.value, tag: eqTag.value.trim(), nozzles: [...parseN(eqIn.value, 'SINK'), ...parseN(eqOut.value, 'SOURCE')] }); say(t('pid.eq.added', { tag: o.tag })); pidShow(false); } } }, t('pid.eq.add.btn'))),
+          ...(lines.length ? [el('h4', {}, t('pid.rename')), el('div', { style: 'display:flex;gap:0.25rem;flex-wrap:wrap' }, newNum, el('button', { type: 'button', class: 'btn-line btn-sm-cc', 'data-pid-rename': '', on: { click: () => { const o = L.renameLine(lineSel.value, newNum.value); say(o ? t('pid.rename.done', { number: o.number }) : t('pid.rename.refused')); if (o) pidShow(false); } } }, t('pid.rename.btn')))] : []), msg);
       } catch (e) { pidBody.append(el('p', {}, /schematic/.test(String(e && e.message)) || /import/i.test(String(e && e.message)) ? t('pid.noengine') : String(e && e.message || e))); }
     };
     pidShow(false);

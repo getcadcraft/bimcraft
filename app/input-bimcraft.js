@@ -30,6 +30,7 @@ export const COMMANDS = [
   C('file.new', 'file', 'bi-building-add', '.bc-left [data-new]'),
   C('file.save', 'file', 'bi-download', '[data-save]', { defKeys: ['Ctrl+S'] }),
   C('file.print', 'file', 'bi-printer', '[data-model-print]', { draw: true }),
+  C('file.plan-cad', 'file', 'bi-file-earmark-arrow-down', '[data-model-cad]', { draw: true, label: 'cad.plan.ask' }),   // SU.1994
   C('edit.undo', 'edit', 'bi-arrow-counterclockwise', '[data-toolbar] [data-act="undo"]', { defKeys: ['Ctrl+Z'] }),
   C('edit.redo', 'edit', 'bi-arrow-clockwise', '[data-toolbar] [data-act="redo"]', { defKeys: ['Ctrl+Y', 'Ctrl+Shift+Z'] }),
   C('edit.cut', 'edit', 'bi-scissors', '[data-edit-menu] [data-act="cut"]', { defKeys: ['Ctrl+X'] }),
@@ -93,6 +94,7 @@ export const COMMANDS = [
   C('build.framing', 'model', 'bi-grid-3x3-gap', '[data-mtool="framing"]', { draw: true }),
   C('build.panels', 'model', 'bi-columns-gap', '[data-panels-open]', { draw: true }),   // 0.8 EG.6: panel shop drawings, timber or light-gauge steel
   C('build.electrical', 'model', 'bi-plug', '[data-mtool="electrical"]', { draw: true }),
+  // i18n-ignore: CSS, selector, class name or search keywords: no words a person reads (words-11)
   C('build.symbols', 'model', 'bi-grid-3x3-gap-fill', '[data-sym-open], [data-sym-toolbar]', { draw: true }),   // 0.8 GH.3-F/G (symbols-ui.js): the symbol palette
   C('build.symbollink', 'model', 'bi-link-45deg', '[data-symlink-open]', { draw: true }),   // 0.10 BK.23 (bk-r3-types-10, asset-symbol-ui.js): link a placed element to a symbol
   C('build.terrain', 'model', 'bi-globe', '[data-mtool="terrain"]', { draw: true }),
@@ -217,7 +219,7 @@ const CURTAIN_DRAW = ['curtain.system', 'curtain.grid', 'curtain.mullion', 'mode
 const PLANE_DRAW = ['workplane.set', 'workplane.show', 'workplane.reference', 'workplane.viewer', 'model.text', 'model.line'];
 // 0.10 BK.126: the Draw bar's other tools, placed once in every menu style
 const MORE_DRAW = ['model.grid', 'model.column', 'model.floorbyoutline', 'model.ramp', 'modify.trim', 'modify.corner', 'model.callout', 'tools.pmeasure', 'site.outline', 'site.buildingline', 'site.servitude', 'draft.line', 'draft.polyline', 'draft.rectangle', 'draft.hatch', 'mep.pipe', 'mep.duct', 'mep.valve', 'mep.weld', 'mep.equipment', 'model.family', 'wall.refdimension'];
-const FILE_MENU = ['file.new', 'file.open', 'file.folder', 'file.documents', '-', 'file.save', 'file.print', 'file.dae', '-', 'app.settings', 'app.palette', 'app.help'];   // file.dae: File › Export Collada (0.9 SU.1125)
+const FILE_MENU = ['file.new', 'file.open', 'file.folder', 'file.documents', '-', 'file.save', 'file.plan-cad', 'file.print', 'file.dae', '-', 'app.settings', 'app.palette', 'app.help'];   // file.dae: File › Export Collada (0.9 SU.1125); file.plan-cad: Save the plan as DWG or DXF (SU.1994)
 const EDIT_MENU = ['edit.undo', 'edit.redo', '-', 'edit.cut', 'edit.copy', 'edit.paste', 'edit.paste-in-place', 'edit.duplicate', 'edit.delete', '-', 'edit.select-all', 'edit.select-none'];
 
 export const STYLES = {
@@ -229,7 +231,7 @@ export const STYLES = {
   home: {
     format: 'cadcraft-input', version: 1, id: 'home', name: 'input.style.home', builtin: true, layout: 'menubar',
     menus: [
-      m('file', [...FILE_MENU.slice(0, 6), 'file.sheets', ...FILE_MENU.slice(6)]),
+      m('file', [...FILE_MENU.slice(0, 7), 'file.sheets', ...FILE_MENU.slice(7)]),
       m('edit', EDIT_MENU),
       m('build', ['model.draw', 'model.levels', '-', 'model.select', 'model.wall', 'model.door', 'model.window', '-', 'model.floor', 'model.ceiling', 'model.roof', '-', 'build.roofplane', 'build.dormer', 'build.foundation', 'build.stair', 'build.railing', 'build.countertop', 'build.framing', 'build.panels', 'build.electrical', 'build.symbols', 'build.symbollink', '-', 'build.terrain', 'build.pad', 'build.paving', '-', 'build.section', 'build.elevation', '-', 'build.stairsketch', 'model.pens', 'model.traceref', 'model.picture', 'modify.move', 'modify.align', 'modify.distribute', '-', ...MORE_DRAW]),
       m('walls', ['wall.rect', 'wall.rectrot', 'wall.polygon', 'wall.arccentre', 'wall.arctangent', 'wall.pick', 'wall.trace', 'wall.split', 'wall.delsegment', 'wall.connect', 'wall.offset', 'wall.boxstretch', 'wall.alignlock', 'wall.joinstyle', 'wall.disallow', 'wall.layerpriority', 'wall.swaptype', 'wall.attach', 'wall.profile', 'wall.slant', 'wall.opening']),   // 0.10: the wall tools in a menu of their own (Build went over the 80-item limit)
@@ -304,7 +306,7 @@ export const STYLES = {
   viewer: {
     format: 'cadcraft-input', version: 1, id: 'viewer', name: 'input.style.viewer', builtin: true, layout: 'menubar',
     menus: [
-      m('file', ['file.open', 'file.folder', 'file.documents', '-', 'file.save', 'file.print', 'file.sheets', 'file.dae', '-', 'app.settings', 'app.palette', 'app.help']),
+      m('file', ['file.open', 'file.folder', 'file.documents', '-', 'file.save', 'file.plan-cad', 'file.print', 'file.sheets', 'file.dae', '-', 'app.settings', 'app.palette', 'app.help']),
       m('view', ['view.fit', 'view.top', 'view.front', 'view.side', '-', 'view.3d', 'view.plan', 'view.split', 'view.planfit', '-', 'view.walk', 'view.views', 'view.render', 'view.live', 'view.livewindow', 'view.vr', 'file.glb', 'file.gltf', 'file.usd', 'file.dae', '-', 'view.edges', 'view.display.shaded', 'view.display.edges', 'view.display.wireframe', 'view.spaces']),
       m('show', ['vis.hide', 'vis.isolate', 'vis.ghost', 'vis.all', '-', 'view.section', 'view.secbox', '-', 'view.cloud', 'view.register', 'view.maps']),
       m('check', ['tools.measure', 'view.dims', '-', 'library.equipment', 'library.updates', 'library.credits', '-', 'tools.takeoff', 'tools.handoff', '-', 'tools.ids', 'tools.audit', 'tools.markchecked']),

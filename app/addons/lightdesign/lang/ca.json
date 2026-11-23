@@ -205,6 +205,7 @@
   "draw.done.bim": "S'han col·locat {n} lluminàries al model i {lux} traços de números de lux a la vista en planta.",
   "lum.pole": "Lluminària genèrica de columna",
   "lum.bollard": "Bolard genèric",
+  "map.isolines": "Línies d'igual lux (isolínies)",
   "f.outdoor": "Exterior: il·luminació de l'emplaçament (sense sostre ni parets; llum directa sobre el terreny)",
   "f.cct": "Temperatura de color",
   "f.groundrho": "Reflectància del terreny",

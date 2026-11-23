@@ -205,6 +205,7 @@
   "draw.done.bim": "Modelī novietoti {n} gaismekļi un plānā skatā ievietotas {lux} līnijas ar luksu skaitļiem.",
   "lum.pole": "Vispārīgs staba gaismeklis",
   "lum.bollard": "Vispārīgs stabiņš",
+  "map.isolines": "Vienāda apgaismojuma līnijas (izolīnijas)",
   "f.outdoor": "Ārā: teritorijas apgaismojums (nav griestu vai sienu; tiešs apgaismojums uz zemes)",
   "f.cct": "Krāsas temperatūra",
   "f.groundrho": "Zemes atstarošanas koeficients",

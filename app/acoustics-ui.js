@@ -12,8 +12,10 @@ import { el } from './ui-util.js';
 import { getDisplayUnits, localizeQuantities, fmtM2, areaMark } from './model-units.js';   // GH.3-A: results in the picked unit
 const Q = (s) => localizeQuantities(s, getDisplayUnits());
 import { t } from './i18n.js';
-import { acousticsRooms, DEFAULT_FINISHES } from './acoustics-model.js';
-import { MATERIALS, materialKeys, BANDS, rtProblems } from './acoustics.js';
+import { acousticsRooms, acousticsGeometry, DEFAULT_FINISHES } from './acoustics-model.js';
+import { traceRoom, echogramMetrics } from './geo.js';
+import { insideRoom } from './simplify.js';
+import { MATERIALS, materialKeys, BANDS, rtProblems, reverb } from './acoustics.js';
 import { synthIR, drySample, listen, wavBytes } from './acoustics-ir.js';
 import { allBands, parseWav, compare } from './metrics.js';
 import { boxReverb } from './stat.js';
@@ -149,6 +151,55 @@ export function mountAcoustics(host) {
     out.push(el('p', { className: 'bc-muted' }, t('eg49.m.note')));
     return out;
   }
+  // The room's real shape, ray-traced (0.11 XE.3 S2, sound-11): simplify.js turns the plan, its walls' finishes and its openings into a closed model of
+  // convex surfaces; geo.js traces rays from the source to the listener the person placed. Energy only, above the Schroeder frequency; scattering 0.1 is an assumption.
+  function traced(r) {
+    const out = [el('p', { className: 'bc-h' }, t('eg49.g.title')), el('p', { className: 'bc-muted' }, t('eg49.g.intro'))];
+    const tol = el('input', { className: 'bc-input', type: 'number', min: '0', step: '10', value: S.gtol ?? '50', 'data-eg49-gtol': '', 'aria-label': t('eg49.g.tol') });
+    tol.addEventListener('change', () => { S.gtol = tol.value; });
+    const res = S.geo && S.geo.room === r.id ? S.geo : null;
+    const go = el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-eg49-trace': '', onClick: () => {
+      go.disabled = true; go.textContent = t('eg49.g.busy');
+      setTimeout(() => { try { S.geo = { room: r.id, ...runTrace(r, Math.max(0, num(tol.value) || 0) / 1000) }; } catch (e) { S.geo = { room: r.id, error: String(e && e.message || e) }; } render(); }, 20);
+    } }, t('eg49.g.run'));
+    out.push(label(t('eg49.g.tol'), tol), el('div', { className: 'bc-find-row' }, go));
+    if (res?.error) out.push(el('p', { className: 'bc-note', 'data-eg49-g-error': '' }, res.error));
+    if (res && !res.error) {
+      out.push(el('p', { 'data-eg49-g-model': '' }, Q(t('eg49.g.model', { n: res.surfaces, v: f2(res.volume), corners: res.corners, removed: res.removed, ms: res.ms, rays: res.rays }))));
+      for (const n of res.notes) out.push(el('p', { className: 'bc-muted', 'data-eg49-g-note': n.key }, t(n.key, n)));
+      const head = el('tr', {}, el('th', {}, ''), ...BANDS.map((b) => el('th', {}, b + ' Hz')));
+      const row = (k, name, vals, fmt) => el('tr', { 'data-eg49-g': k }, el('th', {}, name), ...vals.map((v) => el('td', {}, v == null || !Number.isFinite(v) ? '–' : fmt(v))));
+      out.push(el('div', { style: 'overflow-x:auto' }, el('table', { className: 'bc-qto-table', 'data-eg49-gtable': '' }, el('thead', {}, head), el('tbody', {},
+        row('t30', t('eg49.g.t30'), res.bands.map((b) => b.t30 ?? b.t20), f2), row('edt', t('eg49.g.edt'), res.bands.map((b) => b.edt), f2),
+        row('c80', t('eg49.g.c80'), res.bands.map((b) => b.c80), (v) => v.toFixed(1)), row('d50', t('eg49.g.d50'), res.bands.map((b) => b.d50), (v) => v.toFixed(2)),
+        row('same', t('eg49.g.same'), res.same, f2), row('stat', t('eg49.g.stat'), r.res.ok ? r.res.bands.map((b) => b.T) : BANDS.map(() => null), f2)))));
+      out.push(el('p', { className: 'bc-muted' }, t('eg49.g.note')));
+    }
+    return out;
+  }
+  function runTrace(r, tolM) {
+    const g = acousticsGeometry(r, { tol: tolM });
+    if (!g.ok) return { error: t(g.reason === 'nomaterial' ? 'eg49.g.nomat' : g.reason === 'open' ? 'eg49.g.open' : 'eg49.nores', { key: g.key || '' }) };
+    const pos = S.pos[r.id] || {}, xs = g.poly.map((p) => p[0]), ys = g.poly.map((p) => p[1]);
+    const mid = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+    const src = pos.src ? toBox(r, pos.src, 1.5) : [mid[0] - (Math.max(...xs) - Math.min(...xs)) / 4, mid[1], 1.5], lis = pos.lis ? toBox(r, pos.lis, 1.2) : [mid[0] + (Math.max(...xs) - Math.min(...xs)) / 4, mid[1], 1.2];
+    const z = (p) => [p[0], p[1], Math.min(p[2], g.z1 - 0.3)];
+    // a point placed on or past a wall is moved in along the line to the middle of the nearest floor piece (convex, so its middle is inside), and the panel says so
+    const pieces = g.surfaces.filter((f) => f.part === 'floor').map((f) => [f.pts.reduce((a2, q) => a2 + q[0], 0) / f.pts.length, f.pts.reduce((a2, q) => a2 + q[1], 0) / f.pts.length]);
+    const pull = (p, margin) => {
+      if (insideRoom(g, p, margin)) return { p, moved: false };
+      const c = pieces.slice().sort((u, v) => Math.hypot(u[0] - p[0], u[1] - p[1]) - Math.hypot(v[0] - p[0], v[1] - p[1]))[0];
+      for (let k = 1; k <= 40; k++) { const q = [p[0] + (c[0] - p[0]) * k / 40, p[1] + (c[1] - p[1]) * k / 40, p[2]]; if (insideRoom(g, q, margin)) return { p: q, moved: true }; }
+      return null;
+    };
+    const ps = pull(z(src), 0.25), pl = pull(z(lis), 0.3);
+    if (!ps || !pl) return { error: t('eg49.g.outside') };
+    const notes = ps.moved || pl.moved ? [{ key: 'eg49.g.moved' }] : [];
+    const T = r.res.ok ? Math.max(...r.res.bands.map((b) => b.T)) : 1, rays = 8000, t0 = Date.now();
+    const eg = traceRoom(g, ps.p, pl.p, { rays, sr: 4000, tmax: Math.min(3, Math.max(0.6, 1.2 * T)), radius: 0.3, seed: 1, env: { T: num(S.T) || 20, RH: num(S.RH) || 50 } });
+    const same = reverb(g.spec, { T: num(S.T) || 20, RH: num(S.RH) || 50 });
+    return { bands: echogramMetrics(eg), same: same.ok ? same.bands.map((b) => b.T) : BANDS.map(() => null), surfaces: g.surfaces.length, volume: g.volume_m3, corners: g.poly.length, removed: g.removed.vertices, notes: [...notes, ...g.notes], ms: Date.now() - t0, rays };
+  }
   // ISO 717 ratings and the mass law (0.8 XE.3 S3, first part)
   function insulation() {
     const ta = el('textarea', { className: 'bc-input', rows: '2', 'data-eg49-rvals': '', 'aria-label': t('eg49.i.vals'), value: S.rvals || '' });
@@ -233,7 +284,7 @@ export function mountAcoustics(host) {
     out.push(placer(r), el('p', { className: 'bc-h' }, t('eg49.listen')), label(t('eg49.sound'), snd), label(t('eg49.snd.load'), file), ...(S.pos[r.id]?.src && S.pos[r.id]?.lis ? [] : [field('dist', t('eg49.dist'))]),
       el('div', { className: 'bc-find-row' }, btn({ 'data-eg49-dry': '' }, t('eg49.play.dry'), () => play(false)), btn({ 'data-eg49-room-play': '' }, t('eg49.play.room'), () => play(true), 'btn-plot'), btn({ 'data-eg49-stop': '' }, t('eg49.stop'), stopNow)),
       el('div', { className: 'bc-find-row' }, btn({ 'data-eg49-save-ir': '' }, t('eg49.save.ir'), () => saveIR(false)), btn({ 'data-eg49-save-room': '' }, t('eg49.save.room'), () => saveIR(true))),
-      el('p', { className: 'bc-muted' }, t('eg49.ir.model')), ...measures(r), ...boxShape(r), ...insulation());
+      el('p', { className: 'bc-muted' }, t('eg49.ir.model')), ...measures(r), ...traced(r), ...boxShape(r), ...insulation());
     box.replaceChildren(...out.filter(Boolean));
   }
   window.addEventListener('bimcraft-units', () => { try { render(); } catch (e) { /* GH.3-A: the tab has nothing to show yet */ } });   // results follow the display unit

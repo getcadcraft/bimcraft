@@ -11,6 +11,7 @@
   "bt.file.open": "Layout faylını aç",
   "bt.file.save": "Layouta fayl kimi saxla",
   "bt.file.bad": "{name} Material flow layoutu deyil.",
+  "bt.file.ask": "Cari tərtibat bu faylla əvəz edilsin?",
   "bt.file.done": "{name}: {n} element yükləndi, {dropped} kənarda qaldı.",
   "bt.fit.run": "Divarlarla yoxla",
   "bt.fit.nolayout": "Hələ yoxlanılacaq layout yoxdur. Xanadan istifadə edin və ya layout faylını açın.",

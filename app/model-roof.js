@@ -20,10 +20,10 @@
  * erosion by a square, and a square inside the outline lies inside one of those rectangles), so each rectangle gives its
  * four faces; where two overlap, the higher one shows (a valley). Other outlines are refused (model.err.roofshape).
  */
+import { cross2 as cross, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+import { pointInRing as inPoly, ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+export { area };
 const D2R = Math.PI / 180;
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 
 export function roofPlan(outline, { pitch = 26.565, overhang = 304.8, gables = [] } = {}) {
   const P = outline.map((q) => [q[0], q[1]]);
@@ -198,13 +198,4 @@ function isConvex(P) {
     if (!sign) sign = Math.sign(z); else if (Math.sign(z) !== sign) return false;
   }
   return true;
-}
-export function area(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
-function inPoly(x, y, p) {
-  let inside = false;
-  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
-    const [xi, yi] = p[i], [xj, yj] = p[j];
-    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
 }

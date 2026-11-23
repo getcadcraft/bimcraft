@@ -20,6 +20,7 @@
  *   packageFiles({ cover, comments, ifc, reportPdf, extra }) → [{ name, data: Uint8Array }]   for bcf.js zip()
  *   manifest(files) → [{ name, bytes, sha256 }] is left to the caller (SubtleCrypto); names are fixed here: 00-cover.md, 01-review-comments.csv, 02-regulation-report.pdf, 03-model.ifc
  */
+import { csvCell as cell } from './util.js';   // shared helpers (0.11 PERF.74)
 const clip = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
 const esc = (s) => clip(s, 400).replace(/\|/g, '/');
 const FIX = {
@@ -89,7 +90,6 @@ export function permitMarkdown({ project = {}, comments = [], problems = [], rep
 }
 
 export function commentsCsv(comments) {
-  const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const head = ['kind', 'where', 'rule', 'clause', 'required', 'found', 'source', 'comment', 'what to do'];
   return [head, ...comments.map((c) => [c.kind, c.where, c.rule, c.clause, c.required, c.found, c.source, c.text, c.fix])].map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';
 }

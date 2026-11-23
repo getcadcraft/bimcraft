@@ -20,6 +20,7 @@ export function mountLibraryKinds({ modelUi, t, status, el, placed, download }) 
 
   function addType(item) {
     if (!A?.ed?.()) { status(t('lib.type.needs_model'), true); return; }
+    if (item?.type?.element === 'barrier') { status(t('lib.type.barrier'), true); return; }   // 0.11 su-finish-11 barriers: no layers to add; the tool that draws it uses it
     const pack = item?.type?.pack;
     const chk = readTypePack(pack);
     if (!chk.ok) { status(t('lib.err.format', { errors: chk.errors[0] }), true); return; }

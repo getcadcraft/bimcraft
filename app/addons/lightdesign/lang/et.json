@@ -205,6 +205,7 @@
   "draw.done.bim": "Mudelisse paigutati {n} valgustit ja plaanivaatele {lux} luksiväärtuse märgendit.",
   "lum.pole": "Üldine postvalgusti",
   "lum.bollard": "Üldine pollar",
+  "map.isolines": "Võrdse valgustustiheduse jooned (isoliinid)",
   "f.outdoor": "Välitingimused: platsi valgustus (lage ja seinu pole; otsene valgus maapinnale)",
   "f.cct": "Värvustemperatuur",
   "f.groundrho": "Maapinna peegeldustegur",

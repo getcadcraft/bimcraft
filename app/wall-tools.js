@@ -29,11 +29,10 @@ import { ids, val } from './ifc-util.js';
 import { segsOf, pathArea, offsetPath } from './walls/draw.js';
 import { splitAt, deleteSegment, canRejoin, openingsAfter, station, wallLength } from './walls/cut.js';
 import { keep, followGrid, drop, renameGrid } from './walls/hold.js';
+import { dist2 as dist, unit2 as unit } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const nowall = () => Object.assign(new Error('model.err.nowall'), { key: 'model.err.nowall' });
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
-const dist = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1]);
-const unit = (v) => { const L = Math.hypot(v[0], v[1]); return L > 0 ? [v[0] / L, v[1] / L] : [1, 0]; };
 
 // ------------------------------------------------------------------------------------------------------------------- draw
 /** The centre lines of a path drawn on a face: straight sides offset and mitred, curved ones kept concentric. */

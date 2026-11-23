@@ -29,6 +29,7 @@
  */
 import { ids, val, lengthUnitMm, productTriangles } from './ifc-util.js';
 import { ModelWriter } from './model-write.js';
+import { dot3 as dot, sub3 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74)
 
 export const DEFAULTS = Object.freeze({ T: 0.7, glazedShare: 0.75, M: 1, refl: Object.freeze({ floor: 0.2, wall: 0.5, ceiling: 0.7 }) });
 export const GLASS_R = 0.1;
@@ -125,7 +126,6 @@ function triArea(tr, i) {
 }
 /** Closest point of a triangle to p (Ericson, Real-Time Collision Detection 5.1.5). */
 function closestOnTri(p, a, b, c) {
-  const sub = (x, y) => [x[0] - y[0], x[1] - y[1], x[2] - y[2]], dot = (x, y) => x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
   const add = (x, y, t) => [x[0] + y[0] * t, x[1] + y[1] * t, x[2] + y[2] * t];
   const ab = sub(b, a), ac = sub(c, a), ap = sub(p, a);
   const d1 = dot(ab, ap), d2 = dot(ac, ap);

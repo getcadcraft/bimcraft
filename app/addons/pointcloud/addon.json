@@ -7,7 +7,15 @@
   ],
   "api": "1.4",
   "license": "Apache-2.0",
-  "imports": { "node": ["fs/promises", "path", "worker_threads"] },
+  "imports": {
+    "node": [
+      "fs/promises",
+      "path",
+      "worker_threads",
+      "fs",
+      "url"
+    ]
+  },
   "entry": "./main.js",
   "permissions": [
     "panel",

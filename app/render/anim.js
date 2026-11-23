@@ -93,7 +93,7 @@ export const BLENDS = ['replace', 'add'];
 export const EXTENDS = ['none', 'forward', 'both'];
 export const LIMITS = { length: 3600, keys: 2000, tracks: 500, path: 32, size: 4, actions: 50, clips: 200, value: 1e9, shapes: 200, drivers: 200, expr: 400, vars: 16, rigs: 20, bones: 256 };
 /** What a property track may point at (see the header); ids are short words, paths are instance ids. */
-export const TARGET_RE = /^(?:camera|render|light:[A-Za-z0-9_-]{1,40}|mat:[A-Za-z0-9_.:-]{1,80}|obj:\d{1,9}(?:\/\d{1,9}){0,31}|shape:[A-Za-z0-9_-]{1,40}|bone:[A-Za-z0-9_-]{1,40}\/[A-Za-z0-9_.-]{1,64}|cns:n\d{1,3})$/;
+export const TARGET_RE = /^(?:camera|render|light:[A-Za-z0-9_-]{1,40}|mat:[A-Za-z0-9_.:-]{1,80}|obj:\d{1,16}(?:\/\d{1,16}){0,31}|shape:[A-Za-z0-9_-]{1,40}|bone:[A-Za-z0-9_-]{1,40}\/[A-Za-z0-9_.-]{1,64}|cns:n\d{1,3})$/;
 export const PROP_RE = /^[a-z][a-z0-9_]{0,40}$/;
 
 const r3 = (x) => Math.round(x * 1000) / 1000;
@@ -1260,7 +1260,7 @@ export function bonePose(vals, rig, bone) {
 export const CONSTRAINT_TYPES = ['ik', 'lookat', 'copy', 'limit', 'childof', 'path'];
 export const AXES = ['+x', '-x', '+y', '-y', '+z', '-z'];
 const CNS_ID_RE = /^n\d{1,3}$/;
-const OWNER_RE = /^(?:obj:\d{1,9}(?:\/\d{1,9}){0,31}|bone:r\d{1,3}\/[a-z][a-z0-9_.-]{0,40})$/;
+const OWNER_RE = /^(?:obj:\d{1,16}(?:\/\d{1,16}){0,31}|bone:r\d{1,3}\/[a-z][a-z0-9_.-]{0,40})$/;
 function cleanTarget(x) {
   if (!x || typeof x !== 'object') return null;
   if (x.kind === 'obj' && isPath(x.path)) return { kind: 'obj', path: x.path.slice() };

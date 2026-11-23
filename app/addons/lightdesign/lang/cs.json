@@ -205,6 +205,7 @@
   "draw.done.bim": "Počet svítidel umístěných v modelu: {n}; počet tahů čísel osvětlení v půdorysu: {lux}.",
   "lum.pole": "Obecné stožárové svítidlo",
   "lum.bollard": "Obecný sloupek",
+  "map.isolines": "Izolinie stejné osvětlenosti (isolines)",
   "f.outdoor": "Venku: osvětlení pozemku (bez stropu a stěn; přímé světlo na zemi)",
   "f.cct": "Barevná teplota",
   "f.groundrho": "Odrazivost terénu",

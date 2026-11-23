@@ -23,6 +23,7 @@
  */
 
 import { decodeElec, elecText, plumbSize } from './libitem.js';
+import { csvCell as cell } from './util.js';   // shared helpers (0.11 PERF.74)
 
 const TAG = 'KCL-ITEM';
 
@@ -111,11 +112,6 @@ const joinText = (...xs) => xs.map(clean).filter(Boolean).filter((x, i, a) => a.
 /** CSV for a spreadsheet: BOM added by the caller; cells starting = + - @ get a leading '. */
 export function equipmentCsv(rows, sheetName) {
   const head = ['Item', 'Qty', 'Category', 'Manufacturer', 'Model', 'Electrical', 'Plumbing', 'Remarks', 'Electrical remarks', 'Plumbing remarks', 'Sheets', 'Placed'];   // i18n-ignore: CSV column headers other programs read (data file)
-  const cell = (v) => {
-    let s = String(v ?? '');
-    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
-    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  };
   const lines = [head, ...rows.map((r) => [r.no, r.qty, r.category, r.mfr, r.model, r.elecText, r.plumbText, r.remark, r.elRemark, r.plRemark,
     r.sheets.map(sheetName).join('; '), r.places.length])];
   return lines.map((l) => l.map(cell).join(',')).join('\r\n') + '\r\n';

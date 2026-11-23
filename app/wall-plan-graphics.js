@@ -10,6 +10,7 @@ import { hatchSegments } from './drafting.js';
 import { layerBands, cleanJunction, subtractConvex, segmentOutside } from './walls/layerjoin.js';   // 0.9 WT.5 (walls-join-10): layer priority at junctions
 import { deriveJoins } from './walls/joins.js';
 import { lodBand } from './walls/lod.js';   // 0.10 BK.15 (bk-r3-types-10): the LOD-driven sketch display
+import { cross2 as cross, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74)
 
 export const PLAN_DETAILS = ['coarse', 'medium', 'fine'];
 // Rendering chord error, not a model tolerance. Analytic layer offsets are exact.
@@ -178,7 +179,7 @@ function cleanLayerJoins(rows, walls, outlines, hatchOf) {
     for (const c of j.cuts) { if (!cuts.has(c.wall)) cuts.set(c.wall, []); cuts.get(c.wall).push(c.poly); }
     for (const g of [r.a.guid, r.b.guid]) { const row = rowOf.get(g); row.layerJoins = (row.layerJoins || 0) + 1; touched.add(g); }
     const first = rowOf.get(r.a.guid);
-    if (j.lines.length) { let b = first.boundaries.find(x => x.join); if (!b) { b = { join: true, paths: [] }; first.boundaries.push(b); } b.paths.push(...j.lines); }
+    if (j.lines.length) { let b = first.boundaries.find(x => x.join); if (!b) { b = { join: true, paths: [] }; first.boundaries.push(b); } for (const l of j.lines) b.paths.push(l); }
     for (const a of j.adds) { const row = rowOf.get(a.wall), layer = row.layers.find(l => l.index === a.band); if (layer) (layer.added ||= []).push(a.poly); }
   }
   for (const g of touched) {
@@ -223,9 +224,39 @@ export function wallPlanEdges(rows) {
       if (a.x0 <= b.x1 + 1e-6 && a.x1 >= b.x0 - 1e-6 && a.y0 <= b.y1 + 1e-6 && a.y1 >= b.y0 - 1e-6) { seen.add(j); group.push(j); }
     }
     if (group.length === 1) out.push(pieces[i]);
-    else out.push(...unionEdges(group.map(j => pieces[j])));
+    else for (const e of unionEdges(group.map(j => pieces[j]))) out.push(e);
   }
   return out;
+}
+
+/** #1995: for each edge, the edges (by index, ascending, itself too) whose boxes grown by 1e-6 of their length + 1e-9 meet its own. */
+function edgeNeighbours(edges) {
+  const n = edges.length, bx = new Float64Array(n * 4); let sum = 0;
+  for (let i = 0; i < n; i++) { const [a, b] = edges[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]), m = 1e-6 * L + 1e-9; bx[4 * i] = Math.min(a[0], b[0]) - m; bx[4 * i + 1] = Math.min(a[1], b[1]) - m; bx[4 * i + 2] = Math.max(a[0], b[0]) + m; bx[4 * i + 3] = Math.max(a[1], b[1]) + m; sum += L; }
+  const all = () => edges.map(() => edges.map((_, j) => j));
+  if (!(sum > 0) || !bx.every(Number.isFinite)) return all();
+  const cell = Math.max(sum / n, 1e-3), cx = v => Math.floor(v / cell), grid = new Map(), wide = [];
+  for (let i = 0; i < n; i++) { const x0 = cx(bx[4 * i]), y0 = cx(bx[4 * i + 1]), x1 = cx(bx[4 * i + 2]), y1 = cx(bx[4 * i + 3]); if ((x1 - x0 + 1) * (y1 - y0 + 1) > 4096) { wide.push(i); continue; } for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) { const k = x + ',' + y; let l = grid.get(k); if (!l) grid.set(k, (l = [])); l.push(i); } }
+  const meet = (i, j) => bx[4 * i] <= bx[4 * j + 2] && bx[4 * j] <= bx[4 * i + 2] && bx[4 * i + 1] <= bx[4 * j + 3] && bx[4 * j + 1] <= bx[4 * i + 3];
+  const seen = new Int32Array(n).fill(-1), out = [];
+  for (let i = 0; i < n; i++) {
+    const js = [], take = j => { if (seen[j] !== i) { seen[j] = i; if (meet(i, j)) js.push(j); } };
+    const x0 = cx(bx[4 * i]), y0 = cx(bx[4 * i + 1]), x1 = cx(bx[4 * i + 2]), y1 = cx(bx[4 * i + 3]);
+    if ((x1 - x0 + 1) * (y1 - y0 + 1) > 4096) for (let j = 0; j < n; j++) take(j);
+    else { for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) for (const j of grid.get(x + ',' + y) || []) take(j); for (const j of wide) take(j); }
+    out.push(js.sort((p, q) => p - q));
+  }
+  return out;
+}
+/** #1995: p → inside any of the polygons (inPoly, even-odd), testing only the polygons whose box holds p: outside its box a point never is. */
+function insideOf(polys) {
+  const boxes = polys.map(p => { let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity; for (const q of p) { if (q[0] < x0) x0 = q[0]; if (q[0] > x1) x1 = q[0]; if (q[1] < y0) y0 = q[1]; if (q[1] > y1) y1 = q[1]; } return [x0, y0, x1, y1]; });
+  if (!boxes.every(b => b.every(Number.isFinite))) return p => polys.some(poly => inPoly(...p, poly));
+  let sum = 0; for (const b of boxes) sum += Math.max(b[2] - b[0], b[3] - b[1]);
+  const cell = Math.max(sum / Math.max(boxes.length, 1), 1e-3), cx = v => Math.floor(v / cell), grid = new Map(), wide = [];
+  boxes.forEach((b, i) => { const x0 = cx(b[0]), y0 = cx(b[1]), x1 = cx(b[2]), y1 = cx(b[3]); if ((x1 - x0 + 1) * (y1 - y0 + 1) > 4096) { wide.push(i); return; } for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) { const k = x + ',' + y; let l = grid.get(k); if (!l) grid.set(k, (l = [])); l.push(i); } });
+  const hold = (i, x, y) => { const b = boxes[i]; return x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3] && inPoly(x, y, polys[i]); };
+  return ([x, y]) => { for (const i of grid.get(cx(x) + ',' + cx(y)) || []) if (hold(i, x, y)) return true; for (const i of wide) if (hold(i, x, y)) return true; return false; };
 }
 
 // Drawing union boundaries without node-grid quantization. The room loop walker's
@@ -233,12 +264,24 @@ export function wallPlanEdges(rows) {
 // Open segments do not need that topology; endpoints retain binary64 coordinates.
 function unionEdges(polys) {
   const edges = polys.flatMap(p => p.map((a, i) => [a, p[(i + 1) % p.length]]));
-  const cross = (a, b) => a[0] * b[1] - a[1] * b[0], sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-  const inside = p => polys.some(poly => inPoly(...p, poly)), out = [];
-  for (const [a, b] of edges) {
+  // #1995: a big group (a whole level of walls) went every edge against every edge, every polygon per piece and every line found per new
+  // line: 6 s of a 3,400-wall set. The same tests now run only where they can pass (an edge whose grown box meets this one's; a polygon whose
+  // box holds the point; a line with an end in the next 1e-7 cells): the same lines in the same order. Small groups keep the plain loops.
+  const big = edges.length > 64;
+  const others = big ? edgeNeighbours(edges) : null;
+  const inside = big ? insideOf(polys) : (p => polys.some(poly => inPoly(...p, poly))), out = [];
+  const seenAt = big ? new Map() : null, cellK = (p, dx, dy) => (Math.floor(p[0] * 1e7) + dx) + ',' + (Math.floor(p[1] * 1e7) + dy);
+  const dupe = (p, q, near) => {
+    if (!big) return out.some(([x, y]) => (near(p, x) && near(q, y)) || (near(p, y) && near(q, x)));
+    for (let dx = -1; dx <= 1; dx++) for (let dy = -1; dy <= 1; dy++) for (const [x, y] of seenAt.get(cellK(p, dx, dy)) || []) if ((near(p, x) && near(q, y)) || (near(p, y) && near(q, x))) return true;
+    return false;
+  };
+  const keep = (p, q) => { out.push([p, q]); if (big) for (const r of [p, q]) { const k = cellK(r, 0, 0); let l = seenAt.get(k); if (!l) seenAt.set(k, (l = [])); if (!l.includes(out[out.length - 1])) l.push(out[out.length - 1]); } };
+  for (let ei = 0; ei < edges.length; ei++) {
+    const [a, b] = edges[ei];
     const d = sub(b, a), L = Math.hypot(...d); if (L < 1e-9) continue;
     const cuts = [0, 1];
-    for (const [c, e] of edges) {
+    for (const [c, e] of (big ? others[ei].map(j => edges[j]) : edges)) {
       const v = sub(e, c), ca = sub(c, a), den = cross(d, v);
       if (Math.abs(den) < 1e-12 * L * Math.hypot(...v)) {
         if (Math.abs(cross(ca, d)) > 1e-7 * L) continue;
@@ -255,7 +298,7 @@ function unionEdges(polys) {
       if (inside(mid.map((v, j) => v + n[j])) === inside(mid.map((v, j) => v - n[j]))) continue;
       const p = a.map((v, j) => v + d[j] * t0), q = a.map((v, j) => v + d[j] * t1);
       const near = (x, y) => Math.hypot(x[0] - y[0], x[1] - y[1]) < 1e-7;
-      if (!out.some(([x, y]) => (near(p, x) && near(q, y)) || (near(p, y) && near(q, x)))) out.push([p, q]);
+      if (!dupe(p, q, near)) keep(p, q);
     }
   }
   return out;

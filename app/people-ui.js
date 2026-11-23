@@ -30,6 +30,20 @@ export function mountPeople(host) {
     shut: new Set(), loads: saved.loads || {}, in3d: !!saved.in3d, run: null, level: '', frame: 0, playing: false, speed: 8 };
   const keep = () => { try { localStorage.setItem(SAVE, JSON.stringify({ scenario: S.scenario, m2: S.m2, pre0: S.pre0, pre1: S.pre1, win: S.win, limit: S.limit, avail: S.avail, seed: S.seed, loads: S.loads, in3d: S.in3d })); } catch (e) { /* private window */ } };
   let src = null, timer = 0, canvas = null;
+  // PERF.75: playback paced by requestAnimationFrame (one draw per painted frame, nothing while the tab is hidden);
+  // `everyMs` keeps the old setInterval's pace: `step(n)` gets the whole number of intervals that went by.
+  const playEvery = (everyMs, step) => {
+    let id = 0, last = performance.now(), acc = 0;
+    const loop = (now) => {
+      acc = Math.min(acc + now - last, everyMs * 8); last = now;
+      const n = Math.floor(acc / everyMs);
+      id = requestAnimationFrame(loop);
+      if (n > 0) { acc -= n * everyMs; step(n); }
+    };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
+  };
+  const stopTimer = () => { if (timer) timer(); timer = 0; };
   const post = (list) => { try { src ||= (host.problems || window.ccProblems)?.source?.({ id: 'bimcraft.people', kind: 'engine', label: t('eg48.title') }); src?.set(list); } catch { /* the shell's Problems are not loaded */ } };
 
   // a count the person typed for a room (a number, 0 allowed); a blank box leaves the room to the factor
@@ -151,12 +165,12 @@ export function mountPeople(host) {
     const tick = () => { clock.textContent = fmt(frames[Math.min(S.frame, last)]?.t || 0) + ' s'; slider.value = S.frame; draw(); draw3d(); };
     slider.addEventListener('input', () => { S.frame = Number(slider.value); tick(); });
     const play = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-eg48-play': '' }, t('eg48.play'));
-    const stop = () => { S.playing = false; clearInterval(timer); play.textContent = t('eg48.play'); };
+    const stop = () => { S.playing = false; stopTimer(); play.textContent = t('eg48.play'); };
     play.addEventListener('click', () => {
       if (S.playing) { stop(); return; }
       if (S.frame >= last) S.frame = 0;
       S.playing = true; play.textContent = t('eg48.pause');
-      timer = setInterval(() => { S.frame = Math.min(last, S.frame + 1); tick(); if (S.frame >= last) stop(); }, 1000 / Math.max(1, S.speed));
+      timer = playEvery(1000 / Math.max(1, S.speed), (n) => { S.frame = Math.min(last, S.frame + n); tick(); if (S.frame >= last) stop(); });
     });
     const legend = el('p', { className: 'bc-muted' }, t('eg48.legend'));
     setTimeout(tick, 0);
@@ -177,7 +191,7 @@ export function mountPeople(host) {
   }
 
   function render() {
-    clearInterval(timer);
+    stopTimer();
     const ed = host.editor();
     if (!ed) { box.replaceChildren(el('p', { className: 'bc-muted' }, t('eg48.nomodel'))); return; }
     const sc = el('select', { className: 'select-cc', 'data-eg48-scenario': '' }, [['evacuate', t('eg48.sc.evac')], ['arrive', t('eg48.sc.arrive')], ['exchange', t('eg48.sc.exchange')]].map(([v, l]) => el('option', { value: v }, l)));

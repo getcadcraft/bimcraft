@@ -11,6 +11,7 @@
   "bt.file.open": "Otevřít soubor rozvržení",
   "bt.file.save": "Uložit rozvržení jako soubor",
   "bt.file.bad": "{name} není rozvržení Material flow.",
+  "bt.file.ask": "Nahradit aktuální rozvržení tímto souborem?",
   "bt.file.done": "{name}: načteno {n}, vynecháno: {dropped}.",
   "bt.fit.run": "Zkontrolovat proti stěnám",
   "bt.fit.nolayout": "Zatím není co kontrolovat. Použijte buňku nebo otevřete soubor rozvržení.",

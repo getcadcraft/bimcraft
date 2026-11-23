@@ -11,6 +11,7 @@
   "bt.file.open": "Åpne en oppsettfil",
   "bt.file.save": "Lagre oppsettet som en fil",
   "bt.file.bad": "{name} er ikke et oppsett fra «Materialflyt».",
+  "bt.file.ask": "Skal gjeldende layout erstattes med denne filen?",
   "bt.file.done": "{name}: {n} elementer lastet, {dropped} utelatt.",
   "bt.fit.run": "Kontroller mot veggene",
   "bt.fit.nolayout": "Det finnes ikke noe oppsett å kontrollere ennå. Bruk en celle eller åpne en oppsettfil.",

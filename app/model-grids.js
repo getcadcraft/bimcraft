@@ -36,6 +36,7 @@ import { op } from './model-ops.js';
 import { afterGridMove, afterGridRemove } from './wall-tools.js';   // 0.9 WT.7: walls locked to grid lines
 import { scaleT } from './model-write.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
+import { dot2 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74)
 
 export const GRID_PSET = 'CadCraft_Grid';
 export const BUBBLES = ['both', 'start', 'end', 'none'];
@@ -301,6 +302,41 @@ export function changeGrid({ bubbles, dims }) {
 }
 
 /**
+ * 0.10.1 (support #1509): a grid line's spacing as a number to type. gridSpacing(axes, tag) → { from, gap, n } : the nearest
+ * parallel line (the one labelled before it when there is one each side), the distance between them and the unit direction
+ * from that line to this one; null when no other line runs parallel. gridSpacingMove(axes, tag, value) → { a, b } : the line
+ * moved square to itself so that distance is `value` (the other lines stay), null when it cannot be.
+ */
+export function gridSpacing(axes, tag) {
+  const me = axes.find((x) => x.tag === tag);
+  if (!me) return null;
+  const d0 = [me.b[0] - me.a[0], me.b[1] - me.a[1]], l0 = Math.hypot(d0[0], d0[1]);
+  if (l0 < 1) return null;
+  const d = [d0[0] / l0, d0[1] / l0], n = [-d[1], d[0]];
+  const s = (p) => p[0] * n[0] + p[1] * n[1], sm = s(me.a);
+  let lo = null, hi = null;
+  for (const x of axes) {
+    if (x === me) continue;
+    const e = [x.b[0] - x.a[0], x.b[1] - x.a[1]], l = Math.hypot(e[0], e[1]);
+    if (l < 1 || Math.abs((e[0] * d[1] - e[1] * d[0]) / l) >= 0.01) continue;
+    const sx = s(x.a);
+    if (sx < sm - 0.5 && (!lo || sx > lo.s)) lo = { tag: x.tag, s: sx };
+    if (sx > sm + 0.5 && (!hi || sx < hi.s)) hi = { tag: x.tag, s: sx };
+  }
+  if (!lo && !hi) return null;
+  const before = (q) => q && String(q.tag).localeCompare(String(tag), undefined, { numeric: true }) < 0;
+  const ref = lo && hi ? (before(lo) && !before(hi) ? lo : before(hi) && !before(lo) ? hi : (sm - lo.s <= hi.s - sm ? lo : hi)) : (lo || hi);
+  const sign = ref.s < sm ? 1 : -1;
+  return { from: ref.tag, gap: Math.abs(sm - ref.s), n: [n[0] * sign, n[1] * sign] };
+}
+export function gridSpacingMove(axes, tag, value) {
+  const me = axes.find((x) => x.tag === tag), g = gridSpacing(axes, tag);
+  if (!me || !g || !(value >= 1) || !Number.isFinite(value)) return null;
+  const k = value - g.gap;
+  return { a: [me.a[0] + g.n[0] * k, me.a[1] + g.n[1] * k], b: [me.b[0] + g.n[0] * k, me.b[1] + g.n[1] * k] };
+}
+
+/**
  * Dimensions of a grid (0.9 D9.2): per family, the lines parallel to its first line (within ~0.6°), sorted across; a row of
  * spacings between neighbours and, with three lines or more, a row with the overall size. Both rows sit OUTSIDE the lines'
  * start ends, past the bubbles (a set distance on screen: `offPx`, as drawn sheets do), so they never meet the walls' own
@@ -315,7 +351,6 @@ export function gridDims(axes, fmt) {
     const d0 = [mine[0].b[0] - mine[0].a[0], mine[0].b[1] - mine[0].a[1]], l0 = Math.hypot(d0[0], d0[1]);
     if (l0 < 1) continue;
     const d = [d0[0] / l0, d0[1] / l0], n = [-d[1], d[0]];
-    const dot = (p, v) => p[0] * v[0] + p[1] * v[1];
     const par = mine.filter((x) => { const e = [x.b[0] - x.a[0], x.b[1] - x.a[1]], l = Math.hypot(e[0], e[1]); return l >= 1 && Math.abs((e[0] * d[1] - e[1] * d[0]) / l) < 0.01; });
     if (par.length < 2) continue;
     // each line's place across (s); the row runs along the family's start ends (t0)

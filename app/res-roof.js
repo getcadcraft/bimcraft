@@ -24,13 +24,11 @@ import { ids, inv4, mul4, apply4 } from './ifc-util.js';
 import { round } from './model-write.js';
 import { ROOF_DEFAULTS, segDist, roofGeometry, heightAt } from './res-roofplan.js';   // the pure part (TrussCraft shares it)
 import { t as tr } from './i18n.js';
+import { cross2 as cross, cross3 as X3, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const D2R = Math.PI / 180;
 const IN = 25.4;
 export { ROOF_DEFAULTS, segDist, roofGeometry, heightAt };   // re-exported: every importer of res-roof.js keeps working
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
 
 // ---------------------------------------------------------------------------------------------------- edges and walls
 export function edgeWalls(outline, walls) {
@@ -136,7 +134,6 @@ export function writeRoofParts(w, r, { wallsLv, L, outline, top }) {
   const host = w.api.GetLine(w.mid, r.storey, false);
   const M = mul4(inv4(w.storeyWorld(r.storey)), w.storeyWorld(wallsLv.id));
   const P = (x, y, z) => apply4(M, x, y, z), D = (x, y, z) => { const a = apply4(M, x, y, z), o = apply4(M, 0, 0, 0); return [a[0] - o[0], a[1] - o[1], a[2] - o[2]]; };
-  const X3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
   if (r.parts.length) w.dropProduct(r.parts);
   const parts = [];
   const place = () => w.placeAt(host.ObjectPlacement.value, 0, 0, 0, 0);

@@ -205,6 +205,7 @@
   "draw.done.bim": "Modelyje įdėta šviestuvų: {n}, plano vaizde nubrėžta liuksų skaičių brūkšnių: {lux}.",
   "lum.pole": "Bendrasis stulpinis šviestuvas",
   "lum.bollard": "Bendrasis stulpelis",
+  "map.isolines": "Vienodo apšvietimo linijos (izolinijos)",
   "f.outdoor": "Lauke: aikštelės apšvietimas (be lubų ir sienų; tiesioginė šviesa ant žemės)",
   "f.cct": "Spalvinė temperatūra",
   "f.groundrho": "Žemės atspindžio koeficientas",

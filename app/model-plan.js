@@ -20,6 +20,8 @@
 import { runEdges } from './ifc-vis.js';
 import { mul4, inv4 } from './ifc-util.js';
 import { wallMap } from './model-arcs.js';   // 0.6 round 2 (bim-comforts_PART_2): curved walls
+import { pointInRing as inPoly } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+export { inPoly };
 
 /** viewer (Y up, m) → model mm (Z up, file axes) → storey plan (mm). */
 export function viewerToPlan(C, storeyWorldMm) {
@@ -184,14 +186,6 @@ export function planBounds(...lists) {
 }
 
 /** Is (x, y) inside the polygon [[x, y]…] (even-odd)? */
-export function inPoly(x, y, p) {
-  let inside = false;
-  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
-    const [xi, yi] = p[i], [xj, yj] = p[j];
-    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
 /** Distance from (x, y) to the segment ab. */
 export function segDist(x, y, a, b) {
   const dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy;

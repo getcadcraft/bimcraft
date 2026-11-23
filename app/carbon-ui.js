@@ -16,6 +16,7 @@ import { carbonFromFile, IMPORT_LABEL } from './data-packs.js';
 import { STARTER_LABEL, cleanRow, tableCsv, tableJson, readTableCsv, readTableJson } from './carbon-factors.js';
 
 /** English text for every key (the language files take these; a key a file lacks falls back here). */
+// i18n-ignore-start: English defaults; the same keys live in lang/en.json (words-11)
 export const STRINGS = {
   'carbon.title': 'Embodied carbon', 'carbon.intro': 'Adds up kgCO2e from each element\'s quantity and material. An early-design estimate from the factors below, not an assessment.',
   'carbon.starter': STARTER_LABEL, 'carbon.check': 'Check carbon', 'carbon.modules': 'Count', 'carbon.m.a1a3': 'A1–A3 product', 'carbon.m.a4': 'A4 transport', 'carbon.m.a5': 'A5 site waste',
@@ -27,6 +28,7 @@ export const STRINGS = {
   'carbon.noelements': 'The model has no building elements to count.', 'carbon.unmatched': '{n} parts have no factor.', 'carbon.missing': '{n} parts have no quantity.',
   'carbon.err.failed': 'The check could not run.', 'carbon.err.row': 'A row is not valid ({why}).',
 };
+// i18n-ignore-end
 const tr = (k, v) => { const s = t(k, v); return s === k ? String(STRINGS[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => v?.[n] ?? '') : s; };
 const f1 = (x) => (Number.isFinite(x) ? String(Math.round(x * 10) / 10) : '—');
 const f0 = (x) => (Number.isFinite(x) ? Math.round(x).toLocaleString('en-US') : '—');

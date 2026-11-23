@@ -498,4 +498,14 @@ export function snapshotModel(ed) {
   return { levels: readLevels(w), walls, openings: readOpenings(w, null, walls), derived: readDerived(w), unitMm: w.unitMm, v4: w.v4, reported };
 }
 /** The rooms and building outlines of a level, from its walls now (the plan's labels and the tools' hover). */
-export function loopsOf(ed, storey) { return storeyLoops(new ModelWriter(ed.W, ed.api, ed.mid), storey); }
+/** A level's room loops (storeyLoops), kept while the model's lines are unchanged (#1995: a set of sheets read every level's loops twice,
+ *  for the plans and again for the schedules: 6 s at 3,400 walls). Keyed by the IfcFile and its version; nobody changes a result. */
+const loopMemo = new WeakMap();
+export function loopsOf(ed, storey) {
+  const f = ed?.api?.file?.(ed.mid) || null;
+  if (!f) return storeyLoops(new ModelWriter(ed.W, ed.api, ed.mid), storey);
+  let m = loopMemo.get(f);
+  if (!m || m.v !== f.version) loopMemo.set(f, (m = { v: f.version, by: new Map() }));
+  if (!m.by.has(storey)) m.by.set(storey, storeyLoops(new ModelWriter(ed.W, ed.api, ed.mid), storey));
+  return m.by.get(storey);
+}

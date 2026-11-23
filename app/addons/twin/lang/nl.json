@@ -11,6 +11,7 @@
   "bt.file.open": "Een indelingsbestand openen",
   "bt.file.save": "De indeling opslaan als bestand",
   "bt.file.bad": "{name} is geen Material flow-indeling.",
+  "bt.file.ask": "De huidige indeling vervangen door dit bestand?",
   "bt.file.done": "{name}: {n} items geladen, {dropped} overgeslagen.",
   "bt.fit.run": "Controleren op wanden",
   "bt.fit.nolayout": "Er is nog geen indeling om te controleren. Gebruik een cel of open een indelingsbestand.",

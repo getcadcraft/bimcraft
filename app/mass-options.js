@@ -43,6 +43,7 @@ import { buildOptionIn } from './program-mass.js';
 import { planToSite } from './model-site.js';
 import { ids, val, inv4, apply4 } from './ifc-util.js';
 import { scaleT, round } from './model-write.js';
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const DEFAULT_SET = 'Massing';   // i18n-ignore: IFC file data (a set's name when the file gives none)
 export const FLOOR_PSET = 'CadCraft_MassFloor';
@@ -50,7 +51,6 @@ export const LIMITS = { options: 200, name: 80, floors: 200 };
 const refuse = (key, fill) => { throw Object.assign(new Error(key), { key, fill }); };
 const clean = (s, n = LIMITS.name) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
 const yes = (v) => v === true || /^(\.?T\.?|true|1)$/i.test(String(v ?? ''));
-const area = (P) => { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; };
 const perimeter = (P) => P.reduce((s, a, i) => { const b = P[(i + 1) % P.length]; return s + Math.hypot(b[0] - a[0], b[1] - a[1]); }, 0);
 const r2 = (v) => Math.round(v * 100) / 100;
 

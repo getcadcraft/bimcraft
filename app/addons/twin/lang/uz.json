@@ -11,6 +11,7 @@
   "bt.file.open": "Joylashuv faylini ochish",
   "bt.file.save": "Joylashuvni fayl sifatida saqlash",
   "bt.file.bad": "{name} Material oqimi joylashuvi emas.",
+  "bt.file.ask": "Joriy maketni ushbu fayl bilan almashtirilsinmi?",
   "bt.file.done": "{name}: {n} ta element yuklandi, chetda qoldirildi: {dropped}.",
   "bt.fit.run": "Devorlar bilan tekshirish",
   "bt.fit.nolayout": "Hali tekshiriladigan joylashuv yoʻq. Katakdan foydalaning yoki joylashuv faylini oching.",

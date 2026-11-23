@@ -1,0 +1,6 @@
+- Switch the add-on on in Settings, Add-ons, then open the Dome generator tab.
+- Choose the curve and type the diameter, the height and a stem wall height. Look at the plan, the section and the quantities under Result.
+- Set the door and the windows under Openings. Pick feet and inches under Units if you work in them.
+- Type your snow, wind and earthquake figures under Loads, and read the forces, the bending and the buckling figure under Result.
+- Add a spec side add-on (Dome spec: United States or Dome spec: Europe), pick it under Spec, and read what it set and what breaks it.
+- Place the dome in the model (BimCraft) or draw the plan and section (CadCraft), or save the IFC file and the report for your engineer.

@@ -205,6 +205,7 @@
   "draw.done.bim": "Modelə {n} işıq qurğusu yerləşdirildi və plan görünüşündə {lux} xətt lüks rəqəmi çəkildi.",
   "lum.pole": "Ümumi dirəkli işıqlandırma cihazı",
   "lum.bollard": "Ümumi yol dirəyi",
+  "map.isolines": "Eyni lüks xətləri (izolinlər)",
   "f.outdoor": "Açıq hava: sahə işıqlandırması (tavan və divar yoxdur; işıq birbaşa zəminə düşür)",
   "f.cct": "Rəng temperaturu",
   "f.groundrho": "Zəminin əks etmə əmsalı",

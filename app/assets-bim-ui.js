@@ -147,9 +147,17 @@ export function mountAssets(host) {
     return out;
   }
 
+  /** The picks made while the panel was away, as picked() would have taken them then. */
+  function openPicks() {
+    const list = S.picks; S.picks = null;
+    if (!list?.length || !ed()) return;
+    const ids = new Set(assets().map((a) => a.id));
+    for (const k of list) if (ids.has(k)) { S.open = k; S.editing = null; }
+  }
   function render() {
     if (!host.shown()) return;
     if (!ed()) { host.pane.replaceChildren(el('p', { className: 'bc-muted' }, t('assets.needs-ifc'))); return; }
+    openPicks();
     const all = assets();
     const storeys = [...new Set(all.map((a) => a.storey).filter((s) => s !== null))];
     const q = S.q.trim().toLowerCase();
@@ -187,7 +195,13 @@ export function mountAssets(host) {
   }
   return {
     render, state: S,
-    changed() { S.version++; render(); },
-    picked() { const k = host.selection().find((x) => x < KEY_SPAN); if (k !== undefined && assets().some((a) => a.id === k)) { S.open = k; S.editing = null; } render(); },
+    changed() { S.version++; S.picks = null; render(); },
+    // perf-finish-11 (PERF.37): a pick while the panel is not on screen is only remembered. readAssets reads every element's property sets
+    // (1.4 s at 115 MB): it ran on the first click of every model, panel closed. The remembered picks apply, in order, when it shows.
+    picked() {
+      const k = host.selection().find((x) => x < KEY_SPAN);
+      if (!host.shown()) { if (k !== undefined) { (S.picks ||= []).push(k); if (S.picks.length > 64) S.picks.shift(); } return; }
+      openPicks(); if (k !== undefined && assets().some((a) => a.id === k)) { S.open = k; S.editing = null; } render();
+    },
   };
 }

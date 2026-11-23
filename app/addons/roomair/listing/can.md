@@ -1,0 +1,5 @@
+- Read a room and its diffusers, grilles and fan coils from a BimCraft model, or type them.
+- Add people, machines and lights as boxes of heat and moisture.
+- See the air speed, temperature and relative humidity in the occupied zone, and how much warmer the air is at head height than at the ankles.
+- Check that the air, heat and water in equal what leaves {#ra-1}.
+- Colour a plan at any height, or a section across the room, by speed, temperature or humidity, and save its numbers as CSV.

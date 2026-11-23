@@ -2,7 +2,7 @@
 title: អ្វីថ្មីក្នុង 0.7 (ពីមុន)
 summary: BimCraft បន្ថែមជញ្ជាំងតាមច្រើនកម្រិត និង Copy this level ជញ្ជាំងពី PDF និងស្កេន ការផ្គុំជញ្ជាំងផ្ទាល់ខ្លួន គ្រួសារដែលសម្បូរជាង ឧបករណ៍ MEP ជាមួយច្រក សំណុំការប៉ះទង្គិច ចំហ និងស្ពូលបំពង់ ឯកសារទ្រព្យសម្បត្តិ COBie និងការអានសេនស័រ ផ្ទៃមេឃ ព្រះអាទិត្យ ពន្លឺថ្ងៃលើក្រឡាចត្រង្គ និងបន្ទុកកំដៅ/ត្រជាក់ ការចុះបញ្ជីស្កេន ទិដ្ឋភាពផ្ទាល់ និងការតាមដានផ្លូវលើកាតក្រាហ្វិក STEP និង USD បណ្ណាល័យជាមួយបំរែបំរួល និងកាន់តែច្រើនសម្រាប់ជំនួយការ AI។
 keywords: whats new 0.7, earlier release, release notes, changelog, changes, 0.7, version, new features, walls through levels, copy this level, pdf, scan, trace, walls from plans, wall assemblies, layers, core, membrane, reference dimensions, material library, display units, view style, framing, joists, families, parameters, plan symbol, hotspots, repeat, detail level, nested families, csv sizes, per element, equipment, ports, connections, clearances, openings, spools, spool sheets, field weld, duct cut list, documents, cobie, sensors, mqtt, live feed, vertical sky component, solar gain, daylight grid, heating, cooling, loads, u-value, register scans, icp, e57, live view, path tracing, webgpu, denoise, physical sky, light mixing, render queue, your machine, step, usd, project bundle, develop a mass, variants, assistants, add-on api, plant, electrical, design checks
-from: ef226539
+from: a638080d
 ---
 
 នេះជាអ្វីដែលបានផ្លាស់ប្តូរក្នុង BimCraft 0.7 បើធៀបនឹង 0.6។ បញ្ជីត្រូវបានដាក់ជាក្រុមតាមតំបន់ ដោយសំខាន់បំផុតមកមុន។

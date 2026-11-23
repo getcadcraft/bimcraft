@@ -205,6 +205,7 @@
   "draw.done.bim": "Menempatkan {n} armatur lampu di model dan {lux} goresan angka lux di tampilan denah.",
   "lum.pole": "Luminer tiang generik",
   "lum.bollard": "Bollard generik",
+  "map.isolines": "Garis lux yang sama (isolines)",
   "f.outdoor": "Di luar ruangan: pencahayaan tapak (tanpa langit-langit atau dinding; cahaya langsung ke tanah)",
   "f.cct": "Suhu warna",
   "f.groundrho": "Reflektansi tanah",

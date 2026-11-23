@@ -23,6 +23,7 @@ import { ModelWriter } from './model-write.js';
 import { loopAt } from './model-rooms.js';
 import { wallType, typeName } from './model-walls.js';
 import { cleanFinishes, emptyFinishes, roomFinishes, FINISH_FORMAT } from './quantities/finishes.js';
+import { cross2 as cross, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const FINISH_PSET = 'CadCraft_Finishes';
 export const COVERING_PSET = 'Pset_SpaceCoveringRequirements';
@@ -65,9 +66,6 @@ export function saveFinishesOp(input) {
 }
 
 // ---------------------------------------------------------------------------------------------- the rooms as the model has them
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
 /** The straight wall whose face this side of a room lies on: parallel, half its thickness away, alongside it. */
 function wallOfEdge(a, b, walls) {
   const L = Math.hypot(b[0] - a[0], b[1] - a[1]);

@@ -1,0 +1,431 @@
+{
+ "format": "cadcraft-dome-spec",
+ "version": 1,
+ "id": "dome-spec-us",
+ "name": "United States (ACI thin shell and building code)",
+ "region": "US",
+ "researched": "2026-11-21",
+ "standards": [
+  {
+   "key": "aci318.2-14",
+   "title": "Building Code Requirements for Concrete Thin Shells (ACI 318.2-14) and Commentary (ACI 318.2R-14)",
+   "edition": "2014 (superseded by 318.2-19 and CODE-318.2-25; the only edition whose full text was readable)",
+   "publisher": "American Concrete Institute",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf"
+  },
+  {
+   "key": "aci318-19",
+   "title": "Building Code Requirements for Structural Concrete (ACI 318-19) and Commentary",
+   "edition": "2019 (edition referenced by IBC 2021 Chapter 35)",
+   "publisher": "American Concrete Institute",
+   "url": "https://concrete.org/Portals/0/Files/PDF/Previews/318-19_preview.pdf"
+  },
+  {
+   "key": "ibc-2021",
+   "title": "International Building Code (IBC)",
+   "edition": "2021 (read as adopted with amendments: Utah Building Code 2021, on up.codes)",
+   "publisher": "International Code Council",
+   "url": "https://codes.iccsafe.org/content/IBC2021P2"
+  },
+  {
+   "key": "ibc-2018",
+   "title": "International Building Code (IBC)",
+   "edition": "2018 (read as adopted with amendments: Utah Building Code 2018, on up.codes)",
+   "publisher": "International Code Council",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/19/concrete"
+  },
+  {
+   "key": "astm-a615",
+   "title": "ASTM A615/A615M: Standard Specification for Deformed and Plain Carbon-Steel Bars for Concrete Reinforcement",
+   "edition": "A615/A615M-26 (scope on the ASTM store page; IBC 2021 Chapter 35 lists A615/A615M-15ae1)",
+   "publisher": "ASTM International",
+   "url": "https://store.astm.org/a0615_a0615m-26.html"
+  },
+  {
+   "key": "dsa-ir19-8",
+   "title": "DSA Interpretation of Regulations IR 19-8: Shotcrete Construction: 2022 CBC",
+   "edition": "Issued 05/22/25",
+   "publisher": "California Department of General Services, Division of the State Architect",
+   "url": "https://www.dgs.ca.gov/-/media/Divisions/DSA/Publications/interpretations_of_regs/IR_19-8_2022-CBC.pdf"
+  },
+  {
+   "key": "cbc-2022",
+   "title": "California Building Code 2022 (Title 24, Part 2), Chapters 19 and 19A",
+   "edition": "2022 (California amendments to IBC 2021 and ACI 318-19; read on up.codes)",
+   "publisher": "California Building Standards Commission",
+   "url": "https://up.codes/viewer/california/ca-building-code-2022/chapter/19A/concrete"
+  },
+  {
+   "key": "asce7-16-supp",
+   "title": "ASCE/SEI 7-16 Supplements 1 to 3 (change text only, as posted for reference by the Washington State Building Code Council)",
+   "edition": "Supplement 1 effective December 12, 2018, and later supplements",
+   "publisher": "American Society of Civil Engineers",
+   "url": "https://sbcc.wa.gov/sites/default/files/2022-04/3%29%20ASCE%207-16%20Supplements-%20For%20reference.pdf"
+  }
+ ],
+ "values": {
+  "shell.thickness.min": {
+   "value": null,
+   "unit": "mm",
+   "standard": "aci318.2-14",
+   "clause": "3.1.7 (2014); 3.1 'Minimum thickness' (2019, 2025: heading only)",
+   "read": "none",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "The thickness of a shell and its reinforcement shall be proportioned for the required strength and serviceability requirements of ACI 318.",
+   "note": "No number read. ACI 318.2-14 (full text on concrete.org) gives no minimum thickness: 3.1.7 as quoted; commentary R3.1.7 says thickness 'is often dictated by the required reinforcement and the construction constraints (Gupta 1986), shell stability, or by the ACI 318 minimum thickness requirements.' The 2019 and 2025 editions have a section headed '3.1—Minimum thickness' (seen in both preview contents), but its text is behind the paywall, so whether it states a number is unknown. ACI 334.1-22 preview lists '5.5—Minimum thickness (ACI 318.2-19 Section 3.1)', text also not readable. Practical floor from what was read: two cover layers plus the bars (318.2-14 R6.1.9: cover and spacing for multiple layers 'may govern the design of the shell thickness'). ROUND 2 (2026-11-21): still no number read; value unchanged. up.codes lists ACI 318.2-19 as adopted without amendments by Washington (effective March 15, 2024; Massachusetts and Alabama pages appeared in search results), but its chapter 3 'Design Limits' page shows no text without an account (not pursued). No errata, discussion draft, paper or checklist quoting 3.1 was found. The only number read is a guide recommendation for tank dome roofs, ACI 372R-03 2.4.2.2 (third-party copy): 'The thickness of domes should not be less than 3 in. (75 mm) for monolithic concrete and shotcrete, 4 in. (100 mm) for precast concrete, and 2-1/2 in. (65 mm) for the outer shell of a ribbed dome' (3 in = 76.2 mm), plus its buckling thickness formula (see shell.buckling.guidance). Not a 318.2 requirement."
+  },
+  "shell.cover.min": {
+   "value": 12.7,
+   "unit": "mm",
+   "standard": "aci318.2-14",
+   "clause": "5.1.1, Table 5.1.1",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Not exposed to weather or in contact with ground | No. 6 bar and larger 3/4 | No. 5 bar, W31 or D31 wire, and smaller 1/2",
+   "note": "1/2 in x 25.4 = 12.7 mm. Cast-in-place nonprestressed shells, No. 5 bar, W31 or D31 wire and smaller, not exposed to weather or in contact with ground. Same table: No. 6 bar and larger 3/4 in (19.05 mm); exposed to weather or in contact with ground: No. 6 and larger 2 in (50.8 mm), No. 5 and smaller 1-1/2 in (38.1 mm). Quote is the table row as extracted from the PDF. 2014 edition; the 2019 edition moves this to 7.2 'Specified concrete cover' (heading seen, text not readable). R5.1: shell soffits are not usually 'exposed to weather' unless subject to alternate wetting and drying, including condensation. A greater cover applies if the general building code requires it for fire protection (5.1). In a foam-and-airform dome the outer face is against foam, the inner face is the room side; which row applies is the engineer's call.",
+   "value_us": 0.5,
+   "unit_us": "in"
+  },
+  "footing.cover.min.earth": {
+   "value": 76.2,
+   "unit": "mm",
+   "standard": "aci318-19",
+   "clause": "Table 20.5.1.3.1",
+   "read": "primary",
+   "url": "https://www.concrete.org/tools/frequentlyaskedquestions.aspx?faqid=903",
+   "quote": "concrete cast against and permanently in contact with ground has 3-in. (76 mm) specified cover over reinforcement.",
+   "note": "3 in x 25.4 = 76.2 mm. Read on ACI's own technical FAQ page, which states the ACI 318-19 requirement; the code table itself was not opened (paywalled). IBC 2021 Table 1808.8.2 (Utah adoption, up.codes) sends shallow foundations to the same place: 'Shallow foundations | In accordance with Section 20.5 of ACI 318'. ACI 318.2-14 5.1.5.1 sends shell surfaces exposed to earth or weather to '20.6.1 of ACI 318' (318-14 numbering).",
+   "value_us": 3,
+   "unit_us": "in"
+  },
+  "shell.concrete.strength.min": {
+   "value": 20.684,
+   "unit": "MPa",
+   "standard": "aci318.2-14",
+   "clause": "4.1.1",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Specified compressive strength of concrete at 28 days shall be at least 3000 psi.",
+   "note": "3000 psi x 0.00689476 = 20.684 MPa. Thin shells, ACI 318.2-14 (2014 edition; the 2019 edition's '2.2—Materials' was not readable, so the current figure is unconfirmed). General structural concrete under ACI 318-19 Table 19.2.1.1 is 2500 psi (17.237 MPa), read secondary in the ICC 2021 Concrete Manual sample: 'General 2500'. IBC 2021 Table 1808.8.1 (Utah adoption) gives 2,500 psi for foundations in Seismic Design Category A, B or C. Durability exposure classes can require more (not researched here).",
+   "value_us": 3000,
+   "unit_us": "psi"
+  },
+  "shell.rebar.ratio.min": {
+   "value": 0.0018,
+   "unit": "ratio",
+   "standard": "aci318.2-14",
+   "clause": "6.1.3 (commentary R6.1.3 ties it to slab shrinkage and temperature reinforcement)",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "The minimum area of shell reinforcement at any section as measured in two orthogonal directions shall be at least 0.0018 times the gross area of the section for Grade 60 reinforcement or 0.0020 for Grade 40 reinforcement.",
+   "note": "Dimensionless, no conversion. Area of steel / gross concrete area, in each of two orthogonal directions, Grade 60 bars; 0.0020 for Grade 40. In the 2014 edition the number is printed in 318.2 itself, not by reference; R6.1.3: 'Minimum membrane reinforcement corresponding to slab shrinkage and temperature reinforcement should be provided in at least two approximately orthogonal directions even if the calculated membrane forces are compressive'. The 2019 edition's '6.1—Minimum reinforcement in nonprestressed shells' was not readable; whether it now points to ACI 318-19 24.4.3.2 is unconfirmed. Also 6.1.8 (2014): where tension steel is concentrated, 'The ratio of shell reinforcement in any portion of the tensile zone shall be at least 0.0035 based on the overall thickness of the shell.'"
+  },
+  "shell.rebar.spacing.max": {
+   "value": 457.2,
+   "unit": "mm",
+   "standard": "aci318.2-14",
+   "clause": "6.1.10",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Shell reinforcement spacing in any direction shall not exceed the lesser of 5h and 18 in.",
+   "note": "18 in x 25.4 = 457.2 mm. This is the absolute cap; the governing limit is the lesser of the cap and a multiple of the shell thickness h (see shell.rebar.spacing.rule): for a 3 in shell, 5h = 15 in (381 mm) governs. 2014 edition; the 2019 edition's '7.4—Reinforcement spacing' was not readable.",
+   "value_us": 18,
+   "unit_us": "in"
+  },
+  "shotcrete.strength.min": {
+   "value": 27.579,
+   "unit": "MPa (California public schools, colleges and hospitals only)",
+   "standard": "cbc-2022",
+   "clause": "California Building Code 2022, 1905A.1.12 (modifies ACI 318-19 19.2.1.1 and Table 19.2.1.1). Jurisdiction: California, Chapter 19A buildings only (DSA-SS and OSHPD)",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/california/ca-building-code-2022/chapter/19A/concrete",
+   "quote": "Modify ACI 318, Section 19.2.1.1 and Table 19.2.1.1 as follows: [...] APPLICATION | MINIMUM fc', psi | General 3000 [...] Precast-prestressed driven piles 5000 | Shotcrete 4000",
+   "note": "4000 psi x 0.00689476 = 27.579 MPa. CHANGED in round 2 (2026-11-21): round 1 recorded 2500 psi (17.237 MPa), the general ACI 318-19 floor, because no shotcrete-specific figure had been read. Now read: California's amended Table 19.2.1.1 has its own row 'Shotcrete 4000' (and 'General 3000'). JURISDICTION LIMIT: this is Chapter 19A, which per 1901A.1.1 applies to structures regulated by DSA-SS ('public elementary and secondary schools, community colleges and state-owned or state-leased essential services buildings') and OSHPD ('hospitals and correctional treatment centers'). It is not the rule for ordinary California buildings (Chapter 19 has no such table; its 1910.3.3 for OSHPD nursing facilities says f'c 'shall not be less than 3,000 psi (20.7 MPa)'), and not the rule elsewhere in the US. Elsewhere, as read in round 1: no shotcrete-specific minimum; the general floor is 2500 psi (17.237 MPa) per ACI 318-19 19.2.1.1 as cited by the ICC 2021 Concrete Manual sample ('no structural concrete can be specified with a strength less than 2500 psi'), shotcrete following concrete per 4.2.1.1; thin shells 3000 psi (20.684 MPa) per ACI 318.2-14 4.1.1; ASA position 4000 psi (shotcrete.org/?p=2017), which matches the California figure. Same page, 1908A.1: 'Shotcrete shall be in accordance with the requirements of ACI 318 and the provisions of ACI 506R' (DSA-SS: ACI 506.2). Quote is the table as extracted, rows shortened with [...]. ACI 318-19 26.12 and unamended Table 19.2.1.1 still not read in ACI's text.",
+   "value_us": 4000,
+   "unit_us": "psi"
+  },
+  "steel.yield": {
+   "value": 413.686,
+   "unit": "MPa",
+   "standard": "astm-a615",
+   "clause": "1.2 (Scope)",
+   "read": "primary",
+   "url": "https://store.astm.org/a0615_a0615m-26.html",
+   "quote": "bars are of four minimum yield strength levels: namely, 40 000 psi [280 MPa], 60 000 psi [420 MPa], 80 000 psi [550 MPa], and 100 000 psi [690 MPa], designated as Grade 40 [280], Grade 60 [420], Grade 80 [550], and Grade 100 [690], respectively.",
+   "note": "60 000 psi x 0.00689476 = 413.686 MPa by exact conversion; the standard's own SI designation is Grade 420 [420 MPa] (a separate metric grade, not a conversion): use 420 MPa when working in the A615M system. Read in the scope text on ASTM's store page for A615/A615M-26; the tensile table itself is paywalled. ACI 318.2-14 4.1.2 caps shells: 'Specified yield strength of nonprestressed reinforcement shall not exceed 60,000 psi.'",
+   "value_us": 60000,
+   "unit_us": "psi"
+  },
+  "shell.rebar.spacing.rule": {
+   "value": "Spacing not over the lesser of 5 x shell thickness and 18 in (457.2 mm); lesser of 3 x thickness and 18 in where factored principal membrane tension exceeds 4*phi*lambda*sqrt(f'c).",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "6.1.10",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Shell reinforcement spacing in any direction shall not exceed the lesser of 5h and 18 in. Where the principal membrane tensile stress on the gross concrete area due to factored loads exceed 4ϕλ√fc′, reinforcement spacing shall not exceed the lesser of 3h and 18 in.",
+   "note": "h = shell thickness; f'c in psi in the stress expression (US customary form; no SI form was read). 2014 edition; 2019 section 7.4 not readable. Shotcrete adds minimum clear spacings, read in IBC 2018 1908.4.2 (Utah adoption): 'Where No. 5 or smaller bars are used, there shall be a minimum clearance between parallel reinforcement bars of 21/2 inches (64 mm)'; these IBC rules were moved into ACI 318-19 (text not read)."
+  },
+  "shell.rebar.layers": {
+   "value": "No thickness threshold for two layers read. Where bending steel is needed in one face only, equal amounts go near both surfaces. Commentary: two mats, one near each surface, help against buckling.",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "6.1.9; commentary R3.1.8",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Where shell reinforcement is required in only one face to resist bending moments, equal amounts shall be placed near both surfaces of the shell even though a reversal of bending moments is not indicated by the analysis.",
+   "note": "2014 edition. R3.1.8 (commentary, not a requirement): 'Measures successfully used to improve resistance to buckling include the provision of two mats of reinforcement—one near each outer surface of the shell'. No rule of the form 'two layers when thicker than X' was found in 318.2-14. The 2019 edition's '7.5—Reinforcement placement' was not readable. The ACI 318 wall rule on two layers was not researched."
+  },
+  "shell.stability": {
+   "value": "Shell instability (buckling) must be investigated and shown by design to be precluded. No formula or safety factor is given in the code text.",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "3.1.8 (2019 edition: 2.4 'Stability', heading only)",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Shell instability shall be investigated and shown by design to be precluded.",
+   "note": "2014 edition. Commentary R3.1.8 lists what the investigation should consider: deviation of as-built geometry, local variations in curvature, large deflections, creep and shrinkage, inelastic properties, cracking, reinforcement, deformation of supports; it points to ACI SP-67 and the IASS recommendations for dome buckling. Also read: 6.1.5 'The area of shell tension reinforcement shall be limited so that the reinforcement will yield before either crushing of concrete in compression or shell buckling can take place'; 7.1.2 requires specified shape tolerances and re-analysis if exceeded; R7.1.2: 'Attention is needed when using air-supported form systems (Huber 1986).'"
+  },
+  "shell.analysis": {
+   "value": "Elastic analysis of the uncracked shell is the accepted basis. Inelastic, experimental, numerical and approximate methods are permitted where shown to be a safe basis. Equilibrium checks required.",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "3.1.1 to 3.1.5",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Elastic behavior shall be an accepted basis for determining internal forces and displacements of thin shells. This behavior shall be permitted to be established by calculations based on an analysis of the uncracked concrete structure in which the material is assumed linearly elastic, homogeneous, and isotropic.",
+   "note": "2014 edition. 3.1.2: 'Inelastic analyses shall be permitted to be used where it can be shown that such methods provide a safe basis for design.' 3.1.3: 'Equilibrium checks of internal resistances and external loads shall be made to ensure consistency of results.' 3.1.5: 'Approximate methods of analysis shall be permitted where it can be shown that such methods provide a safe basis for design.' Commentary R3.1.5 names 'simple membrane analysis for shells of revolution' among approximate methods. The 2019 preview (pages 1-3, read) keeps the same definitions of elastic, experimental and inelastic analysis in 2.1; its analysis rules (4.1.2.x per the ACI 334.1-22 contents) were not readable."
+  },
+  "shell.tension.rebar": {
+   "value": "Tension steel in two or more directions, its resistance in any direction at least the tensile component of internal forces; along principal tension where practical; phi 0.90 for membrane tension.",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "6.1.1, 6.1.2, 6.1.6, 6.1.7, 4.2.1",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Tensile reinforcement shall be provided in two or more directions and shall be proportioned such that its resistance in any direction equals or exceeds the tensile component of internal forces in that direction.",
+   "note": "2014 edition. 4.2.1: 'The value of ϕ for membrane tension shall be 0.90.' 6.1.7: 'If the direction of reinforcement varies more than 10 degrees from the direction of principal tensile membrane force, the amount of reinforcement shall be reviewed in relation to cracking at service loads.' 3.1.11: 'In a region where membrane cracking is predicted, the nominal compressive strength parallel to the cracks shall be taken as 0.4fc′.' Anchorage at supports and edge members (ring beam), 6.1.11: 'at least 1.2ℓd but not less than 18 in.'; lap splices 6.1.12: at least the greater of 1.2ℓd and 18 in, staggered, not more than one-third spliced at any section."
+  },
+  "shotcrete.standard": {
+   "value": "IBC 2021 section 1908.1 sends shotcrete to ACI 318 (318-19 per IBC Chapter 35), which holds the shotcrete rules since 2019. ACI 506.2 is the construction specification; ACI 506R and 506.4R are guides.",
+   "unit": "",
+   "standard": "ibc-2021",
+   "clause": "1908.1; Chapter 35 (ACI 318-19)",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2021/chapter/19/concrete",
+   "quote": "Shotcrete shall be in accordance with the requirements of ACI 318.",
+   "note": "IBC model text read in Utah's adoption on up.codes (codes.iccsafe.org shows a captcha), hence secondary. IBC 2021 Chapter 35 on the same site lists ACI '318—19'; it does not list ACI 506.2, so 506.2 binds through the contract documents, not the IBC. DSA IR 19-8 (California, 2025): 'the 2021 edition of the International Building Code (IBC) ... eliminated its shotcrete provisions in deference to those contained in ACI 318' and names 'ACI 506R: Guide to Shotcrete', 'ACI 506.2: Specification for Shotcrete', 'ACI 506.4R', 'ACI 506.6T', 'ACI PRC-506.7'. ICC/S. K. Ghosh slides: 'Provisions for shotcrete are added throughout ACI 318-19 for the first time'; acceptance criteria 'in a new Section 26.12.4'. ACI 318-19 section numbers seen cited: 4.2.1.1, 25.2.7 to 25.2.9 (bar spacing), 26.3.1(b), 26.12.1.1(b), 26.12.2.1(d), 26.12.4; their text was not read. The IBC 2018 still carries the full old section 1908 (1908.1 to 1908.10)."
+  },
+  "shotcrete.testing": {
+   "value": "Before work: mockup panels per nozzle operator. During work: test panels shot, cored and tested per ACI 318-19 26.12 and ACI 506.2 1.6. IBC 2018: 3 cores, average 0.85 f'c, none below 0.75 f'c.",
+   "unit": "",
+   "standard": "dsa-ir19-8",
+   "clause": "IR 19-8 section 2.4.1, citing ACI 318 26.12.1.1(b), 26.12.2.1(d) and ACI 506.2 section 1.6",
+   "read": "secondary",
+   "url": "https://www.dgs.ca.gov/-/media/Divisions/DSA/Publications/interpretations_of_regs/IR_19-8_2022-CBC.pdf",
+   "quote": "Throughout shotcrete construction operations, test panels shall be shot, cored, and tested in accordance with ACI 318 Section 26.12.1.1(b), ACI 318 Section 26.12.2.1(d), and ACI 506.2 Section 1.6.",
+   "note": "California state document (schools jurisdiction) quoting ACI 318-19; the ACI clauses themselves were not read, so frequency and acceptance numbers under ACI 318-19 are NOT recorded. Same document: 'Test panels shall comply with ASTM C1140'; nozzle operator qualification 'consists of construction, evaluation, and acceptance of shotcrete mockup panels'. Numbers read in the superseded IBC 2018 section 1908 (Utah adoption, https://up.codes/viewer/utah/ibc-2018/chapter/19/concrete), from which ICC says the ACI 318-19 rules were adapted: 1908.5 preconstruction panel 'shall be shot, cured, cored or sawn, examined and tested prior to commencement of the project'; 1908.10 not less than three 3-inch (76 mm) cores (2-inch where aggregate is 3/8 inch or smaller); 1908.10.1 'not less than once each shift, but not less than one for each 50 cubic yards (38.2 m3)'; 1908.10.2 panels 18 by 18 inches (457 mm), or 12 by 12 inches (305 mm); 1908.10.3 'average compressive strength of three cores ... shall equal or exceed 0.85 f´c with no single core less than 0.75 f´c'."
+  },
+  "load.standard": {
+   "value": "ASCE/SEI 7 (7-16 with Supplement 1 in IBC 2021): snow per Chapter 7, wind per Chapters 26 to 30, earthquake per Chapters 11, 12, 13, 15, 17 and 18.",
+   "unit": "",
+   "standard": "ibc-2021",
+   "clause": "1608.1, 1609.1.1, 1613.1; Chapter 35",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2021/chapter/16/structural-design",
+   "quote": "Wind loads on every building or structure shall be determined in accordance with Chapters 26 to 30 of ASCE 7.",
+   "note": "IBC model text read in Utah's 2021 adoption on up.codes, hence secondary. 1608.1: 'design snow loads shall be determined in accordance with Chapter 7 of ASCE 7, but the design roof load shall not be less than that determined by Section 1607' (Utah amends the rest of 1608.1). 1613.1: 'designed and constructed to resist the effects of earthquake motions in accordance with Chapters 11, 12, 13, 15, 17 and 18 of ASCE 7, as applicable.' Edition from Chapter 35 on the same site: '7—16 with Supplement 1'. The IBC 2024 (expected to reference ASCE 7-22) was not read. Jurisdictions adopt different IBC editions; check the local one. ASCE 7 itself (dome snow and wind coefficients) was not read."
+  },
+  "foam.fire": {
+   "value": "Flame spread index max 75, smoke-developed max 450 (ASTM E84/UL 723); interior thermal barrier of 1/2 in (12.7 mm) gypsum board or NFPA 275 equivalent, unless 1 in (25 mm) concrete covers each face.",
+   "unit": "",
+   "standard": "ibc-2021",
+   "clause": "2603.3, 2603.4, 2603.4.1.1, 2603.9",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2021/chapter/26/plastic",
+   "quote": "foam plastic shall be separated from the interior of a building by an approved thermal barrier of 1/2-inch (12.7 mm) gypsum wallboard, heavy timber in accordance with Section 602.4 or a material that is tested in accordance with and meets the acceptance criteria of both the Temperature Transmission Fire Test and the Integrity Fire Test of NFPA 275.",
+   "note": "IBC model text read in Utah's 2021 adoption on up.codes, hence secondary. 2603.3: 'foam plastic insulation and foam plastic cores of manufactured assemblies shall have a flame spread index of not more than 75 and a smoke-developed index of not more than 450 where tested in the maximum thickness intended for use in accordance with ASTM E84 or UL 723.' 2603.4.1.1: 'A thermal barrier is not required for foam plastic installed in a masonry or concrete wall, floor or roof system where the foam plastic insulation is covered on each face by not less than 1-inch (25 mm) thickness of masonry or concrete.' In a dome the foam has concrete on the inside face only (airform membrane outside), so 2603.4.1.1 as worded ('each face') is not plainly met: whether the shotcrete alone serves as the thermal barrier, or 2603.9 special approval by large-scale test (NFPA 286, FM 4880, UL 1040, UL 1715) is needed, is for the building official. Exterior wall and roof rules (2603.5, 2603.6) were not researched."
+  },
+  "footing.frost": {
+   "value": "Footings at least 12 in (305 mm) below undisturbed ground; frost protection: extend below the local frost line, build to ASCE 32, or bear on solid rock. The IBC gives no frost depth: it is local.",
+   "unit": "",
+   "standard": "ibc-2021",
+   "clause": "1809.4, 1809.5",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2021/chapter/18/soils-and-foundations",
+   "quote": "Except where otherwise protected from frost, foundations and other permanent supports of buildings and structures shall be protected from frost by one or more of the following methods: Extending below the frost line of the locality. Constructing in accordance with ASCE 32. Erecting on solid rock.",
+   "note": "IBC model text read in Utah's 2021 adoption on up.codes, hence secondary; the quote joins the lead sentence and its three list items as extracted. 1809.4: 'The minimum depth of footings below the undisturbed ground surface shall be 12 inches (305 mm). ... The minimum width of footings shall be 12 inches (305 mm).' 12 in x 25.4 = 304.8 mm. Exception read: free-standing Risk Category I buildings of 600 ft2 or less (light-frame) or 400 ft2 or less (other) with eave height 10 ft or less. 'Shallow foundations shall not bear on frozen soil unless such frozen condition is of a permanent character.' ASCE 32 (frost-protected shallow foundations) was not read."
+  },
+  "load.factor.dead.alone": {
+   "value": 1.4,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equation 16-1",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "1.4(D + F) (Equation 16-1)",
+   "note": "Factor on D (and fluid load F) in the dead-load-only combination. On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.factor.dead": {
+   "value": 1.2,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equations 16-2 to 16-5",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "1.2(D + F) + 1.6(Lr or S or R) + 1.6H + (f1L or 0.5W) (Equation 16-3)",
+   "note": "1.2 on D in every combination with live, roof live, snow, rain, wind or earthquake acting in the same sense: 16-2, 16-3 (snow leads), 16-4 (wind leads), 16-5 (earthquake). On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.factor.dead.min": {
+   "value": 0.9,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equation 16-6 (wind) and 16-7 (earthquake)",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "0.9D+ 1.0W+ 1.6H (Equation 16-6)",
+   "note": "0.9 on D where dead load resists wind uplift or overturning (16-6); the same 0.9 with earthquake: '0.9(D + F) + 1.0E+ 1.6H' (16-7). Exception 2 read: 'Where the effect of H resists the primary variable load effect, a load factor of 0.9 shall be included with H where H is permanent and H shall be set to zero for all other conditions.' On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.factor.snow": {
+   "value": 1.6,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equation 16-3",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "1.2(D + F) + 1.6(Lr or S or R) + 1.6H + (f1L or 0.5W) (Equation 16-3)",
+   "note": "1.6 on S where roof live load, snow or rain is the leading variable load; wind accompanies at 0.5W, or live load at f1L (f1 = 0.5 for most live loads, 1 for public assembly over 100 psf and parking garages). On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.factor.snow.accompanying": {
+   "value": 0.5,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equation 16-4 (also 16-2)",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "1.2(D + F) + 1.0W + f1L + 1.6H + 0.5(Lr or S or R) (Equation 16-4)",
+   "note": "0.5 on S where wind leads (16-4) and where floor live load leads (16-2: '1.2(D + F) + 1.6(L + H) + 0.5(Lr or S or R)'). With earthquake the snow factor is f2 (16-5): model IBC '0.7 for roof configurations (such as saw tooth) that do not shed snow off the structure' and 0.2 otherwise per the model code (the 0.2 was NOT read: Utah replaces it with an elevation formula, 'f2 = 0.20 + .025(A-5)' above 30 psf, 0 at 30 psf or less). On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.factor.wind": {
+   "value": 1,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equations 16-4 and 16-6 (ASCE 7-16 wind, per IBC 2018 Chapter 35)",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "1.2(D + F) + 1.0W + f1L + 1.6H + 0.5(Lr or S or R) (Equation 16-4)",
+   "note": "1.0 on W in the strength combinations, for wind loads from ASCE 7-10 or later (ultimate, strength-level wind speed maps); here ASCE 7-16. Wind as accompanying load: 0.5W (16-3). The change of edition was read in an American Wood Council paper (https://awc.org/wp-content/uploads/2021/12/D-CodeUpdates-Line-Jan121.pdf): '1.6 = ASCE 7-05 LRFD load factor for wind' and '1.0 = ASCE 7-10 LRFD load factor for wind'; 'VASCE7-10 = VASCE7-05 x (1.6)1/2' (speeds raised by the square root of 1.6 so the factor could become 1.0). Never combine 1.6 with ASCE 7-10, 7-16 or 7-22 wind pressures. ASD factor in ASCE 7-10: 0.6 (same paper). On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.factor.seismic": {
+   "value": 1,
+   "unit": "factor",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equations 16-5 and 16-7",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "1.2(D + F) + 1.0E + f1L + 1.6H + f2S (Equation 16-5)",
+   "note": "1.0 on E, both with 1.2D (16-5) and with 0.9D (16-7: '0.9(D + F) + 1.0E+ 1.6H'). E includes the vertical effect, so the net dead factor shifts: an ICC worked example read (shop.iccsafe.org 8983P18 sample) shows 'IBC Equation 16-5 becomes: 1.2D + QE + 0.08D + 0.5L' and 'IBC Equation 16-7 becomes: 0.9D + QE – 0.08D' for its SDS. On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed."
+  },
+  "load.combinations": {
+   "value": "IBC 2018 1605.2: 1.4(D+F); 1.2(D+F)+1.6(L+H)+0.5(Lr|S|R); 1.2(D+F)+1.6(Lr|S|R)+1.6H+(f1L|0.5W); 1.2(D+F)+1.0W+f1L+1.6H+0.5(Lr|S|R); 1.2(D+F)+1.0E+f1L+1.6H+f2S; 0.9D+1.0W+1.6H; 0.9(D+F)+1.0E+1.6H",
+   "unit": "",
+   "standard": "ibc-2018",
+   "clause": "1605.2, Equations 16-1 to 16-7 (IBC 2021: 1605.1 refers to ASCE 7 section 2.3)",
+   "read": "secondary",
+   "url": "https://up.codes/viewer/utah/ibc-2018/chapter/16/structural-design",
+   "quote": "Where strength design or load and resistance factor design is used, buildings and other structures, and portions thereof, shall be designed to resist the most critical effects resulting from the following combinations of factored loads:",
+   "note": "'|' stands for the printed 'or'. D dead, F fluid, L live, Lr roof live, S snow, R rain, H soil/lateral earth, W wind, E earthquake. On up.codes the seven equations are images (no text layer); each image was opened and read by eye. IBC 2018 model text read in Utah's adoption (Utah amends only f2), hence secondary. IBC 2018 Chapter 35 on the same site lists ASCE '7—16'. IBC 2021 no longer prints the strength combinations: 1605.1 (Utah 2021 adoption) says structures 'shall be designed to resist the strength load combinations specified in ASCE 7, Section 2.3'. ASCE 7-16 section 2.3 itself was not read, so whether its wording differs (F, H and the seismic combinations of 2.3.6 are arranged differently) is unconfirmed. Also read (1605.2.1): flood, self-straining and ice loads go to ASCE 7 sections 2.3.2, 2.3.4 and 2.3.3."
+  },
+  "strength.reduction": {
+   "value": "318.2-14: phi 0.90 for membrane tension; other cases per ACI 318 chapter 21. ACI 318-19 Table 21.2.2 as replaced by California: tension-controlled 0.9; compression-controlled 0.75 spiral, 0.65 other.",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "4.2.1, 4.2.2 (318.2-14); ACI 318-19 Table 21.2.2 via CBC 2022 1905A.1.13",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "4.2.1 The value of ϕ for membrane tension shall be 0.90. 4.2.2 The value for ϕ for other conditions may be found in Chapter 21 of ACI 318.",
+   "note": "Primary for the shell rule (2014 edition; the 2019 edition's chapter 5 'Design strength' was not readable). 318.2-14 prints NO phi for membrane compression: it falls under ACI 318 chapter 21. ACI 318-19 Tables 21.2.1/21.2.2 were not read in ACI's text. Secondary, California Building Code 2022 1905A.1.13 (https://up.codes/viewer/california/ca-building-code-2022/chapter/19A/concrete) 'Replace Table 21.2.2 as follows': εt ≤ εty compression-controlled 0.75 (spirals conforming to 25.7.3) / 0.65 (other); εt ≥ 0.005 tension-controlled 0.9 / 0.9; transition by equation. California's table uses 0.005 as the tension-controlled limit; the unamended ACI 318-19 limit, per ICC/S. K. Ghosh slides (iccsafe.org/wp-content/uploads/An-Overview-of-Changes-from-ACI-318-14-to-ACI-318-19.pdf), is 'εt ≥ εty + 0.003', with 'For Grade 60 deformed reinforcement, it shall be permitted to take εty equal to 0.002.' Phi for shear was not read. Related: 318.2-14 3.1.11 caps nominal compressive strength parallel to membrane cracks at 0.4f'c; ACI 372R-03 uses φ = 0.7 in its dome buckling formula (see shell.buckling.guidance)."
+  },
+  "concrete.modulus": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "Not read in a source we cite: ACI 318-19 section 19.2.2.1 is behind a paywall and the only copy of a document printing the formula was not the publisher's."
+  },
+  "wind.dome": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "Not read in a source we cite: ASCE 7 itself is not free to read, and the only page found describing its dome figure was a software vendor's article. ASCE 7-16 Figure 27.3-2 is where the coefficients for domed roofs are."
+  },
+  "snow.dome": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "Not read in a source we cite: ASCE 7 itself is not free to read, and the only page found describing its curved-roof figure was a software vendor's article. ASCE 7-16 chapter 7 (Figure 7.4-2) is where curved roofs and domes are."
+  },
+  "seismic.method": {
+   "value": "Equivalent lateral force: base shear from ASCE 7 Section 12.8 (V = Cs x W, Cs by Eq. 12.8-2); as read in course notes V = (Ie x SDS / R) x W for T <= Ts. Nonbuilding structures: ASCE 7 Chapter 15.",
+   "unit": "",
+   "standard": "asce7-16-supp",
+   "clause": "ASCE 7-16 Section 12.8 (Eq. 12.8-2 for Cs); Chapter 15; IBC 2021 1613.1",
+   "read": "secondary",
+   "url": "https://sbcc.wa.gov/sites/default/files/2022-04/3%29%20ASCE%207-16%20Supplements-%20For%20reference.pdf",
+   "quote": "the procedures in Section 12.8 for the determination of the seismic base shear, V .",
+   "note": "The printed equation 'V = CsW' (Eq. 12.8-1) was NOT read in ASCE text: the form given in value is assembled from three readings. (1) ASCE 7-16 supplement text hosted by the Washington State Building Code Council (quote above, from C12.9.1.5; also 'the seismic response coefficient Cs is determined by Eq. 12.8-2'). (2) San Jose State CE 160 notes (sjsu.edu, Vukazich 2017): V = (Ie SDS / R) W for T ≤ Ts and V = (Ie SD1 / (T R)) W for T > Ts, 'where TS = SD1/SDS', 'W = Total Seismic Weight of Building', 'R = Response Modification Coefficient: ASCE 7 Table 12.2-1'. (3) IBC 2021 Chapter 16 text on up.codes (Utah): 'Equation 12.8-2 of ASCE 7 is used to determine the seismic response coefficient, C s'. Nonbuilding structures, STRUCTURE magazine April 2017 (structuremag.org/article/seismic-design-of-nonbuilding-structures/): R, Ωo and Cd 'are located in Table 12.2-1 for building structures, Table 15.4-1 for nonbuilding structures similar to buildings, and Table 15.4-2 for nonbuilding structures not similar to buildings'; 'Section 15.4.4 allows the fundamental period of nonbuilding structures to be calculated ... without the restrictions and limits of Section 12.8.2.' No R value for a concrete shell or dome building was read; a dome used as a building falls under Chapter 12, whose Table 12.2-1 was not read. Minimum Cs and period formulas not read."
+  },
+  "shell.buckling.guidance": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "Not read in a source we cite: the dome roof thickness formula of ACI 372R (wire-wrapped tanks, section 2.4.2.2) was found only in a copy that was not the publisher's. Ask your engineer for ACI 372R or the IASS recommendations."
+  },
+  "shell.edge.members": {
+   "value": "Edge beams and ribs are \"auxiliary members\": designed to ACI 318; a shell strip of T-beam flange width may act with them; shell bars anchored into or through them at least 1.2 ld and 18 in (457 mm).",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "2.1.4, 3.1.9, 6.1.11 (commentary R2.1.4)",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "3.1.9 Auxiliary members shall be designed according to the applicable provisions of ACI 318. It shall be permitted to assume that a portion of the shell equal to the flange width, as specified in ACI 318, acts with the auxiliary member.",
+   "note": "2014 edition. 3.1.9 continues: 'In such portions of the shell, the reinforcement perpendicular to the auxiliary member shall be at least equal to that required for the flange of a T-beam by ACI 318.' 2.1.4: 'Auxiliary members—Ribs or edge beams that serve to strengthen, stiffen, or support the shell; usually, auxiliary members act jointly with the shell.' R2.1.4: 'Most thin shell structures require ribs or edge beams at their boundaries to resist the shell boundary forces, to assist in transmitting them to the supporting structure, and to accommodate the increased amount of reinforcement in these areas.' 6.1.11: 'Shell reinforcement at the junction of the shell and supporting members or edge members shall be anchored in or extended through such members at least 1.2ℓd but not less than 18 in.' 1.1.1: the code governs 'thin shell concrete structures, including ribs and edge members'. No sizing rule for a dome ring beam is given: the ring tension comes from analysis. ACI 334.1-22 preview definition: 'member, edge—structural element along the edge of a thin shell that does not form part of the main supporting structure but serves to stiffen and act compositely with the thin shell to carry loads to the supporting member.' ACI 372R-03 (tank domes, guide): a prestressed dome ring 'should be provided at the base of the dome shell to resist the horizontal component of the dome thrust'; ring nonprestressed steel ratio 0.0025."
+  },
+  "shell.openings": {
+   "value": "318.2-14 gives no opening rule beyond requiring shell reinforcement at shell openings (6.1.1). No size limit, trim-bar rule or thickening rule was read.",
+   "unit": "",
+   "standard": "aci318.2-14",
+   "clause": "6.1.1",
+   "read": "primary",
+   "url": "https://www.concrete.org/portals/0/files/pdf/318_2_14.pdf",
+   "quote": "Shell reinforcement shall be provided to resist tensile stresses from internal membrane forces, to resist tension from bending and twisting moments, to limit shrinkage and temperature crack width and spacing, and as reinforcement at shell boundaries, load attachments, and shell openings.",
+   "note": "2014 edition; the word 'opening' appears only here in the whole document (searched the full text). The 2019 edition was not readable. ACI 334.1-22 (preview, chapter 3 opening text): 'At boundaries, edges, openings, and non-uniform loaded areas, loads are resisted by a combination of axial, flexure, and shear forces, then transmitted to the columns and foundation', that is, membrane action is disturbed at openings and bending must be designed for; its detailed recommendations on openings were not readable. ACI 334.1R-92 was not found in readable form."
+  },
+  "thermal.barrier.dome": {
+   "value": null,
+   "unit": "",
+   "standard": "aci334.3-24",
+   "clause": "",
+   "read": "none",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/334.3-24_preview.pdf",
+   "quote": "This report focuses primarily on inflated forms for concrete thin-shell domes (and structures of similar geometry), which also incorporate a spray polyurethane foam (SPF) layer as part of the construction process.",
+   "note": "Nothing from a building authority or an ICC-ES report about foam on the outside of a concrete dome shell was found. Looked: web searches for ICC-ES evaluation reports and state interpretations on 'monolithic dome', 'concrete dome', inflated form, polyurethane foam, thermal barrier, Section 2603 (results were ordinary spray-foam and ICF wall reports, none for a dome assembly; none opened as relevant); floridabuilding.org and California DSA hits in the same search results likewise showed no dome item. The quote only shows that ACI's own report treats SPF as a normal part of this construction (preview pages 1-2; chapter 4.12 'Polyurethane foam (when used)' not readable). The general rule stays as in foam.fire: IBC 2603.4 thermal barrier, with the 2603.4.1.1 exception written for foam covered 'on each face' by 1 inch of concrete or masonry. Sellers' pages (monolithic.org, dometechnology.com) appeared in results and were deliberately not used."
+  }
+ },
+ "notes": "Round 1 (2026-11-20): shell rules are from ACI 318.2-14, the only thin-shell edition with free full text; it is two editions old (318.2-19 is what IBC 2021 reaches; CODE-318.2-25 is current). Check every 318.2-14 value against 318.2-19. shell.thickness.min stays none: 2014 sets no number, the 2019/2025 '3.1 Minimum thickness' text is paywalled (up.codes has it behind an account). IBC text was read in Utah's adoption on up.codes, so secondary. Round 2 (2026-11-21) weak spots. Load factors: from IBC 2018 1605.2, whose equations are images read by eye; IBC 2021 only points to ASCE 7 section 2.3, which was not read; the 0.2 snow factor with earthquake was not read (Utah amends f2). Shotcrete 4000 psi is California Chapter 19A only (schools, hospitals, state buildings), not a national rule; elsewhere the 2500 psi general floor applies. Buckling formula and Ec are from ACI 372R-03: a guide for tank dome roofs, superseded by 372R-13, 1999 load factors, read in a third-party-hosted copy; its Bi/Bc values carry stated conditions. Phi: 0.90 membrane tension is primary (318.2-14); the 0.9/0.75/0.65 table is California's replacement of ACI 318-19 Table 21.2.2. wind.dome and snow.dome rest on a software vendor's worked examples, not ASCE text: figure numbers and procedure only, no usable coefficients; the dome snow rule was not read. seismic.method: 'V = CsW' was not read verbatim. thermal.barrier.dome: nothing found from an authority. Not read: ASCE 7 body, ACI 318-19 body, ACI 334.1 body, ACI 372R-13, AWWA D110, IASS 1979, ACI SP-67, IBC 2024, ASCE 32. fema.gov and seattle.gov refused automated reading. Held back from this pack (their only sources are ones we do not cite): wind.dome, snow.dome, concrete.modulus, shell.buckling.guidance."
+}

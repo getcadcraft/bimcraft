@@ -2,7 +2,7 @@
 title: Wat is nuut in 0.7 (vroeër)
 summary: BimCraft voeg mure oor verskeie vlakke en Kopieer hierdie vlak by, mure uit PDF's en skanderings, jou eie muursamestellings, ryker families, MEP-toerusting met poorte, botsingstelle, openings en pypspoele, bateldokumente, COBie en sensorlesings, hemel, son, dagligte op 'n rooster en verwarmings- en verkoellaste, skanderingsregistrasie, 'n lewe-aansig en padtraseerder op die grafiese kaart, STEP en USD, biblioteekvariante, en meer vir KI-assistente.
 keywords: wat is nuut 0.7, vroeëre vrystelling, vrystellingsnotas, veranderinge, 0.7, weergawe, nuwe funksies, mure oor vlakke, kopieer hierdie vlak, pdf, skandering, traseer, mure uit planne, muursamestellings, lae, kern, membraan, verwysingsmaatte, materiaalbiblioteek, vertoonenhede, aansigstyl, raamwerk, balke, families, parameters, plansimbool, trefpunte, herhaal, detailvlak, geneste families, csv-groottes, per element, toerusting, poorte, verbindings, vrye ruimtes, openings, spoele, spoelblaaie, veldlas, lugkanaal-snitlys, dokumente, cobie, sensors, mqtt, lewendige voer, vertikale hemelkomponent, sonwins, dagligrooster, verwarming, verkoeling, laste, u-waarde, skanderings registreer, icp, e57, lewe-aansig, padtraseer, webgpu, ontgeraas, fisiese hemel, lig meng, weergaverry, jou masjien, step, usd, projekbundel, ontwikkel 'n massa, variante, assistente, byvoeg-API, plant, elektries, ontwerpkontroles
-from: ef226539
+from: a638080d
 ---
 
 Dit is wat in BimCraft 0.7 verander het, vergeleke met 0.6. Die lys is volgens gebied gegroepeer, met die belangrikste eerste.

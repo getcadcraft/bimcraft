@@ -11,6 +11,7 @@
   "bt.file.open": "Fungua faili ya mpangilio",
   "bt.file.save": "Hifadhi mpangilio kama faili",
   "bt.file.bad": "{name} si mpangilio wa Mtiririko wa nyenzo.",
+  "bt.file.ask": "Ungependa kubadilisha mpangilio wa sasa na faili hii?",
   "bt.file.done": "{name}: vipengee {n} vimepakiwa, {dropped} vimeachwa.",
   "bt.fit.run": "Angalia dhidi ya kuta",
   "bt.fit.nolayout": "Bado hakuna mpangilio wa kukagua. Tumia seli au fungua faili ya mpangilio.",

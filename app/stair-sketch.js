@@ -12,9 +12,9 @@
  *     The tread is worked from the line's length: each step is the line's length over the number of treads the height needs.
  */
 import { STAIR_DEFAULTS, stairLayout } from './res-stair.js';
+import { dist2 as dist } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const fail = (key) => { throw Object.assign(new Error(key), { key }); };
-const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 const ang = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
 const turnOf = (a, b, c) => Math.sign((b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]));   // + = left
 const between = (a, b) => { let d = (b - a) % 360; if (d > 180) d -= 360; if (d <= -180) d += 360; return d; };

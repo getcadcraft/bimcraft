@@ -37,6 +37,20 @@ export function mountHazard(host) {
   const climate = () => (clim ||= climateFor(host, { show: climShow, onChange: () => { S.run = null; render(); } }));
   const keep = () => { try { localStorage.setItem(SAVE, JSON.stringify({ kind: S.kind, peak: S.peak, rise: S.rise, hold: S.hold, fall: S.fall, tol: S.tol, wind: S.wind, gust: S.gust, dir: S.dir, mass: S.mass, source: S.source, T1: S.T1, pga: S.pga, zeta: S.zeta, motion: S.motion, hz: S.hz, dur: S.dur, drift: S.drift, scText: S.scText, year: S.year, clKind: S.clKind })); } catch (e) { /* private window */ } };
   let src = null, timer = 0, canvas = null;
+  // PERF.75: playback paced by requestAnimationFrame (one draw per painted frame, nothing while the tab is hidden);
+  // `everyMs` keeps the old setInterval's pace: `step(n)` gets the whole number of intervals that went by.
+  const playEvery = (everyMs, step) => {
+    let id = 0, last = performance.now(), acc = 0;
+    const loop = (now) => {
+      acc = Math.min(acc + now - last, everyMs * 8); last = now;
+      const n = Math.floor(acc / everyMs);
+      id = requestAnimationFrame(loop);
+      if (n > 0) { acc -= n * everyMs; step(n); }
+    };
+    id = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(id);
+  };
+  const stopTimer = () => { if (timer) timer(); timer = 0; };
   const post = (list) => { try { src ||= (host.problems || window.ccProblems)?.source?.({ id: 'bimcraft.hazard', kind: 'engine', label: t('eg47.title') }); src?.set(list); } catch { /* the shell's Problems are not loaded */ } };
   const prob = (code, text, extra = {}) => ({ code, severity: 'warning', msg: { key: 'eg47.p.' + code.split('.')[1], vars: {} }, text, source: { kind: 'engine', name: 'bimcraft.hazard' }, ...extra });
 
@@ -140,13 +154,13 @@ export function mountHazard(host) {
     };
     slider.addEventListener('input', () => { S.frame = Number(slider.value); tick(); });
     const play = el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-eg47-play': '' }, t('eg47.play'));
-    const stop = () => { S.playing = false; clearInterval(timer); play.textContent = t('eg47.play'); };
+    const stop = () => { S.playing = false; stopTimer(); play.textContent = t('eg47.play'); };
     play.addEventListener('click', () => {
       if (S.playing) { stop(); return; }
       if (S.frame >= last) S.frame = 0;
       S.playing = true; play.textContent = t('eg47.pause');
       const stride = r.kind === 'quake' ? 2 : 1;
-      timer = setInterval(() => { S.frame = Math.min(last, S.frame + stride); tick(); if (S.frame >= last) stop(); }, 33);
+      timer = playEvery(33, (n) => { S.frame = Math.min(last, S.frame + stride * n); tick(); if (S.frame >= last) stop(); });
     });
     canvas = el('canvas', { className: 'bc-hazard-plan', 'data-eg47-plan': '', role: 'img', 'aria-label': t('eg47.plan.alt'), style: 'width:100%;height:16rem;border:1px solid var(--grid)' });
     const parts = [];
@@ -198,7 +212,7 @@ export function mountHazard(host) {
   }
 
   function render() {
-    clearInterval(timer);
+    stopTimer();
     const ed = host.editor();
     if (!ed) { box.replaceChildren(el('p', { className: 'bc-muted' }, t('eg47.nomodel'))); return; }
     const kind = el('select', { className: 'select-cc', 'data-eg47-kind': '' }, [['flood', t('eg47.k.flood')], ['wind', t('eg47.k.wind')], ['quake', t('eg47.k.quake')], ['fire', climate().say('clim.fi.head')], ['heat', climate().say('clim.he.head')]].map(([v, l]) => el('option', { value: v }, l)));

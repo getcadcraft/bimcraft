@@ -318,6 +318,9 @@ html.cc-phone .bc-toolbar[data-toolbar] .bc-tool-group { display: flex; align-it
   border: var(--pen-1) solid transparent; border-radius: var(--radius); white-space: nowrap;
 }
 :is(.bc-toolbar[data-toolbar]:not(.ws-toolbar-strip), .bc-modelbar) :is(.bc-tool-row > .bc-tool, .bc-tool-row > .bc-mb-layout > .bc-tool, .bc-tool-row > details > summary.bc-tool, .bc-mb-right > .bc-tool) .bi { font-size: 1.15rem; line-height: 1; color: var(--layer); }
+/* 0.11 FX.436: an add-on's tool drawn from the CadCraft icon set (addons.js toolbarGroup: svg.ccic, 1.75rem by default) is the size of the glyphs beside it;
+   at 1.75rem it made its row 9 px taller (Print stage, the Output row: 70.8 % to 69.8 % of the window for the drawing, labels on) */
+:is(.bc-toolbar[data-toolbar]:not(.ws-toolbar-strip), .bc-modelbar) .bc-tool-row > .bc-tool[data-addon-tool] > svg.ccic { --ic-size: 1.15rem; }
 :is(.bc-toolbar[data-toolbar]:not(.ws-toolbar-strip), .bc-modelbar) :is(.bc-tool-row > .bc-tool, .bc-tool-row > .bc-mb-layout > .bc-tool, .bc-tool-row > details > summary.bc-tool, .bc-mb-right > .bc-tool):hover { border-color: var(--line); background: var(--sheet); }
 :is(.bc-toolbar[data-toolbar]:not(.ws-toolbar-strip), .bc-modelbar) :is(.bc-tool-row > .bc-tool, .bc-tool-row > .bc-mb-layout > .bc-tool, .bc-tool-row > details > summary.bc-tool, .bc-mb-right > .bc-tool):focus-visible { outline: var(--pen-3) solid var(--action); outline-offset: 1px; }
 :is(.bc-toolbar[data-toolbar]:not(.ws-toolbar-strip), .bc-modelbar) :is(.bc-tool-row > .bc-tool[aria-pressed="true"], .bc-tool-row > details[open] > summary.bc-tool, .bc-tool-row > .bc-mb-more:has([data-mtool][aria-pressed="true"]) > summary.bc-tool, .bc-mb-right > .bc-tool[aria-pressed="true"]) {
@@ -710,6 +713,13 @@ body:not([data-shell-tb="labels"]) .bc.bc-fit-compact :is(.bc-toolbar[data-toolb
 .bc-dialog-wide { max-width: min(60rem, calc(100vw - 2rem)); width: 100%; }
 .bc-dialog::backdrop { background: rgb(0 0 0 / .35); }
 .bc-dialog form { margin: 0; }
+/* SU.1994: Save as DWG or DXF (cad-export-ui.js): a shadow like every overlay, a white field */
+.bc-cad-dlg { width: min(26rem, calc(100vw - 2rem)); box-shadow: 0 .6rem 1.8rem rgb(0 0 0 / .28); }
+.bc-cad-dlg .bc-h { margin: 0 0 .75rem; }
+.bc-cad-field { display: grid; gap: .25rem; margin: 0 0 .6rem; font-size: var(--fs-sm); font-weight: 600; }
+.bc-cad-field select { width: 100%; background-color: var(--sheet); }
+.bc-cad-dlg .bc-muted { margin: 0 0 .9rem; font-size: var(--fs-sm); }
+.bc-cad-actions { display: flex; gap: .5rem; justify-content: flex-end; }
 .bc-dlg-field { display: grid; gap: .2rem; margin: 0 0 .65rem; font-size: var(--fs-sm); font-weight: 600; }
 .bc-dlg-field .bc-input { width: 100%; }
 .bc-dialog .bc-equip-table { margin-top: .5rem; }

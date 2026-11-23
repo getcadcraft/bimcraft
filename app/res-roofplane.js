@@ -19,6 +19,7 @@ import { readLevels } from './model-levels.js';
 import { readWalls } from './model-walls.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const PLANE_PSET = 'CadCraft_RoofPlane';
 const D2R = Math.PI / 180;
@@ -39,7 +40,6 @@ export function planeZ(rp, p) {
   const f = planeFrame(rp.points), s = Math.tan(rp.pitch * D2R);
   return rp.base + s * ((p[0] - f.o[0]) * f.n[0] + (p[1] - f.o[1]) * f.n[1]);
 }
-function area(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
 
 export function readRoofPlanes(w) {
   const out = [];

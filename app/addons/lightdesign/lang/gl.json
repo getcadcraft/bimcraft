@@ -203,6 +203,7 @@
   "draw.done.bim": "Colocáronse {n} luminarias no modelo e {lux} trazos de cifras de lux na vista en planta.",
   "lum.pole": "Luminaria xenérica de poste",
   "lum.bollard": "Bolardo xenérico",
+  "map.isolines": "Liñas de igual lux (isolíneas)",
   "f.outdoor": "Exteriores: iluminación de terreo (sen teito nin paredes; luz directa sobre o chan)",
   "f.cct": "Temperatura de cor",
   "f.groundrho": "Reflectancia do terreo",

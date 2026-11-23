@@ -205,6 +205,7 @@
   "draw.done.bim": "Modele {n} armatür yerleştirildi, plan görünümüne ise {lux} lux değeri yazıldı.",
   "lum.pole": "Genel direk armatürü",
   "lum.bollard": "Genel bollard",
+  "map.isolines": "Eşit lüks çizgileri (izolinler)",
   "f.outdoor": "Dış mekân: saha aydınlatması (tavan veya duvar yok; zemine doğrudan ışık)",
   "f.cct": "Renk sıcaklığı",
   "f.groundrho": "Zemin yansıtma oranı",

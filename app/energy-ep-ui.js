@@ -55,6 +55,10 @@ export function mountEnergyEp(pane, app) {
   const takeFuture = (redraw) => { const g = globalThis.ccBimcraftClimateEpw; if (!g) return; S.epw = new TextEncoder().encode(g.text); S.epwName = g.name; S.epwFuture = true; S.both = null; if (redraw) draw(); };
   takeFuture(false);   // handed over before this pane was mounted
   globalThis.addEventListener?.('cc-bimcraft-climate-epw', () => takeFuture(true));
+  // 0.11 WX.5: a present-day year handed over by the Weather files add-on (the same file a person could pick with the button)
+  const takeWeather = (redraw) => { const g = globalThis.ccBimcraftWeatherEpw; if (!g || S.epwFuture) return; S.epw = new TextEncoder().encode(g.text); S.epwName = g.name; S.both = null; if (redraw) draw(); };
+  takeWeather(false);
+  globalThis.addEventListener?.('cc-bimcraft-weather-epw', () => { S.epwFuture = false; takeWeather(true); });
 
   const model = (mode) => {
     const ed = app.ed();

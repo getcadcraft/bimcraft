@@ -2,7 +2,7 @@
 title: Yang baru di 0.7 (sebelumnya)
 summary: BimCraft menambahkan dinding melalui beberapa level, Salin level ini, dinding dari PDF dan scan, rakitan dinding sendiri, famili yang lebih kaya, peralatan MEP dengan port, kumpulan benturan, bukaan dan spool pipa, dokumen aset, COBie dan pembacaan sensor, langit, matahari, cahaya siang pada grid, dan beban pemanasan serta pendinginan, registrasi scan, tampilan langsung, dan path tracing pada kartu grafis, STEP dan USD, varian pustaka, dan lebih banyak untuk asisten AI.
 keywords: yang baru 0.7, rilis sebelumnya, catatan rilis, changelog, perubahan, 0.7, versi, fitur baru, dinding melalui level, salin level ini, pdf, scan, telusur, dinding dari denah, rakitan dinding, layer, inti, membran, dimensi referensi, pustaka material, satuan tampilan, gaya tampilan, rangka, balok, famili, parameter, simbol denah, hotspot, pengulangan, tingkat detail, famili bersarang, ukuran csv, per elemen, peralatan, port, koneksi, jarak bebas, bukaan, spool, lembar spool, las lapangan, daftar potong duct, dokumen, cobie, sensor, mqtt, umpan langsung, komponen langit vertikal, perolehan panas matahari, grid cahaya siang, pemanasan, pendinginan, beban, nilai u, registrasi scan, icp, e57, tampilan langsung, path tracing, webgpu, denoise, langit fisik, pencampuran cahaya, antrean render, komputer Anda, step, usd, bundel proyek, kembangkan massa, varian, asisten, api add-on, tanaman, listrik, pemeriksaan desain
-from: ef226539
+from: a638080d
 ---
 
 Ini adalah perubahan di BimCraft 0.7, dibandingkan dengan 0.6. Daftar ini dikelompokkan per area, dengan yang paling penting di awal.

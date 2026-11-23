@@ -27,6 +27,7 @@
  */
 import { ids } from './ifc-util.js';
 import { op } from './model-ops.js';
+import { csvCell as cell } from './util.js';   // shared helpers (0.11 PERF.74)
 
 export const FORMAT = 'cadcraft-submission-checklist';
 export const STATE_PSET = 'CadCraft_SubmissionChecklist';
@@ -193,7 +194,6 @@ export function checklistMarkdown(pack, rows, t = (k) => k) {
   return L.join('\n');
 }
 export function checklistCsv(pack, rows, t = (k) => k) {
-  const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
   const head = ['authority list', 'item', 'clause', 'when', 'status', 'satisfied by', 'note', 'source', 'date fetched', 'verified by a local practitioner'];   // i18n-ignore: CSV header (data, as the review-comments CSV)
   return [head, ...rows.map((r) => [pack.name, r.title, r.clause, r.when, r.status, r.status === 'linked' ? r.by.map((b) => b.label).join('; ') : '', hintText(r, t), pack.sources[r.source]?.url || '', pack.sources[r.source]?.fetched || '', isUnverified(pack) ? 'no' : 'yes'])].map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';
 }

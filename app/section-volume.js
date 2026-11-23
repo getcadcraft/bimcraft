@@ -24,6 +24,7 @@
  * (|a|, |b| ≤ MAX_TILT): a = 30 on x1 turns the +X face so it faces 30° towards +Y.
  */
 
+import { add3 as add, cross3 as cross, dot3 as dot, scale3 as mul, sub3 as sub, unit3 as unit } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 export const FACES = ['x0', 'x1', 'y0', 'y1', 'z0', 'z1'];
 /** The two in-plane axes each face leans along (0 = X, 1 = Y, 2 = Z). */
 export const FACE_AXES = { x0: [1, 2], x1: [1, 2], y0: [0, 2], y1: [0, 2], z0: [0, 1], z1: [0, 1] };
@@ -34,12 +35,6 @@ const EPS = 1e-7;
 
 const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const unit = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
 const rad = (d) => d * Math.PI / 180;
 const deg = (r) => r * 180 / Math.PI;
 

@@ -52,7 +52,7 @@ Ask in plain words, for example "isolate the external walls on Level 1", "which 
 
 ## Without a window: scripts and the command line
 
-The same drawing tools work on IFC files in folders you name, with no window open: CadCraft's MCP server and command line can start a new building or open an IFC file, describe it, add walls, doors, windows, floors, levels and grids, undo and save it as a new `.ifc` file. You decide which folders it may use and whether it may change or save anything.
+The same drawing tools work on IFC files in folders you name, with no window open: CadCraft's MCP server and command line can start a new building or open an IFC file, describe it, add walls, doors, windows, floors, levels and grids, undo and save it as a new `.ifc` file. Four more tools suit scripts: `ifc_batch` runs up to 200 edit steps as one (all or nothing: one undo takes the whole batch back, and a refused step undoes the rest and names the step); `ifc_describe` lists the levels and every wall with its doors and windows; `ifc_render_png` writes a flat-shaded checking picture of the model (no materials, textures or shadows) without a window; `usd_export` writes `.usda`, `.usdc` or `.usdz`. On the command line, `cadcraft bim script.json --from model.ifc -o out.ifc` runs a script of steps, and `--usd`, `--png` and `--plan` write a USD file, a picture or a plan from the same run. You decide which folders it may use and whether it may change or save anything.
 
 ## Turn it off
 

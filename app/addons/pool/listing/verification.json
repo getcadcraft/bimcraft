@@ -1,0 +1,99 @@
+{
+ "cases": [
+  {
+   "id": "pool-volume",
+   "name": "Water volume and concrete against hand calculation",
+   "result": "A flat 8 by 4 m pool 1.2 m deep with no steps holds 38.4 cubic metres, and its slab and walls match the closed-form volumes; a sloped pool holds length times width times the mean depth (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-steps",
+   "name": "Steps: equal risers down to the floor",
+   "result": "A flat 1.2 m deep pool with a 200 mm riser limit gets six risers of 200 mm and five treads, 1.35 cubic metres of steps taken off the water; on a sloping floor the riser count rises until the bottom riser equals the others (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-shell",
+   "name": "Skimmer and overflow-channel pools",
+   "result": "An overflow pool has no freeboard, a channel, a grating, a balance tank and no skimmers; a skimmer pool has a coping and one skimmer per stated surface area (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-hydraulics",
+   "name": "Flow, filter, pump and pipes against hand calculation",
+   "result": "36 cubic metres an hour at 1 m/s needs a 112.8 mm bore and takes the 125 step; 36 cubic metres an hour against 10 m is 0.98 kW of water power; the filter is the smallest step whose area carries the flow at the rate, and four of the largest are flagged when even they are too small (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-headloss",
+   "name": "Head loss in the routed pipes against hand calculation",
+   "result": "50 cubic metres an hour in 10 m of 100 mm pipe at C 140 loses 10.67 L Q^1.852 / (C^1.852 D^4.871) of head, a bend costs K v squared over 2g, and a calculated head equals suction path plus return path plus the equipment figure and drives the pump power (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-routes",
+   "name": "Pipes go round the pool to the room on every side",
+   "result": "With the machine room on each of the four sides, with skimmers and with an overflow channel, no suction or return collector passes through the pool in plan, and every pipe has a length and a size (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-quantities",
+   "name": "Quantities add up",
+   "result": "Tile areas match the closed forms for the floor, walls and steps, tiles to order follow the tile, joint and waste, pipe lengths by size equal the routes, and the CSV quotes cells a spreadsheet would run as formulas (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-spec",
+   "name": "Where each figure comes from",
+   "result": "A person's figure always stands and is reported when it breaks the spec; an empty box takes the spec's minimum when that is larger than the starting figure; a rule written for public pools is not applied to a private one; a value with no page it was read on is refused (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-bim",
+   "name": "Placed in a real BimCraft page",
+   "result": "In BimCraft's lab build the add-on is switched on, a pool is placed in a model as elements with the CadCraft_Pool property set, placing again replaces them, and Undo takes them out (tools/pool/browser.mjs)"
+  },
+  {
+   "id": "pool-cad",
+   "name": "Drawn in a real CadCraft page",
+   "result": "In CadCraft's lab build the plan and section are drawn on POOL- layers in one undo step and removed again (tools/pool/browser.mjs)"
+  },
+  {
+   "id": "pool-ifc",
+   "name": "The IFC file read back",
+   "result": "The file is read by our own IFC reader: every line has the number of attributes its class has in IFC4, every GlobalId is 22 characters and unique, the walls, slabs, coverings, filter, pump and pipes are there, and the same pool writes the same file twice (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-fountain",
+   "name": "A fountain",
+   "result": "A fountain has one depth, no steps, skimmers or inlets, a sump, its jets, and a flow that is the larger of the turnover flow and the jets' flow (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-shapes",
+   "name": "Other shapes against hand calculation",
+   "result": "An 8 by 4 m oval holds its 48-sided outline times the depth (within 0.3 % of the true ellipse); an L-shape less a 3 by 2 m cut-out holds 31.2 cubic metres and its shell concrete matches the offset areas by hand; a sloped L-shape holds each part at the depth of its middle; a triangle, corners given either way round, holds half base times height times depth; an outline that crosses itself is refused (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-benches",
+   "name": "Steps on any side and benches",
+   "result": "Steps on side 3 of a flat 1.2 m pool get six risers and take the same 1.35 cubic metres off the water; a 3 m bench 450 mm deep with its seat 500 mm under the water takes 0.945 cubic metres; a side the pool does not have, or a seat below the floor, is refused and said (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-gate",
+   "name": "A gate in the barrier",
+   "result": "A 1 m gate on the shallow-end side is an IfcDoor of type GATE and the barrier is exactly its band less the opening; a round pool gets its gate across as many short sides as it takes (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-ports",
+   "name": "Connected pipes with ports",
+   "result": "For every shape, room side, overflow and fountain, every pipe end meets a fitting, terminal, pump or filter, every connection joins an outlet to an inlet, and the IFC file has one port per port and one IfcRelConnectsPorts per connection, every line well formed for IFC4 (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-bars",
+   "name": "Bar schedule against hand calculation",
+   "result": "12 mm bars at a 0.003 ratio in a 250 mm wall are spaced 150 mm (bar area over ratio times thickness, down to 5 mm), never wider than the largest spacing; the mass is length times bar area times 7850 kg per cubic metre and is the shell's steel (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-units",
+   "name": "Feet and inches",
+   "result": "26'-3\" reads as 8001.0 mm, 26.25 as feet, 9 7/8 as inches for a thickness, 8000 mm shows as 26'-2 15/16\", corners typed in feet become millimetres and the water shows in US gallons; the engine stays in millimetres (bin/test-pool.mjs)"
+  },
+  {
+   "id": "pool-binder",
+   "name": "A calculation page for the report binder",
+   "result": "The Markdown page carries the notice, the shape, where each figure came from, the circulation, quantities and bar schedule, with names escaped; SuperCad's report binder takes it under Calculations while the tab is open and leaves it out with Calculations off (bin/test-pool.mjs)"
+  }
+ ]
+}

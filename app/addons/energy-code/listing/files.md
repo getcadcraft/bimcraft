@@ -1,0 +1,2 @@
+Reads the open IFC model: exterior wall types and their walls, the windows and doors in them, the site's true north and postal code. Keeps what you state in the drawing as the CadCraft_EnergyCode property set on the project, one undo step. Saves the check as a CSV file. Code packs are JSON files in the cadcraft-energy-code format.
+Writes a CBECC single-family project file (.ribd25, plain text) on request.

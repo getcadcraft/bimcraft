@@ -12,9 +12,9 @@
 import { op, settleFor } from './model-ops.js';
 import { addWall } from './model-walls.js';
 import { setSiteOutline } from './model-site.js';
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const MM = 1000;
-const area = (P) => { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; };
 const ccw = (P) => (area(P) < 0 ? P.slice().reverse() : P);
 
 export function contextWalls(accepted, { defaultHeight = 6 } = {}) {

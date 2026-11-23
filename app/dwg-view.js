@@ -20,6 +20,7 @@
 
 import { PadDetector } from './wheel-pad.js';   // 0.8 D7.56 (CadCraft's copy, byte-identical): a trackpad's two-finger swipe pans
 import { wheelFactor } from './input-mouse.js';   // 0.5 IP.1: buttons and wheel from the input profile
+import { affineMul as mul } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export class DrawingView {
   constructor(canvas, { onCursor = () => {} } = {}) {
@@ -408,13 +409,6 @@ export class DrawingView {
   }
 }
 
-function mul(p, q) {
-  return [
-    p[0] * q[0] + p[2] * q[1], p[1] * q[0] + p[3] * q[1],
-    p[0] * q[2] + p[2] * q[3], p[1] * q[2] + p[3] * q[3],
-    p[0] * q[4] + p[2] * q[5] + p[4], p[1] * q[4] + p[3] * q[5] + p[5],
-  ];
-}
 function rgb(hex) {
   const h = String(hex).replace('#', '');
   if (!/^[0-9a-f]{6}$/i.test(h)) return [128, 128, 128];

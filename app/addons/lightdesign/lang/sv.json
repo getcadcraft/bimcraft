@@ -205,6 +205,7 @@
   "draw.done.bim": "Placerade {n} armaturer i modellen och {lux} streck med luxvärden i planvyn.",
   "lum.pole": "Stolparmatur, generisk",
   "lum.bollard": "Generisk pollare",
+  "map.isolines": "Linjer med lika lux (isolinjer)",
   "f.outdoor": "Utomhus: platsbelysning (inget tak eller inga väggar; direkt ljus mot marken)",
   "f.cct": "Färgtemperatur",
   "f.groundrho": "Markreflektans",

@@ -205,6 +205,7 @@
   "draw.done.bim": "{n} Leuchten im Modell platziert und {lux} Striche mit Lux-Werten in der Planansicht.",
   "lum.pole": "Allgemeine Mastleuchte",
   "lum.bollard": "Allgemeine Pollerleuchte",
+  "map.isolines": "Linien gleicher Beleuchtungsstärke (Isolux-Linien)",
   "f.outdoor": "Im Freien: Außenbeleuchtung (keine Decke oder Wände; direktes Licht auf dem Boden)",
   "f.cct": "Farbtemperatur",
   "f.groundrho": "Bodenreflexion",

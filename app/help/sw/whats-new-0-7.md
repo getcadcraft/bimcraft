@@ -2,7 +2,7 @@
 title: Kipya katika 0.7 (cha awali)
 summary: BimCraft inaongeza kuta kupitia ngazi kadhaa na Nakili kiwango hiki, kuta kutoka PDF na skani, mikusanyiko yako ya kuta, familia tajiri zaidi, vifaa vya MEP vyenye milango, seti za migongano, nafasi wazi na mikanda ya mabomba, hati za mali, COBie na usomaji wa sensa, anga, jua, mwanga wa mchana kwenye gridi na mizigo ya joto na upoezaji, usajili wa skani, mwonekano wa moja kwa moja na ufuatiliaji wa njia kwenye kadi ya picha, STEP na USD, tofauti za maktaba, na zaidi kwa visaidizi vya AI.
 keywords: mpya 0.7, toleo la awali, maelezo ya toleo, mabadiliko, 0.7, toleo, vipengele vipya, kuta kupitia ngazi, nakili kiwango hiki, pdf, skani, fuatilia, kuta kutoka mipango, mikusanyiko ya kuta, tabaka, kiini, utando, vipimo vya rejeleo, maktaba ya nyenzo, vipimo vya kuonyesha, mtindo wa mwonekano, fremu, viungio, familia, vigezo, alama ya mpango, alama za haraka, rudia, kiwango cha maelezo, familia zilizowekwa, ukubwa wa csv, kwa kipengele, vifaa, milango, miunganisho, nafasi za kupita, nafasi wazi, mikanda, mikanda ya spuli, weld ya eneo la kazi, orodha ya kukata mifereji, hati, cobie, sensa, mqtt, mlisho wa moja kwa moja, sehemu ya anga wima, faida ya jua, gridi ya mwanga wa mchana, kupasha joto, kupoeza, mizigo, u-value, usajili wa skani, icp, e57, mwonekano wa moja kwa moja, ufuatiliaji wa njia, webgpu, kupunguza kelele, anga halisi, kuchanganya mwanga, foleni ya utoaji, kompyuta yako, step, usd, kifurushi cha mradi, tengeneza wingi, tofauti, visaidizi, api ya programu-jalizi, mmea, umeme, ukaguzi wa muundo
-from: ef226539
+from: a638080d
 ---
 
 Hii ndiyo iliyobadilika katika BimCraft 0.7, ikilinganishwa na 0.6. Orodha imepangwa kwa maeneo, na yenye umuhimu zaidi kwanza.

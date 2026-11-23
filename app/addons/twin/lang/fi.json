@@ -11,6 +11,7 @@
   "bt.file.open": "Avaa asettelutiedosto",
   "bt.file.save": "Tallenna asettelu tiedostoksi",
   "bt.file.bad": "{name} ei ole Material flow -asettelu.",
+  "bt.file.ask": "Korvataanko nykyinen asettelu tällä tiedostolla?",
   "bt.file.done": "{name}: {n} kohdetta ladattu, {dropped} jätetty pois.",
   "bt.fit.run": "Tarkista seiniä vasten",
   "bt.fit.nolayout": "Tarkistettavaa asettelua ei ole vielä. Käytä solua tai avaa asettelutiedosto.",

@@ -205,6 +205,7 @@
   "draw.done.bim": "Au fost plasate {n} corpuri de iluminat în model și {lux} linii cu valori lux în vederea planului.",
   "lum.pole": "Corp de iluminat generic pe stâlp",
   "lum.bollard": "Pilon generic",
+  "map.isolines": "Linii de lux egal (izolux)",
   "f.outdoor": "Exterior: iluminat de amplasament (fără tavan sau pereți; lumină directă pe teren)",
   "f.cct": "Temperatura de culoare",
   "f.groundrho": "Reflectanța terenului",

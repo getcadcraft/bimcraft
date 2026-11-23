@@ -35,6 +35,7 @@ import { dimensionFootprint } from './dimension-geometry.js';
 import { PHASE_PLAN } from './phase-pens.js';   // 0.8 EG.59: the plan's phase pens
 import { PadDetector } from './wheel-pad.js';   // 0.8 D7.56 (CadCraft's copy, byte-identical): a trackpad's two-finger swipe pans
 import { panButton, wheelFactor } from './input-mouse.js';   // 0.5 IP.1: buttons and wheel from the input profile
+import { pointInRing as inPoly } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 const TOKENS = ['--ink', '--ink-2', '--line', '--grid', '--grid-minor', '--sheet', '--sheet-2', '--action', '--poche', '--layer-blue', '--layer-red', '--layer-ochre',
   '--layer-green', '--layer-orange', '--layer-magenta', '--layer-violet', '--layer-cyan'];   // 0.6 DF.29: pipe and duct systems' colours
 
@@ -578,14 +579,6 @@ export class PlanView {
   destroy() { this.ro.disconnect(); }
 }
 
-function inPoly(x, y, p) {
-  let inside = false;
-  for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
-    const [xi, yi] = p[i], [xj, yj] = p[j];
-    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside;
-  }
-  return inside;
-}
 function inLoop(x, y, l) {
   let inside = false;
   for (let i = 0, j = l.length - 2; i < l.length; j = i, i += 2) {

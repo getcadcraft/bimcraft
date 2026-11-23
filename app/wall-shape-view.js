@@ -27,8 +27,8 @@
 import { wallGeom } from './model-arcs.js';
 import { readShape, setWallShape } from './wall-shape.js';
 import { profileAt } from './walls/shape.js';
+import { dot2 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 const R10 = (v) => Math.round(v / 10) * 10;
 const WALL_KEY = /^wall:[0-9A-Za-z_$]{22}$/;
 export const isWallView = (k) => WALL_KEY.test(String(k || ''));

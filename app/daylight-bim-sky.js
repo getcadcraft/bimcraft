@@ -37,7 +37,7 @@
  */
 import { sectionTheta, meanReflectance, DEFAULTS } from './daylight-bim.js';
 import { sunPosition, dayOfYear } from './render/sun.js';
-import { ids, val } from './ifc-util.js';
+import { ids, val, lengthUnitMm } from './ifc-util.js';
 import { compound } from './ifc-geo.js';
 
 const D2R = Math.PI / 180, R2D = 180 / Math.PI, EPS = 1e-6;
@@ -151,7 +151,9 @@ export function siteOf(api, mid) {
       const r = c.TrueNorth?.DirectionRatios?.map((x) => Number(val(x)));
       if (r && r.length >= 2 && Math.hypot(r[0], r[1]) > 1e-9) { const l = Math.hypot(r[0], r[1]); north = [r[0] / l, r[1] / l]; break; }
     }
-    const el = Number(val(s.RefElevation));
+    // FX (2026-11-20): RefElevation is in the file's length unit; the callers (the EnergyPlus file's Site:Location, the clear-sky altitude of the
+    // solar panels) want metres. A file in millimetres used to give a site 113,000 m up.
+    const el = Number(val(s.RefElevation)) * lengthUnitMm(api, mid) / 1000;
     return { lat, lon, north, elevation: Number.isFinite(el) ? el : 0 };
   } catch { return null; }
 }

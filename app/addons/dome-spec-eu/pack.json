@@ -1,0 +1,454 @@
+{
+ "format": "cadcraft-dome-spec",
+ "version": 1,
+ "id": "dome-spec-eu",
+ "name": "Europe (Eurocode 2 and EN sprayed concrete)",
+ "region": "EU",
+ "researched": "2026-11-21",
+ "standards": [
+  {
+   "key": "en1992-1-1",
+   "title": "Eurocode 2: Design of concrete structures - Part 1-1: General rules and rules for buildings",
+   "edition": "EN 1992-1-1:2004 (read as BS EN 1992-1-1:2004 incl. corrigenda, free scanned copy; the second-generation EN 1992-1-1:2023 replaces it and its text was NOT read)",
+   "publisher": "CEN",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf"
+  },
+  {
+   "key": "en1992-2",
+   "title": "Eurocode 2: Design of concrete structures - Part 2: Concrete bridges - Design and detailing rules",
+   "edition": "EN 1992-2:2005 (read as BS EN 1992-2:2005, free scanned copy; merged into EN 1992-1-1:2023)",
+   "publisher": "CEN",
+   "url": "https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1992.2.2005.pdf"
+  },
+  {
+   "key": "en14487-1",
+   "title": "Sprayed concrete - Part 1: Definitions, specifications and conformity",
+   "edition": "EN 14487-1:2022 (read as the STN EN 14487-1:2023 preview: foreword, scope, normative references; and the contents page of DIN EN 14487-1:2023-03). Clauses 4 to 7 were NOT read",
+   "publisher": "CEN",
+   "url": "https://normy.normoff.gov.sk/norma/136776/nahlad"
+  },
+  {
+   "key": "en14487-2",
+   "title": "Sprayed concrete - Part 2: Execution",
+   "edition": "EN 14487-2:2006 (read as the SIST EN 14487-2:2007 preview, clauses 1 to 7.2; clauses 9 to 11 not read)",
+   "publisher": "CEN",
+   "url": "https://cdn.standards.iteh.ai/samples/26244/b3b8958da46b4c39bdaf9e579d07041e/SIST-EN-14487-2-2007.pdf"
+  },
+  {
+   "key": "bs4449",
+   "title": "BS 4449:2005+A3:2016 Steel for the reinforcement of concrete - Weldable reinforcing steel - Bar, coil and decoiled product (as described on The Concrete Centre page 'Standards for reinforcement'; EN 10080:2005 itself gives no grades)",
+   "edition": "BS 4449:2005+A3:2016 (standard text not read)",
+   "publisher": "BSI (described by The Concrete Centre)",
+   "url": "https://concretecentre.com/Codes/European-standards-for-reinforcement.aspx"
+  },
+  {
+   "key": "en1991-1-3",
+   "title": "Eurocode 1: Actions on structures - Part 1-3: General actions - Snow loads",
+   "edition": "EN 1991-1-3:2003 (read as BS EN 1991-1-3:2003, free scanned copy; a second-generation edition exists and was not read)",
+   "publisher": "CEN",
+   "url": "https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1991.1.3.2003.pdf"
+  },
+  {
+   "key": "en1991-1-4",
+   "title": "Eurocode 1: Actions on structures - Part 1-4: General actions - Wind actions",
+   "edition": "EN 1991-1-4:2005+A1:2010 (free scanned copy; a second-generation edition exists and was not read)",
+   "publisher": "CEN",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1991.1.4.2005.pdf"
+  },
+  {
+   "key": "en13165",
+   "title": "Thermal insulation products for buildings - Factory made rigid polyurethane foam (PU) products - Specification",
+   "edition": "EN 13165:2012+A1:2015 (read as the STN EN 13165+A1:2015 preview: contents, foreword, scope; +A2:2016 exists)",
+   "publisher": "CEN",
+   "url": "https://normy.normoff.gov.sk/norma/120964/nahlad"
+  },
+  {
+   "key": "en1997-1",
+   "title": "Eurocode 7: Geotechnical design - Part 1: General rules",
+   "edition": "EN 1997-1:2004 (read as BS EN 1997-1:2004, free scanned copy; a second-generation EN 1997 exists and was not read)",
+   "publisher": "CEN",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1997.1.2004.pdf"
+  },
+  {
+   "key": "en1990",
+   "title": "Eurocode: Basis of structural design",
+   "edition": "EN 1990:2002+A1:2005 (read as BS EN 1990:2002+A1:2005, free scanned copy; the text layer drops symbols and some numbers, so the tables and expressions were read on the page images; the second-generation EN 1990:2023 exists and was not read)",
+   "publisher": "CEN",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf"
+  },
+  {
+   "key": "en1998-1",
+   "title": "Eurocode 8: Design of structures for earthquake resistance - Part 1: General rules, seismic actions and rules for buildings",
+   "edition": "EN 1998-1:2004 (read as BS EN 1998-1:2004, free scanned copy; a second-generation EN 1998-1-1 exists and was not read)",
+   "publisher": "CEN",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1998.1.2004.pdf"
+  },
+  {
+   "key": "en14315-1",
+   "title": "Thermal insulating products for buildings - In-situ formed sprayed rigid polyurethane (PUR) and polyisocyanurate (PIR) foam products - Part 1: Specification for the rigid foam spray system before installation",
+   "edition": "EN 14315-1:2013 (read as the DIN EN 14315-1:2013-04 overview on din.de, which gives the scope, and its contents page; clauses not read)",
+   "publisher": "CEN / DIN",
+   "url": "https://www.din.de/en/wdc-beuth:din21:93775910"
+  },
+  {
+   "key": "andres-2004",
+   "title": "Zum Stabilitätsnachweis von Schalentragwerken aus Hochleistungsbeton (Dissertation, M. Andres)",
+   "edition": "2004, Bergische Universität Wuppertal; a thesis that describes the Dulácska & Kollár (1995) buckling procedure and the DIN 1045 (1988) / VGB BTR (1997) buckling safety factor. Not a standard",
+   "publisher": "Bergische Universität Wuppertal (open repository)",
+   "url": "https://elekpub.bib.uni-wuppertal.de/ubwhsmig/download/pdf/3556093"
+  }
+ ],
+ "values": {
+  "shell.thickness.min": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "EN 1992-1-1:2004 sets no minimum thickness for a shell. A full-text search of the scanned copy (https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf) finds the word 'shell' only twice: 5.3.1 (1)P (list of element types) and 5.8.2 (1)P (second order effects). EN 1992-2:2005 Annex LL (shell elements) gives no thickness either. In practice the thickness follows from cover on both faces plus the bar layers, and from buckling. EN 1992-1-1:2023 Annex G was seen in a contents page only. Round 2 (2026-11-21), nothing better read, value stays null: the prEN 1992-1-1:2021 preview (https://cdn.standards.iteh.ai/samples/73026/81e9d4c3ad734d95a74d49b94ee18392/oSIST-prEN-1992-1-1-2021.pdf, 15 pages) shows only contents ('Annex G (normative) Design of membrane-, shell- and slab elements', 'G.4 Design of shell- and slab elements in ULS'); the JRC 2025 second-generation EN 1992 workshop file did not download; searches for a minimum shell thickness in DIN 1045 (1988), DBV or fib texts found no readable page; the Andres (2004) shell buckling thesis states none. Only slab-type limits were seen in EN 1992-1-1:2004 (9.3.2 (1): a slab with shear reinforcement at least 200 mm deep), which is not a shell minimum."
+  },
+  "shell.cover.min": {
+   "value": 15,
+   "unit": "mm",
+   "standard": "en1992-1-1",
+   "clause": "4.4.1.2 (5), Table 4.4N (XC1, structural class S4)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "84 10 15 25 30 35 40 45",
+   "note": "cmin,dur, 2004 edition, recommended values (a national annex may change them). Scan prints 'S4' as '84'; columns X0, XC1, XC2/XC3, XC4, XD1/XS1, XD2/XS2, XD3/XS3. Table 4.3N, as read: 'Member with slab geometry (position of reinforcement not affected by construction process) reduce class by 1', which gives S3 = 10 mm for XC1 (row '83 10 10 20 25 30 35 40'). Expression (4.2): cmin = max {cmin,b; cmin,dur + ...; 10 mm}, so bond (bar diameter) can govern. Nominal cover = cmin + deviation allowance, 4.4.1.3 (1)P: 'The recommended value is 10 mm.' XC1 fits only a dry, permanently protected inside face; a face under foam and membrane still needs its own exposure class."
+  },
+  "footing.cover.min.earth": {
+   "value": 40,
+   "unit": "mm",
+   "standard": "en1992-1-1",
+   "clause": "4.4.1.3 (4)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "the nonlinal cover should be at least k1 nlm for concrete cast against prepared ground (including blinding) and k2 mm for concrete cast directly against soil. ... The recommended values are 40 mm and 75 mm.",
+   "note": "Nominal cover, 2004 edition. The value 40 mm is k1 (against prepared ground or blinding); k2 = 75 mm applies when the ring beam is cast directly against soil. Nationally determined. Quote keeps the scan's OCR errors ('nonlinal' = nominal, 'nlm' = mm); revision marks removed."
+  },
+  "shell.concrete.strength.min": {
+   "value": "C20/25",
+   "unit": "class",
+   "standard": "en1992-1-1",
+   "clause": "Annex E (informative), Table E.1N, XC1",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "XC1 XC2 XC3 XC4 XD1 XD2 XD3 XS1 XS2 XS3 ... C20/25 C25/30 C30/37 C30/37 C35/45 C30/37 C35/45 Indicative minimum strength class",
+   "note": "Indicative minimum class for durability in XC1 (dry or permanently wet), 2004 edition; informative annex and a nationally determined value. Same table: XC2 C25/30, XC3/XC4 C30/37, X0 C12/15, XF1 C30/37. Row quoted from a scanned table, column order as printed. No separate 'minimum class for structural concrete' was read. A sprayed shell is normally specified higher: see shotcrete.strength.min."
+  },
+  "shell.rebar.ratio.min": {
+   "value": 0.0013,
+   "unit": "ratio",
+   "standard": "en1992-1-1",
+   "clause": "9.2.1.1 (1), expression (9.1N); applied to slabs by 9.3.1.1 (1)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "but not less than O,0013b td (9.1 N)",
+   "note": "Formula: As,min = 0,26 (fctm / fyk) bt d, but not less than 0,0013 bt d (bt = mean width of the tension zone, d = effective depth, so the ratio is on b x d, not on the gross section). The first half of the expression is broken by OCR in the scan; the floor is legible. Recommended value for beams, nationally determined. 9.3.1.1 (1): 'For the minimum and the maximum steel percentages in the main direction 9.2,1,1 (1) and (3) apply.' The rule is written for slabs in bending; no shell-specific minimum was read. 9.3.1.1 (2): secondary reinforcement not less than 20 % of the principal in one way slabs. Walls, 9.6.2 (1): 0,002 Ac vertical."
+  },
+  "shell.rebar.spacing.max": {
+   "value": 400,
+   "unit": "mm",
+   "standard": "en1992-1-1",
+   "clause": "9.3.1.1 (3)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "- for the principal reinforcement, 3h 400 mm, where h is the total depth of the slab;",
+   "note": "Smax,slabs, recommended value, nationally determined, 2004 edition. The scan drops the 'less than or equal' sign between 3h and 400 mm. A thin shell is governed by the 3h part: at h = 100 mm the limit is 300 mm. See shell.rebar.spacing.rule for the other cases."
+  },
+  "shotcrete.strength.min": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "EN 14487-1:2022 clause 4.4 'Compressive strength' is listed in the contents page of DIN EN 14487-1:2023-03 but its text was not on any free page (previews stop after clause 3; the 2005 and 2021-draft iTeh previews and the Slovak 2022 preview were checked). Not a norm value, read today in the older EFNARC 'European Specification for Sprayed Concrete' (1996), 9.1: 'The strength grade of sprayed concrete shall be specified in accordance with concrete strength classes C24/30 to C48/60 as specified in EN 206', i.e. its lowest class is C24/30 (https://static1.squarespace.com/static/5e6b93d41858c8369bc361b9/t/5f71cc200a75e61a51e03cbe/1601293345222/EUROPEAN+CONCRETE+SPEC+-+ENGLISH.PDF). Round 2 (2026-11-21), nothing better read, value stays null: the I.S. EN 14487-1:2022 preview (https://i2.saiglobal.com/mpc2v/preview/1083279888308.pdf?sku=862898_SAIG_NSAI_NSAI_3207163, 11 pages) again stops at the contents ('4.4 Compressive strength', '4.5.2 Residual strength classes') but its introduction was read: 'This document has taken EN 206 as a basis. Some clauses which apply to sprayed concrete refer to EN 206 because of their importance.' So strength classes are EN 206 classes; no minimum class for structural sprayed concrete was read. German searches (DIN 18551, ÖBV Richtlinie Spritzbeton, supplier handbooks) gave no page quoting the clause 4.4 table. The EFNARC 1996 line above (C24/30 lowest) remains the only number read."
+  },
+  "steel.yield": {
+   "value": 500,
+   "unit": "MPa",
+   "standard": "bs4449",
+   "clause": "BS 4449 grades B500A, B500B, B500C (as described by The Concrete Centre)",
+   "read": "secondary",
+   "url": "https://concretecentre.com/Codes/European-standards-for-reinforcement.aspx",
+   "quote": "This standard defines three grades of reinforcement conforming to the now withdrawn BS EN 10080: B500A, B500B and B500C. The characteristic yield strength is set at 500 MPa",
+   "note": "B500 is a national product grade (here the UK's BS 4449), read on a trade association page. Same page: 'BS EN 10080:2005 gives no actual specification or figures; that is left to the National Standards.' Read primary in EN 1992-1-1:2004 3.2.2 (3)P: 'The application rules for design and detailing in this Eurocode are valid for a specified yield strength range, fyk = 400 to 600 MPa' (upper limit per national annex); Annex C Table C.1 repeats '400 to 600'. https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf"
+  },
+  "shell.rebar.spacing.rule": {
+   "value": "Slabs: principal bars at most 3h and 400 mm, secondary 3,5h and 450 mm; where loads concentrate or moment peaks, 2h and 250 mm (principal), 3h and 400 mm (secondary). h = total depth.",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "9.3.1.1 (3)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "(3) The spacing of bars should not exceed Smax,slabs. Note; The value of Smax,slabs for use in a Country may be found in its National Annex. The recommended value is: - for the principal reinforcement, 3h 400 mm, where h is the total depth of the slab; - for the secondary reinforcement, 3,5h 450 mm .",
+   "note": "2004 edition, recommended values, nationally determined. The comparison signs are lost or garbled in the scan. Continues: 'In areas with concentrated loads or areas of maximum moment those provisions become respectively: - for the principal reinforcement, 2h 250 mm - for the secondary reinforcement, 3h 400 mm.' Written for slabs (9.3 applies where spans are not less than 5h); no shell-specific spacing rule was read. Walls, 9.6.2 (3): 3 times the wall thickness or 400 mm, whichever is the lesser."
+  },
+  "shell.rebar.layers": {
+   "value": "No Eurocode rule read that requires two layers in a shell. Walls: when minimum vertical steel governs, half goes at each face. Sprayed work: encase the rear mesh layer before fixing the next one.",
+   "unit": "",
+   "standard": "en14487-2",
+   "clause": "EN 14487-2:2006 clause 6; EN 1992-1-1:2004 9.6.2 (2)",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/26244/b3b8958da46b4c39bdaf9e579d07041e/SIST-EN-14487-2-2007.pdf",
+   "quote": "where two or more layers of mesh reinforcement are incorporated, the rear layer should be encased in sprayed concrete prior to fixing the next front layer (not applicable to necessary overlaps within a layer) which shall be fixed at a distance of at least 2 times the maximum aggregate size from the preceding sprayed concrete layer.",
+   "note": "Same clause: bars are to be fixed so they stay in place and do not vibrate during spraying, and arranged 'to minimize the shadow effect and improve compaction'. EN 1992-1-1:2004 9.6.2 (2), walls (https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf): 'Where the minimum area of reinforcement, As,vmin, controls in design, half of this area should be located at each face.' EN 1992-2:2005 Annex LL models a cracked shell element as a sandwich whose two outer layers carry the membrane forces, which implies steel near both faces where the shell cracks, but it states no layer rule."
+  },
+  "shell.stability": {
+   "value": "Shells are named among members governed by second order effects: verify equilibrium and resistance in the deformed state, with cracking, non-linear materials and creep. Ignorable if under 10 %.",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "5.8.2 (1)P, (2)P, (6)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "(1)P This clause deals with members and structures in which the structural behaviour is significantly influenced by second order effects (e.g. columns, walls, piles, arches and shells).",
+   "note": "2004 edition. (2)P: 'Where second order effects are taken into account, see (6), equilibrium and resistance shall be verified in the deformed state. Deformations shall be calculated taking into account the relevant effects of cracking, non-linear material properties and creep.' (5)P: geometric imperfections as additional first order effects (5.2). (6): 'Second order effects may be ignored if they are less than 10 % of the corresponding first order effects. Simplified criteria are given for isolated members in 5.8.3.1 and for structures in 5.8.3.3.' Those simplified criteria are for columns and braced buildings; no dome or shell buckling formula, knock-down factor or safety factor was read in EN 1992. EN 1993-1-6 (steel shells) was not used."
+  },
+  "shell.analysis": {
+   "value": "Part 1-1:2004 only names shells as an element type. EN 1992-2 Annex LL (informative): 8 internal force components; uncracked = check principal compression, cracked = 3-layer sandwich model.",
+   "unit": "",
+   "standard": "en1992-2",
+   "clause": "EN 1992-2:2005 Annex LL (101) to (112), 6.109; EN 1992-1-1:2004 5.3.1 (1)P, 5.1.1 (3)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1992.2.2005.pdf",
+   "quote": "(104) In cracked elements a sandwich model should be used for design or verification of the shell element.",
+   "note": "Annex LL (101): 'This section applies to shell elements, in which there are generally eight components of internal forces' (3 plate, 3 slab, 2 transverse shear). (103): 'In uncracked elements the only verification required is to check that the minimum principal stress is smaller than the design compressive strength'. (112): 'The outer layers should be designed as membrane elements, using the design rules of 6.109 and Annex F.' 6.109 (101): membrane elements take 'internal forces evaluated by means of a linear finite element analysis'. EN 1992-1-1:2004 5.3.1 (1)P: elements 'are classified ... as beams, columns, slabs, walls, plates, arches, shells etc. Rules are provided for the analysis of the commoner of these elements'. The 2004 Part 1-1 has no clause 6.9. EN 1992-1-1:2023: contents page lists 'Annex G (normative) Design of membrane-, shell- and slab elements' (G.3 membrane ULS, G.4 shell and slab ULS); text not read."
+  },
+  "shell.tension.rebar": {
+   "value": "Annex F (informative): for in-plane stresses sEdx, sEdy, tEdxy, steel along x and y gives ftdx = rx fyd, ftdy = ry fyd. None needed where both are compressive and their product exceeds tEdxy squared.",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "Annex F, F.1 (1) to (4), expressions (F.1) to (F.7)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "Compressive stresses should be taken as positive, with O\"Edx > OEdy, and the direction of reinforcement should coincide with the x and y axes. The tensile strengths provided by reinforcement should be determined from: ftdx =Px fYd and ftdy =Pi fyd (F.1 )",
+   "note": "2004 edition, informative annex; 5.1.1 (3) points to it: 'For in-plane stress fields a simplified method for determining reinforcement may be used.' Quote is raw OCR (sigma, rho and tau are garbled; 'O\"Edx' = sigma Edx, 'Px' = rho x). (1): 'This annex does not include expressions for compression reinforcement.' (3): where both stresses are compressive and their product exceeds the shear stress squared 'design reinforcement is not required', but the maximum compressive stress should not exceed fcd. (4): otherwise reinforcement is required; the optimum-reinforcement expressions (F.2) to (F.7) were too garbled in the scan to copy and are NOT recorded. Note read: 'The minimum reinforcement is obtained if the directions of reinforcement are identical to the directions of the principal stresses.'"
+  },
+  "shotcrete.standard": {
+   "value": "EN 14487-1 (definitions, specifications, conformity; covers new structures, wet and dry mix, insulating materials as substrate), EN 14487-2 (execution), EN 14488 parts 1 to 7 (testing).",
+   "unit": "",
+   "standard": "en14487-1",
+   "clause": "EN 14487-1:2022 clause 1 Scope and clause 2 Normative references",
+   "read": "primary",
+   "url": "https://normy.normoff.gov.sk/norma/136776/nahlad",
+   "quote": "Tento dokument platí pre striekaný betón určený na sanáciu a spevnenie konštrukcii, na nové konštrukcie a na spevnenie horniny. ... Tento dokument platí pre striekaný betón používajúci mokrú zmes a pre striekaný betón zo suchej zmesi.",
+   "note": "Slovak preview of the current 2022 edition. Its substrate list includes 'rôzne druhy debnení' (different types of formwork) and 'izolačné materiály' (insulating materials). The same scope in English was read in the superseded EN 14487-1:2005 preview (https://cdn.standards.iteh.ai/samples/2660/dbbbdf862e0b45349f677e82f62098d6/SIST-EN-14487-1-2006.pdf): 'applicable to sprayed concrete, to be used for repair and upgrading of structures, for new structures and for strengthening of ground'. Normative references read: 'EN 14487-2 Sprayed concrete – Part 2: Execution', 'EN 14488-1 Testing sprayed concrete – Sampling fresh and hardened concrete', EN 14488-2 (young strength), -3 (flexural), -4 (bond), -5 (energy absorption), -7 (fibre content); EN 14487-2 cites EN 14488-6 (thickness). EN 14487-2:2006 scope: 'for free-standing structures', wet and dry process. The standard is built on EN 206."
+  },
+  "shotcrete.testing": {
+   "value": "EN 14487-1 clause 7: inspection categories (7.2), preconstruction testing (7.3), production control (7.4), conformity criteria (7.5). The project specification must state the inspection category.",
+   "unit": "",
+   "standard": "en14487-2",
+   "clause": "EN 14487-2:2006 4.1; EN 14487-1:2022 clause 7 (headings only)",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/26244/b3b8958da46b4c39bdaf9e579d07041e/SIST-EN-14487-2-2007.pdf",
+   "quote": "As a minimum the following shall be stated: type of project (bridge, house, road, railway, hydro power, etc.), purpose of concrete spraying ... inspection category according to EN 14487-1, ... NOTE 1 Quality plan for execution is normally required for inspection classes 2 and 3.",
+   "note": "The definitions of the inspection categories, the test list and the sampling frequencies (EN 14487-1 7.2 to 7.5, tables) were NOT read: free previews stop before them. Headings read in the DIN EN 14487-1:2023-03 contents page (https://www.din.de/de/mitwirken/normenausschuesse/nabau/veroeffentlichungen/wdc-beuth:din21:355702858/toc-3416648/download): '7.2 Inspection categories', '7.3 Preconstruction testing', '7.4.4 Control of sprayed concrete properties', '7.5 Conformity criteria'. EN 14487-2 contents: '10.2 Thickness', '11 Inspection'. Not a norm: EFNARC 1996 has three control classes (minor, normal, extended) with a guide table, e.g. compressive strength one test per 500 / 250 / 100 m2 and thickness per 50 / 25 / 10 m2."
+  },
+  "load.standard": {
+   "value": "Snow: EN 1991-1-3 (no dome clause read; 5.3.5 cylindrical roofs is the nearest). Wind: EN 1991-1-4, 7.2.8 'Vaulted roofs and domes', Figure 7.12 gives cpe,10 for domes with circular base.",
+   "unit": "",
+   "standard": "en1991-1-4",
+   "clause": "EN 1991-1-4 7.2.8 (1), Figure 7.12; EN 1991-1-3 5.3.5 (1)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1991.1.4.2005.pdf",
+   "quote": "(1) This section applies to circular cylindrical roofs and domes. NOTE The values of Cpe ,10 and C pe ,1 to be used for circular cylindrical roofs and domes may be given in the National Annex. The recornmended values of Cpe ,10 are given in Figures 7.11 and 7.12 for different zones. The reference height should be taken as Ze = h + f.",
+   "note": "Wind: EN 1991-1-4:2005+A1:2010; coefficients are nationally determined; figure values were not copied (graph). Snow: EN 1991-1-3:2003 (https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1991.1.3.2003.pdf) has no hit for the word 'dome'; 5.3.5 (1) 'Cylindrical roofs': shape coefficient mu3 = 0 where the roof slope exceeds 60 degrees, else mu3 = 0,2 + 10 h/b, 'The recommended upper value for mu3 is 2,0' (national annex may change it). Applying 5.3.5 to a dome is an assumption, not something the page says. Characteristic snow load and basic wind speed come from each country's national annex maps."
+  },
+  "foam.fire": {
+   "value": "Reaction to fire is classed by EN 13501-1: A1, A2, B, C, D, E, F plus smoke s1-s3 and droplets d0-d2. EN 13165 covers factory-made PU boards, not in situ foam, and sets no required level: rules do.",
+   "unit": "",
+   "standard": "en13165",
+   "clause": "EN 13165:2012+A1:2015 clause 1 Scope; EN 13501-1:2018 clause 1 and contents (8.1 to 8.5, 11.2 to 11.10)",
+   "read": "primary",
+   "url": "https://normy.normoff.gov.sk/norma/120964/nahlad",
+   "quote": "This standard does not specify the required level of a given property to be achieved by a product to demonstrate fitness for purpose in a particular application. The levels required for a given application are to be found in regulations or non-conflicting standards.",
+   "note": "Same scope: 'factory made rigid polyurethane foam (PU) products ... PU includes both PIR and PUR products. The products are manufactured in the form of boards' and 'This standard does not cover in situ insulation products'. So foam sprayed on site inside the form is outside EN 13165; the standard for in situ sprayed PU was not read. EN 13501-1:2018 scope (https://normy.normoff.gov.sk/norma/128447/nahlad): 'provides the reaction to fire classification procedure for all construction products'; 'Products are considered in relation to their end use application.' Class names read from its contents page only ('Class E, F', 'Classes D, C, B', 'Classes A2, A1', 's1, s2, s3 for smoke production', 'd0, d1, d2 for flaming droplets/particles'); class criteria not read. No class for PU foam, and no national requirement, was read."
+  },
+  "footing.frost": {
+   "value": "Foundation depth must consider the depth above which frost damage may occur. No damage if soil is not frost-susceptible, the base is below frost-free depth, or insulation removes frost. No depth set.",
+   "unit": "",
+   "standard": "en1997-1",
+   "clause": "6.4 (1)P, (2), (3)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1997.1.2004.pdf",
+   "quote": "(2) Frost damage will not occur if: the soil is not frost-susceptible; the foundation level is beneath frost-free depth; frost is eliminated by insulation. (3) EN-ISO 13793 may be applied for frost protecting measures for building foundations.",
+   "note": "EN 1997-1:2004. (1)P: 'When choosing the depth of a spread foundation the following shall be considered: ... the depth above which frost damage may occur'. The Eurocode gives no frost depth in mm: it is set nationally (national annex, building regulations or local practice), which was not read for any country. Heading read: '6.4 Design and construction considerations' (section 6, spread foundations). EN ISO 13793 (frost-protected shallow foundations) was not read."
+  },
+  "load.factor.dead.alone": {
+   "value": 1.35,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "Annex A1, Table A1.2(B), NOTE 2 (expression 6.10)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "γG,j,sup = 1,35 γG,j,inf = 1,00 γQ,1 = 1,50 where unfavourable (0 where favourable) γQ,i = 1,50 where unfavourable (0 where favourable) ξ = 0,85 (so that ξγG,j,sup = 0,85 × 1,35 ≅ 1,15).",
+   "note": "EN 1990:2002+A1:2005, Table A1.2(B), NOTE 2: recommended values, a Nationally Determined Parameter ('The γ and ξ values may be set by the National annex'). Quote read on the page image (printed page 55); the scan's text layer drops 1,35 and 1,00. NOTE 1: the choice between 6.10 and 6.10a/6.10b is national. A1.3.1 (4): STR design not involving geotechnical actions uses Table A1.2(B). EN 1990 has no separate dead-load-only factor: with expression 6.10 a combination of permanent actions alone carries the same γG,j,sup = 1,35, so the same value is recorded. (Expression 6.10a, where a country allows it, is the permanent-dominated case; the note says the national annex may modify 6.10a to include permanent actions only.)"
+  },
+  "load.factor.dead": {
+   "value": 1.35,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "Annex A1, Table A1.2(B), NOTE 2: γG,j,sup",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "γG,j,sup = 1,35 γG,j,inf = 1,00 γQ,1 = 1,50 where unfavourable (0 where favourable) γQ,i = 1,50 where unfavourable (0 where favourable) ξ = 0,85 (so that ξγG,j,sup = 0,85 × 1,35 ≅ 1,15).",
+   "note": "EN 1990:2002+A1:2005, Table A1.2(B), NOTE 2: recommended values, a Nationally Determined Parameter ('The γ and ξ values may be set by the National annex'). Quote read on the page image (printed page 55); the scan's text layer drops 1,35 and 1,00. NOTE 1: the choice between 6.10 and 6.10a/6.10b is national. A1.3.1 (4): STR design not involving geotechnical actions uses Table A1.2(B). Unfavourable permanent actions. NOTE 3: all permanent actions from one source (e.g. self weight of the structure) take γG,sup if the total effect is unfavourable and γG,inf if favourable."
+  },
+  "load.factor.dead.min": {
+   "value": 1,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "Annex A1, Table A1.2(B), NOTE 2: γG,j,inf",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "γG,j,sup = 1,35 γG,j,inf = 1,00 γQ,1 = 1,50 where unfavourable (0 where favourable) γQ,i = 1,50 where unfavourable (0 where favourable) ξ = 0,85 (so that ξγG,j,sup = 0,85 × 1,35 ≅ 1,15).",
+   "note": "EN 1990:2002+A1:2005, Table A1.2(B), NOTE 2: recommended values, a Nationally Determined Parameter ('The γ and ξ values may be set by the National annex'). Quote read on the page image (printed page 55); the scan's text layer drops 1,35 and 1,00. NOTE 1: the choice between 6.10 and 6.10a/6.10b is national. A1.3.1 (4): STR design not involving geotechnical actions uses Table A1.2(B). Favourable permanent actions (STR, Set B). Static equilibrium (EQU) uses Table A1.2(A), whose values were not recorded here."
+  },
+  "load.factor.snow": {
+   "value": 1.5,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "Annex A1, Table A1.2(B), NOTE 2: γQ,1 (leading variable action)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "γG,j,sup = 1,35 γG,j,inf = 1,00 γQ,1 = 1,50 where unfavourable (0 where favourable) γQ,i = 1,50 where unfavourable (0 where favourable) ξ = 0,85 (so that ξγG,j,sup = 0,85 × 1,35 ≅ 1,15).",
+   "note": "EN 1990:2002+A1:2005, Table A1.2(B), NOTE 2: recommended values, a Nationally Determined Parameter ('The γ and ξ values may be set by the National annex'). Quote read on the page image (printed page 55); the scan's text layer drops 1,35 and 1,00. NOTE 1: the choice between 6.10 and 6.10a/6.10b is national. A1.3.1 (4): STR design not involving geotechnical actions uses Table A1.2(B). Snow as the leading variable action; 0 where favourable."
+  },
+  "load.factor.snow.accompanying": {
+   "value": 0.75,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "Annex A1, Table A1.2(B) (γQ,i ψ0,i Qk,i) with Table A1.1 (ψ0 for snow)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "Remainder of CEN Member States, for sites located at altitude H ≤ 1000 m a.s.l. 0,50 0,20 0",
+   "note": "The value is our product γQ,i × ψ0 = 1,50 × 0,50 = 0,75 for the table row quoted (CEN states other than Finland, Iceland, Norway, Sweden, sites at or below 1000 m). For Finland, Iceland, Norway, Sweden, and for other states above 1000 m, ψ0 = 0,70, giving 1,50 × 0,70 = 1,05. Both factors are recommended values (national annex may change them). Table A1.1, read on the page image (printed page 52): Snow loads on buildings: 'Finland, Iceland, Norway, Sweden 0,70 0,50 0,20'; 'Remainder of CEN Member States, for sites located at altitude H > 1000 m a.s.l. 0,70 0,50 0,20'; '... at altitude H ≤ 1000 m a.s.l. 0,50 0,20 0' (columns ψ0, ψ1, ψ2). 'Wind loads on buildings (see EN 1991-1-4) 0,6 0,2 0'. 'NOTE The ψ values may be set by the National annex.'"
+  },
+  "load.factor.wind": {
+   "value": 1.5,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "Annex A1, Table A1.2(B), NOTE 2: γQ,1; Table A1.1 for ψ",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "γG,j,sup = 1,35 γG,j,inf = 1,00 γQ,1 = 1,50 where unfavourable (0 where favourable) γQ,i = 1,50 where unfavourable (0 where favourable) ξ = 0,85 (so that ξγG,j,sup = 0,85 × 1,35 ≅ 1,15).",
+   "note": "EN 1990:2002+A1:2005, Table A1.2(B), NOTE 2: recommended values, a Nationally Determined Parameter ('The γ and ξ values may be set by the National annex'). Quote read on the page image (printed page 55); the scan's text layer drops 1,35 and 1,00. NOTE 1: the choice between 6.10 and 6.10a/6.10b is national. A1.3.1 (4): STR design not involving geotechnical actions uses Table A1.2(B). Wind as the leading variable action. As an accompanying action wind takes ψ0 = 0,6 (ψ1 = 0,2, ψ2 = 0), i.e. 1,50 × 0,6 = 0,90 (our product). Table A1.1, read on the page image (printed page 52): Snow loads on buildings: 'Finland, Iceland, Norway, Sweden 0,70 0,50 0,20'; 'Remainder of CEN Member States, for sites located at altitude H > 1000 m a.s.l. 0,70 0,50 0,20'; '... at altitude H ≤ 1000 m a.s.l. 0,50 0,20 0' (columns ψ0, ψ1, ψ2). 'Wind loads on buildings (see EN 1991-1-4) 0,6 0,2 0'. 'NOTE The ψ values may be set by the National annex.'"
+  },
+  "load.factor.seismic": {
+   "value": 1,
+   "unit": "factor",
+   "standard": "en1990",
+   "clause": "6.4.3.4 (2) expression (6.12b); A1.3.2 (1)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "(1) The partial factors for actions for the ultimate limit states in the accidental and seismic design situations (expressions 6.11a to 6.12b) should be 1,0. ψ values are given in Table A1.1.",
+   "note": "Expression (6.12b), read on the page image: Σ(j≥1) Gk,j \"+\" P \"+\" AEd \"+\" Σ(i≥1) ψ2,i Qk,i. So the design seismic action AEd and the permanent actions enter with factor 1,0 and variable actions with ψ2. ψ2 for snow, Table A1.1 (recommended, national annex may change): 0,20 for Finland, Iceland, Norway, Sweden and for other CEN states above 1000 m; 0 for other CEN states at or below 1000 m. ψ2 for wind is 0. 'NOTE For the seismic design situation see also EN 1998.' How AEd itself is built (importance factor, behaviour factor) is in EN 1998 and was not recorded here."
+  },
+  "load.combinations": {
+   "value": "Σ γG,j Gk,j \"+\" γP P \"+\" γQ,1 Qk,1 \"+\" Σ γQ,i ψ0,i Qk,i (6.10): factored permanent + prestress + leading variable + accompanying variables reduced by ψ0.",
+   "unit": "",
+   "standard": "en1990",
+   "clause": "6.4.3.2 (3), expression (6.10)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1990.2002.pdf",
+   "quote": "(3) The combination of actions in brackets { }, in (6.9b) may either be expressed as : Σ(j≥1) γG,j Gk,j \"+\" γP P \"+\" γQ,1 Qk,1 \"+\" Σ(i>1) γQ,i ψ0,i Qk,i (6.10) or, alternatively for STR and GEO limit states, the less favourable of the two following expressions:",
+   "note": "EN 1990:2002+A1:2005. Read on the page image (printed page 47); the sums run over j ≥ 1 and i > 1, written inline here. '\"+\" implies \"to be combined with\"', 'Σ implies \"the combined effect of\"'. The alternative pair is (6.10a)/(6.10b) with the reduction factor ξ; which is used is a national choice (Table A1.2(B) NOTE 1). Seismic: (6.12b) Σ Gk,j \"+\" P \"+\" AEd \"+\" Σ ψ2,i Qk,i. For a dome: 1,35 G + 1,5 snow + 1,5 × 0,6 wind, and 1,35 G + 1,5 wind + 1,5 ψ0 snow, with 1,0 G where self weight is favourable (recommended values)."
+  },
+  "strength.reduction": {
+   "value": "Partial factors, persistent and transient: γc = 1,5 (concrete), γs = 1,15 (reinforcing steel); accidental 1,2 and 1,0. fcd = αcc fck / γc with αcc = 1 recommended (allowed range 0,8 to 1,0).",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "2.4.2.4 (1), Table 2.1N; 3.1.6 (1)P, expression (3.15)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "Table 2.1 N: Partial factors for materials for ultimate limit states Design situations Yc for concrete Ys for reinforcing steel Ys for prestressing steel Persistent & Transient 1,5 1,15 1,15 Accidental 1,2 1,0 1,0",
+   "note": "EN 1992-1-1:2004, recommended values, Nationally Determined Parameters ('The values of γc and γs for use in a Country may be found in its National Annex'); 'not valid for fire design'. Scan prints γ as 'Y'. 3.1.6 (1)P as read: 'fed = acc fck / Yc (3.15)' (= fcd = αcc fck / γc) and 'Note: The value of a cc for use in a Country should lie between 0,8 and 1,0 and may be found in its National Annex. The recommended value is 1.' Some countries choose 0,85. Eurocode has no single strength reduction factor of the ACI kind: resistance is reduced material by material."
+  },
+  "concrete.modulus": {
+   "value": "Table 3.1: Ecm = 22 [(fcm)/10]^0,3 in GPa with fcm in MPa and fcm = fck + 8 MPa (secant modulus, quartzite aggregate). Tabulated: C20/25 Ecm = 30 GPa, C30/37 Ecm = 33 GPa.",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "3.1.3 (2), Table 3.1",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "(2) The modulus of elasticity of a concrete is controlled by the moduli of elasticity of its components. Approximate values for the modulus of elasticity Eem , secant value between O\"c = 0 and O,4fem, for concretes with quartzite aggregates, are given in Table 3.1.",
+   "note": "EN 1992-1-1:2004. Quote is raw OCR ('Eem' = Ecm, 'O\"c' = σc, 'fem' = fcm). Table 3.1 rows as read: 'fek (MPa) 12 16 20 25 30 35 40 45 50 55 60 70 80 90', 'fek,eube 15 20 25 30 37 45 50 55 60 67 75 85 95 105', 'Ecm 27 29 30 31 33 34 35 36 37 38 39 41 42 44' with the relation column 'Ecm 22[(fcrn }/10]0,3 (fem in MPa)' and 'fern = fck+8(MPa)'. So C12/15 27, C16/20 29, C20/25 30, C25/30 31, C30/37 33 GPa. Same clause: 'For limestone and sandstone aggregates the value should be reduced by 10% and 30% respectively. For basalt aggregates the value should be increased by 20%.' A sprayed mix (small aggregate, accelerator) may differ: nothing was read on that. Creep lowers the effective modulus for buckling under sustained load (5.8.2 (2)P)."
+  },
+  "wind.dome": {
+   "value": "EN 1991-1-4 7.2.8 covers circular cylindrical roofs and domes. Figure 7.12: recommended cpe,10 at A (windward edge), B (crown), C (leeward edge) against f/d and h/d; reference height ze = h + f.",
+   "unit": "",
+   "standard": "en1991-1-4",
+   "clause": "7.2.8 (1), Figure 7.12",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1991.1.4.2005.pdf",
+   "quote": "Cpe ,10 is constant along arcs of circles, intersections of the sphere and of planes perpendicular to the wind; it can be determined as a first approximation by linear interpolation between the values in A, Band C along the arcs of circles parallel to the wind.",
+   "note": "EN 1991-1-4:2005+A1:2010; the coefficients are Nationally Determined ('may be given in the National Annex. The recommended values of Cpe,10 are given in Figures 7.11 and 7.12'). Figure 7.12 is a graph (printed page 51, read on the page image): d = base diameter, f = rise of the dome, h = height of the base above ground; curves A(h/d=0), A(h/d=0,25), A(h/d≥1), B(h/d=0), B(h/d≥0,5), C(h/d=0), C(h/d≥0,5); axis f/d from 0 to 0,5, cpe,10 from +0,8 to -1,6. Read off the graph by eye at f/d = 0,5 (hemisphere), approximate, NOT printed numbers: A = +0,8 for every h/d; B about -1,2 (h/d=0) and about -1,3 (h/d≥0,5); C = 0 (h/d=0) and about -0,5 (h/d≥0,5). Caption text: 'the values of cpe,10 in A if 0 < h/d < 1 and in B or C if 0 < h/d < 0,5 can be obtained by linear interpolation'. The curves must be digitised from the figure before use in code; no table of values was read. cpe,1 (local) is not given in the figure. 7.2.9 (1)P: internal and external pressures act together."
+  },
+  "snow.dome": {
+   "value": "EN 1991-1-3 has no dome clause (as far as read). Nearest, 5.3.5 cylindrical roofs: μ3 = 0 where β > 60°, else μ3 = 0,2 + 10 h/b, upper value 2,0 recommended; undrifted and drifted cases in Figure 5.6.",
+   "unit": "",
+   "standard": "en1991-1-3",
+   "clause": "5.3.5 (1) to (3), expressions (5.4), (5.5), Figures 5.5 and 5.6",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1991.1.3.2003.pdf",
+   "quote": "(1) The snow load shape coefficients that should be used for cylindrical roofs, in absence of snow fences, are given in the following expressions (see also Figure 5.6). For j3 > 60°, Jl3 = 0 (5.4) For j3 50 60°, Jl3 = 0,2 + 10 hlb (5.5) An upper value of Jl3 should be specified .",
+   "note": "EN 1991-1-3:2003. Quote is raw OCR: 'j3' = β (roof slope angle), 'Jl3' = μ3, '50' = ≤, 'hlb' = h/b (rise over span). 'NOTE 1: The upper value of μ3 may be specified in the National Annex. The recommended upper value for μ3 is 2,0 (see Figure 5.5).' (2): 'The undrifted load arrangement which should be used is shown in Figure 5.6, case (i).' (3): 'The drifted load arrangement which should be used is shown in Figure 5.6, case (ii), unless specified for local conditions.' The word 'dome' has no hit in the scan's text and 'spher' none; 'curved roof' appears only for sliding snow and obstructions. Using 5.3.5 on a dome section is an engineering assumption, not something the page says. ISO 4355:2013 (snow loads on roofs) was NOT read: the free preview refused automated reading; whether it has a dome case is unknown here. No national annex was read."
+  },
+  "seismic.method": {
+   "value": "Lateral force method, 4.3.3.2: base shear Fb = Sd(T1) · m · λ per horizontal direction; λ = 0,85 if T1 ≤ 2 TC and over two storeys, else 1,0. For buildings regular in elevation; no shell rule read.",
+   "unit": "",
+   "standard": "en1998-1",
+   "clause": "4.3.3.2.1 (1)P, (2); 4.3.3.2.2 (1)P, expression (4.5); Table 4.1",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2015id_/https://law.resource.org/pub/eur/ibr/en.1998.1.2004.pdf",
+   "quote": "(1)P This type of analysis may be applied to buildings whose response is not significantly affected by contributions from modes of vibration higher than the fundamental mode in each principal direction.",
+   "note": "EN 1998-1:2004; quote cleaned of OCR noise ('J110de' = mode). Expression (4.5) read on the page image (printed page 57): 'Fb = Sd(T1) · m · λ', with 'Sd(T1) is the ordinate of the design spectrum (see 3.2.2.5) at period T1', 'm is the total mass of the building, above the foundation or above the top of a rigid basement', 'λ = 0,85 if T1 ≤ 2 TC and the building has more than two storeys, or λ = 1,0 otherwise'. 4.3.3.2.1 (2): deemed satisfied when T1 is below the limit of expression (4.4) (not legible in the scan, not recorded) and the building meets the regularity in elevation criteria of 4.2.3.3. (4.6): T1 = Ct · H^(3/4), Ct = 0,050 for 'all other structures', for buildings up to 40 m. The words 'shell' and 'dome' have no hit in the scan's text layer: no page read says shells are inside or outside these rules. Section 4 is 'relevant specifically to buildings' (1.1.2 (4)). A single-storey dome takes λ = 1,0 by the wording. Combination with other actions: EN 1990 (6.12b)."
+  },
+  "shell.buckling.guidance": {
+   "value": "No Eurocode formula. Dulácska & Kollár method: λcrit = λlin,crit · ρimp · ρcreep · ρcrack · ρpl, check λcrit / γ ≥ 1. Old DIN 1045 (1988) and VGB BTR (1997): buckling safety factor γb = 5,0.",
+   "unit": "",
+   "standard": "andres-2004",
+   "clause": "Andres (2004) section 2.2, expressions (2.2), (2.3); section 9.1, expression (9.1)",
+   "read": "secondary",
+   "url": "https://elekpub.bib.uni-wuppertal.de/ubwhsmig/download/pdf/3556093",
+   "quote": "Das Grundkonzept der Methode besteht darin, zunächst die Beullast nach linearer Theorie unter Annahme von linear elastischem Material zu bestimmen und sie mittels Faktoren für Vorverformungen, Kriecheinfluss, Rissbildung und Plastizieren des Betons abzumindern: λcrit = λlin,crit · ρimp · ρcreep · ρcrack · ρpl . (2.2)",
+   "note": "Source: M. Andres, dissertation, Wuppertal 2004 (PDF pages 26 and 176), describing 'das Verfahren nach Dulácska & Kollár (1995)' (Thin-Walled Structures 23, 1995, paywalled: NOT read). Symbols: λlin,crit = buckling load factor from linear theory with linear elastic material; ρimp, ρcreep, ρcrack, ρpl = reduction factors for initial deformations (imperfections), creep, cracking, plastification of the concrete. (2.3): 'Der Nachweis ausreichender Beulsicherheit ist schließlich erbracht, wenn gilt: λcrit / γ ≥ 1'; γ 'ist abhängig vom Verhältnis der plastischen Versagenslast zu der linearen Beullast'. The VALUES of the ρ factors and of γ were not read anywhere (they come from diagrams in the 1995 paper); the thesis calls the method very conservative and its charts valid for some special cases only. Ligatures lost in the PDF text were restored in the quote. DIN: 'Dieser Beulsicherheitsfaktor ist in der DIN 1045 (1988) und der BTR (1997) zu γb = 5.0 angegeben', assuming cracking and geometric deviations are in the model; after Krätzig (1977), (9.1): γb = 1.40 · 1.15 · 2.00 · 1.30 · 1.20 = 5.02 (load level, calculation assumptions, cracking, test inaccuracy, material flaws). 'Die bisherige Regelung der DIN 1045 (1988) wurde ... nicht übernommen' into DIN 1045-1 (2001); Zerna et al. (1980) thought 2.1 enough for cooling towers. BTR is a cooling tower guideline. Classical sphere formula, read in Mekjavić, Tehnički vjesnik 18, 4 (2011) (https://hrcak.srce.hr/file/111993): qcr = 2 E h² / (r² √(3(1-ν²))) (1), E modulus, h thickness, r radius, ν Poisson's ratio; 'Experimental results have repeatedly shown critical stresses of as low as 10 percent of the classical'; empirical (3), from Timoshenko & Gere: qcr = (1 - 0,175 (α° - 20°)/20°)(1 - 0,07 (r/h)/400)(0,3 E)(h/r)², for 400 ≤ r/h ≤ 2000 and 20° ≤ α ≤ 60°. The IASS Recommendations (1979) text itself was NOT read (no free copy; a course copy of a Dulácska & Kollár IASS paper needs a login); search abstracts only say they rest on Kollár and Dulácska's factor method. EN 1992-1-1:2004 5.8 gives no shell formula (see shell.stability). A TU Delft MSc thesis (Zhao, https://repository.tudelft.nl/file/File_bcde35ca-6daf-4b65-a695-5a7530732459) says of knockdown factors on linear buckling loads: 'Often, 1/6 is used, which is based on the lower bound of many aluminum cylinder experiments', not concrete domes."
+  },
+  "shell.edge.members": {
+   "value": "No ring beam or shell edge member rule read in EN 1992-1-1:2004. Nearest: 9.10 tying systems for buildings: continuous peripheral tie within 1,2 m of the edge, Ftie,per = li · q1 ≥ Q2 (10 kN/m, 70 kN)",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "9.10.1 (1)P, (2); 9.10.2.2 (1), (2), expression (9.15)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "(1) At each floor and roof level an effectively continuous peripheral tie within 1,2 m from the edge should be provided. The tie may include reinforcement used as part of the internal tie. (2) The peripheral tie should be capable of resisting a tensile force:",
+   "note": "EN 1992-1-1:2004 incl. corrigendum. A search of the scan for 'ring beam', 'edge beam' and 'edge member' finds nothing. (9.15) read on the page image (printed page 169): 'Ftie,per = li · q1 ≥ Q2', 'li length of the end-span'; 'The recommended value of q1 is 10 kN/m and of Q2 is 70 kN' (Nationally Determined). 9.10.1 (1)P: 'Structures which are not designed to withstand accidental actions shall have a suitable tying system, to prevent progressive collapse'; 9.10.2.1 (1): 'Ties are intended as a minimum and not as an additional reinforcement to that required by structural analysis.' These are robustness rules for framed and panel buildings, not a design rule for the hoop tension at a dome base: that tension comes from the shell analysis, and its steel from Annex F (see shell.tension.rebar) and anchorage and lap rules of Section 8 (not recorded). EN 1992-2 Annex LL has no edge member rule either."
+  },
+  "shell.openings": {
+   "value": "No shell opening rule read in EN 1992-1-1:2004. Nearest: 9.3.1.4 free slab edges need longitudinal and transverse edge steel; 9.9 D-regions by strut-and-tie (6.5), ties fully anchored; walls 9.6.1.",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "9.3.1.4 (1), (2), Figure 9.8; 9.9 (1), (2)P; 9.6.1 (1); 10.9.3",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "(1) Along a free (unsupported) edge, a slab should normally contain longitudinal and transverse reinforcement, generally arranged as shown in Figure 9.8. (2) The normal reinforcement provided for a slab may act as edge reinforcement.",
+   "note": "EN 1992-1-1:2004. 9.9: '(1) D-regions should normally be designed with strut-and-tie models according to section 6.5 and detailed according to the rules given in Section 8. Note: Further information is given in Annex J. (2)P The reinforcement, corresponding to the ties, shall be fully anchored by an anchorage of lbd according to 8.4.' 5.6.4 (1): discontinuity regions 'in general ... extend up to a distance h (section depth of member) from the discontinuity'. 9.6.1 (1), walls: 'The amount and proper detailing of reinforcement may be derived from a strut-and-tie model (see 6.5).' 10.9.3 (precast floor diaphragms): 'stress concentrations at openings and connections should be taken into account in the detailing of reinforcement'. 6.4.2 (3) treats openings near punching perimeters only. Figure 9.8 (edge bar arrangement) was not transcribed. No rule was read for trimmer bars, replacement of cut steel or a thickened rim round a door in a shell: that is engineering practice, not Eurocode text as far as read."
+  },
+  "thermal.barrier.dome": {
+   "value": "In-situ sprayed rigid PUR/PIR foam on walls, ceilings, roofs and floors is specified by EN 14315-1 (system before installation). It sets no required level: the reaction-to-fire class is national.",
+   "unit": "",
+   "standard": "en14315-1",
+   "clause": "EN 14315-1:2013 clause 1 Scope (as given in the DIN overview); contents: Annex G, Annex H",
+   "read": "primary",
+   "url": "https://www.din.de/en/wdc-beuth:din21:93775910",
+   "quote": "This European Standard specifies requirements for in-situ formed sprayed rigid polyurethane (PUR) and rigid polyisocyanurate (PIR) foam products when applied to walls, ceilings, roofs, suspended ceilings and floors. This European Standard is a specification for the rigid foam spray system before installation.",
+   "note": "Read on the DIN page for DIN EN 14315-1:2013-04 (publisher's overview, which reproduces the scope; relayed by the page reader in segments, so check wording against the standard before quoting it publicly). Same overview: 'This European Standard does not specify the required levels of the properties to be achieved by a product to demonstrate fitness for purpose in a particular end-use application. The required levels are to be found in regulations or non-conflicting standards.' and it 'does not cover factory made rigid polyurethane (PUR) or polyisocyanurate (PIR) foam insulation products' (those are EN 13165, see foam.fire). Contents page read (https://www.din.de/de/mitwirken/normenausschuesse/nabau/veroeffentlichungen/wdc-beuth:din21:93775910/toc-1988940/download): 'Annex G (normative) Testing for reaction to fire products', 'Annex H (normative) Testing for reaction to fire products in standardised assemblies simulating end-use application(s)'. Part 2 (EN 14315-2, installed products) was seen in a catalogue title only. The class itself is declared to EN 13501-1. No Eurocode or EN text read requires a thermal barrier (covering) over foam: whether exposed foam inside or outside a dome is allowed, and with which class, is national building regulation, not read for any country."
+  }
+ },
+ "notes": "Round 1 (2026-11-20) + round 2 (2026-11-21): 35 rules, 31 primary, 2 secondary, 2 not found. Weak spots. (1) Editions: everything is first-generation (EN 1990:2002+A1, EN 1991, EN 1992-1-1:2004, EN 1997, EN 1998-1:2004) from free scans with OCR noise; several values (Table A1.2(B), (6.10), (6.12b), (4.5), (9.15)) were read on page images because the text layer drops them. Second-generation texts (EN 1990:2023, EN 1992-1-1:2023 Annex G) were seen as contents only. (2) National parameters: all load factors, psi values, gamma_c, gamma_s, alpha_cc, cover, As,min, spacing, tie forces, wind coefficients and the snow upper value are 'recommended' values; national annexes, frost depth and fire classes were not read. (3) No shell rules in the Eurocodes: no minimum shell thickness, no shell minimum steel, no dome buckling formula, no ring beam or opening rule (building tying, slab edge and D-region rules recorded instead). (4) Buckling is from a 2004 thesis quoting Dulacska & Kollar and old DIN 1045 (factor 5,0) plus a 2011 paper for the classical formula: the reduction factor VALUES and the IASS 1979 text were not read. (5) Wind: Figure 7.12 is a graph; the few coefficients noted were read by eye and are approximate. (6) Snow: no dome clause; 5.3.5 is for cylindrical roofs; ISO 4355 not read. (7) Seismic: lateral force method is written for regular buildings; nothing read on shells. (8) Sprayed concrete: EN 14487-1 clauses 4 to 7 stay behind the paywall; EFNARC 1996 (C24/30 lowest) is in notes only. (9) B500 is from a UK trade page. (10) EN 14315-1 scope is from the DIN overview page; EN 13165 excludes in situ foam. (11) load.factor.snow.accompanying and the wind 0,90 are our products of two read numbers."
+}

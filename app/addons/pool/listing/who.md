@@ -1,0 +1,4 @@
+- A pool builder or landscape designer who needs a first layout, a model and quantities for a quote.
+- An architect placing a pool or a fountain in a building or a garden model and handing an IFC file to the team.
+- An engineer who wants the geometry and the take-off done before starting the real structural and hydraulic design.
+- A student learning how a pool, its circulation and its machine room fit together.

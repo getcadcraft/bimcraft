@@ -205,6 +205,7 @@
   "draw.done.bim": "Inseriti {n} apparecchi nel modello e {lux} tratti di numeri lux nella vista in pianta.",
   "lum.pole": "Apparecchio generico su palo",
   "lum.bollard": "Dissuasore generico",
+  "map.isolines": "Linee di pari lux (isolinee)",
   "f.outdoor": "All'aperto: illuminazione di aree esterne (nessun soffitto né muro; luce diretta sul terreno)",
   "f.cct": "Temperatura di colore",
   "f.groundrho": "Riflettanza del terreno",

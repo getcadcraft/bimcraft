@@ -205,6 +205,7 @@
   "draw.done.bim": "Postavljeno {n} svetiljki u modelu i {lux} oznaka vrednosti luksa u planu.",
   "lum.pole": "Opšta svetiljka na stubu",
   "lum.bollard": "Opšti stubić za osvetljenje",
+  "map.isolines": "Linije jednake osvetljenosti (izolinije)",
   "f.outdoor": "Spolja: osvetljenje lokacije (nema plafona ni zidova; direktna svetlost na tlu)",
   "f.cct": "Temperatura boje",
   "f.groundrho": "Refleksija tla",

@@ -205,6 +205,7 @@
   "draw.done.bim": "Placerede {n} lysarmaturer i modellen og {lux} streger med lux-tal i planvisningen.",
   "lum.pole": "Generisk stolpearmatur",
   "lum.bollard": "Generisk pullert",
+  "map.isolines": "Linjer med lige lux (isolinjer)",
   "f.outdoor": "Udendørs: belysning af terræn (intet loft eller vægge; direkte lys på jorden)",
   "f.cct": "Farvetemperatur",
   "f.groundrho": "Jordens refleksion",

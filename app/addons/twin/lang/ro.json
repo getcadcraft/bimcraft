@@ -11,6 +11,7 @@
   "bt.file.open": "Deschidere fișier de aranjament",
   "bt.file.save": "Salvare aranjament ca fișier",
   "bt.file.bad": "{name} nu este un aranjament Flux de materiale.",
+  "bt.file.ask": "Înlocuiți aranjarea curentă cu acest fișier?",
   "bt.file.done": "{name}: {n} elemente încărcate, {dropped} lăsate deoparte.",
   "bt.fit.run": "Verificare față de pereți",
   "bt.fit.nolayout": "Nu există încă un aranjament de verificat. Folosiți o celulă sau deschideți un fișier de aranjament.",

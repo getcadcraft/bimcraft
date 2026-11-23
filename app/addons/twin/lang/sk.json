@@ -11,6 +11,7 @@
   "bt.file.open": "Otvoriť súbor rozloženia",
   "bt.file.save": "Uložiť rozloženie ako súbor",
   "bt.file.bad": "{name} nie je rozloženie z Material flow.",
+  "bt.file.ask": "Nahradiť aktuálne rozloženie týmto súborom?",
   "bt.file.done": "{name}: načítané položky: {n}, vynechané: {dropped}.",
   "bt.fit.run": "Skontrolovať voči stenám",
   "bt.fit.nolayout": "Rozloženie na kontrolu zatiaľ nie je. Použite bunku alebo otvorte súbor rozloženia.",

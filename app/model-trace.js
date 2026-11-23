@@ -32,12 +32,12 @@ import { round } from './model-write.js';
 import { t as tr } from './i18n.js';
 import { markRecognised, markNewRooms, spaceIds } from './verify-model.js';   // 0.10 BK.64 (bk-r3-checks-10): what a program recognised is unverified until a person checks it
 import { storeyLoops } from './model-slabs.js';
+import { dist2 as len } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const UNDERLAY_PSET = 'CadCraft_Underlay';
 const INS_MM = { 1: 25.4, 2: 304.8, 4: 1, 5: 10, 6: 1000, 10: 914.4 };
 export const MAX_UNDERLAY_POINTS = 150000;
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
-const len = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 
 export function drawingParts(model, { unitMm = 0 } = {}) {
   const um = unitMm > 0 ? unitMm : INS_MM[model.header?.INSUNITS] || 1;

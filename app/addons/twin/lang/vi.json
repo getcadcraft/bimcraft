@@ -11,6 +11,7 @@
   "bt.file.open": "Mở tệp bố cục",
   "bt.file.save": "Lưu bố cục thành tệp",
   "bt.file.bad": "{name} không phải là bố cục Material flow.",
+  "bt.file.ask": "Thay thế bố cục hiện tại bằng tệp này?",
   "bt.file.done": "{name}: đã tải {n} mục, {dropped} mục bị bỏ qua.",
   "bt.fit.run": "Kiểm tra với các tường",
   "bt.fit.nolayout": "Chưa có bố cục để kiểm tra. Dùng một ô hoặc mở tệp bố cục.",

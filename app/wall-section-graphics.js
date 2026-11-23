@@ -10,8 +10,8 @@ import { readOpenings } from './model-openings.js';
 import { mul4, inv4 } from './ifc-util.js';
 import { isSketchWall, SKETCH_BAND } from './wall-plan-graphics.js';   // 0.10 BK.15
 import { segDist } from './model-plan.js';
+import { dot2 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 const rect = (a, b, lo, hi) => [[Math.min(a,b),lo],[Math.max(a,b),lo],[Math.max(a,b),hi],[Math.min(a,b),hi]];
 const finite = a => a.every(Number.isFinite);
 
@@ -27,7 +27,7 @@ export function straightElevationWidth(walls, dir) {
     const n=[-(w.b[1]-w.a[1])/L,(w.b[0]-w.a[0])/L],half=Math.abs(dot(n,right))*w.t/2;
     for(const p of [w.a,w.b])xs.push(dot(p,right)-half,dot(p,right)+half);
   }
-  return {x0:Math.min(...xs),x1:Math.max(...xs)};
+  return {x0:xs.reduce((m,x)=>Math.min(m,x),Infinity),x1:xs.reduce((m,x)=>Math.max(m,x),-Infinity)};   // #1995: Math.min(...xs) without the spread (same values, NaN too)
 }
 
 export function isolatedWall(w, walls) {

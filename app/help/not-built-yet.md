@@ -65,7 +65,7 @@ BimCraft today is a reader, checker and IFC data editor that has started to draw
 
 | Not yet | Instead, today |
 |---|---|
-| Editing, measuring or saving DWG and DXF | The CadCraft drafting app ({{ui:Edit in CadCraft}} on the 2D view) |
+| Editing, measuring or saving a DWG or DXF you opened | The CadCraft drafting app ({{ui:Edit in CadCraft}} on the 2D view). BimCraft's own drawings save as DWG or DXF: see [Save a plan, elevation or section as DWG or DXF](topic:save-dwg-dxf) |
 | Printing or exporting PDF | Print from the program that made the drawing; check it first with {{ui:Print view}} |
 | Plot styles and pen tables | {{ui:Print view}} shows plain black with line weights |
 | DWG files older than R13, and binary DXF (BimCraft says so when you open one) | Save the drawing again as a newer DWG, or as ASCII DXF |

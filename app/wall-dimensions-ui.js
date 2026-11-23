@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 import { el } from './ui-util.js';
 import { ModelWriter } from './model-write.js';
-import { WALL_REFERENCES, readWallDimensions, referencePoint, resolveDimension, saveWallDimension, saveWallDimensions, removeWallDimensions } from './wall-dimensions.js';
+import { WALL_REFERENCES, readWallDimensions, referencePoint, resolveDimension, squareDimension, saveWallDimension, saveWallDimensions, removeWallDimensions } from './wall-dimensions.js';
 import { planAutoDimensions } from './autodim.js';   // 0.8 EG.20
 import { wallGeom } from './model-arcs.js';
 import { fmtLen, parseTyped } from './model-units.js';
@@ -42,7 +42,11 @@ export function mountWallDimensions(modelUi) {
   function reset(){refs=[];hover=null;at=null;editing=null;}
   function choose(p) {
     if(refs.length<2) {
-      const r=pickRef(p);if(!r){A.host.status(t('pickwall'),true);return;}
+      let r=pickRef(p);if(!r){A.host.status(t('pickwall'),true);return;}
+      if(refs.length===1) {   // 0.10.1 (support #1509): two parallel walls are measured square to them, whatever Direction says
+        const fit=squareDimension([refs[0],r],axis,walls());r=fit.refs[1];
+        if(fit.axis!==axis){axis=fit.axis;axisSelect.value=axis;A.host.status(t('autodir',{dir:t('axis.'+axis)}),false,true);}
+      }
       if(refs.length===1 && !candidate(p,[refs[0],r])) {A.host.status(t('coincident'),true);return;}
       refs.push(r);hint();return;
     }

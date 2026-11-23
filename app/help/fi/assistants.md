@@ -1,65 +1,65 @@
 ---
-title: Anna AI-avustajan työskennellä mallisi kanssa
-summary: Ota avustajat käyttöön asetuksissa, jotta tietokoneesi avustaja voi löytää elementtejä, lukea niiden ominaisuuksia, eristää ne näkymässä sekä piirtää seiniä, ovia, ikkunoita, lattioita, tasoja ja ruudukoita CadCraft Studion kautta. Pois päältä, kunnes käynnistät sen.
-keywords: ai, avustaja, mcp, skripti, automaatio, studio, etsi elementit, eristä, ominaisuudet, oikeudet, katkaise yhteys, toiminta, piirrä seiniä, lisää ovia, lisää ikkunoita, tasot, ruudukot, lattiat, kumoa, tallenna, komentorivi, cli, ilman ikkunaa, käyttö AI-avustajien kanssa
-from: c5ee595b
+title: Anna tekoälyavustajan työskennellä mallisi kanssa
+summary: Ota avustajat käyttöön Asetuksissa, jotta tietokoneellasi oleva avustaja voi etsiä kohteita, lukea niiden ominaisuuksia, eristää ne näkymässä ja piirtää seinät, ovet, ikkunat, lattiat, tasot ja akselit CadCraft Studion kautta. Pois päältä, kunnes otat ne käyttöön.
+keywords: tekoäly, avustaja, mcp, skripti, automaatio, studio, etsi kohteita, eristä, ominaisuudet, oikeudet, katkaise yhteys, toiminta, piirrä seinät, lisää ovet, lisää ikkunat, tasot, akselit, lattiat, kumoa, tallenna, komentorivi, cli, ilman ikkunaa, käytä tekoälyavustajien kanssa
+from: 66d72742
 ---
 
 ## Mitä opit
 
-Miten annat AI-avustajalle (mille tahansa avustajalle, joka puhuu MCP:tä) luvan katsoa avoinna olevaa IFC-mallia ja piirtää siihen, mitä se voi ja ei voi tehdä, ja miten pysäytät sen.
+Miten annat tekoälyavustajalle (millä tahansa MCP:tä puhuvalla avustajalla) pääsyn avoinna olevaan IFC-malliin ja piirtämään siihen, mitä se voi ja ei voi tehdä ja miten sen saa pysäytettyä.
 
 ## Mitä avustaja voi tehdä BimCraftissa
 
 | Se pyytää | Mitä tapahtuu | Tarvitsee |
 |---|---|---|
-| Etsi elementit | Se saa luettelon elementeistä luokan, kerroksen, nimen tai ominaisuusarvon mukaan, kuten **Etsi** tekee | Lue |
-| Lue ominaisuudet | Se saa yhden elementin attribuutit, tyypin, ominaisuusjoukot ja määrät, kuten **Ominaisuudet** näyttää ne | Lue |
-| Kuvaa malli, luettele seinät | Se saa tasot, seinät, ovet, ikkunat, huoneet, lattiat, ruudukot ja pilarit sekä jokaisen seinän päät, tyypin ja korkeuden | Lue |
-| Eristä, läpinäkyvä, piilota tai näytä | 3D-näkymä muuttuu, kuten jos olisit käyttänyt {{ui:Näytä}}-valikkoa | Muuta näkymää ja piirrä |
-| Piirrä seiniä, ovia, ikkunoita, lattioita, tasoja tai ruudukkoviivoja | Malli muuttuu, kuten jos olisit käyttänyt {{ui:Piirrä}}-työkaluja: seinät liittyvät, ja huoneet, lattiat ja katot seuraavat | Muuta näkymää ja piirrä |
-| Muuta nimeä tai ominaisuusarvoa | Yhden elementin Nimi, Kuvaus, Objektityyppi tai Tunniste, tai yksi ominaisuusarvo. Arvo, jonka se jakaa muiden elementtien kanssa, kopioidaan sille ensin; tyypin arvo muuttuu vain, kun avustaja sanoo niin, koska jokainen saman tyypin elementti seuraa sitä | Muuta näkymää ja piirrä |
-| Siirrä, poista, muuta seiniä, ovia ja ikkunoita | Elementit siirtyvät tai poistetaan niiden mukana, joissa ne ovat. {{ui:Piirrä}}-työkaluilla piirretyt seinät muuttuvat päiden tai tyypin mukaan, ovet ja ikkunat paikan, koon tai tyypin mukaan, ja huoneet ja liitokset seuraavat | Muuta näkymää ja piirrä |
-| Aseta, järjestä ja lue luettelo | "Ovien luettelo kerroksittain, palonkestävyys ja rautatavarat": avustaja nimeää luettelon, sen sarakkeet (ominaisuus tai tunniste tulee sarakkeeksi) ja ryhmittelyn. BimCraft täyttää luettelon mallista ja asettelee sen, ja ottaa sen, mitä avustaja ei maininnut, toimiston standardista. Asetelma liittyy {{ui:Luettelot}}-listaasi. Jokainen sen palauttama rivi nimeää elementtinsä, joten avustaja voi valita ne | Lue lukemiseen; Muuta näkymää ja piirrä asetelman tallentamiseen |
-| Vie luettelo | CSV, Excel tai sarkaimilla erotettu teksti liitettäväksi Google Sheetsiin (mitään ei lähetetä Googlelle) | Vie |
-| Lue ja aseta huoneiden viimeistelyt | Viimeistelytyypit, kunkin huoneen lattia-, seinä- ja kattoviimeistely, vyöhykkeet; alat, laattamäärät ja alustan tilavuudet tulevat sitten viimeistelyluetteloista | Lue; asettamiseen Muuta näkymää ja piirrä |
-| Valitse elementit, kumoa oma vaiheensa | Elementit valitaan näkymästä; sen viimeisin vaihe kumotaan | Muuta näkymää ja piirrä |
-| Tallenna | Uusi IFC-tiedosto, jossa on kaikki muutokset, kuten {{ui:Tallenna IFC-tiedostona}} sen tekee (alkuperäistä ei koskaan muuteta) | Tallenna |
-| Vie USD | Avoimet mallit OpenUSD-muodossa (.usda, .usdc tai .usdz), kuten työkalurivin {{ui:USD}} kirjoittaa sen | Vie |
-| Renderöi kuva, aja renderijono | Kuva 3D-näkymästä, kuten {{ui:Renderöi}}-valintaikkuna tekee renderiasetuksillasi, ellei se pyydä muita, tai laadukkaita kuvia valintaikkunan jonoon, joka renderöidään peräkkäin (jono tarvitsee WebGPU:n). Mallissa ei muutu mitään ([Renderöi kuva](topic:render)) | Vie |
+| Etsi kohteita | Se saa luettelon kohteista luokan, kerroksen, nimen tai ominaisuuden arvon mukaan, kuten **Etsi** tekee | Lukeminen |
+| Lue ominaisuuksia | Se saa yhden kohteen attribuutit, tyypin, ominaisuusjoukot ja määrät, kuten **Ominaisuudet** ne näyttää | Lukeminen |
+| Kuvaile malli, luettele seinät | Se saa tasot, seinät, ovet, ikkunat, huoneet, lattiat, akselistot ja pilarit sekä kunkin seinän päät, tyypin ja korkeuden | Lukeminen |
+| Eristä, tee läpinäkyväksi, piilota tai näytä | 3D-näkymä muuttuu kuin olisit käyttänyt {{ui:Näytä}}-valikkoa | Näkymän muuttaminen ja piirtäminen |
+| Piirrä seinät, ovet, ikkunat, lattiat, tasot tai akselilinjat | Malli muuttuu kuin olisit käyttänyt {{ui:Piirrä}}-työkaluja: seinät liittyvät toisiinsa, ja huoneet, lattiat ja katot seuraavat | Näkymän muuttaminen ja piirtäminen |
+| Vaihda nimi tai ominaisuuden arvo | Yhden kohteen Nimi, Kuvaus, Objektityyppi tai Tunniste, tai yhden ominaisuuden arvo. Arvo, jonka se jakaa muiden kohteiden kanssa, kopioidaan sille ensin. Tyypin arvo muuttuu vain, kun avustaja sanoo niin, koska jokainen saman tyypin kohde seuraa sitä | Näkymän muuttaminen ja piirtäminen |
+| Siirrä, poista, muuta seinät, ovet ja ikkunat | Kohteet siirtyvät tai poistuvat yhdessä niitä isännöivien kohteiden kanssa. Piirrä-työkaluilla piirretyt seinät muuttuvat päiden tai tyypin mukaan, ovet ja ikkunat paikan, koon tai tyypin mukaan, ja huoneet ja liitokset seuraavat | Näkymän muuttaminen ja piirtäminen |
+| Määritä, järjestä ja lue aikataulu | ”Ovien aikataulu kerroksittain, palonkestävyys ja kalusteet”: avustaja nimeää aikataulun, sen sarakkeet (ominaisuus tai tunniste muuttuu sarakkeeksi) ja ryhmittelyn. BimCraft täyttää aikataulun mallista ja asettelee sen, ja se, mitä avustaja ei määritellyt, otetaan toimiston standardista. Asetus liittyy Aikataulut-luetteloosi. Jokainen takaisin saatu rivi nimeää kohteensa, joten avustaja voi valita ne | Lukeminen lukemiseen; näkymän muuttaminen ja piirtäminen asetuksen tallentamiseen |
+| Vie aikataulu | CSV, Excel tai sarkaineroteltu teksti liitettäväksi Google Sheetsiin (mitään ei lähetetä Googlelle) | Vienti |
+| Lue ja aseta huonepinnat | Pintatyypit, kunkin huoneen lattian, seinän ja katon pinta, vyöhykkeet. Pinta-alat, laattamäärät ja alustan tilavuudet tulevat sen jälkeen pinta-aikatauluista | Lukeminen; asettamiseen näkymän muuttaminen ja piirtäminen |
+| Valitse kohteita, kumoa oman toiminnon vaiheet | Kohteet valitaan näkymästä, ja sen viimeinen vaihe perutaan | Näkymän muuttaminen ja piirtäminen |
+| Tallenna | Uusi IFC-tiedosto kaikilla muutoksilla, kuten {{ui:Tallenna IFC-tiedostona}} sen tekee (alkuperäistä ei koskaan muuteta) | Tallennus |
+| Vie USD | Avoimet mallit OpenUSD-muodossa (.usda, .usdc tai .usdz), kuten työkalurivin {{ui:USD}} ne kirjoittaa | Vienti |
+| Renderöi kuva, aja renderointijono | Kuva 3D-näkymästä, kuten {{ui:Renderöi}}-valintaikkuna sen tekee renderöinnin asetuksilla, ellei avustaja pyydä muita. Tai laadukkaita kuvia, jotka lisätään valintaikkunan jonoon ja renderöidään peräkkäin (jono vaatii WebGPU:n). Mallin mikään ei muutu ([Renderöi kuva](topic:render)) | Vienti |
 
-Jokainen avustajan tekemä muutos on yksi vaihe **Muutokset**-listassa, nimeltään "Avustaja: …" (esimerkiksi "Avustaja: lisää 4 seinää"), joten {{key:Mod+Z}} kumoaa koko sen toiminnon, ja näet, kenen vaihe se oli. Ikkunassa avustaja ei voi avata tiedostoja: sinä avaat mallin, ja avustaja työskentelee avoimen mallin kanssa.
+Jokainen avustajan tekemä muutos on yksi vaihe **Muutokset**-luettelossa, nimeltään ”Avustaja: …” (esimerkiksi ”Avustaja: lisää 4 seinää”). Siksi {{key:Mod+Z}} perii koko sen toiminnon, ja näet, kenen vaihe se oli. Ikkunassa se ei voi avata tiedostoja: sinä avaat mallin, ja avustaja työskentelee avoinna olevan kanssa.
 
 ## Ota käyttöön
 
-Avustajat tavoittavat BimCraftin CadCraft Studion kautta tietokoneellasi; tavallinen selain ei tarjoa pääsyä.
+Avustajat yhdistyvät BimCraftiin tietokoneellasi olevan CadCraft Studion kautta. Pelkällä selaimella ei ole siihen pääsyä.
 
 1. Avaa {{ui:Asetukset}} ja valitse **BimCraft**-välilehti.
-2. Kohdassa **Avustajat** valitse **Anna AI-avustajien ja skriptien käyttää BimCraftia**.
-3. **Lue** on valittu puolestasi. Valitse myös **Muuta näkymää ja piirrä**, jos avustaja saa eristää ja piilottaa elementtejä sekä piirtää, ja **Tallenna**, jos se saa tallentaa mallin uutena tiedostona.
-4. Yhdistä avustaja Studiossa (Studio näyttää osoitteen ja asetukset, jotka liitetään siihen).
+2. Kohdassa **Avustajat** rastita **Anna tekoälyavustajien ja skriptien käyttää BimCraftia**.
+3. **Lukeminen** on valittu puolestasi. Rastita myös **Muuta näkymää ja piirrä**, jos avustaja saa eristää ja piilottaa kohteita sekä piirtää, ja **Tallennus**, jos se saa tallentaa mallin uutena tiedostona.
+4. Yhdistä avustaja Studiossa. Studio näyttää osoitteen ja asetukset, jotka liitetään avustajaan.
 
 ## Kun avustaja on yhdistetty
 
-Oikean paneelin yläreunassa oleva huomautus kertoo, mikä avustaja on yhdistetty ja mitä se voi tehdä. Napsauta {{ui:Katkaise yhteys}} lopettaaksesi sen istunnon heti; sen on yhdistyttävä uudelleen jatkaakseen.
+Oikean paneelin yläreunassa näkyy huomautus siitä, mikä avustaja on yhdistetty ja mitä se voi tehdä. Napsauta {{ui:Katkaise yhteys}} lopettaaksesi istunnon heti. Avustajan on yhdistettävä uudelleen, jotta se voi jatkaa.
 
-**Toiminta**, Asetukset-kohdan **Avustajat** alla, luettelee jokaisen avustajan tekemän kutsun, uusin ensin, ja kertoo, onnistuiko se.
+**Toiminta**-luettelo kohdassa **Avustajat** Asetuksissa näyttää kaikki avustajan kutsut uusimmasta vanhimpaan ja kertoo, onnistuiko kutsu.
 
 :::tip
-Kysy tavallisin sanoin, esimerkiksi "eristä ulkoseinät tasolla 1", "mitkä ovet puuttuvat palonkestävyyden?" tai "piirrä 6 x 4 metrin huone tasolle 1 oven kanssa etelän seinään". Avustaja löytää elementit ja näyttää ne näkymässäsi tai piirtää ne.
+Kysy tavallisin sanoin, esimerkiksi ”eristä ulkoseinät tasolta 1”, ”mitkä ovet puuttuu palonkestävyys?” tai ”piirrä 6 x 4 metrin huone tasolle 1 ja ovi etelän seinään”. Avustaja etsii kohteet ja näyttää ne näkymässäsi tai piirtää ne.
 :::
 
 ## Ilman ikkunaa: skriptit ja komentorivi
 
-Samat piirtotyökalut toimivat ilman avointa ikkunaa IFC-tiedostoissa kansioissa, jotka nimeät: CadCraftin MCP-palvelin ja komentorivi voivat aloittaa uuden rakennuksen tai avata IFC-tiedoston, kuvata sitä, lisätä seiniä, ovia, ikkunoita, lattioita, tasoja ja ruudukoita, kumota ja tallentaa sen uutena `.ifc`-tiedostona. Sinä päätät, mitä kansioita se saa käyttää ja saako se muuttaa tai tallentaa mitään.
+Samat piirustustyökalut toimivat IFC-tiedostoilla kansioissa, jotka nimeät, ilman avointa ikkunaa. CadCraftin MCP-palvelin ja komentorivi voivat aloittaa uuden rakennuksen tai avata IFC-tiedoston, kuvailla sitä, lisätä seinät, ovet, ikkunat, lattiat, tasot ja akselilinjat, kumota ne ja tallentaa uutena `.ifc`-tiedostona. Neljä muuta työkalua sopii skripteihin: `ifc_batch` suorittaa enintään 200 muokkausvaihetta yhtenä kokonaisuutena (kaikki tai ei mitään: yksi kumoaminen perii koko erän, ja hylätty vaihe kumoaa loput ja nimeää vaiheen); `ifc_describe` luettelee tasot ja jokaisen seinän ovineen ja ikkunoineen; `ifc_render_png` kirjoittaa mallista tasavarjostetun tarkistuskuvan ilman ikkunaa (ei materiaaleja, tekstuureja tai varjoja); `usd_export` kirjoittaa `.usda`-, `.usdc`- tai `.usdz`-tiedoston. Komentorivillä `cadcraft bim script.json --from model.ifc -o out.ifc` suorittaa vaiheiden skriptin, ja `--usd`, `--png` ja `--plan` kirjoittavat saman ajon USD-tiedoston, kuvan tai pohjakuvan. Päätät itse, mitä kansioita avustaja saa käyttää ja saako se muuttaa tai tallentaa mitään.
 
-## Pois päältä
+## Poista käytöstä
 
-Poista valinta kohdasta **Anna AI-avustajien ja skriptien käyttää BimCraftia**. Jokainen avustaja katkaistaan heti, ja asetus säilyy seuraavaa kertaa varten.
+Poista rasti kohdasta **Anna tekoälyavustajien ja skriptien käyttää BimCraftia**. Jokainen avustaja katkaistaan heti, ja asetus säilyy seuraavaa kertaa varten.
 
 ## Katso myös
 
-- [Reseptejä tekoälyavustajille](common:assistants-recipes): toimivia esimerkkejä, joista jokainen kertoo kutsumansa työkalut.
-- [Etsi elementit luokan, nimen tai ominaisuuden mukaan](topic:find)
-- [Piilota, eristä ja tee elementit läpinäkyviksi](topic:hide-and-isolate)
+- [Reseptit tekoälyavustajille](common:assistants-recipes): toimivia esimerkkejä, joista kukin kertoo, mitä työkaluja se kutsuu.
+- [Etsi kohteita luokan, nimen tai ominaisuuden mukaan](topic:find)
+- [Piilota, eristä ja tee kohteista läpinäkyviä](topic:hide-and-isolate)
 - [BimCraftin asetukset](topic:settings)

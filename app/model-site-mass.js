@@ -21,10 +21,10 @@ import { addWall } from './model-walls.js';
 import { addFloor } from './model-slabs.js';
 import { ids, val, inv4, apply4 } from './ifc-util.js';
 import { scaleT } from './model-write.js';
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const MASS_PSET = 'CadCraft_SiteMass';
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
-const area = (P) => { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; };
 
 /** The footprint of a proxy: its extruded profile's outline, world mm. */
 function footprintOf(w, id) {

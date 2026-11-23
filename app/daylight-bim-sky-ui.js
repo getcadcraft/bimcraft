@@ -36,6 +36,27 @@ function load() {
 export const SKY = { inputs: null, sun: null, grid: null, open: { sun: false, grid: false }, charts: new Set() };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(SKY.inputs)); } catch { /* private window */ } };
 
+/**
+ * T24.6: the sun for the cooling peak without a separate step. When Heating and cooling loads are worked out and nobody has worked out "Sun
+ * through the windows" yet, the same calculation runs here (solarDay: NOAA sun position, Hottel clear-sky beam, Liu & Jordan diffuse, the
+ * exact shading by the model) with that section's own inputs: its date (21 July unless changed), window g-value and ground reflectance. Needs
+ * the model's site or a typed latitude and longitude, else null (the loads say so). The result is the section's own (SKY.sun), marked auto.
+ */
+export function autoSun(host, ctx) {
+  if (SKY.sun) return SKY.sun;
+  if (!SKY.inputs) SKY.inputs = load();
+  const I = SKY.inputs, g = ctx.gathered(), e = host.editor();
+  if (!g || !e) return null;
+  const site = siteOf(e.api, e.mid) || (I.lat !== '' && I.lon !== '' ? { lat: Number(I.lat), lon: Number(I.lon), north: [0, 1] } : null);
+  if (!site) return null;
+  const [mo, dd] = I.date.split('-').map(Number);
+  const sun = solarDay(g.rooms, g.prods, site, { month: mo, day: dd, tz: I.tz === '' ? null : Number(I.tz), g: I.g, ground: I.ground, glazedShare: ctx.inputs().glazedShare, climate: I.climate || null, altitudeKm: (site.elevation || 0) / 1000 });
+  sun.site = site; sun.auto = true; sun.g = I.g;
+  sun.date = new Date(Date.UTC(2026, mo - 1, dd)).toLocaleDateString(undefined, { month: 'long', day: 'numeric', timeZone: 'UTC' });
+  SKY.sun = sun;
+  return sun;
+}
+
 export function windowLine(w) {
   return Number.isFinite(w.vsc) ? t('day.sky.window', { vsc: w.vsc.toFixed(1), alpha: (w.alpha || 0).toFixed(0) }) : '';
 }

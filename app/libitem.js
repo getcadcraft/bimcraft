@@ -35,6 +35,7 @@
  */
 
 import { validatePackVersion } from './packver.js';   // BK.153/154: the one version + changelog rule (lib/packver; PHP twin PackVersioning)
+import { escXml as esc } from './util.js';   // shared helpers (0.11 PERF.74)
 
 export const FORMAT = 'cadcraft-library-item';
 export const FORMAT_VERSION = 1;
@@ -215,6 +216,7 @@ export const MESSAGES = {
   'libitem.cat.types.floors': 'Floor types',
   'libitem.cat.types.roofs': 'Roof types',
   'libitem.cat.types.ceilings': 'Ceiling types',
+  'libitem.cat.types.barriers': 'Barriers',
   'libitem.cat.kits.templates': 'Project templates',
   'libitem.cat.kits.quick': 'Quick Kits',
   'libitem.v.not_object': 'not a JSON object',
@@ -266,6 +268,13 @@ export const MESSAGES = {
   'libitem.v.type_pack_same': 'must be the same as type.element',
   'libitem.v.type_layers_n': 'must be {n}, the number of layers in the pack',
   'libitem.v.type_thickness_sum': 'must be {n} mm, the sum of the pack\'s layers',
+  'libitem.v.barrier_ifc': 'must be IfcRailingType for a barrier type',
+  'libitem.v.barrier_cat': 'must be types/barriers for a barrier type',
+  'libitem.v.barrier_ifc_only': 'is for barrier types only (type.element barrier)',
+  'libitem.v.barrier_cat_only': 'holds barrier types only (type.element barrier)',
+  'libitem.v.barrier_req': 'is required for a barrier type (its subtype, height and settings)',
+  'libitem.v.barrier_height_req': 'is required (mm)',
+  'libitem.v.barrier_predefined': 'must be {value} for a {sub} barrier type (IfcRailingTypeEnum, IFC4X3)',
   'libitem.v.kit_kind': 'only an item of kind kit has one',
   'libitem.v.kit_required': 'is required for a project template or Quick Kit',
   'libitem.v.kit_body': 'must be null for a kit',
@@ -402,7 +411,52 @@ export const MESSAGES = {
   'libitem.rfa.no_family': 'This file has no family data (PartAtom); it may be a project, not a family.',
   'libitem.rfa.box': 'Geometry not read from this family; a box stands in.',
   'libitem.rfa.outline': 'Geometry not read from this family; no height parameter, so a 2D outline only.',
+  'libitem.rfa.types': 'This family has {n} types: each is a variant of the item, with its own values and box.',
+  'libitem.rfa.types_catalog': '{n} types read from the type catalog beside the family: each is a variant of the item.',
+  'libitem.rfa.one_type': 'One type in this family ({name}): its values fill the item.',
+  'libitem.rfa.types_cut': 'Only the first {n} types are kept.',
+  'libitem.rfa.columns_cut': 'Only the first {n} parameters that differ between types are kept as columns.',
+  'libitem.rfa.shape': 'Shape taken from {file}: the family file gave the data, that file the geometry.',
   'libitem.rfa.no_geometry': 'Geometry not read from this family, and it has no Width and Depth parameters: the item has no geometry (data only).',
+  'libitem.w.must_be_text': 'must be text',
+  'libitem.w.longer_than_500_characters': 'longer than 500 characters',
+  'libitem.w.is_empty': 'is empty',
+  'libitem.w.is_not_part_of_the': 'is not part of the format',
+  'libitem.w.must_be_cadcraft_component': 'must be cadcraft-component',
+  'libitem.w.must_be_1': 'must be 1',
+  'libitem.w.must_be_a_lower_case': 'must be a lower-case id (a-z, 0-9, dots and dashes)',
+  'libitem.w.must_be_one_of': 'must be one of {list}',
+  'libitem.w.must_be_a_list': 'must be a list',
+  'libitem.w.at_most_40_sources': 'at most 40 sources',
+  'libitem.w.must_be_an_object': 'must be an object',
+  'libitem.w.must_be_1_32_letters': 'must be 1–32 letters, digits, dots, dashes or underscores',
+  'libitem.w.is_used_twice': 'is used twice',
+  'libitem.w.must_be_an_https_link': 'must be an https link',
+  'libitem.w.at_most_120_properties': 'at most 120 properties',
+  'libitem.w.must_be_a_number_or': 'must be a number or text',
+  'libitem.w.must_name_a_source_key': 'must name a source key of this record',
+  'libitem.w.at_most_200_failure_rates': 'at most 200 failure rates',
+  'libitem.w.must_be_a_number_0': 'must be a number, 0 or more',
+  'libitem.w.must_be_user_or_community': 'must be user or community: failure rates are never supplied by the system',
+  'libitem.w.needs_a_state_unchecked_draft': 'needs a state: unchecked, draft or reviewed',
+  'libitem.w.is_required_when_reviewed': 'is required when reviewed',
+  'libitem.w.must_be_cadcraft_doc_template': 'must be cadcraft-doc-template',
+  'libitem.w.must_be_a_lower_case2': 'must be a lower-case key (a-z, 0-9, dashes)',
+  'libitem.w.must_be_text_of_1': 'must be text of 1 to 120 characters',
+  'libitem.w.is_longer_than_bytes': 'is longer than {n} bytes',
+  'libitem.w.holds_markup_that_a_document': 'holds markup that a document cannot carry',
+  'libitem.w.at_most_40_tag_definitions': 'at most 40 tag definitions',
+  'libitem.w.must_be_text_of_12': 'must be text of 1 to 80 characters',
+  'libitem.w.must_be_a_list_of': 'must be a list of at most 60',
+  'libitem.w.has_a_value_that_is': 'has a value that is not short text or a number',
+  'libitem.w.must_be_cadcraft_plant': 'must be cadcraft-plant',
+  'libitem.w.at_most_40_languages': 'at most 40 languages',
+  'libitem.w.is_not_a_language_tag': 'is not a language tag (like es or es-MX)',
+  'libitem.w.has_a_value_that_is2': 'has a value that is not one of {list}',
+  'libitem.w.must_be_a_number_above': 'must be a number above 0 and at most {max}',
+  'libitem.w.needs_whole_usda_zones_1': 'needs whole USDA zones 1 to 13, min not above max',
+  'libitem.w.must_be_a_number_from': 'must be a number from 0 (seed or turf) to 50',
+  'libitem.w.must_be_empty_or_one': 'must be empty or one of {list}',
 };
 /* i18n-ignore-end */
 
@@ -443,6 +497,8 @@ for (const k of [
   'templates/specification',
   // 2026-11-11 BK.21 / BK.98: Types (kind type) and Quick Kits / project templates (kind kit)
   'types/walls', 'types/floors', 'types/roofs', 'types/ceilings', 'kits/templates', 'kits/quick',
+  // 0.11 su-finish-11 barriers (owner 2026-11-21): guards, handrails, balustrades, fences and road guardrails as one Type category
+  'types/barriers',
 ]) {
   Object.defineProperty(CATEGORIES, k, { enumerable: true, get: () => msg('libitem.cat.' + k.replace('/', '.')) });
 }
@@ -461,8 +517,24 @@ export const LOD_SCALE = [100, 200, 300, 350, 400, 500];
 export const CLASSIFICATION_SYSTEMS = ['uniclass', 'omniclass', 'uniformat'];
 export const LOD_KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'type'];
 export const CLASSIFIED_KINDS = ['equipment', 'furniture', 'fixture', 'door', 'window', 'symbol', 'detail', 'plant', 'type'];
-export const TYPE_ELEMENTS = ['wall', 'floor', 'roof', 'ceiling'];
-export const TYPE_IFC_CLASSES = ['IfcWallType', 'IfcSlabType', 'IfcRoofType', 'IfcCoveringType'];
+export const TYPE_ELEMENTS = ['wall', 'floor', 'roof', 'ceiling', 'barrier'];
+export const TYPE_IFC_CLASSES = ['IfcWallType', 'IfcSlabType', 'IfcRoofType', 'IfcCoveringType', 'IfcRailingType'];
+/**
+ * 0.11 su-finish-11 barriers: a Barriers type (element barrier + category types/barriers + IfcRailingType, only together) has no layers:
+ * item.type = { element: 'barrier', lod?, barrier: { subtype, height (mm), …the settings BARRIER_FIELDS lists for it } }; ifc.predefined is the
+ * sub-type's IfcRailingTypeEnum value (IFC4X3_ADD2). Twin of LibraryCatalog::BARRIER_* (bin/test-library-barriers.php compares them).
+ */
+export const BARRIER_CATEGORY = 'types/barriers';
+export const BARRIER_IFC_CLASS = 'IfcRailingType';
+export const BARRIER_SUBTYPES = { guard: 'GUARDRAIL', handrail: 'HANDRAIL', balustrade: 'BALUSTRADE', fence: 'FENCE', guardrail: 'GUARDRAIL' };
+const INFILL_ = ['balusters', 'panel', 'cable', 'mesh', 'rails'];
+export const BARRIER_FIELDS = {
+  fence: { style: ['panel', 'rails', 'pickets'], terrain: ['raked', 'stepped'], postSize: 'mm', postSpacing: 'mm', rails: 'int', railSize: 'mm', picketW: 'mm', picketGap: 'mm', panelThk: 'mm', gap: 'mm', maxGap: 'mm', embed: 'mm' },
+  guard: { infill: INFILL_, postSize: 'mm', postSpacing: 'mm', railSize: 'mm', infillSize: 'mm', infillGap: 'mm' },
+  balustrade: { infill: INFILL_, postSize: 'mm', postSpacing: 'mm', railSize: 'mm', infillSize: 'mm', infillGap: 'mm' },
+  handrail: { profile: ['round', 'rect'], railSize: 'mm', wallGap: 'mm', bracketSpacing: 'mm' },
+  guardrail: { beam: ['w-beam', 'thrie-beam', 'box-beam', 'cable'], postSize: 'mm', postSpacing: 'mm', beamDepth: 'mm' },
+};
 export const KIT_TYPES = ['project-template', 'quick-kit'];
 export const MAX_KIT_BYTES = 4194304;
 const CLASS_CODE_RE = /^[A-Za-z0-9][A-Za-z0-9 ._:\/-]{0,39}$/;
@@ -492,7 +564,7 @@ export const PORT_DIRECTIONS = ['in', 'out', 'both'];
 export const PORT_SHAPES = ['round', 'rect', 'oval'];
 export const VARIANT_LIMITS = { rows: 200, columns: 24, ports: 32 };
 const VARIANT_ID_RE = /^[A-Za-z0-9_.-]{1,60}$/;
-export const LICENSES = ['CC0-1.0', 'CC-BY-4.0', 'CC-BY-3.0', 'CC-BY-SA-4.0', 'MAKER-TERMS', 'TEAM-ONLY'];
+export const LICENSES = ['CC0-1.0', 'CC-BY-4.0', 'CC-BY-3.0', 'CC-BY-SA-4.0', 'MAKER-TERMS', 'TEAM-ONLY', 'PRIVATE'];   // PRIVATE (PO.1): a private object in My objects; the server sets it, nobody chooses it
 export const LIMITS = { bytes: 8 * 1024 * 1024, triangles: 200000, entities: 50000, text: 500, coord: 1e7 };
 /** Length units → mm. */
 export const UNIT_MM = { mm: 1, cm: 10, dm: 100, m: 1000, km: 1e6, in: 25.4, ft: 304.8, yd: 914.4, mi: 1609344, mil: 0.0254, um: 0.001 };
@@ -519,64 +591,67 @@ const TOP_KEYS = ['format', 'format_version', 'uuid', 'version', 'name', 'kind',
 function checkComponent(c, err) {
   const bad = (p, what) => err(p, msg('libitem.v.component_bad', { what }));
   const text = (p, v, required = false) => {
-    if (typeof v !== 'string') return bad(p, 'must be text');
-    if ([...v].length > 500) return bad(p, 'longer than 500 characters');
-    if (required && v.trim() === '') bad(p, 'is empty');
+    if (typeof v !== 'string') return bad(p, msg('libitem.w.must_be_text'));
+    if ([...v].length > 500) return bad(p, msg('libitem.w.longer_than_500_characters'));
+    if (required && v.trim() === '') bad(p, msg('libitem.w.is_empty'));
   };
   const plain = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  const allowed = (p, o, names) => { for (const k of Object.keys(o)) if (!names.includes(k)) bad(p + '.' + k, 'is not part of the format'); };
+  const allowed = (p, o, names) => { for (const k of Object.keys(o)) if (!names.includes(k)) bad(p + '.' + k, msg('libitem.w.is_not_part_of_the')); };
   allowed('component', c, ['format', 'version', 'id', 'class', 'formula', 'sources', 'properties', 'failure_data', 'review']);
-  if (c.format !== 'cadcraft-component') bad('component.format', 'must be cadcraft-component');
-  if (c.version !== 1) bad('component.version', 'must be 1');
-  if (typeof c.id !== 'string' || !/^[a-z0-9][a-z0-9.-]{1,63}$/.test(c.id)) bad('component.id', 'must be a lower-case id (a-z, 0-9, dots and dashes)');
-  if (!COMPONENT.classes.includes(c.class)) bad('component.class', 'must be one of ' + COMPONENT.classes.join(', '));
+  if (c.format !== 'cadcraft-component') bad('component.format', msg('libitem.w.must_be_cadcraft_component'));
+  if (c.version !== 1) bad('component.version', msg('libitem.w.must_be_1'));
+  if (typeof c.id !== 'string' || !/^[a-z0-9][a-z0-9.-]{1,63}$/.test(c.id)) bad('component.id', msg('libitem.w.must_be_a_lower_case'));
+  if (!COMPONENT.classes.includes(c.class)) bad('component.class', msg('libitem.w.must_be_one_of', { list: COMPONENT.classes.join(', ') }));
   if ('formula' in c) text('component.formula', c.formula);
   const keys = new Set();
-  if (!Array.isArray(c.sources)) bad('component.sources', 'must be a list');
-  else if (c.sources.length > 40) bad('component.sources', 'at most 40 sources');
+  if (!Array.isArray(c.sources)) bad('component.sources', msg('libitem.w.must_be_a_list'));
+  else if (c.sources.length > 40) bad('component.sources', msg('libitem.w.at_most_40_sources'));
   else c.sources.forEach((s, i) => {
+    // i18n-ignore: a path in the record, not a sentence (words-11)
     const p = `component.sources[${i}]`;
-    if (!plain(s)) return bad(p, 'must be an object');
+    if (!plain(s)) return bad(p, msg('libitem.w.must_be_an_object'));
     allowed(p, s, ['key', 'kind', 'title', 'url', 'date', 'note']);
-    if (typeof s.key !== 'string' || !/^[A-Za-z0-9._-]{1,32}$/.test(s.key)) bad(p + '.key', 'must be 1–32 letters, digits, dots, dashes or underscores');
-    else if (keys.has(s.key)) bad(p + '.key', 'is used twice');
+    if (typeof s.key !== 'string' || !/^[A-Za-z0-9._-]{1,32}$/.test(s.key)) bad(p + '.key', msg('libitem.w.must_be_1_32_letters'));
+    else if (keys.has(s.key)) bad(p + '.key', msg('libitem.w.is_used_twice'));
     else keys.add(s.key);
-    if (!COMPONENT.sourceKinds.includes(s.kind)) bad(p + '.kind', 'must be one of ' + COMPONENT.sourceKinds.join(', '));
+    if (!COMPONENT.sourceKinds.includes(s.kind)) bad(p + '.kind', msg('libitem.w.must_be_one_of', { list: COMPONENT.sourceKinds.join(', ') }));
     text(p + '.title', s.title, true);
-    if ('url' in s && !(typeof s.url === 'string' && /^https:\/\//.test(s.url))) bad(p + '.url', 'must be an https link');
+    if ('url' in s && !(typeof s.url === 'string' && /^https:\/\//.test(s.url))) bad(p + '.url', msg('libitem.w.must_be_an_https_link'));
     for (const k of ['date', 'note']) if (k in s) text(`${p}.${k}`, s[k]);
   });
-  if (!Array.isArray(c.properties)) bad('component.properties', 'must be a list');
-  else if (c.properties.length > 120) bad('component.properties', 'at most 120 properties');
+  if (!Array.isArray(c.properties)) bad('component.properties', msg('libitem.w.must_be_a_list'));
+  else if (c.properties.length > 120) bad('component.properties', msg('libitem.w.at_most_120_properties'));
   else c.properties.forEach((pr, i) => {
+    // i18n-ignore: a path in the record, not a sentence (words-11)
     const p = `component.properties[${i}]`;
-    if (!plain(pr)) return bad(p, 'must be an object');
+    if (!plain(pr)) return bad(p, msg('libitem.w.must_be_an_object'));
     allowed(p, pr, ['key', 'value', 'unit', 'src', 'table']);
     text(p + '.key', pr.key, true);
-    if (!(typeof pr.value === 'string' || (typeof pr.value === 'number' && Number.isFinite(pr.value)))) bad(p + '.value', 'must be a number or text');
+    if (!(typeof pr.value === 'string' || (typeof pr.value === 'number' && Number.isFinite(pr.value)))) bad(p + '.value', msg('libitem.w.must_be_a_number_or'));
     if ('unit' in pr) text(p + '.unit', pr.unit);
-    if (!keys.has(pr.src)) bad(p + '.src', 'must name a source key of this record');
+    if (!keys.has(pr.src)) bad(p + '.src', msg('libitem.w.must_name_a_source_key'));
     if ('table' in pr) text(p + '.table', pr.table);
   });
   const fd = c.failure_data ?? [];
-  if (!Array.isArray(fd)) bad('component.failure_data', 'must be a list');
-  else if (fd.length > 200) bad('component.failure_data', 'at most 200 failure rates');
+  if (!Array.isArray(fd)) bad('component.failure_data', msg('libitem.w.must_be_a_list'));
+  else if (fd.length > 200) bad('component.failure_data', msg('libitem.w.at_most_200_failure_rates'));
   else fd.forEach((f, i) => {
+    // i18n-ignore: a path in the record, not a sentence (words-11)
     const p = `component.failure_data[${i}]`;
-    if (!plain(f)) return bad(p, 'must be an object');
+    if (!plain(f)) return bad(p, msg('libitem.w.must_be_an_object'));
     allowed(p, f, ['mode', 'rate', 'unit', 'basis', 'source', 'supplied_by']);
     text(p + '.mode', f.mode, true);
-    if (typeof f.rate !== 'number' || !Number.isFinite(f.rate) || f.rate < 0) bad(p + '.rate', 'must be a number, 0 or more');
-    if (!COMPONENT.rateUnits.includes(f.unit)) bad(p + '.unit', 'must be one of ' + COMPONENT.rateUnits.join(', '));
+    if (typeof f.rate !== 'number' || !Number.isFinite(f.rate) || f.rate < 0) bad(p + '.rate', msg('libitem.w.must_be_a_number_0'));
+    if (!COMPONENT.rateUnits.includes(f.unit)) bad(p + '.unit', msg('libitem.w.must_be_one_of', { list: COMPONENT.rateUnits.join(', ') }));
     if ('basis' in f) text(p + '.basis', f.basis);
-    if (!keys.has(f.source)) bad(p + '.source', 'must name a source key of this record');
-    if (!COMPONENT.suppliedBy.includes(f.supplied_by)) bad(p + '.supplied_by', 'must be user or community: failure rates are never supplied by the system');
+    if (!keys.has(f.source)) bad(p + '.source', msg('libitem.w.must_name_a_source_key'));
+    if (!COMPONENT.suppliedBy.includes(f.supplied_by)) bad(p + '.supplied_by', msg('libitem.w.must_be_user_or_community'));
   });
   const r = c.review;
-  if (!plain(r) || !COMPONENT.reviewStates.includes(r.state)) bad('component.review', 'needs a state: unchecked, draft or reviewed');
+  if (!plain(r) || !COMPONENT.reviewStates.includes(r.state)) bad('component.review', msg('libitem.w.needs_a_state_unchecked_draft'));
   else {
     allowed('component.review', r, ['state', 'note', 'checked_by']);
-    if (r.state === 'reviewed' && String(r.checked_by ?? '').trim() === '') bad('component.review.checked_by', 'is required when reviewed');
+    if (r.state === 'reviewed' && String(r.checked_by ?? '').trim() === '') bad('component.review.checked_by', msg('libitem.w.is_required_when_reviewed'));
     if ('note' in r) text('component.review.note', r.note);
   }
 }
@@ -586,28 +661,28 @@ export const TEMPLATE = { tagKinds: ['text', 'integer', 'number', 'length', 'ang
 function checkTemplate(c, err) {
   const bad = (p, what) => err(p, msg('libitem.v.template_bad', { what }));
   const plain = (v) => v && typeof v === 'object' && !Array.isArray(v);
-  for (const k of Object.keys(c)) if (!['format', 'version', 'key', 'trade', 'title', 'tags', 'text'].includes(k)) bad('template.' + k, 'is not part of the format');
-  if (c.format !== 'cadcraft-doc-template') bad('template.format', 'must be cadcraft-doc-template');
-  if (c.version !== 1) bad('template.version', 'must be 1');
-  if (typeof c.key !== 'string' || !/^[a-z0-9][a-z0-9-]{1,63}$/.test(c.key)) bad('template.key', 'must be a lower-case key (a-z, 0-9, dashes)');
-  for (const f of ['trade', 'title']) if (typeof c[f] !== 'string' || c[f].trim() === '' || [...c[f]].length > 120) bad('template.' + f, 'must be text of 1 to 120 characters');
-  if (typeof c.text !== 'string' || c.text.trim() === '') bad('template.text', 'is empty');
-  else if (new TextEncoder().encode(c.text).length > TEMPLATE.maxText) bad('template.text', 'is longer than ' + TEMPLATE.maxText + ' bytes');
-  else if (/<\s*(script|iframe|object|embed)/i.test(c.text)) bad('template.text', 'holds markup that a document cannot carry');
-  if (!Array.isArray(c.tags)) { bad('template.tags', 'must be a list'); return; }
-  if (c.tags.length > 40) bad('template.tags', 'at most 40 tag definitions');
+  for (const k of Object.keys(c)) if (!['format', 'version', 'key', 'trade', 'title', 'tags', 'text'].includes(k)) bad('template.' + k, msg('libitem.w.is_not_part_of_the'));
+  if (c.format !== 'cadcraft-doc-template') bad('template.format', msg('libitem.w.must_be_cadcraft_doc_template'));
+  if (c.version !== 1) bad('template.version', msg('libitem.w.must_be_1'));
+  if (typeof c.key !== 'string' || !/^[a-z0-9][a-z0-9-]{1,63}$/.test(c.key)) bad('template.key', msg('libitem.w.must_be_a_lower_case2'));
+  for (const f of ['trade', 'title']) if (typeof c[f] !== 'string' || c[f].trim() === '' || [...c[f]].length > 120) bad('template.' + f, msg('libitem.w.must_be_text_of_1'));
+  if (typeof c.text !== 'string' || c.text.trim() === '') bad('template.text', msg('libitem.w.is_empty'));
+  else if (new TextEncoder().encode(c.text).length > TEMPLATE.maxText) bad('template.text', msg('libitem.w.is_longer_than_bytes', { n: TEMPLATE.maxText }));
+  else if (/<\s*(script|iframe|object|embed)/i.test(c.text)) bad('template.text', msg('libitem.w.holds_markup_that_a_document'));
+  if (!Array.isArray(c.tags)) { bad('template.tags', msg('libitem.w.must_be_a_list')); return; }
+  if (c.tags.length > 40) bad('template.tags', msg('libitem.w.at_most_40_tag_definitions'));
   c.tags.forEach((d, i) => {
     const p = 'template.tags.' + i;
-    if (!plain(d)) { bad(p, 'must be an object'); return; }
-    for (const k of Object.keys(d)) if (!['name', 'kind', 'values', 'classes', 'note'].includes(k)) bad(p + '.' + k, 'is not part of the format');
-    if (typeof d.name !== 'string' || d.name.trim() === '' || [...d.name].length > 80) bad(p + '.name', 'must be text of 1 to 80 characters');
-    if (!TEMPLATE.tagKinds.includes(d.kind)) bad(p + '.kind', 'must be one of ' + TEMPLATE.tagKinds.join(', '));
+    if (!plain(d)) { bad(p, msg('libitem.w.must_be_an_object')); return; }
+    for (const k of Object.keys(d)) if (!['name', 'kind', 'values', 'classes', 'note'].includes(k)) bad(p + '.' + k, msg('libitem.w.is_not_part_of_the'));
+    if (typeof d.name !== 'string' || d.name.trim() === '' || [...d.name].length > 80) bad(p + '.name', msg('libitem.w.must_be_text_of_12'));
+    if (!TEMPLATE.tagKinds.includes(d.kind)) bad(p + '.kind', msg('libitem.w.must_be_one_of', { list: TEMPLATE.tagKinds.join(', ') }));
     for (const f of ['values', 'classes']) {
       if (!(f in d)) continue;
-      if (!Array.isArray(d[f]) || d[f].length > 60) { bad(p + '.' + f, 'must be a list of at most 60'); continue; }
-      if (d[f].some((x) => !(typeof x === 'string' || typeof x === 'number') || String(x).length > 80)) bad(p + '.' + f, 'has a value that is not short text or a number');
+      if (!Array.isArray(d[f]) || d[f].length > 60) { bad(p + '.' + f, msg('libitem.w.must_be_a_list_of')); continue; }
+      if (d[f].some((x) => !(typeof x === 'string' || typeof x === 'number') || String(x).length > 80)) bad(p + '.' + f, msg('libitem.w.has_a_value_that_is'));
     }
-    if ('note' in d && typeof d.note !== 'string') bad(p + '.note', 'must be text');
+    if ('note' in d && typeof d.note !== 'string') bad(p + '.note', msg('libitem.w.must_be_text'));
   });
 }
 /** 0.8 LD.1: the shape of a plant record (format cadcraft-plant, version 1). Mirrors LibraryItemFormat::plant. Lengths in metres. */
@@ -623,57 +698,77 @@ function checkPlant(c, err) {
   const bad = (p, what) => err(p, msg('libitem.v.plant_bad', { what }));
   const plain = (v) => v && typeof v === 'object' && !Array.isArray(v);
   const text = (p, v, required = false) => {
-    if (typeof v !== 'string') return bad(p, 'must be text');
-    if ([...v].length > 500) return bad(p, 'longer than 500 characters');
-    if (required && v.trim() === '') bad(p, 'is empty');
+    if (typeof v !== 'string') return bad(p, msg('libitem.w.must_be_text'));
+    if ([...v].length > 500) return bad(p, msg('libitem.w.longer_than_500_characters'));
+    if (required && v.trim() === '') bad(p, msg('libitem.w.is_empty'));
   };
   const names = ['format', 'version', 'key', 'botanical', 'names', 'type', 'form', 'foliage', 'size', 'growth', 'light', 'water', 'soil', 'zone', 'spacing', 'container', 'region', 'notes', 'symbol', 'model', 'source'];
-  for (const k of Object.keys(c)) if (!names.includes(k)) bad('plant.' + k, 'is not part of the format');
-  if (c.format !== 'cadcraft-plant') bad('plant.format', 'must be cadcraft-plant');
-  if (c.version !== 1) bad('plant.version', 'must be 1');
-  if (typeof c.key !== 'string' || !/^[a-z0-9][a-z0-9-]{1,63}$/.test(c.key)) bad('plant.key', 'must be a lower-case key (a-z, 0-9, dashes)');
+  for (const k of Object.keys(c)) if (!names.includes(k)) bad('plant.' + k, msg('libitem.w.is_not_part_of_the'));
+  if (c.format !== 'cadcraft-plant') bad('plant.format', msg('libitem.w.must_be_cadcraft_plant'));
+  if (c.version !== 1) bad('plant.version', msg('libitem.w.must_be_1'));
+  if (typeof c.key !== 'string' || !/^[a-z0-9][a-z0-9-]{1,63}$/.test(c.key)) bad('plant.key', msg('libitem.w.must_be_a_lower_case2'));
   text('plant.botanical', c.botanical, true);
-  if (!plain(c.names)) bad('plant.names', 'must be an object');
+  if (!plain(c.names)) bad('plant.names', msg('libitem.w.must_be_an_object'));
   else {
-    if (Object.keys(c.names).length > 40) bad('plant.names', 'at most 40 languages');
+    if (Object.keys(c.names).length > 40) bad('plant.names', msg('libitem.w.at_most_40_languages'));
     for (const [l, n] of Object.entries(c.names)) {
-      if (!/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$/.test(l)) bad('plant.names', 'is not a language tag (like es or es-MX)');
+      if (!/^[a-z]{2,3}(-[A-Z][a-z]{3})?(-([A-Z]{2}|[0-9]{3}))?$/.test(l)) bad('plant.names', msg('libitem.w.is_not_a_language_tag'));
       else text('plant.names.' + l, n);
     }
   }
-  const one = (f, allowed) => { if (!allowed.includes(c[f])) bad('plant.' + f, 'must be one of ' + allowed.join(', ')); };
+  const one = (f, allowed) => { if (!allowed.includes(c[f])) bad('plant.' + f, msg('libitem.w.must_be_one_of', { list: allowed.join(', ') })); };
   one('type', PLANT.types); one('form', PLANT.forms); one('foliage', PLANT.foliage); one('growth', PLANT.growth); one('water', PLANT.water);
   for (const [f, allowed] of [['light', PLANT.light], ['soil', PLANT.soils], ['region', PLANT.regions]]) {
-    if (!Array.isArray(c[f])) { bad('plant.' + f, 'must be a list'); continue; }
-    if (c[f].some((x) => !allowed.includes(x))) bad('plant.' + f, 'has a value that is not one of ' + allowed.join(', '));
+    if (!Array.isArray(c[f])) { bad('plant.' + f, msg('libitem.w.must_be_a_list')); continue; }
+    if (c[f].some((x) => !allowed.includes(x))) bad('plant.' + f, msg('libitem.w.has_a_value_that_is2', { list: allowed.join(', ') }));
   }
-  const len = (p, v, max) => { if (typeof v !== 'number' || !(v > 0) || v > max) bad(p, `must be a number above 0 and at most ${max}`); };
-  if (!plain(c.size)) bad('plant.size', 'must be an object');
+  const len = (p, v, max) => { if (typeof v !== 'number' || !(v > 0) || v > max) bad(p, msg('libitem.w.must_be_a_number_above', { max })); };
+  if (!plain(c.size)) bad('plant.size', msg('libitem.w.must_be_an_object'));
   else {
-    for (const k of Object.keys(c.size)) if (!['plant', 'mature'].includes(k)) bad('plant.size.' + k, 'is not part of the format');
-    if (!plain(c.size.mature)) bad('plant.size.mature', 'must be an object');
+    for (const k of Object.keys(c.size)) if (!['plant', 'mature'].includes(k)) bad('plant.size.' + k, msg('libitem.w.is_not_part_of_the'));
+    if (!plain(c.size.mature)) bad('plant.size.mature', msg('libitem.w.must_be_an_object'));
     else { len('plant.size.mature.h', c.size.mature.h, 150); len('plant.size.mature.s', c.size.mature.s, 60); }
     if (c.size.plant != null) {
-      if (!plain(c.size.plant)) bad('plant.size.plant', 'must be an object');
+      if (!plain(c.size.plant)) bad('plant.size.plant', msg('libitem.w.must_be_an_object'));
       else { len('plant.size.plant.h', c.size.plant.h, 150); len('plant.size.plant.s', c.size.plant.s, 60); }
     }
   }
   if (c.zone != null) {
-    if (!plain(c.zone)) bad('plant.zone', 'must be an object');
-    else if (!Number.isInteger(c.zone.min) || !Number.isInteger(c.zone.max) || c.zone.min < 1 || c.zone.max > 13 || c.zone.min > c.zone.max) bad('plant.zone', 'needs whole USDA zones 1 to 13, min not above max');
+    if (!plain(c.zone)) bad('plant.zone', msg('libitem.w.must_be_an_object'));
+    else if (!Number.isInteger(c.zone.min) || !Number.isInteger(c.zone.max) || c.zone.min < 1 || c.zone.max > 13 || c.zone.min > c.zone.max) bad('plant.zone', msg('libitem.w.needs_whole_usda_zones_1'));
   }
-  if (c.spacing != null && (typeof c.spacing !== 'number' || !(c.spacing >= 0) || c.spacing > 50)) bad('plant.spacing', 'must be a number from 0 (seed or turf) to 50');
+  if (c.spacing != null && (typeof c.spacing !== 'number' || !(c.spacing >= 0) || c.spacing > 50)) bad('plant.spacing', msg('libitem.w.must_be_a_number_from'));
   for (const f of ['container', 'notes', 'model', 'source']) if (f in c) text('plant.' + f, c[f]);
-  if ('symbol' in c && c.symbol !== '' && !PLANT.symbols.includes(c.symbol)) bad('plant.symbol', 'must be empty or one of ' + PLANT.symbols.join(', '));
+  if ('symbol' in c && c.symbol !== '' && !PLANT.symbols.includes(c.symbol)) bad('plant.symbol', msg('libitem.w.must_be_empty_or_one', { list: PLANT.symbols.join(', ') }));
+}
+
+/** 0.11 su-finish-11 barriers: item.type.barrier = { subtype, height (mm > 0), + BARRIER_FIELDS[subtype] }. Twin of LibraryItemFormat::barrierBlock. */
+function checkBarrier(t, item, { err, num, keys, obj_ }) {
+  if (!('barrier' in t)) { err('type.barrier', msg('libitem.v.barrier_req')); return; }
+  if (!obj_('type.barrier', t.barrier)) return;
+  const b = t.barrier, sub = b.subtype;
+  if (typeof sub !== 'string' || !Object.prototype.hasOwnProperty.call(BARRIER_SUBTYPES, sub)) { err('type.barrier.subtype', msg('libitem.v.one_of', { list: Object.keys(BARRIER_SUBTYPES).join(', ') })); return; }
+  const fields = BARRIER_FIELDS[sub];
+  keys('type.barrier', b, ['subtype', 'height', ...Object.keys(fields)]);
+  if (!('height' in b)) err('type.barrier.height', msg('libitem.v.barrier_height_req')); else num('type.barrier.height', b.height, { min: 0, max: 10000, positive: true });
+  for (const [k, kind] of Object.entries(fields)) {
+    if (!(k in b)) continue;
+    const p = 'type.barrier.' + k;
+    if (Array.isArray(kind)) { if (!kind.includes(b[k])) err(p, msg('libitem.v.one_of', { list: kind.join(', ') })); } else if (kind === 'int') num(p, b[k], { min: 1, max: 8, int: true }); else num(p, b[k], { min: 0, max: 10000 });
+  }
+  const want = BARRIER_SUBTYPES[sub], pre = item.ifc && typeof item.ifc === 'object' && !Array.isArray(item.ifc) ? item.ifc.predefined : undefined;
+  if (pre !== want) err('ifc.predefined', msg('libitem.v.barrier_predefined', { value: want, sub }));
 }
 
 /** BK.21: item.type = { element, lod?, thickness (mm, the layers' sum), layers (how many), pack (a cadcraft-type-pack holding exactly this type) }. Twin of LibraryItemFormat::typeBlock. */
-function checkTypeBlock(t, item, { err, num, keys }) {
+function checkTypeBlock(t, item, { err, num, keys, obj_ }) {
   const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
-  keys('type', t, ['element', 'lod', 'thickness', 'layers', 'pack']);
+  const isBarrier = t.element === 'barrier';   // 0.11 su-finish-11 barriers: no layers, its own block
+  keys('type', t, isBarrier ? ['element', 'lod', 'barrier'] : ['element', 'lod', 'thickness', 'layers', 'pack']);
   if (!TYPE_ELEMENTS.includes(t.element)) err('type.element', msg('libitem.v.one_of', { list: TYPE_ELEMENTS.join(', ') }));
   if ('lod' in t && !LOD_SCALE.includes(t.lod)) err('type.lod', msg('libitem.v.lod', { list: LOD_SCALE.join(', ') }));
   if ('lod' in t && 'lod' in item && t.lod !== item.lod) err('type.lod', msg('libitem.v.type_lod_twice'));
+  if (isBarrier) { checkBarrier(t, item, { err, num, keys, obj_ }); return; }
   if (!('thickness' in t)) err('type.thickness', msg('libitem.v.type_thickness_req')); else num('type.thickness', t.thickness, { min: 0, max: 20000 });
   if (isNum(t.thickness) && !(t.thickness > 0)) err('type.thickness', msg('libitem.v.type_gt0'));
   if (!('layers' in t)) err('type.layers', msg('libitem.v.type_layers_req')); else num('type.layers', t.layers, { min: 1, max: 60, int: true });
@@ -1023,6 +1118,16 @@ export function validateItem(obj, { partial = false, content = false } = {}) {
   if (isType) {
     if (!obj.ifc || typeof obj.ifc !== 'object' || Array.isArray(obj.ifc)) err('ifc', msg('libitem.v.type_ifc_required', { list: TYPE_IFC_CLASSES.join(', ') }));
     else if (typeof obj.ifc.class === 'string' && !TYPE_IFC_CLASSES.includes(obj.ifc.class)) err('ifc.class', msg('libitem.v.type_ifc_class', { list: TYPE_IFC_CLASSES.join(', ') }));
+    // 0.11 su-finish-11 barriers: element barrier, IfcRailingType and category types/barriers go together, and only together
+    const elNow = obj.type && typeof obj.type === 'object' && !Array.isArray(obj.type) ? obj.type.element : undefined;
+    const clsNow = obj.ifc && typeof obj.ifc === 'object' && !Array.isArray(obj.ifc) ? obj.ifc.class : undefined;
+    if (elNow === 'barrier') {
+      if (typeof clsNow === 'string' && TYPE_IFC_CLASSES.includes(clsNow) && clsNow !== BARRIER_IFC_CLASS) err('ifc.class', msg('libitem.v.barrier_ifc'));
+      if (obj.category !== BARRIER_CATEGORY) err('category', msg('libitem.v.barrier_cat'));
+    } else {
+      if (clsNow === BARRIER_IFC_CLASS) err('ifc.class', msg('libitem.v.barrier_ifc_only'));
+      if (obj.category === BARRIER_CATEGORY) err('category', msg('libitem.v.barrier_cat_only'));
+    }
     if ('body' in obj && obj.body !== null) err('body', msg('libitem.v.type_body'));
     if (obj.plan && Array.isArray(obj.plan.entities) && obj.plan.entities.length) err('plan', msg('libitem.v.type_plan'));
     if ('ports' in obj || 'variants' in obj) err('item', msg('libitem.v.type_extra'));
@@ -2198,18 +2303,31 @@ function mtextLines(s) {
 // ---------------------------------------------------------------------------
 // RFA (family file): PartAtom only
 
-/** info = readRevit() result. Title, category, params; geometry is not read (undocumented): a box from W/D/H, else no body. */
-export function itemFromRfa(info) {
+/**
+ * info = readRevit() result. Title, category, params; geometry is not read (undocumented): a box from W/D/H, else no body.
+ * PO.4: the family's types (info.family.types, from the file's own type list) — or opts.types, the rows of a type catalog (.txt)
+ * read with parseTypeCatalog — become the item's variants: one row per type with the values that differ between types and, where a
+ * type has Width and Depth, its own box. One type only: its values fill the item (most families keep their sizes on the type).
+ */
+export function itemFromRfa(info, opts = {}) {
   const fam = info && info.family;
   if (!fam) return { items: [], notes: [msg('libitem.rfa.no_family')] };
   const notes = [];
   const it = baseItem(fam.title || info.fileName || 'Family');
   const params = {};
   for (const g of fam.groups || []) for (const p of g.params || []) if (p.name && p.value !== undefined && p.value !== '') params[p.name] = String(p.value);
-  it.source_attrs = sourceAttrs(params);
-  const find = (...names) => { for (const n of names) for (const k of Object.keys(params)) if (k.toLowerCase() === n) { const v = parseLength(params[k], 304.8); if (Number.isFinite(v) && v > 0) return v; } return null; };
-  const w = find('width', 'overall width', 'length'), d = find('depth', 'overall depth'), h = find('height', 'overall height');   // i18n-ignore: parameter names in the file
-  const pinfo = attrsInfo({ MANUFACTURER: params.Manufacturer || '', MODEL: params.Model || '' });
+  const types = (Array.isArray(opts.types) && opts.types.length ? opts.types : fam.types || []).filter((t) => t && t.name).slice(0, VARIANT_LIMITS.rows);
+  if ((opts.types || []).length > VARIANT_LIMITS.rows || (fam.types || []).length > VARIANT_LIMITS.rows) notes.push(msg('libitem.rfa.types_cut', { n: VARIANT_LIMITS.rows }));
+  const typeParams = (t) => { const o = {}; for (const p of t.params || []) if (p.name && p.value !== undefined && p.value !== '') o[p.name] = String(p.value); return o; };
+  const first = types.length ? typeParams(types[0]) : {};
+  const all = { ...params, ...first };   // the first type is the default: its values win over the family's own
+  it.source_attrs = sourceAttrs(all);
+  const sizeIn = (o) => {
+    const find = (...names) => { for (const n of names) for (const k of Object.keys(o)) if (k.toLowerCase() === n) { const v = parseLength(o[k], 304.8); if (Number.isFinite(v) && v > 0) return v; } return null; };
+    return { w: find('width', 'overall width', 'length'), d: find('depth', 'overall depth'), h: find('height', 'overall height') };   // i18n-ignore: parameter names in the file
+  };
+  const { w, d, h } = sizeIn(all);
+  const pinfo = attrsInfo({ MANUFACTURER: all.Manufacturer || '', MODEL: all.Model || '' });
   it.maker = clip(pinfo.maker); it.model = clip(pinfo.model);
   it.description = clip('Family ' + (fam.title || '') + (fam.categories?.length ? ' (' + fam.categories.join(', ') + ')' : '') + '.');
   if (w && d) {
@@ -2219,11 +2337,101 @@ export function itemFromRfa(info) {
     it.body = null;
     notes.push(msg('libitem.rfa.no_geometry'));
   }
+  if (types.length > 1) {
+    // columns: the parameters whose value is not the same in every type (the rest are the item's own data)
+    const per = types.map(typeParams);
+    const names = [];
+    for (const o of per) for (const k of Object.keys(o)) if (!names.includes(k)) names.push(k);
+    const differs = names.filter((k) => per.some((o) => (o[k] ?? '') !== (per[0][k] ?? '')));
+    const cols = [], used = new Set();
+    for (const k of differs.slice(0, VARIANT_LIMITS.columns)) {
+      let key = k.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 70) || 'value', n = 2;
+      while (used.has(key)) key = key.replace(/_\d+$/, '') + '_' + n++;
+      used.add(key);
+      cols.push({ key, label: clip(k, 80), name: k });
+    }
+    if (differs.length > VARIANT_LIMITS.columns) notes.push(msg('libitem.rfa.columns_cut', { n: VARIANT_LIMITS.columns }));
+    if (!cols.length) cols.push({ key: 'type', label: 'Type', name: null });   // i18n-ignore: item data
+    const ids = new Set();
+    const rows = types.map((t, i) => {
+      let id = String(t.name).replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 54) || 'type', n = 2;
+      while (ids.has(id)) id = id.replace(/-\d+$/, '') + '-' + n++;
+      ids.add(id);
+      const o = per[i], row = { id, name: clip(t.name, 120), values: {} };
+      for (const c of cols) row.values[c.key] = c.name === null ? clip(t.name, 120) : clip(o[c.name] ?? '', 200);
+      const sz = sizeIn({ ...params, ...o });
+      if (sz.w && sz.d) {
+        row.footprint = { x: r4(-sz.w / 2), y: r4(-sz.d), w: r4(sz.w), d: r4(sz.d) };
+        row.body = sz.h ? { type: 'box', x: r4(-sz.w / 2), y: r4(-sz.d), z: 0, w: r4(sz.w), d: r4(sz.d), h: r4(sz.h) } : null;
+      }
+      return row;
+    });
+    it.variants = { columns: cols.map(({ key, label }) => ({ key, label })), rows, default: rows[0].id };
+    notes.push(msg(opts.types ? 'libitem.rfa.types_catalog' : 'libitem.rfa.types', { n: rows.length }));
+  } else if (types.length === 1 && types[0].name && types[0].name !== fam.title) {
+    notes.push(msg('libitem.rfa.one_type', { name: clip(types[0].name, 120) }));
+  }
   const sug = suggestCategory((fam.categories || []).join(' ') + ' ' + it.name);
   if (sug) { it.category = sug; notes.push(msg('libitem.category.suggested_family', { category: sug })); }
   else notes.push(msg('libitem.category.set', { category: 'other/other' }));
   if (/furniture/i.test((fam.categories || []).join(' '))) { it.kind = 'furniture'; it.category = sug || 'furniture/other'; }
   return { items: [it], notes };
+}
+
+/**
+ * PO.4: a type catalog — the .txt file that sits beside a family file with the same name, one line per type.
+ * First line: an empty cell, then "Name##kind##unit" per column (e.g. Width##LENGTH##MILLIMETERS); each later line: the type's name,
+ * then its values. Comma-separated, quotes as in CSV. → [{name, params[{name, value}]}] (a length carries its unit so parseLength reads it);
+ * [] when the text is not a type catalog.
+ */
+export function parseTypeCatalog(text) {
+  const rows = csvRows(String(text || '').replace(/^﻿/, ''));
+  if (rows.length < 2 || !rows[0].slice(1).some((c) => /##/.test(c))) return [];
+  const UNIT = { millimeters: 'mm', centimeters: 'cm', meters: 'm', inches: 'in', feet: 'ft', decimal_inches: 'in', decimal_feet: 'ft' };
+  const cols = rows[0].slice(1).map((c) => { const [name, kind = '', unit = ''] = String(c).split('##'); return { name: name.trim(), kind: kind.trim().toLowerCase(), unit: UNIT[unit.trim().toLowerCase().replace(/\s+/g, '_')] || '' }; });
+  const out = [];
+  for (const r of rows.slice(1)) {
+    const name = String(r[0] ?? '').trim();
+    if (!name) continue;
+    const params = [];
+    cols.forEach((c, i) => {
+      const v = String(r[i + 1] ?? '').trim();
+      if (!c.name || v === '') return;
+      params.push({ name: c.name, value: c.kind === 'length' && c.unit && /^-?\d+(\.\d+)?$/.test(v) ? v + ' ' + c.unit : v });
+    });
+    out.push({ name, params });
+    if (out.length >= 500) break;
+  }
+  return out;
+}
+function csvRows(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some((c) => c !== '')) rows.push(row); row = []; }
+    else cell += ch;
+  }
+  row.push(cell); if (row.some((c) => c !== '')) rows.push(row);
+  return rows;
+}
+
+/**
+ * PO.4: a family file's data on another file's shape. `data` = the item made from the .rfa (name, maker, model, category, parameters,
+ * types); `shape` = an item read from an IFC, glTF or OBJ file of the same name (its real geometry). The result is the family's
+ * item with that plan and body; its types keep their values but lose their stand-in boxes (one shape was given, not one per type).
+ */
+export function itemWithShape(data, shape) {
+  const out = { ...data, plan: shape.plan, body: shape.body, clearances: shape.clearances || data.clearances || [] };
+  if (shape.ports) out.ports = shape.ports;
+  const b = bodyBox(shape.body);
+  out.params = { ...(data.params || {}) };
+  if (b) { out.params.width = b.w; out.params.depth = b.d; out.params.height = b.h; }
+  if (shape.ifc && shape.ifc.class && shape.ifc.class !== 'IfcBuildingElementProxy') out.ifc = shape.ifc;
+  if (data.variants) out.variants = { ...data.variants, rows: data.variants.rows.map(({ body, footprint, ...r }) => r) };
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -2279,7 +2487,6 @@ export function previewSvg(item) {
   const s = Math.min((TW - 2 * M) / w, (TH - 2 * M) / h), ox = (TW - w * s) / 2, oy = (TH - h * s) / 2;
   const f = (v) => String(Math.round(v * 10) / 10);
   const X = (x) => f(ox + (x - bb[0]) * s), Y = (y) => f(oy + (bb[3] - y) * s);
-  const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   const pathOf = (pts, close) => 'M' + pts.map(([x, y]) => X(x) + ',' + Y(y)).join('L') + (close ? 'Z' : '');
   const dOf = (e) => {
     if (e.type === 'line') return 'M' + X(e.x1) + ',' + Y(e.y1) + 'L' + X(e.x2) + ',' + Y(e.y2);

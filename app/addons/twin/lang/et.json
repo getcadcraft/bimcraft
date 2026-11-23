@@ -11,6 +11,7 @@
   "bt.file.open": "Ava paigutusfail",
   "bt.file.save": "Salvesta paigutus failina",
   "bt.file.bad": "{name} ei ole Materjalivoo paigutus.",
+  "bt.file.ask": "Kas asendada praegune paigutus selle failiga?",
   "bt.file.done": "{name}: laaditi {n} eset, {dropped} jäeti välja.",
   "bt.fit.run": "Kontrolli seinte suhtes",
   "bt.fit.nolayout": "Kontrollimiseks puudub paigutus. Kasuta valmis lahtrit või ava paigutusfail.",

@@ -23,11 +23,11 @@ import { addWall } from './model-walls.js';
 import { addFloor } from './model-slabs.js';
 import { inv4, apply4, val } from './ifc-util.js';
 import { insidePoint } from './model-site-mass.js';
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const DEFAULTS = { efficiency: 0.8, floorHeight: 3200, maxFloors: 40 };
 const M2 = 1e6;
 const cleanText = (s, n) => String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
-const area = (P) => { let s = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; s += a[0] * b[1] - b[0] * a[1]; } return s / 2; };
 const anticlockwise = (P) => (area(P) < 0 ? [...P].reverse() : P);
 
 /** The program, cleaned: [{ name, count, area_m2 }]; bad rows dropped and said. */

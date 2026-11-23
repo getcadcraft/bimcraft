@@ -41,6 +41,7 @@ import { cleanConcrete, concreteMaterial, stiffnessFactor, diaphragmsOf } from '
 import { cleanAnalysis } from './frame/frame-panel.js';
 import { op } from './model-ops.js';
 import { findSection } from './shapes/sections.js';
+import { add3 as add, cross3 as cross, dot3 as dot, len3 as len, scale3 as mul, sub3 as sub, unit3 as norm } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const ANALYSIS_PSET = 'CadCraft_Analysis';
 export const MERGE_TOL = 10;          // mm: points this close are one node
@@ -53,13 +54,6 @@ const MATS = {
 };
 export const materialKind = (name) => (/concrete|beton|béton|hormig[oó]n|cement/i.test(name || '') ? 'concrete' : /wood|timber|glulam|lumber|madera|holz|\bclt\b/i.test(name || '') ? 'timber' : 'steel');
 
-const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const len = (a) => Math.hypot(a[0], a[1], a[2]);
-const norm = (a) => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
 const I4 = () => ({ X: [1, 0, 0], Y: [0, 1, 0], Z: [0, 0, 1], O: [0, 0, 0] });
 const apply = (M, p) => add(add(add(M.O, mul(M.X, p[0])), mul(M.Y, p[1])), mul(M.Z, p[2] || 0));
 const applyDir = (M, d) => add(add(mul(M.X, d[0]), mul(M.Y, d[1])), mul(M.Z, d[2] || 0));

@@ -36,6 +36,7 @@
 import { ids, val, lengthUnitMm, productTriangles, inv4, apply4, mul4, deleteLine, restored, retypeLine, replaceLine } from './ifc-util.js';
 import { decodeElec, elecText, planBounds, boxFromPlan, variantOf, itemAsVariant } from './libitem.js';
 import { t } from "./i18n.js";
+import { dist2 as dist } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const D2R = Math.PI / 180;
 
@@ -866,7 +867,6 @@ export function pruneRefs(api, mid, gone) {
 
 // ---- helpers ----
 const round = (v, d = 6) => Math.round(v * 10 ** d) / 10 ** d;
-const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const norm = (a) => { let x = a % 360; if (x < 0) x += 360; return x; };
 

@@ -28,10 +28,10 @@ import { round } from './model-write.js';
 import { t as tr } from './i18n.js';
 import { ruleOf } from './quantity-method.js';   // 0.10 BK.42 (bk-measure-10): the project's measurement method; null under the default
 import { outlineArea } from './quantities/rules.js';   // BK.11 (bk-quantities-10): the one stated measuring rule, shared with the schedules and TakeoffCraft
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const DRAWN_PSET = 'CadCraft_DrawnFloor', OPENING_PSET = 'CadCraft_FloorOpening';
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
-const area = (p) => { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; };
 const perim = (p) => p.reduce((s, a, i) => { const b = p[(i + 1) % p.length]; return s + Math.hypot(b[0] - a[0], b[1] - a[1]); }, 0);
 function crosses(a, b, c, d) {
   const o = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]));

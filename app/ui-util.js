@@ -4,19 +4,9 @@
  * el() is the only way file-derived text reaches the page: children are appended as text
  * nodes (textContent semantics), never parsed as HTML. A model or folder is untrusted input.
  */
+import { makeEl } from './ui-util-core.js';
 
-export function el(tag, props = {}, ...children) {
-  const n = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) {
-    if (v === undefined || v === null || v === false) continue;
-    if (k === 'className') n.className = v;
-    else if (k === 'onClick') n.addEventListener('click', v);
-    else if (k in n && typeof v !== 'string') n[k] = v;
-    else n.setAttribute(k, v === true ? '' : String(v));
-  }
-  for (const c of children.flat(Infinity)) if (c !== null && c !== undefined && c !== false) n.append(c);   // strings become text nodes
-  return n;
-}
+export const el = makeEl({ on: 'click', dataset: false });   // PERF.74: the shared builder with this app's own rules (ui-util-core.js)
 
 export function fillDl(dl, rows, keepEmpty = false) {
   dl.replaceChildren();

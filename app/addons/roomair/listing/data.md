@@ -1,0 +1,1 @@
+Nothing is built in: the room, the terminals, the airflows, the supply air and the heat and moisture sources are yours or the model's. Air properties are those of dry air near 20 °C (density 1.2 kg/m³, specific heat 1006 J/kg K, viscosity 1.516e-5 m²/s), stated in the code.

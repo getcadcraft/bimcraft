@@ -1,0 +1,8 @@
+{"cases": [
+  {"id": "ra-1", "name": "Air, heat and water in equal what leaves", "result": "A 2 x 2 x 2.4 m room at 100 L/s and 14 °C with a 500 W, 100 g/h person: the air leaves at 18.161 °C against 18.142 °C from the heat balance (0.46 % of the rise); 100.00 L/s in and out; a fan coil's return air within 0.02 % of the rise (tools/cfd-test/test-room.mjs)"},
+  {"id": "ra-2", "name": "Nothing to change stays unchanged", "result": "Supply air the same as the room air: the temperature stays exact and the mean humidity ratio within 0.05 %; a cold supply alone brings the room to the supply temperature within 0.01 K"},
+  {"id": "ra-3", "name": "Symmetry", "result": "A room symmetric across x stays symmetric to 0.0001 K, and its two returns take the same air"},
+  {"id": "ra-4", "name": "The solver's buoyancy, closed box", "result": "The 3-D differentially heated air cube against the numerical benchmark of Tric, Labrosse and Betrouni (2000): Nu 4.308 against 4.337 at Ra 1e5 on 48 cells (0.11, engineering-11); numerical, laminar, not a measured room"},
+  {"id": "ra-5", "name": "In BimCraft, in the page", "result": "The showcase house with a diffuser, a grille and a fan coil placed with BimCraft's equipment: terminals and airflows read from the model, 60 s of air on 11,880 cells in about 30 s, numbers, coloured plane and CSV shown, nothing written into the model (tools/bimcraft-test/browser-roomair-bim.mjs, 23 checks)"},
+  {"id": "ra-6", "name": "Measured room air", "result": "Not done: waits on measured velocity and temperature profiles of a published test room (the comparison hook is built and says so on every result)"}
+]}

@@ -11,6 +11,7 @@
   "bt.file.open": "Abrir um ficheiro de layout",
   "bt.file.save": "Guardar o layout como ficheiro",
   "bt.file.bad": "{name} não é um layout do Material flow.",
+  "bt.file.ask": "Substituir o layout atual por este ficheiro?",
   "bt.file.done": "{name}: {n} elementos carregados, {dropped} ignorados.",
   "bt.fit.run": "Verificar contra as paredes",
   "bt.fit.nolayout": "Ainda não há layout para verificar. Use uma célula ou abra um ficheiro de layout.",

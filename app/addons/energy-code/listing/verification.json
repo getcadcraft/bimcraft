@@ -1,0 +1,49 @@
+{
+ "cases": [
+  {
+   "id": "ec-table",
+   "name": "Table 150.1-A read twice",
+   "result": "The script's reading of the single-family component package and a second, separate reading of the same PDF agree on all 240 cells compared (15 rows by 16 climate zones), 2026-11-20"
+  },
+  {
+   "id": "ec-zone",
+   "name": "Climate zone from the ZIP code",
+   "result": "93657 (Sanger) is zone 13, 95521 (Arcata) zone 1, 92101 (San Diego) zone 7; a ZIP code outside California is not found (bin/test-energy-code.mjs)"
+  },
+  {
+   "id": "ec-wall",
+   "name": "Wall U-factors from the code's table",
+   "result": "2x6 at 16 in. with R-21 gives 0.069; with R-5 continuous 0.048; installed R-9 continuous uses the R-8 column; a combination the table does not print is reported, not estimated (bin/test-energy-code.mjs)"
+  },
+  {
+   "id": "ec-west",
+   "name": "Which windows face west",
+   "result": "Bearings of 270 and 315 degrees count, 225 and 316 do not, as the code defines west-facing (bin/test-energy-code.mjs)"
+  },
+  {
+   "id": "ec-house",
+   "name": "A whole house by hand",
+   "result": "A 1,800 sq ft house in zone 13 with 2x6 R-21 walls, an R-38 attic and 0.27 / 0.23 windows fails the wall row (0.069 against 0.048) and passes the ceiling, floor and window rows; with R-5 continuous insulation the wall row passes (bin/test-energy-code.mjs)"
+  },
+  {
+   "id": "ec-bim",
+   "name": "In a real BimCraft page",
+   "result": "In BimCraft's lab build the Hillside ranch model is read: its stucco 2x6 wall type, twelve windows with their compass directions and its floor area; the check runs and the inputs are kept in the drawing (tools/energy-code/browser.mjs)"
+  },
+  {
+   "id": "ec-cbecc-check",
+   "name": "The project file check, proven on the Commission's own files",
+   "result": "The reader and the data model check were run on the Energy Commission's 24 published single-family example files: all are read, all read back the same after being written again, and 2,874 objects, 55,231 properties, 17,282 words and 1,502 references pass, with one display field the model does not list (bin/test-energy-code.mjs)"
+  },
+  {
+   "id": "ec-cbecc-file",
+   "name": "A written project file against the program's data model",
+   "result": "The file written for the Hillside ranch in BimCraft's lab build (28 objects, 244 properties, 88 words) passes with no problem: zone 13, four walls by direction, twelve windows under their walls, two doors, the floor over the crawl space. A wrong word and an unknown property are both caught when put in on purpose. The file has NOT been opened in CBECC (tools/energy-code/browser.mjs, bin/test-energy-code.mjs)"
+  },
+  {
+   "id": "ec-u",
+   "name": "The table's U-factor given to the model",
+   "result": "2x6 at 16 in. with R-21 gives 0.069 Btu/h·ft²·°F, which is 0.3918 W/m²K; with R-5 continuous 0.048, which is 0.2726; only the exterior walls of the chosen type are written, in one undo step, and a value out of range is refused. In BimCraft's lab build the four exterior walls of the Hillside ranch carry 0.2726 after the button is pressed (bin/test-energy-code.mjs, tools/energy-code/browser.mjs)"
+  }
+ ]
+}

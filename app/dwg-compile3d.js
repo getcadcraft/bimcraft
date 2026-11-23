@@ -34,6 +34,7 @@
  */
 import { arcPoints, bulgePolyline, hatchRings, layerColor, rgbHex, aciColor, UNITS, plainText, mtextLines } from './dwg-compile.js';
 import { t } from "./i18n.js";
+import { cross3 as cross, unit3 as unit } from './geom-vec.js';   // shared helpers (0.11 PERF.74)
 
 const MAX_PRIMS = 4_000_000;
 const TAU = Math.PI * 2;
@@ -71,8 +72,6 @@ export function normal(ext) {
 export function ocsMatrix(ext) {
   const N = normal(ext);
   if (N[0] === 0 && N[1] === 0 && N[2] === 1) return I3;
-  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  const unit = (v) => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
   const Ax = unit(Math.abs(N[0]) < 1 / 64 && Math.abs(N[1]) < 1 / 64 ? cross([0, 1, 0], N) : cross([0, 0, 1], N));
   const Ay = unit(cross(N, Ax));
   return [Ax[0], Ay[0], N[0], 0, Ax[1], Ay[1], N[1], 0, Ax[2], Ay[2], N[2], 0];

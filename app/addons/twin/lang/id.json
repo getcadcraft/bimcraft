@@ -11,6 +11,7 @@
   "bt.file.open": "Buka file tata letak",
   "bt.file.save": "Simpan tata letak sebagai file",
   "bt.file.bad": "{name} bukan tata letak Material flow.",
+  "bt.file.ask": "Ganti layout saat ini dengan file ini?",
   "bt.file.done": "{name}: {n} item dimuat, {dropped} dilewati.",
   "bt.fit.run": "Periksa terhadap dinding",
   "bt.fit.nolayout": "Belum ada tata letak untuk diperiksa. Gunakan sel atau buka file tata letak.",

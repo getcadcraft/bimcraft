@@ -9,13 +9,8 @@
 import { optimise, remoteEvaluator, VARIANT_TASK } from '../../../process/optimise.js';
 import * as STUDY from '../../../study/study.js';
 
-const WORDS = {
-  'opt.lede': 'Try many settings of the process model and rank them. Name the unit and the parameter to vary, the range, and what to minimise. Computers you connected in Studio (Settings, Rendering, other computers) solve variants too; the rest are solved here.',
-  'opt.spec': 'Study (JSON)', 'opt.run': 'Run the study', 'opt.nodes': '{n} other computers can solve variants.', 'opt.nonodes': 'No other computer is connected: every variant is solved here.',
-  'opt.nomodel': 'No process model yet. Bring one in from the process file first.', 'opt.badjson': 'The study is not valid JSON: {why}', 'opt.running': 'Running…',
-  'opt.done': '{n} variants: {remote} solved on other computers, {local} here, {failed} could not be solved.', 'opt.best': 'Best by your ranking: {text}', 'opt.none': 'No variant met every limit.',
-};
-const wordsOf = (t) => (k, v) => { const r = t ? t(k, v) : k; if (r && r !== k) return r; return (WORDS[k] || k).replace(/\{(\w+)\}/g, (m, a) => (v && v[a] !== undefined ? v[a] : m)); };
+// The words (opt.*) are the add-on's language keys in lang/<locale>.json (CH.32, chem-finish-11: the English that lived here moved to lang/en.json).
+const wordsOf = (t) => (k, v) => { const r = t ? t(k, v) : k; return r == null ? k : r; };
 export const SAMPLE = { title: 'My study', variables: [{ unit: 'UNIT-ID', param: 'PARAMETER', from: 0, to: 0, steps: 5 }], objectives: [{ key: 'energy', metric: 'energy_kW', goal: 'min' }] };
 
 export function mountOptimise(el, { t: t0, model, lan = () => globalThis.bimcraftLan || null } = {}) {

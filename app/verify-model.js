@@ -27,6 +27,7 @@ import { op } from './model-ops.js';
 import { ids, val } from './ifc-util.js';
 import { anyByGuid } from './classify-model.js';
 import { VERIFY_PSET, ASBUILT_PSET, cleanRecord, makeRecord, recordRows, summary, statementRows } from './modelaudit/verify.js';
+import { pointInRing as inPoly } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const INTERFACE_PSET = 'CadCraft_Interface';
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
@@ -84,7 +85,6 @@ export function markRecognised(w, idList, source, note = '') {
   return rec;
 }
 export const spaceIds = (w) => new Set(safeIds(w, 'IFCSPACE'));
-const inPoly = (x, y, p) => { let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const a = p[i], b = p[j]; if ((a[1] > y) !== (b[1] > y) && x < ((b[0] - a[0]) * (y - a[1])) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
 /**
  * Rooms made by this op (not in `before`) are unverified. names = [{ storey (id), name, at: [x, y] }] (plan mm): a name whose point
  * lies in a new room's loop becomes that room's name (loopFor(storeyId) → [{ poly, seed? }] the level's room loops).

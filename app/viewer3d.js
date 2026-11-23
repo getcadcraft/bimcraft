@@ -31,6 +31,8 @@
  *   v.project([x, y, z]) → page {x, y} | null      (labels over the canvas)
  *   v.startWalk(point, opts) / v.stopWalk() / v.walk   walk mode (0.4 B18): eye height, gravity, collision; keys and drag
  *   v.walkPick = (point | null) => …          while set, a click hands over the point it hits (where to start walking)
+ *   v.previewStart() / previewAdd(pieces) / previewEnd()   0.11 PERF.8: the model drawn as its pieces arrive from the geometry worker (ifc-model.js
+ *                                              onPieces), plain shaded, not pickable; setModel replaces it. v.previewCount = meshes drawn so far
  *   v.setModel(m2, { add: true })  removeModel(mi)  setModelVisible(mi, on)  setModelMatrix(mi, m4)  keyBounds(keys)
  *                                              federation (0.4 B16): one layer per model, keys never collide
  *
@@ -217,6 +219,7 @@ export class Viewer3D {
    * or another model added to the scene).
    */
   setModel(model, { keepCamera = false, add = false } = {}) {
+    if (!add) this.previewEnd();
     const cam = (keepCamera || add) && !this.box.isEmpty() ? { p: this.camera.position.clone(), t: this.controls.target.clone() } : null;
     const mi = Math.floor((model.keyBase || 0) / KEY_SPAN);
     this.select(null);
@@ -298,6 +301,72 @@ export class Viewer3D {
     if (this.clip.length) this.updateCaps();
     if (cam) { this.camera.position.copy(cam.p); this.controls.target.copy(cam.t); this.controls.update(); this.render(); }
     else this.view('iso');
+  }
+
+  /**
+   * 0.11 PERF.8: progressive display. A new file's model is drawn while it opens: each group of pieces the geometry worker sends (world space,
+   * see ifc-model.js onPieces) is merged, once a frame, into one vertex-coloured mesh; its arrays are let go once the card has them. The camera
+   * fits what has arrived until the person moves it. Spaces (pass 1) are left out, as the viewer hides them. setModel removes all of it.
+   */
+  previewStart() {
+    this.previewEnd();
+    this.select(null);
+    for (const L of this.layers.values()) this.disposeLayer(L);
+    this.layers.clear(); this.matrices.clear(); this.hiddenModels.clear();
+    this.relist();
+    const group = new THREE.Group();
+    this.root.add(group);
+    const P = this.preview = { group, mat: new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), box: new THREE.Box3(), fitted: 0, moved: false, queue: [], raf: 0 };
+    P.onMove = () => { P.moved = true; };
+    this.controls.addEventListener('start', P.onMove);
+    this.previewCount = 0;
+    this.render();
+  }
+  previewAdd(pieces) {
+    const P = this.preview;
+    if (!P) return;
+    for (const p of pieces) if (p.pass === 0 && p.idx.length) P.queue.push(p);
+    if (!P.raf && P.queue.length) P.raf = requestAnimationFrame(() => { P.raf = 0; if (this.preview === P) this.previewFlush(P); });
+  }
+  previewFlush(P) {
+    const q = P.queue; P.queue = [];
+    let nv = 0, ni = 0;
+    for (const p of q) { nv += p.pos.length / 3; ni += p.idx.length; }
+    if (!ni) return;
+    const pos = new Float32Array(nv * 3), nrm = new Float32Array(nv * 3), col = new Float32Array(nv * 3), idx = new Uint32Array(ni);
+    const c = new THREE.Color();
+    let v = 0, k = 0;
+    for (const p of q) {
+      pos.set(p.pos, v * 3); nrm.set(p.nrm, v * 3);
+      c.setRGB(p.color[0], p.color[1], p.color[2], THREE.SRGBColorSpace);
+      const n = p.pos.length / 3;
+      for (let i = 0; i < n; i++) { col[(v + i) * 3] = c.r; col[(v + i) * 3 + 1] = c.g; col[(v + i) * 3 + 2] = c.b; }
+      for (let i = 0; i < p.idx.length; i++) idx[k + i] = v + p.idx[i];
+      v += n; k += p.idx.length;
+    }
+    const geo = new THREE.BufferGeometry();
+    const drop = function () { this.array = null; };   // the card holds it from here on
+    for (const [name, a] of [['position', pos], ['normal', nrm], ['color', col]]) geo.setAttribute(name, new THREE.BufferAttribute(a, 3).onUpload(drop));
+    geo.setIndex(new THREE.BufferAttribute(idx, 1).onUpload(drop));
+    geo.computeBoundingBox(); geo.computeBoundingSphere();
+    const mesh = new THREE.Mesh(geo, P.mat);
+    mesh.matrixAutoUpdate = false;
+    P.group.add(mesh);
+    this.previewCount = (this.previewCount || 0) + 1;
+    P.box.union(geo.boundingBox);
+    const size = P.box.getSize(new THREE.Vector3()).length();
+    if (!P.moved && (!P.fitted || size > P.fitted * 1.5)) { P.fitted = size; this.box.copy(P.box); this.view('iso'); }
+    else this.render();
+  }
+  previewEnd() {
+    const P = this.preview;
+    if (!P) return;
+    this.preview = null; this.previewCount = 0;
+    if (P.raf) cancelAnimationFrame(P.raf);
+    this.controls.removeEventListener('start', P.onMove);
+    for (const m of P.group.children) m.geometry.dispose();
+    P.mat.dispose();
+    P.group.removeFromParent();
   }
 
   /** The edge lines of a model's batches, one batch at a time between frames (0.10 PERF.8). Stops when the layer was replaced or removed. */

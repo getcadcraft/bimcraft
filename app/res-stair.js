@@ -29,6 +29,7 @@ import { railingParts, railingItems } from './res-railing.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 import { FLOOR, CEIL, stairAdvice, spiralAdvice, advise } from './draw-advice.js';   // 0.10 BK.73: unusual sizes are advised, not refused
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const IN = 25.4;
 export const STAIR_PSET = 'CadCraft_Stair', WELL_PSET = 'CadCraft_StairWell';
@@ -154,7 +155,6 @@ export function stairLayout(spec0) {
   const run = s.kind === 'straight' ? T * d : null;
   return { n, riser: r, tread: d, treads: T, run, pieces, outline, sides, walk, checks, spec: s };
 }
-function area(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
 /** A spiral stair's treads (wedges round the post), its post, the outside handrail, the walk line, the outline (0.6 round 2). */
 function spiralLayout(s, { n, r, T, d, w, a0, ins, pieces, sides, walk, flight }) {
   const rp = (s.post > 0 ? s.post : SPIRAL_DEFAULTS.post) / 2, Ro = rp + w, walkR = rp + SPIRAL_LIMITS.walk;

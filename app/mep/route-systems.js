@@ -6,12 +6,12 @@
  * tables of the plumbing standard in force) and draws what they find as ordinary runs (placeRun / placeNetwork of mep/autoroute.js),
  * so fittings, ports, systems and IfcRelConnectsPorts are the run model's own.
  *
- *   planDrain(w, { storey, outlet, stacks?, obstacles?, std?, mat?, minTail?, ventSize? })       MEP.2 sanitary drainage by gravity
+ *   planDrain(w, { storey | storeys: [guid…], vent?: 'own' | 'stack', ventLimit? (mm, typed), outlet, stacks?, obstacles?, std?, mat?, minTail?, ventSize? })       MEP.2 sanitary drainage by gravity
  *       → { ok, specs, plan (gravity.js result), failed, std, note }   sizes by the fixture units of mep/fixtures.js under `std`
  *       (IPC DFU for 'us', NBR 8160 UHC for 'br'); slopes by mep/pipes.js drainSlope; capacities by mep/drainage.js
  *   planWaterSystems(w, { storey, source, hot?: { source, fixtures }, pressure?, loop?, obstacles?, curve?, wsfu? })   MEP.3 cold and hot water
  *       → { ok, specs, cold, hot, failed }
- *   planRefrigerant(w, { storey, outdoor, indoors: [{ eq, capacity }], limits?, obstacles?, condensate?: { outlet } })   MEP.4 split / multi-split / VRF
+ *   planRefrigerant(w, { storey, outdoor, indoors: [{ eq, capacity }], limits?, equivalent?: { bend, kit } (mm, the maker's, typed), obstacles?, condensate?: { outlet } })   MEP.4 split / multi-split / VRF
  *       → { ok, specs, plan, condensate, failed }
  * A drafting aid: no code compliance is claimed; the person checks the design.
  */
@@ -41,19 +41,24 @@ export function drainFixtures(w, storeyId, std) {
 export function planDrain(w, o) {
   const std = o.std || projectStandard() || 'us';
   const d = runDefaults('pipe', 'san', null, std), mat = o.mat || d.mat, cls = d.cls;
-  const storeyId = w.byGuid(o.storey);
-  if (!storeyId) refuse('model.err.nolevel');
+  // 0.11: `storeys: [guid, …]` routes several storeys in one go (their laterals tap the stacks at their own levels); `storey` is the one-level form
+  const guids = o.storeys && o.storeys.length ? o.storeys.map(String) : [o.storey];
+  const ids = guids.map((g) => w.byGuid(g));
+  if (!ids.length || ids.some((x) => !x)) refuse('model.err.nolevel');
   const sizes = sizeTable(mat, cls), by = new Map(sizes.map((s) => [s.nominal, s]));
-  const rules = { sizes, slopeOf: (n) => by.get(n)?.slope ?? null, capacity: (n, s, role) => capacity(std, n, s, role) };
-  const fixtures = drainFixtures(w, storeyId, std);
-  const plan = planDrainage({ fixtures, outlet: o.outlet, stacks: o.stacks || [], obstacles: o.obstacles || [], rules, minTail: o.minTail ?? 100, clearance: o.clearance ?? 25 });
+  // the most a code allows between a trap and its vent is the person's (o.ventLimit, mm) or a host table: none is shipped here (rule 66)
+  const rules = { sizes, slopeOf: (n) => by.get(n)?.slope ?? null, capacity: (n, s, role) => capacity(std, n, s, role), ...(o.ventLimitOf ? { ventLimit: o.ventLimitOf } : {}) };
+  const fixtures = ids.flatMap((id, i) => drainFixtures(w, id, std).map((f) => ({ ...f, storey: guids[i] })));
+  const plan = planDrainage({ fixtures, outlet: o.outlet, stacks: o.stacks || [], obstacles: o.obstacles || [], rules, minTail: o.minTail ?? 100, clearance: o.clearance ?? 25,
+    vent: o.vent, ventLimit: o.ventLimit });
   if (!plan.runs.length) return { ok: false, specs: [], plan, failed: plan.failed, std, fixtures: fixtures.length };
-  const specs = plan.runs.map((r) => ({ storey: o.storey, kind: 'pipe', system: 'san', mat, cls, size: r.size, slope: r.slope, role: r.role === 'main' ? 'main' : r.role, points: r.points.map((q) => q.slice()), flow: 0 }));
+  const at = (r) => r.storey || guids[0];
+  const specs = plan.runs.map((r) => ({ storey: at(r), kind: 'pipe', system: 'san', mat, cls, size: r.size, slope: r.slope, role: r.role === 'main' ? 'main' : r.role, points: r.points.map((q) => q.slice()), flow: 0 }));
   // vent stubs: the smallest size at least as big as the ventSize asked (a drafting default 1-1/4 in or DN 40)
   const vd = runDefaults('pipe', 'vent', null, std), vs = sizeTable(vd.mat, vd.cls), want = o.ventSize ?? (std === 'br' ? 40 : 1.25);
   const vsize = vs.find((s) => s.nominal + 1e-9 >= want) || vs[vs.length - 1];
-  for (const v of plan.vents || []) specs.push({ storey: o.storey, kind: 'pipe', system: 'vent', mat: vd.mat, cls: vd.cls, size: vsize.key, slope: 0, points: [[v.at[0], v.at[1], v.at[2] + v.up], v.at.slice()] });
-  return { ok: plan.ok, specs, plan, failed: plan.failed, std, fixtures: fixtures.length, note: plan.notes };
+  for (const v of plan.vents || []) specs.push({ storey: v.storey || guids[0], kind: 'pipe', system: 'vent', mat: vd.mat, cls: vd.cls, size: vsize.key, slope: 0, points: [[v.at[0], v.at[1], v.at[2] + v.up], v.at.slice()] });
+  return { ok: plan.ok, specs, plan, failed: plan.failed, std, fixtures: fixtures.length, note: plan.notes, ventChecks: plan.ventChecks || [], junctions: plan.junctions || [], storeys: guids.length };
 }
 
 // ------------------------------------------------------------------------------------------------------------ MEP.3
@@ -66,6 +71,12 @@ export function waterFixtures(w, storeyId, wsfu = DEFAULT_WSFU) {
   return readFixturePorts(w).filter((q) => q.storey === storeyId && q.domain === 'pipe' && q.system === 'cw' && q.flow === 'in' && q.fixture)
     .map((q) => ({ id: String(q.id), kind: q.fixture, p: q.p.slice(), out: axisOf(q.dir, [0, 1, 0]), units: wsfu[q.fixture] || 1 }));
 }
+/** 0.11 MEP.3: a fixture's own hot connector (system 'hw', flow 'in') by the owner of its cold one; null when the family has none (then hotFrom's offset is the drafting default). */
+export function hotPorts(w, storeyId) {
+  const ps = readFixturePorts(w).filter((q) => q.storey === storeyId && q.domain === 'pipe' && q.system === 'hw' && q.flow === 'in' && q.fixture);
+  return new Map(ps.map((q) => [String(q.owner), { p: q.p.slice(), out: axisOf(q.dir, [0, 1, 0]) }]));
+}
+const loopEnd = (port, size) => { const ax = axisOf(port.axis); return { size, to: { p: port.system === 'hwr' ? port.at.slice() : port.at.map((v, i) => v + ax[i] * 150), out: ax }, exact: port.system === 'hwr' }; };
 const specOf = (o, system, mat, cls, r) => ({ storey: o.storey, kind: 'pipe', system, mat, cls, size: r.size, slope: 0, points: r.points.map((q) => q.slice()) });
 export function planWaterSystems(w, o) {
   const storeyId = w.byGuid(o.storey);
@@ -80,16 +91,18 @@ export function planWaterSystems(w, o) {
   if (typeof process !== 'undefined' && process.env?.MEP_TIME) console.log('cold ms', Date.now() - T0);
   failed.push(...cold.failed.map((f) => ({ ...f, system: 'cw' })));
   const specs = cold.runs.map((r) => specOf(o, 'cw', dc.mat, dc.cls, r));
-  let hot = null;
+  let hot = null, ownHot = 0;
   if (o.hot) {
-    const hp = portOf(o.hot.source), hf = fx.filter((f) => !o.hot.fixtures || o.hot.fixtures.includes(f.id)).map((f) => ({ ...f, p: hotFrom(f.p, o.hot.offset ?? 100) }));
+    const hp = portOf(o.hot.source), real = hotPorts(w, storeyId), owners = new Map(readFixturePorts(w).filter((q) => q.system === 'cw').map((q) => [String(q.id), String(q.owner)]));
+    
+    const hf = fx.filter((f) => !o.hot.fixtures || o.hot.fixtures.includes(f.id)).map((f) => { const h = real.get(owners.get(f.id)); if (h) { ownHot++; return { ...f, p: h.p, out: h.out }; } return { ...f, p: hotFrom(f.p, o.hot.offset ?? 100) }; });
     hot = planWater({ source: { p: hp.at, out: axisOf(hp.axis) }, fixtures: hf, obstacles: [...(o.obstacles || []), ...boxesOfRuns(cold.runs, 25, 100)], rules: waterRules(dh.mat, dh.cls, 'hw', o.curve), pressure: o.pressure, system: 'hw', clearance: o.clearance ?? 25, snap: 100, relax: true,
-      loop: o.hot.loop ? { size: o.hot.loop.size, to: { p: portOf(o.hot.loop.port).at.map((v, i) => v + axisOf(portOf(o.hot.loop.port).axis)[i] * 150), out: axisOf(portOf(o.hot.loop.port).axis) } } : null });   // the loop ends 150 mm short of the port: a heater has no return port, so the person joins it (an open end, never a wrong-system connection)
+      loop: o.hot.loop ? loopEnd(portOf(o.hot.loop.port), o.hot.loop.size) : null });   // a real return port (system 'hwr', 0.11) takes the loop exactly; any other port: it ends 150 mm short, open (never a wrong-system connection)
     failed.push(...hot.failed.map((f) => ({ ...f, system: 'hw' })));
     specs.push(...hot.runs.map((r) => specOf(o, 'hw', dh.mat, dh.cls, r)));
     if (hot.loop) specs.push(specOf(o, 'hwr', dh.mat, dh.cls, hot.loop.run));
   }
-  return { ok: !failed.length, specs, cold, hot, failed };
+  return { ok: !failed.length, specs, cold, hot, failed, ownHot: hot ? ownHot : 0 };
 }
 
 // ------------------------------------------------------------------------------------------------------------ MEP.4
@@ -102,12 +115,12 @@ export function planRefrigerant(w, o) {
     const ps = portsAt(eq), l = ps.find((p) => p.system === 'refl'), g = ps.find((p) => p.system === 'refg');
     if (!l || !g) refuse('mep.route.err.port');
     const mid = l.at.map((v, i) => (v + g.at[i]) / 2);
-    return { p: mid, out: axisOf(l.axis), liquid: { key: l.nominal, od: acrOdOf(l.nominal) }, gas: { key: g.nominal, od: acrOdOf(g.nominal) }, ports: { l, g }, drain: ps.find((p) => p.system === 'cond') || null };
+    return { p: mid, ports: { liquid: l.at.slice(), gas: g.at.slice() }, out: axisOf(l.axis), liquid: { key: l.nominal, od: acrOdOf(l.nominal) }, gas: { key: g.nominal, od: acrOdOf(g.nominal) }, drain: ps.find((p) => p.system === 'cond') || null };
   };
   const out = pair(eqOf(o.outdoor));
   const indoors = o.indoors.map((x) => { const e = eqOf(x.eq), q = pair(e); return { id: e.guid, eq: e, ...q, capacity: Number(x.capacity) || Number(e.values?.capacity) || 1 }; });
   const lineSet = (kw) => { const t = lineSetFor(kw); return { liquid: { key: t.liquid, od: acrOdOf(t.liquid) }, gas: { key: t.gas, od: acrOdOf(t.gas) } }; };
-  const plan = planPairs({ outdoor: out, indoors, obstacles: o.obstacles || [], rules: { lineSet, gap: o.gap ?? 25 }, limits: o.limits, clearance: o.clearance ?? 25 });
+  const plan = planPairs({ outdoor: out, indoors, obstacles: o.obstacles || [], rules: { lineSet, gap: o.gap ?? 25, minLeg: o.minLeg ?? 64, ...(o.equivalent ? { equivalent: (kind) => Number(o.equivalent[kind]) || 0 } : {}) }, limits: o.limits, clearance: o.clearance ?? 25 });
   const specs = plan.runs.map((r) => ({ storey: o.storey, kind: 'pipe', system: r.line === 'liquid' ? 'refl' : 'refg', mat: 'acr', cls: 'coil', size: r.size, slope: 0, points: r.points.map((q) => q.slice()) }));
   let condensate = null;
   if (o.condensate) {

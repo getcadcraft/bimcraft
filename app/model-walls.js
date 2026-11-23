@@ -47,6 +47,7 @@ import { squareMove, setLength, setLengthGrow } from './wall-square.js';   // 0.
 import { wallSide } from './quantities/rules.js';   // BK.11 (bk-quantities-10): the one stated measuring rule, shared with the schedules and TakeoffCraft
 import { starterLod } from './new-policy.js';   // 0.10 DP.1 (bk-defaults-10): the LOD tag starter types carry when the person's Default Policies say so (not set = no tag, as before)
 import { cornerEnds, parseStyleToken, styleToken } from './walls/joinstyle.js';   // 0.9 WT.5 (walls-join-10): the join style of an L corner, shared with CadCraft plan walls
+import { add2 as add, cross2 as cross, dist2 as dist, dot2 as dot, scale2 as mul, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 /** Where a plan cuts, mm above its level (the Draw plan's CUT; rooms close against what the cut meets). */
 export const PLAN_CUT = 1200;
@@ -103,12 +104,6 @@ export const typeThickness = (type) => (type?.layers || []).reduce((s, l) => s +
 export const typeName = (type) => type.name || (type.base ? tr('model.wt.custom', { name: tr('model.wt.' + type.base), t: Math.round(typeThickness(type)) }) : tr('model.wt.' + type.key));
 
 // ---------------------------------------------------------------------------------------------------------------- joins
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
-const mul = (a, k) => [a[0] * k, a[1] * k];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
-const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const left = (d) => [-d[1], d[0]];
 /** Where p1 + s·d1 meets p2 + t·d2, or null when they are parallel. */
 function meet(p1, d1, p2, d2) {

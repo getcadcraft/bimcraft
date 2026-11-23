@@ -1,0 +1,6 @@
+- Fill the Dome generator's empty boxes from the spec's values where it has one the generator can use.
+- See each rule with its standard, clause and how it was read, in the Dome generator's Spec section.
+- Get a row in the result, and in Problems, for every figure that breaks a value in the spec.
+- Read the rules the generator does not use as numbers (buckling, analysis, tension steel, bar spacing, sprayed concrete testing, loads, foam and fire, frost) beside the ones it does.
+- Fill the load factors for own weight, snow, wind and earthquake, so the forces, the bending and the uplift check are factored.
+- Bring the rules that most need a decision (buckling, foam and fire, wind and snow on domes, openings) up as notes under Checks.

@@ -2,7 +2,7 @@
 title: 0.7-də yeniliklər (əvvəlki)
 summary: BimCraft bir neçə mərtəbə üzrə divarlar və Bu mərtəbəni kopyala, PDF-lərdən və skanlardan divarlar, öz divar quruluşlarınız, zənginləşdirilmiş ailələr, portlu MEP avadanlığı, toqquşma dəstləri, açılışlar və boru spulları, aktiv sənədləri, COBie və sensor göstəriciləri, səma, günəş, şəbəkədə gündüz işığı və istilik və soyutma yükləri, skan qeydiyyatı, canlı görünüş və qrafik kartında yol izləmə, STEP və USD, kitabxana variantları və süni intellekt köməkçiləri üçün daha çox əlavə edir.
 keywords: 0.7-də yeniliklər, əvvəlki buraxılış, buraxılış qeydləri, dəyişikliklər, dəyişiklik jurnalı, 0.7, versiya, yeni xüsusiyyətlər, mərtəbələr üzrə divarlar, bu mərtəbəni kopyala, pdf, skan, izləmə, plan divarları, divar quruluşları, qatlar, nüvə, membran, istinad ölçüləri, material kitabxanası, ekran vahidləri, görünüş üslubu, karkas, tirlər, ailələr, parametrlər, plan simvolu, isti nöqtələr, təkrar, detal səviyyəsi, iç-içə ailələr, csv ölçüləri, element üzrə, avadanlıq, portlar, birləşmələr, təmizliklər, açılışlar, spullar, spul vərəqləri, yerində qaynaq, kanal kəsim siyahısı, sənədlər, cobie, sensorlar, mqtt, canlı axın, şaquli səma komponenti, günəş qazancı, gündüz işığı şəbəkəsi, istilik, soyutma, yüklər, u-dəyəri, skanları qeydiyyata al, icp, e57, canlı görünüş, yol izləmə, webgpu, səs-küyün təmizlənməsi, fiziki səma, işıq qarışdırma, render növbəsi, sizin kompüteriniz, step, usd, layihə paketi, bu kütləni işləyin, variantlar, köməkçilər, əlavə API, bitki, elektrik, layihə yoxlamaları
-from: ef226539
+from: a638080d
 ---
 
 BimCraft 0.6-ya görə 0.7-də nə dəyişib. Siyahı sahələrə görə qruplaşdırılıb, ən vacib olanlar birincidir.

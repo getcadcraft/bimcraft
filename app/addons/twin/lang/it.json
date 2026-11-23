@@ -11,6 +11,7 @@
   "bt.file.open": "Apri un file di layout",
   "bt.file.save": "Salva il layout come file",
   "bt.file.bad": "{name} non è un layout di Material flow.",
+  "bt.file.ask": "Sostituire il layout corrente con questo file?",
   "bt.file.done": "{name}: {n} elementi caricati, {dropped} esclusi.",
   "bt.fit.run": "Controlla rispetto ai muri",
   "bt.fit.nolayout": "Non c'è ancora un layout da controllare. Usare una cella oppure aprire un file di layout.",

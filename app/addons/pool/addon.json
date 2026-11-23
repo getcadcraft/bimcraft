@@ -1,0 +1,23 @@
+{
+  "id": "pool",
+  "name": "Pool generator",
+  "version": "0.11.1",
+  "apps": [
+    "bimcraft",
+    "cadcraft"
+  ],
+  "api": "1.4",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "panel",
+    "files",
+    "storage",
+    "problems"
+  ],
+  "description": "A swimming pool or fountain, rectangular, L-shaped, round or freeform: the concrete shell, steps, benches, tiles, coping, paving with a gated barrier, filter, pump, connected pipes and a machine room, with quantities, bars and an IFC file. Norms come from spec side add-ons. A drawing aid: an engineer must design the pool.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "off"
+}

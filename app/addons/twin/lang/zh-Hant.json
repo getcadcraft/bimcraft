@@ -11,6 +11,7 @@
   "bt.file.open": "開啟配置檔",
   "bt.file.save": "將配置儲存為檔案",
   "bt.file.bad": "{name}不是物料流配置檔。",
+  "bt.file.ask": "要以此檔案取代目前的配置嗎？",
   "bt.file.done": "{name}：已載入{n}個項目，略過{dropped}個。",
   "bt.fit.run": "與牆面比對",
   "bt.fit.nolayout": "尚無可檢查的配置。請使用單元或開啟配置檔。",

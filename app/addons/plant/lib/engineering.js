@@ -16,19 +16,9 @@ import { volumeMesh, volumesOf } from '../../../process/safety/zones.js';
 export const IDS = ['vessel', 'pipestress', 'relief', 'consequence', 'area', 'bell', 'vessel2', 'pumptrip', 'pipestress2', 'relief2', 'blast', 'heavygas', 'packs', 'fittingk', 'compressor', 'npsh', 'network'];   // chem-draw_PART_4 added the round-4 engines (lib/process/calc4.js)
 const registry = { list: () => CALC.list().filter((c) => IDS.includes(c.id)), get: CALC.get, run: CALC.run, toCsv: CALC.toCsv, pickerOf: CALC.pickerOf };
 
-/** English for the calculator panel's own words, used when the add-on's language file has none (the P&ID add-on's file has them all). */
-export const WORDS = {
-  'calc.option': 'Choose from the list', 'calc.option.pick': 'Choose a fitting from the draft table…',
-  'calc.pick': 'Calculator', 'calc.input': 'Input (JSON)', 'calc.lede': 'Pick a calculator, edit the sample input, and run it. A calculation aid, not an engineering approval: typed constants are marked for review, and these five are not engineer-reviewed.',
-  'calc.run': 'Run', 'calc.reset': 'Reset input', 'calc.csv': 'Results (CSV)', 'calc.running': 'Running…', 'calc.badjson': 'The input is not valid JSON: {why}', 'calc.clean': 'No problems reported.',
-  'calc.level.error': 'Error', 'calc.level.warning': 'Warning', 'calc.level.info': 'Note', 'calc.group.equipment': 'Equipment, piping and relief', 'calc.group.safety': 'Process safety and hazardous areas',
-  'calc.site': 'Site plan (GeoJSON)', 'calc.sitedxf': 'Site plan (DXF)', 'calc.takeoff': 'TakeoffCraft pack', 'calc.drawing': 'Sources from the drawing',
-  'eng.title': 'Engineering checks', 'eng.intro': 'Pressure vessel, pipe stress, relief, consequence zones and hazardous areas. Screening calculators, not engineer-reviewed.',
-  'eng.add': 'Add the vessel to the equipment table', 'eng.run': 'Use a pipe run of the model', 'eng.zones': 'Put the zones in the model', 'eng.norun': 'No pipe run with two or more points in the model.',
-  'eng.nozones': 'Run a consequence or area calculation first: there are no zones to place.', 'eng.nowrite': 'This BimCraft cannot write into the model yet.', 'eng.placed': 'Put {n} zone solids in the model (one undo step). Not engineer-reviewed.',
-  'eng.added': 'Added {tag} to the equipment table.', 'eng.body': 'Add the vessel body to the equipment table', 'eng.nobody': 'Give the vessel body a diameter and a length.', 'eng.filled': 'Filled the input from the run {tag}.', 'eng.novessel': 'Run the vessel calculator first.',
-};
-export const wordsOf = (t) => (k, v) => { const r = t(k, v); if (r && r !== k) return r; return (WORDS[k] || k).replace(/\{(\w+)\}/g, (m, a) => (v && v[a] !== undefined ? v[a] : m)); };
+/** The panel's words (calc.*, eng.*) are the add-on's language keys, lang/en.json and the other languages (CH.32, chem-finish-11: the English that lived here as
+ *  bare strings moved there). A key with no word anywhere shows as the key, which the language checks catch. */
+export const wordsOf = (t) => (k, v) => { const r = typeof t === 'function' ? t(k, v) : k; return r == null ? k : r; };
 
 /** A zone volume (metres) as the `equip` placeEquipment takes: a closed solid in millimetres at the site's own coordinates, no nozzles. */
 export function zoneEquip(vol) {

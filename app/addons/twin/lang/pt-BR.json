@@ -11,6 +11,7 @@
   "bt.file.open": "Abrir um arquivo de layout",
   "bt.file.save": "Salvar o layout como arquivo",
   "bt.file.bad": "{name} não é um layout do Fluxo de material.",
+  "bt.file.ask": "Substituir o layout atual por este arquivo?",
   "bt.file.done": "{name}: {n} itens carregados, {dropped} deixados de fora.",
   "bt.fit.run": "Verificar contra as paredes",
   "bt.fit.nolayout": "Ainda não há layout para verificar. Use uma célula ou abra um arquivo de layout.",

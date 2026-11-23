@@ -2,7 +2,7 @@
 title: Kas naujo 0.7 versijoje (ankstesnė)
 summary: BimCraft prideda sienas per kelis aukštus ir Kopijuoti šį lygį, sienas iš PDF ir skenavimų, savas sienų konstrukcijas, turtingesnes šeimas, MEP įrangą su jungtimis, susidūrimų rinkinius, angas ir vamzdžių ruošinius, turto dokumentus, COBie ir jutiklių rodmenis, dangų, saulę, dienos šviesą tinklelyje ir šildymo bei vėsinimo apkrovas, skenavimų registraciją, tiesioginį vaizdą ir kelio sekimą grafikos plokštėje, STEP ir USD, bibliotekos variantus ir dar daugiau DI asistentams.
 keywords: kas naujo 0.7, ankstesnis leidimas, leidimo pastabos, keitimų žurnalas, pakeitimai, 0.7, versija, naujos funkcijos, sienos per aukštus, kopijuoti šį lygį, pdf, skenavimas, sekimas, sienos iš planų, sienų konstrukcijos, sluoksniai, šerdis, membrana, orientaciniai matmenys, medžiagų biblioteka, ekrano vienetai, vaizdo stilius, karkasas, sijos, šeimos, parametrai, plano simbolis, karštieji taškai, pakartojimas, detalumo lygis, įdėtos šeimos, CSV dydžiai, pagal elementą, įranga, jungtys, prijungimai, atstumai, angos, ruošiniai, ruošų brėžiniai, montažinis suvirinimas, ortakių pjovimo sąrašas, dokumentai, cobie, jutikliai, mqtt, tiesioginis srautas, vertikalus dangaus komponentas, saulės šiluma, dienos šviesos tinklelis, šildymas, vėsinimas, apkrovos, u vertė, skenavimų registracija, icp, e57, tiesioginis vaizdas, kelio sekimas, webgpu, triukšmo mažinimas, fizinis dangus, šviesų maišymas, atvaizdavimo eilė, jūsų kompiuteris, step, usd, projekto paketas, masės išplėtojimas, variantai, asistentai, priedų API, augalas, elektra, dizaino patikrinimai
-from: ef226539
+from: a638080d
 ---
 
 Tai, kas pasikeitė BimCraft 0.7 versijoje, palyginti su 0.6. Sąrašas sugrupuotas pagal sritis, svarbiausios pirmos.

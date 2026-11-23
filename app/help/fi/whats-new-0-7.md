@@ -2,7 +2,7 @@
 title: Mitä uutta versiossa 0.7 (aiemmin)
 summary: BimCraft lisää seinät useiden tasojen läpi ja Kopioi tämä taso -toiminnon, seinät PDF:stä ja skannauksista, omat seinärakenteet, rikkaammat perheet, LVI- ja sähkölaitteet liitäntöineen, törmäysjoukot ja putkiosat, kohdeasiakirjat, COBien ja anturilukemat, taivaan ja auringon, päivänvalon akselistossa sekä lämmitys- ja jäähdytystehot, skannausten rekisteröinnin, reaaliaikanäkymän ja polunseurannan näytönohjaimella, STEP- ja USD-tuen, kirjastomuunnelmat sekä lisää tekoälyavustajille.
 keywords: mitä uutta 0.7, aiempi julkaisu, julkaisutiedot, muutosloki, muutokset, 0.7, versio, uudet ominaisuudet, seinät useiden tasojen läpi, kopioi tämä taso, pdf, skannaus, jäljitys, seinät pohjapiirroksista, seinärakenteet, tasot, ydin, kalvo, viitemitat, materiaalikirjasto, näyttöyksiköt, näkymätyyli, rungotus, lattiapalkit, perheet, parametrit, pohjapiirroksen symboli, kuumat kohdat, toisto, yksityiskohtataso, sisäkkäiset perheet, csv-koot, elementtikohtainen, laitteet, liitännät, yhteydet, selvitykset, aukot, putkiosat, putkiosa-arkit, työmaahitsi, kanavan katkaisuluettelo, asiakirjat, cobie, anturit, mqtt, reaaliaikasyöte, pystysuora taivaskomponentti, auringon lämpökuorma, päivänvalo ruudukko, lämmitys, jäähdytys, kuormat, u-arvo, rekisteröi skannaukset, icp, e57, reaaliaikanäkymä, polunseuranta, webgpu, kohinanpoisto, fyysinen taivas, valojen sekoitus, renderointijono, koneesi, step, usd, projektipaketti, kehitä massa, muunnelmat, avustajat, lisäosa-api, kasvi, sähkö, mitoitustarkastukset
-from: ef226539
+from: a638080d
 ---
 
 Tämä on se, mitä muuttui BimCraft 0.7:ssä verrattuna versioon 0.6. Lista on ryhmitelty alueittain, tärkeimmät ensin.

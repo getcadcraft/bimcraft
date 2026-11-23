@@ -11,6 +11,7 @@
   "bt.file.open": "打开布局文件",
   "bt.file.save": "将布局保存为文件",
   "bt.file.bad": "{name}不是物料流布局。",
+  "bt.file.ask": "要用此文件替换当前布局吗？",
   "bt.file.done": "{name}：已载入{n}项，{dropped}项未导入。",
   "bt.fit.run": "与墙体比对检查",
   "bt.fit.nolayout": "尚无可检查的布局，请选用单元或打开布局文件。",

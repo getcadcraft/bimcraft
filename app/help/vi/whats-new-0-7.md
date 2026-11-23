@@ -2,7 +2,7 @@
 title: Có gì mới trong 0.7 (cũ hơn)
 summary: BimCraft bổ sung tường qua nhiều tầng và Sao chép tầng này, tường từ PDF và bản quét, cấu tạo tường riêng, họ đối tượng phong phú hơn, thiết bị MEP có cổng, bộ va chạm, lỗ mở và đoạn ống, tài liệu tài sản, COBie và số đọc cảm biến, bầu trời, mặt trời, ánh sáng ban ngày trên lưới và tải sưởi và làm mát, đăng ký bản quét, xem trực tiếp và dò đường trên card đồ họa, STEP và USD, biến thể thư viện, và nhiều hơn nữa cho trợ lý AI.
 keywords: có gì mới 0.7, bản phát hành cũ, ghi chú phát hành, nhật ký thay đổi, thay đổi, 0.7, phiên bản, tính năng mới, tường qua các tầng, sao chép tầng này, pdf, bản quét, vẽ lại, tường từ bản vẽ, cấu tạo tường, lớp, lõi, màng, kích thước tham chiếu, thư viện vật liệu, đơn vị hiển thị, kiểu khung nhìn, khung, dầm sàn, họ, tham số, ký hiệu mặt bằng, điểm nóng, lặp lại, mức chi tiết, họ lồng nhau, kích thước csv, theo phần tử, thiết bị, cổng, kết nối, khoảng hở, lỗ mở, đoạn ống, bản vẽ đoạn ống, mối hàn tại công trường, danh sách cắt ống gió, tài liệu, cobie, cảm biến, mqtt, nguồn dữ liệu trực tiếp, thành phần bầu trời đứng, bức xạ mặt trời, lưới ánh sáng ban ngày, sưởi, làm mát, tải, hệ số u, đăng ký bản quét, icp, e57, xem trực tiếp, dò đường, webgpu, khử nhiễu, bầu trời vật lý, trộn ánh sáng, hàng đợi kết xuất, máy của bạn, step, usd, gói dự án, phát triển khối, biến thể, trợ lý, api tiện ích bổ sung, nhà máy, điện, kiểm tra thiết kế
-from: ef226539
+from: a638080d
 ---
 
 Đây là những gì đã thay đổi trong BimCraft 0.7, so với 0.6. Danh sách được nhóm theo khu vực, với những điều quan trọng nhất đứng trước.

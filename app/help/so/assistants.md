@@ -1,65 +1,65 @@
 ---
-title: Ka dhig caawiye AI inuu moodelkaaga kula shaqeeyo
-summary: Ka shid caawiyayaasha Settings si caawiye kombiyuutarkaaga ku jira u helo walxaha, akhriyo sifooyinkooda, ka saar muuqaalka, oo ku sawir darbiyo, albaabo, daaqado, dabaqyo, heerar iyo grids, iyada oo loo marayo CadCraft Studio. Waa la damiyaa ilaa aad shido.
-keywords: ai, caawiye, mcp, script, automation, studio, raadi walxaha, ka saar, sifooyinka, ogolaansho, ka jaree, dhaqdhaqaaq, sawir darbiyo, ku dar albaabo, ku dar daaqado, heerar, grids, dabaqyo, ka noqo, kaydi, command line, cli, headless, isticmaal caawiyayaasha AI
-from: c5ee595b
+title: Ka dhig kaalmeeye AI inuu kaashado moodelkaaga
+summary: Dejinta hoosteeda ku hawlgeli kaalmeeyayaasha si kaalmeeye kombiyuutarkaaga ku jira u helo walxaha, u akhriyo sifooyinkooda, aragtida ku keligeeda u muujiyo, oo darbiyo, albaabyo, daaqado, sagxado, heerar iyo shabakado u sawiro, iyada oo loo marayo CadCraft Studio. Waa la damiyaa ilaa aad hawlgelisid.
+keywords: ai, kaalmeeye, mcp, qoraal, otomaatig, studio, hel walxaha, ku keligeeda, sifooyinka, ogolaansho, ka jaree, dhaqdhaqaaq, sawir darbiyo, ku dar albaabyo, ku dar daaqado, heerar, shabakado, ka noqo, kaydi, sadka amarka, cli, madhan, isticmaal kaalmeeyayaasha
+from: 66d72742
 ---
 
-## Waxa aad baran doontid
+## Waxa aad baran doontaa
 
-Sida loo ogolaado caawiye AI (caawiye kasta oo hadla MCP) inuu eego moodelka IFC ee aad furan tahay oo uu ku sawiro, waxa uu samayn karo iyo waxa uusan samayn karin, iyo sida loo joojiyo.
+Sida loo oggolaado kaalmeeye AI (kaalmeeye kasta oo hadli kara MCP) inuu eego moodelka IFC ee aad furtay oo uu ku sawiro, waxa uu samayn karo iyo waxa aanu samayn karin, iyo sida loo joojiyo.
 
-## Waxa caawiyuhu samayn karo BimCraft
+## Waxa kaalmeeyuhu samayn karo BimCraft
 
-| Waxa uu weydiisto | Waxa dhacaa | Wuxuu u baahan yahay |
+| Waxa uu weydiisto | Waxa dhacaa | Waxa loo baahan yahay |
 |---|---|---|
-| Raadi walxaha | Wuxuu helaa liis walxo oo fasal, dabaq, magac ama qiimaha sifada ku saabsan, sida **Raadi** samayso | Akhri |
-| Akhri sifooyinka | Wuxuu helaa hal walax oo sifooyinkeeda, nooceeda, set-yada sifada iyo cabbirrada, sida **Sifooyinka** muujiyo | Akhri |
-| Sharax moodelka, liis darbiyada | Wuxuu helaa heerarka, darbiyada, albaabada, daaqadaha, qolalka, sagxadaha, grids iyo tiirarka, iyo dhamaadka darbi kasta, nooceeda iyo dherkeeda | Akhri |
-| Ka soo saar, ku dar kaliya, qari ama muuji | Muuqaalka 3D wuu isbedelaa sida aad u isticmaashay menu-ga {{ui:Muuji}} | Beddel aragtida oo sawir |
-| Sawir darbiyo, albaabo, daaqado, dabaqyo, heerar ama grid lines | Moodelka wuu isbedelaa sida aad u isticmaashay qalabka {{ui:Sawir}}: darbiyada isku xidhan, qolalka, sagxadaha iyo saqafyada raacaan | Beddel aragtida oo sawir |
-| Beddel magac ama qiimaha sifada | Magaca, sharaxaadda, nooca shayga ama tag-ka hal walax, ama qiimaha sifo kaliya. Qiimaha uu la wadaago walxo kale waa la koobiyeeyaa marka hore; qiimaha nooca walxa wuxuu isbedelaa kaliya marka caawiyuhu sheego, sababtoo ah walxaha nooca oo dhan way raacaan | Beddel aragtida oo sawir |
-| Beddel, tirtir, darbiyada, albaabada iyo daaqadaha beddel | Walxaha way guurayaan ama way tirtirmaan iyo waxa ay martiqaadaan; darbiyada lagu sawiray qalabka {{ui:Sawir}} waxay isbedelaan geeskooda ama nooceedaba, albaabada iyo daaqadaha meeshooda, cabbirkooda ama nooceedaba, qolalkana iyo isku xidhka way raacaan | Beddel aragtida oo sawir |
-| Dhig, habee oo akhri jadwal | "Jadwal albaabbo dabaq kasta, oo leh heer dab-kicinta iyo hardware-ka albaabka": caawiyuhu wuxuu magacaabaa jadwalka, tiirarkiisa (sifo ama tag wuxuu noqdaa tiir) iyo kooxeynta; BimCraft wuu buuxiyaa oo wuu habeeyaa ka moodelka, wixii caawiyuhu sheegin ayaa laga qaadaa heerka xafiiska. Dejintu waxay ku biirtaa liiskaaga **Jadwallada**. Safka kasta oo uu dib u helo wuxuu magacaabaa walxaheeda, si uu u dooran karo | Akhri si aad u akhrido; Beddel aragtida oo sawir si aad u kaydiso dejinta |
-| Soo saar jadwal | CSV, Excel, ama qoraal tab kala soocaya oo lagu dhejin karo Google Sheets (waxba Google looma diro) | Soo saar |
-| Akhri oo dejiya dhamaystirka qolalka | Noocyada dhamaystirka, dhamaystirka dabaq, darbi iyo saqaf kasta ee qol kasta, aagagga; bedadka, tirada alaabta iyo mugga substrate-ka ayaa markaas ka imanaya jadwallada dhamaystirka | Akhri; Beddel aragtida oo sawir si aad dejiso |
-| Dooro walxaha, ka noqo tallaabooyinkiisa | Walxaha waxa lagu doortaa aragtida; tallaabadiisa ugu dambeysay waa la qaadaa | Beddel aragtida oo sawir |
-| Kaydi | Fayl IFC cusub oo leh isbedel kasta, sida {{ui:U kaydi sida IFC}} u sameyso (asalka lama beddelo) | Kaydi |
-| Soo saar USD | Moodelada furan ee OpenUSD ah (.usda, .usdc ama .usdz), sida {{ui:USD}} ee toolbar-ka u qoro | Soo saar |
-| Sawir rendar, samee queue-ka rendarka | Sawir ee aragtida 3D, sida dialog-ka {{ui:Rendar}} u sameeyo oo leh dejinta Render-kaaga haddii aanu wax kale waydiin, ama sawirro tayo sare ah oo lagu daro queue-ka dialog-ka, oo mid kasta kadib kan kale lagu rendero (queue-ku wuxuu u baahan yahay WebGPU). Waxba moodelka kama beddelo ([Sawir rendar](topic:render)) | Soo saar |
+| Hel walxaha | Wuxuu helaa liis walxaha ah sida fasalka, dabaqa, magaca ama qiimaha sifada, sida **Raadi** samayso | Akhri |
+| Akhri sifooyinka | Wuxuu helaa sifooyinka hal walax, nooca, qaybaha sifooyinka iyo tirooyinka, sida **Sifooyinka** muujiyo | Akhri |
+| Sharax moodelka, liis darbiyada | Wuxuu helaa heerarka, darbiyada, albaabyada, daaqadaha, qolalka, sagxadaha, shabakadaha iyo tiirarka, iyo darbi kasta dhammaadkeeda, nooca iyo dhererka | Akhri |
+| Ka soo saar, ka dhig mid aan cadayn, qari ama muuji | Aragtida 3D way isbeddeshaa sida aad isticmaashay menuga {{ui:Muuji}} | Beddel aragtida oo sawir |
+| Sawir darbiyo, albaabyo, daaqado, sagxado, heerar ama khadadka shabakada | Moodelka way isbeddelaa sida aad isticmaashay qalabka {{ui:Sawir}}: darbiyada way isku xidhmaan, qolalka, sagxadaha iyo saqafyada way raacaan | Beddel aragtida oo sawir |
+| Beddel magac ama qiimaha sifada | Magaca, Sharaxa, Nooca walxa ama Calaamadda hal walax, ama qiimaha sifo keliya. Qiime ay la wadaagto walxo kale waa la koobiyeeyaa marka hore; qiimaha nooceeda wuxuu isbeddelaa kaliya marka kaalmeeyuhu sheego, sababtoo ah walax kasta oo nooca ah way raacdaa | Beddel aragtida oo sawir |
+| Guuri, tirtir, beddel darbiyada, albaabyada iyo daaqadaha | Walxaha way guuraan ama way tirtirmaan oo waxa ay hayaan ayaa la socda; darbiyada lagu sawiray qalabyada {{ui:Sawir}} waxa ay isbeddelaan dhamaadkooda ama nooceeda, albaabyada iyo daaqadaha meeshooda, cabbirkooda ama nooceeda, qolalka iyo isku xidhka way raacaan | Beddel aragtida oo sawir |
+| Dejiso, habeeyo oo akhri jadwal. "Jadwal albaabyada sida dabaqa, oo leh darajada dab-iidka iyo alaabta birta": kaalmeeyuhu wuxuu magacaabaa jadwalka, tiirarkiisa (sifo ama calaamad wuxuu noqdaa tiir) iyo kooxeynta; BimCraft wuxuu buuxiyaa oo habeeyaa moodelka, waxa kaalmeeyuhu aanu sheegin wuxuu ka qaadaa heerka xafiiska. Dejintan waxay ku biirtaa liistaada Jadwallada. Sadar kasta oo uu dib u helo wuxuu magacaabaa walxahiisa si uu u dooran karo | Akhri si aad u akhrido; Beddel aragtida oo sawir si aad dejinta u kaydiso |
+| Dhoofi jadwal | CSV, Excel, ama qoraal kala-saaran tab si aad ugu dhejiso Google Sheets (waxba looma diro Google) | Dhoofi |
+| Akhri oo dejiso dhammaystirka qolalka | Noocyada dhammaystirka, sagxadda, darbiga iyo saqafka qol kasta, aagagga, tirada alaabta iyo mugga lakabka hoosta; aagagga, tirada alaabta iyo mugga lakabka hoosta waxay ka imanayaan jadwallada dhammaystirka | Akhri; Beddel aragtida oo sawir si aad u dejiso |
+| Dooro walxaha, ka noqo tallaabooyinkiisa | Walxaha waxa lagu doortaa aragtida; tallaabadiisii ugu dambaysay waa la ka noqonayaa | Beddel aragtida oo sawir |
+| Kaydi | Fayl IFC cusub oo leh isbeddel kasta, sida {{ui:U kaydi sida IFC}} u sameeyo (asalka looma beddelo) | Kaydi |
+| Dhoofi USD | Moodellada furan sida OpenUSD (.usda, .usdc ama .usdz), sida {{ui:USD}} ee qalabka ku qoro | Dhoofi |
+| Sawir sawir, socodsii safka rendarka | Sawir ee aragtida 3D, sida wada-hadalka {{ui:Rendar}} u sameeyo oo leh dejinta Rendar-kaaga, mana aanu codsan kuwo kale; ama sawirro tayo sare leh oo lagu daro safka wada-hadalka oo mid-mid loo rendaro (safku wuxuu u baahan yahay WebGPU). Waxba moodelka kuma beddelo ([Sawir sawir](topic:render)) | Dhoofi |
 
-Isbedel kasta oo caawiyuhu sameeyo waa hal tallaabo oo ku jirta **Isbedelada**, oo magacaabmaysa "Assistant: …" (tusaale "Assistant: ku dar 4 darbi"), sidaas darteed {{key:Mod+Z}} wuxuu ka noqonayaa ficilkiisa oo dhan, waxaadna arki kartaa tallaabada qofka ay tahay. Daaqadda gudaheeda ma furi karo faylal: adiga ayaa furta moodelka; wuxuu ka shaqeeyaa kan furan.
+Isbeddel kasta oo kaalmeeyuhu sameeyo waa hal tallaabo oo ku jirta **Isbeddelada**, oo magaceedu yahay "Kaalmeeye: …" (tusaale ahaan "Kaalmeeye: ku dar 4 darbi"). Sidaas darteed {{key:Mod+Z}} wuxuu ka noqonayaa ficilkiisa oo dhan, waxaanad ogaan kartaa cidda leh tallaabada. Daaqadda kuma furi karto fayllo: adigaa furta moodelka; wuxuu ka shaqeeyaa kan furan.
 
-## Shid
+## Hawlgeli
 
-Caawiyayaasha waxay BimCraft gaaraan iyadoo loo marayo CadCraft Studio kombiyuutarkaaga; browser-ka caadiga ahi ma leh jid gelid.
+Kaalmeeyayaasha waxay gaadhaan BimCraft iyada oo loo marayo CadCraft Studio ee kombiyuutarkaaga; browser-ka caadiga ah ma lahan jid gelid.
 
 1. Fur {{ui:Dejinta}} oo dooro tab-ka **BimCraft**.
-2. Hoos **Caawiyayaasha**, calaamadee **Ogolow caawiyayaasha AI iyo scripts-ka inay isticmaalaan BimCraft**.
-3. **Akhri** waa la calaamadeeyay adiga. Calaamadee **Beddel aragtida oo sawir** haddii caawiyuhu ka dooran karo, qarin karo walxaha, iyo sawiri karo, iyo **Kaydi** haddii uu moodelka u kaydin karo fayl cusub.
-4. Ku xidh caawiyaha Studio (Studio wuxuu muujinayaa cinwaanka iyo dejinta lagu dhejiyo).
+2. Hoos **Kaalmeeyayaasha**, calaamadi **Ogolow kaalmeeyayaasha AI iyo qoraallada inay isticmaalaan BimCraft**.
+3. **Akhri** adigaa loo calaamadiyay. Calaamadi **Beddel aragtida oo sawir** haddii kaalmeeyuhu u oggol yahay inuu ku keligeeda muujiyo oo qariyo walxaha iyo sawirka, iyo **Kaydi** haddii uu moodelka u kaydin karo fayl cusub.
+4. Ku xidh kaalmeeyaha Studio (Studio wuxuu muujinayaa cinwaanka iyo dejinta lagu dhejiyo).
 
-## Intaad caawiye ku xirnaan
+## Intii kaalmeeyuhu xidhan yahay
 
-Qoraal sare oo ku yaal panel-ka midig wuxuu sheegayaa caawiyaha ku xiran iyo waxa uu samayn karo. Guji {{ui:Ka jaree}} si aad fadhigiisa isla markiiba u dhammaysid; wuxuu dib u xidhmayaa si uu u sii socdo.
+Fiiro ku yaal sare panelka midig ayaa sheegaya kaalmeeyaha xidhan iyo waxa uu samayn karo. Guji {{ui:Ka jaree}} si aad isla markaa u soo afjarto fadhigiisa; wuu mar kale ku xidhmaa si uu u sii wado.
 
-**Dhaqdhaqaaq**, oo ku yaal hoos **Caawiyayaasha** ee Settings, wuxuu liistaa wicitaan kasta oo caawiyuhu sameeyay, kan ugu dambeeya marka hore, iyo in uu shaqeeyay ama ayan shaqeyn.
+**Dhaqdhaqaaqa**, oo hoos ku yaal **Kaalmeeyayaasha** dejinta, wuxuu liistaa wicitaan kasta oo kaalmeeyuhu sameeyay, kan ugu dambeeyay marka hore, iyo in uu shaqeeyay iyo in kale.
 
 :::tip
-Ku weydii erayo fudud, tusaale "ka saar darbiyada dibadda ee Dabaqa 1", "albaabbo noocee ah ayaa aan lahayn heer dab-kicinta?" ama "sawir qol 6 x 4 m ah oo Dabaqa 1 ku yaal, oo leh albaab darbiga koonfureed". Caawiyuhu wuxuu helaa walxaha oo muujiyaa aragtidaada, ama wuu sawiraa.
+Ku weydii erey cad, tusaale ahaan "ku keligeed muuji darbiyada dibadda ee Dabaqa 1", "albaabyadee ma leeyihiin darajada dab-iidka?", ama "ku sawir qol 6 x 4 mitir oo ku yaal Dabaqa 1 oo leh albaab darbiga koonfureed". Kaalmeeyuhu wuxuu helaa walxaha oo wuxuu ku muujiyaa aragtidaada, ama wuu sawiraa.
 :::
 
-## Adigoo aan daaqad lahayn: script-yada iyo command line-ka
+## Daaqad la'aan: qoraallo iyo sadka amarka
 
-Qalabka sawirka ee isku mid ah ayaa ku shaqeeya faylasha IFC ee folders-ka aad magacaabto, iyadoo aan daaqad furan: MCP server-ka CadCraft iyo command line-ku waxay bilaabi karaan dhismo cusub ama furi karaan fayl IFC, sharax, ku dar darbiyo, albaabo, daaqado, dabaqyo, heerar iyo grids, ka noqo, oo kaydi sida fayl `.ifc` cusub. Adiga ayaa go'aamiya folders-ka uu isticmaali karo iyo inuu wax beddeli karo ama kaydin karo.
+Qalabyada sawirka isla kuwaas ayaa ku shaqeeya faylasha IFC ee foolderro aad magacowday, iyadoo aan daaqad la furin: server-ka MCP ee CadCraft iyo sadka amarka waxay bilaabi karaan dhismo cusub ama fur fayl IFC, sharax, ku dar darbiyo, albaabyo, daaqado, sagxado, heerar iyo shabakado, ka noqo oo kaydi sida fayl `.ifc` cusub. Afar qalab oo dheeraad ah ayaa u habboon qoraallada: `ifc_batch` wuxuu socodsiiyaa ilaa 200 tallaabo oo tafatir ah hal mar (oo dhan ama waxba: hal ka noqod wuxuu qaadaa batch-ka oo dhan, tallaabo diidan ayaa ka noqonaysa kuwa kale oo magacaabaa tallaabada); `ifc_describe` wuxuu liistaa heerarka iyo darbi kasta oo leh albaabyadiisa iyo daaqadihiisa; `ifc_render_png` wuxuu qoraa sawir hufan oo hubin ah oo moodelka ah (aan alwaax, tekstuur ama hooska lahayn) iyadoo aan daaqad la furin; `usd_export` wuxuu qoraa `.usda`, `.usdc` ama `.usdz`. Sadka amarka, `cadcraft bim script.json --from model.ifc -o out.ifc` wuxuu socodsiiyaa qoraal tallaabooyin ah, `--usd`, `--png` iyo `--plan` waxay qoraan fayl USD, sawir ama qorshe isla socodsiintaas. Adigu go'aamiyaa foolderrada uu isticmaali karo iyo in uu wax beddeli karo ama kaydin karo.
 
-## Dami
+## Joojiso
 
-Ka saar calaamadda **Ogolow caawiyayaasha AI iyo scripts-ka inay isticmaalaan BimCraft**. Caawiye kasta isla markiiba waa la jaraa, dejintuna waa la kaydiyaa xilliga xiga.
+Ka saar calaamadda **Ogolow kaalmeeyayaasha AI iyo qoraallada inay isticmaalaan BimCraft**. Dhammaan kaalmeeyayaasha isla markaa way ka go'aan, dejintana way xasuusataa xiliga soo socda.
 
 ## Eeg sidoo kale
 
-- [Cuntooyinka caawiyayaasha AI](common:assistants-recipes): tusaalooyin shaqo, mid kastaba leh qalabka uu wicitaano.
-- [Raadi walxaha fasal, magac ama sifo](topic:find)
-- [Qari, kaliya u dhig, ama muuqaal cadaan u dhig walxaha](topic:hide-and-isolate)
+- [Cuntooyinka kaalmeeyayaasha AI](common:assistants-recipes): tusaalooyin shaqo, mid kasta oo leh qalabyada uu wacayo.
+- [Hel walxaha iyada oo loo marayo fasal, magac ama sifo](topic:find)
+- [Qari, ku keligeeda muuji oo ka dhig aragtida walxaha](topic:hide-and-isolate)
 - [Dejinta BimCraft](topic:settings)

@@ -11,6 +11,7 @@
   "bt.file.open": "Otvori datoteku rasporeda",
   "bt.file.save": "Spasi raspored kao datoteku",
   "bt.file.bad": "{name} nije raspored iz Toka materijala.",
+  "bt.file.ask": "Zamijeniti trenutni raspored ovom datotekom?",
   "bt.file.done": "{name}: učitano stavki: {n}, izostavljeno: {dropped}.",
   "bt.fit.run": "Provjeri u odnosu na zidove",
   "bt.fit.nolayout": "Raspored za provjeru još ne postoji. Koristi ćeliju ili otvori datoteku rasporeda.",

@@ -21,6 +21,28 @@ export function referencePoint(ref, walls, level = null) {
   const p=g.at(g.L * ref.station, off);
   return p.every(Number.isFinite) ? p : null;
 }
+/**
+ * 0.10.1 (support #1509): a dimension between two parallel straight walls measures their spacing, whatever Direction is set.
+ * Horizontal between two walls that run left to right (or Vertical between two that run up) measured ALONG the walls: a
+ * leftover of where the clicks landed, which no typed value could change. Then the direction turns to the one square to the
+ * walls; with Aligned the second point drops square from the first when that foot lies on the wall. → { refs, axis }
+ */
+export function squareDimension(refs, axis, walls) {
+  const same = { refs, axis };
+  const [w0, w1] = refs.map(r => walls.find(w => w.guid === r?.wall));
+  if (!w0 || !w1 || w0 === w1 || w0.bulge || w1.bulge) return same;
+  const dir = w => { const d = [w.b[0]-w.a[0], w.b[1]-w.a[1]], l = Math.hypot(d[0], d[1]); return l > 0.001 ? [d[0]/l, d[1]/l, l] : null; };
+  const u = dir(w0), v = dir(w1);
+  if (!u || !v || Math.abs(u[0]*v[1]-u[1]*v[0]) > 0.02) return same;
+  let ax = axis;
+  if (axis === 'x' && Math.abs(u[1]) < 0.05) ax = 'y';          // walls run along X: their spacing is up the page
+  else if (axis === 'y' && Math.abs(u[0]) < 0.05) ax = 'x';
+  if (ax !== 'aligned') return ax === axis ? same : { refs, axis: ax };
+  const p = referencePoint(refs[0], [w0]);
+  if (!p) return same;
+  const station = ((p[0]-w1.a[0])*v[0] + (p[1]-w1.a[1])*v[1]) / v[2];
+  return station >= 0 && station <= 1 ? { refs: [refs[0], { ...refs[1], station }], axis: ax } : same;
+}
 export function resolveDimension(d, walls) {
   // A caller may pass a previously resolved row: never retain its cached value/points.
   const {a:oldA,b:oldB,witnesses,value,off,...base}=d;

@@ -11,6 +11,7 @@
   "bt.file.open": "Fur fayl habayn",
   "bt.file.save": "U kaydi habaynta fayl ahaan",
   "bt.file.bad": "{name} ma aha habayn Socdaalka agabka.",
+  "bt.file.ask": "Ma beddelaa qaabaynta hadda jirta fayladan?",
   "bt.file.done": "{name}: {n} shay ayaa la soo rariyay, {dropped} waa laga reebay.",
   "bt.fit.run": "Kala hubi darbiyada",
   "bt.fit.nolayout": "Weli habayn ma jirto oo la hubiyo. Isticmaal unug ama fur fayl habayn.",

@@ -205,6 +205,7 @@
   "draw.done.bim": "Setti {n} ljósabúnað inn í líkanið og {lux} línur af lux-tölum í grunnmyndina.",
   "lum.pole": "Almennur staurljósabúnaður",
   "lum.bollard": "Almennur stöpull",
+  "map.isolines": "Línur með jöfnu lúxgildi (jafnlínur)",
   "f.outdoor": "Utandyra: útilýsing á lóð (ekkert loft eða veggir; beint ljós á jörðu)",
   "f.cct": "Litarhitastig",
   "f.groundrho": "Endurkast jarðar",

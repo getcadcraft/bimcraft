@@ -205,6 +205,7 @@
   "draw.done.bim": "Sijoitettiin {n} valaisinta malliin ja {lux} viivaa luksilukuja pohjakuvanäkymään.",
   "lum.pole": "Yleinen pylväsvalaisin",
   "lum.bollard": "Yleinen pollari",
+  "map.isolines": "Yhtä suuren valaistuksen viivat (isoluksit)",
   "f.outdoor": "Ulkona: piha-valaistus (ei kattoa tai seiniä; suora valo maahan)",
   "f.cct": "Värilämpötila",
   "f.groundrho": "Maanpinnan heijastuskerroin",

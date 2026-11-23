@@ -253,10 +253,10 @@ export async function readBcf(bytes) {
     const t = {
       guid: tp.attrs.Guid || folder, title: txt(tp, 'Title'), status: tp.attrs.TopicStatus || '', type: tp.attrs.TopicType || '',
       author: txt(tp, 'CreationAuthor'), created: txt(tp, 'CreationDate'), modified: txt(tp, 'ModifiedDate') || null, description: txt(tp, 'Description'),
-      comments: kids(m, 'Comment').map((c) => ({ guid: c.attrs.Guid || '', date: txt(c, 'Date'), author: txt(c, 'Author'), text: txt(c, 'Comment'), viewpoint: kid(c, 'Viewpoint')?.attrs.Guid || null })),
+      comments: [...kids(kid(tp, 'Comments'), 'Comment'), ...kids(m, 'Comment')].map((c) => ({ guid: c.attrs.Guid || '', date: txt(c, 'Date'), author: txt(c, 'Author'), text: txt(c, 'Comment'), viewpoint: kid(c, 'Viewpoint')?.attrs.Guid || null })),
       viewpoints: [],
     };
-    const refs = kids(m, 'Viewpoints').map((v) => ({ guid: v.attrs.Guid || '', file: txt(v, 'Viewpoint'), snap: txt(v, 'Snapshot') }));
+    const refs = [...kids(m, 'Viewpoints'), ...kids(kid(tp, 'Viewpoints'), 'ViewPoint')].map((v) => ({ guid: v.attrs.Guid || '', file: txt(v, 'Viewpoint'), snap: txt(v, 'Snapshot') }));   // BCF 3.0 (inside Topic: ViewPoint) as well as 2.x
     // BCF 2.0 without a Viewpoints list: the default viewpoint.bcfv / snapshot.png
     if (!refs.length && files.has(folder + '/viewpoint.bcfv')) refs.push({ guid: '', file: 'viewpoint.bcfv', snap: files.has(folder + '/snapshot.png') ? 'snapshot.png' : '' });
     for (const r of refs) {

@@ -2,7 +2,7 @@
 title: Nýtt í 0.7 (eldra)
 summary: BimCraft bætir við veggjum yfir nokkur kótastig og Afrita þessa hæð, veggjum úr PDF-skjölum og skönnum, eigin veggjasamsetningum, ríkari fjölskyldum, MEP-búnaði með tengipunktum, árekstrasettum, opum og pípuspólum, skjölum fyrir eignir, COBie og skynjaralestrum, himni, sól, dagsbirtu á neti og hita- og kæliálagi, skráningu skanna, lifandi sýn og geislarakningu á skjákorti, STEP og USD, afbrigðum safnhluta og fleira fyrir AI-aðstoðarmenn.
 keywords: nýtt í 0.7, eldri útgáfa, útgáfuskýringar, breytingaskrá, breytingar, 0.7, útgáfa, nýir eiginleikar, veggir yfir kótastig, afrita þessa hæð, pdf, skanni, rekja, veggir úr grunnmyndum, veggjasamsetningar, lög, kjarni, himna, viðmiðunarmál, efnissafn, birtingareiningar, sýnarstíll, grindun, bitar, fjölskyldur, breytur, táknmynd grunnmyndar, heitir reitir, endurtaka, smáatriðastig, hreiðraðar fjölskyldur, CSV-stærðir, á hvern hlut, búnaður, tengipunktar, tengingar, lágmarksfjarlægðir, op, pípuspólur, spólublöð, suðu á staðnum, skurðarlisti loftstokka, skjöl, cobie, skynjarar, mqtt, lifandi straumur, lóðrétt himinhluti, sólarálag, dagsbirtunet, hitun, kæling, álag, u-gildi, skráning skanna, icp, e57, lifandi sýn, geislarakning, webgpu, afhljóð, eðlilegur himinn, ljósblöndun, myndgerðarröð, þín tölva, step, usd, verkpakki, þróa massa, afbrigði, aðstoðarmenn, viðbótar-API, planta, rafmagn, hönnunarathuganir
-from: ef226539
+from: a638080d
 ---
 
 Þetta er það sem breyttist í BimCraft 0.7, miðað við 0.6. Listinn er flokkaður eftir svæðum, með því mikilvægasta fyrst.

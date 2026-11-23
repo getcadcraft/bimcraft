@@ -2,7 +2,7 @@
 title: Perkara baharu dalam 0.7 (terdahulu)
 summary: BimCraft menambah dinding merentasi beberapa aras dan Salin aras ini, dinding daripada PDF dan imbasan, himpunan dinding anda sendiri, keluarga yang lebih kaya, peralatan MEP dengan port, set pertembungan, bukaan dan spul paip, dokumen aset, COBie dan bacaan penderia, langit, matahari, cahaya siang pada grid serta beban pemanasan dan penyejukan, pendaftaran imbasan, paparan langsung dan penjejakan laluan pada kad grafik, STEP dan USD, varian pustaka, dan lebih banyak untuk pembantu AI.
 keywords: perkara baharu 0.7, keluaran terdahulu, nota keluaran, log perubahan, perubahan, 0.7, versi, ciri baharu, dinding merentasi aras, salin aras ini, pdf, imbasan, kesan, dinding daripada pelan, himpunan dinding, lapisan, teras, membran, dimensi rujukan, pustaka bahan, unit paparan, gaya paparan, rangka, gelegar, keluarga, parameter, simbol pelan, hotspot, ulang, tahap perincian, keluarga bersarang, saiz csv, setiap elemen, peralatan, port, sambungan, ruang bebas, bukaan, spul, helaian spul, kimpalan tapak, senarai potongan saluran, dokumen, cobie, penderia, mqtt, suapan langsung, komponen langit tegak, tenaga suria, grid cahaya siang, pemanasan, penyejukan, beban, nilai-u, daftar imbasan, icp, e57, paparan langsung, penjejakan laluan, webgpu, nyahbising, langit fizikal, percampuran cahaya, barisan render, mesin anda, step, usd, bundle projek, bangunkan jisim, varian, pembantu, api add-on, tumbuhan, elektrik, semakan reka bentuk
-from: ef226539
+from: a638080d
 ---
 
 Ini ialah apa yang berubah dalam BimCraft 0.7, berbanding 0.6. Senarai dikumpulkan mengikut bidang, dengan yang paling penting dahulu.

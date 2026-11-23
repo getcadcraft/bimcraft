@@ -18,6 +18,8 @@ Choose {{ui:Pens}}. Say what the pen is for: all walls, all doors, all windows, 
 
 Choose {{ui:Sketch stair}} and click the corners of the walking line, bottom step first. One line is a straight stair, two lines meeting at a right angle are an L, and three lines (up, across, back) are a U. Press {{key:L}} to draw a landing: click its corners and press {{key:Enter}}, and its short side sets the stair's width. Press {{key:Enter}} to place the stair. Each tread is worked out from the length of your line and the number of risers the height needs. After that it is an ordinary stair: change it in Properties, and the stairwell and handrails follow.
 
+With a pen, you can draw the walking line in one stroke instead of clicking it. Where the pen is turned on for the apps (Settings › Global › Input devices › Pen), choose {{ui:Sketch stair}}, put the pen down at the bottom step and draw the line without lifting it, turning where the stair turns. BimCraft finds the corners in the stroke (a straight line, an L or a U) and shows the walking line; press {{key:Enter}} to place the stair, or draw again to replace it. A wobble shorter than a tenth of the stroke is not a corner. Strokes drawn with a mouse or a finger don't do this: click the corners as above.
+
 Tick **Make it a family** in the tool's row (or press {{key:F}}) before {{key:Enter}} to place the stair as a family instead (a straight, L or U stair). It comes in as one element and opens in the family editor with its width, tread, total height, the treads in each flight and the gap of a U as parameters, so you can add sizes, a plan symbol or hotspots. Steps and the riser height follow from them. It has no handrails or stairwell: those belong to an ordinary stair.
 
 ## Open an OBJ

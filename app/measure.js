@@ -14,6 +14,7 @@
  */
 import { runEdges } from './ifc-vis.js';
 import { fmtLen, fmtArea as fmtModelArea, getDisplayUnits } from './model-units.js';
+import { cross3 as cross, dot3 as dot, len3 as len, sub3 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export { runEdges };
 
@@ -23,10 +24,6 @@ export function runOf(batch, key) {
   return -1;
 }
 
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const len = (a) => Math.hypot(a[0], a[1], a[2]);
 
 export function faceRegion(batch, r, seedTri, tolDeg = 1) {
   const P = batch.positions, I = batch.indices, E = batch.elems;

@@ -36,6 +36,7 @@
  * 1.5 (0.10 DP.1, session bk-defaults-10): api.defaults.provide(provider) / api.defaults.changed(): one add-on at a time may say what a new project starts with and
  * what new things get (defaults-hook.js has the provider's shape: get(id, ctx) → value | undefined, source() → words). The app asks policy by policy and uses
  * its own built-in default for every one that is not set; switching the add-on off removes the provider. The first user is the bundled Default Policies add-on.
+ * 0.11 (SU.1561, su-finish-11 plant): mep.runs() rows carry `instruments`, and mep.setRunInstruments(changes) writes them (one undo step); added to 1.5, so feature-test it.
  * Add-ons written for 1.0 to 1.4 keep working (the loader takes 1.0 to 1.5 manifests).
  *
  * The model is BimCraft's IFC model (ifc-model.js: properties(id) → { id, cls, name, guid, tag, sets: [{ name, rows: [{ name,
@@ -59,7 +60,8 @@ import { levelRooms, roomOpenings } from '../furnish-model.js';   // 1.4 (0.8 DC
 import { readLevels } from '../model-levels.js';
 import { readWalls } from '../model-walls.js';
 import { putDrafting } from '../drafting.js';
-import { readRuns, placeRun, setRunSizes, PIPE_SYSTEMS, DUCT_SYSTEMS } from '../mep-model.js';
+import { viewerToPlan } from '../model-plan.js';   // 0.11 SU.1816: model.triangles in a level's plan axes
+import { readRuns, placeRun, setRunSizes, setRunInstruments, PIPE_SYSTEMS, DUCT_SYSTEMS } from '../mep-model.js';
 import { readPorts } from '../mep/ports.js';
 import { writePorts, readEquipment } from '../mep/equipment.js';
 import { readSpools } from '../mep/spools.js';
@@ -135,7 +137,7 @@ export function makeBimcraftApi(base, addon, ctx) {
       const w = writer();
       return readRuns(w).map((r) => clone({ guid: r.guid, id: r.id, storey: r.storey ? w.guidOf(r.storey) : null, kind: r.kind, system: r.system, points: r.points,
         mat: r.mat, cls: r.cls, size: r.size, shape: r.kind === 'duct' ? r.shape : null, w: r.kind === 'duct' ? r.w : null, h: r.kind === 'duct' ? r.h : null,
-        slope: r.slope, flow: r.flow, valves: r.valves, parts: r.parts }));
+        slope: r.slope, flow: r.flow, valves: r.valves, instruments: r.instruments || [], parts: r.parts }));
     },
     ports() {
       const w = writer();
@@ -165,6 +167,18 @@ export function makeBimcraftApi(base, addon, ctx) {
       needEditor();
       const meta = { label: addonName + ': ' + list.length + ' run size' + (list.length > 1 ? 's' : '') };
       const op = setRunSizes(list);
+      if (ctx.write) await ctx.write(op, meta); else { ctx.editor().modelChange(op, { label: meta.label, verb: '' }); ctx.afterEdit(meta.label); }
+      return { n: list.length };
+    },
+    /** 0.11 SU.1561 (added to 1.5; feature-test it): the instruments on pipe runs, ONE undo step. changes [{ guid, instruments [{ s (mm along the run), tag, kind (ISA letters), loc field|panel|aux }] }]
+     *  = each run's whole list (data on the run, CadCraft_MepRun.Instruments; no solid). Unknown guids and ducts are skipped. → Promise<{ n }>. */
+    async setRunInstruments(changes) {
+      if (!Array.isArray(changes) || !changes.length || changes.length > 500) throw new Error('mep.setRunInstruments: 1 to 500 changes [{ guid, instruments }]');
+      const list = changes.map((c) => ({ guid: String(c && c.guid || ''), instruments: Array.isArray(c && c.instruments) ? c.instruments.slice(0, 200).map((x) => ({ s: Number(x && x.s), tag: String(x && x.tag || ''), kind: String(x && x.kind || ''), loc: String(x && x.loc || '') })) : null })).filter((c) => c.guid && c.instruments);
+      if (!list.length) throw new Error('mep.setRunInstruments: every change needs a guid and an instruments list');
+      needEditor();
+      const meta = { label: addonName + ': instruments on ' + list.length + ' run' + (list.length > 1 ? 's' : '') };
+      const op = setRunInstruments(list);
       if (ctx.write) await ctx.write(op, meta); else { ctx.editor().modelChange(op, { label: meta.label, verb: '' }); ctx.afterEdit(meta.label); }
       return { n: list.length };
     },
@@ -206,6 +220,44 @@ export function makeBimcraftApi(base, addon, ctx) {
   };
   /** The model's walls (GlobalId, level, ends, thickness, mm) — to match a selection with a room. */
   model.walls = () => { const w = writer(); return readWalls(w).map((x) => clone({ guid: x.guid, id: x.id, storey: x.storey ? w.guidOf(x.storey) : null, a: x.a, b: x.b, t: x.t, height: x.height })); };
+  /**
+   * 0.11 SU.1816 (an addition inside 1.5: an add-on checks `typeof api.model.triangles`): the model's own surfaces near a room, for a picture of it. → [{ color '#rrggbb',
+   * alpha (0..1), tris: [[[x, y, z], [x, y, z], [x, y, z]], ...] }] grouped by the colour the 3D view draws, in the plan axes of the level `storey` (GlobalId; the frame of
+   * roomPlans' poly, z = mm above the level), counter-clockwise seen from outside. Only triangles that reach into box { x0, y0, x1, y1, z0, z1 } (mm) when given; spaces,
+   * openings and light fixtures are left out (a lamp is not shaded by its own fitting); at most `max` triangles (default 200 000), then `cut: true` on the last group.
+   */
+  model.triangles = (storey, { box = null, max = 200000 } = {}) => {
+    const ed = needEditor(), res = typeof ctx.loadResult === 'function' ? ctx.loadResult() : null;
+    if (!res || !Array.isArray(res.batches)) return [];
+    const w = writer(), sid = w.byGuid(String(storey || ''));
+    const st = sid === undefined || sid === null ? null : ed.api.GetLine(ed.mid, sid, false);
+    const SW = st?.ObjectPlacement ? [...ed.api.GetWorldTransformMatrix(ed.mid, st.ObjectPlacement.value)] : [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
+    SW[12] *= w.unitMm; SW[13] *= w.unitMm; SW[14] *= w.unitMm;
+    const M = viewerToPlan([...ed.api.GetCoordinationMatrix(ed.mid)], SW), kb = res.keyBase || 0, skip = /^Ifc(Space|OpeningElement|LightFixture)/i;
+    const ap = (P, v) => { const x = P[v], y = P[v + 1], z = P[v + 2]; return [M[0] * x + M[4] * y + M[8] * z + M[12], M[1] * x + M[5] * y + M[9] * z + M[13], M[2] * x + M[6] * y + M[10] * z + M[14]]; };
+    const hex = (c) => '#' + [0, 1, 2].map((i) => Math.max(0, Math.min(255, Math.round((Number(c?.[i]) || 0) * 255))).toString(16).padStart(2, '0')).join('');
+    const groups = new Map();
+    let n = 0, cut = false;
+    for (const b of res.batches) {
+      if (b.space || !b.positions || !b.indices) continue;
+      const P = b.positions, I = b.indices, T = b.triIds, color = hex(b.color), alpha = Number.isFinite(b.color?.[3]) ? b.color[3] : 1, gk = color + '|' + alpha.toFixed(2);
+      for (let t = 0; t < I.length / 3; t++) {
+        if (T && skip.test(res.classOf?.get(T[t] - kb) || '')) continue;
+        const tri = [ap(P, I[3 * t] * 3), ap(P, I[3 * t + 1] * 3), ap(P, I[3 * t + 2] * 3)];
+        if (box && (Math.max(tri[0][0], tri[1][0], tri[2][0]) < box.x0 || Math.min(tri[0][0], tri[1][0], tri[2][0]) > box.x1 || Math.max(tri[0][1], tri[1][1], tri[2][1]) < box.y0 || Math.min(tri[0][1], tri[1][1], tri[2][1]) > box.y1
+          || Math.max(tri[0][2], tri[1][2], tri[2][2]) < box.z0 || Math.min(tri[0][2], tri[1][2], tri[2][2]) > box.z1)) continue;
+        if (n >= max) { cut = true; break; }
+        let g = groups.get(gk);
+        if (!g) { g = { color, alpha: Math.round(alpha * 100) / 100, tris: [] }; groups.set(gk, g); }
+        g.tris.push(tri.map((q) => q.map((v) => Math.round(v * 10) / 10)));
+        n++;
+      }
+      if (cut) break;
+    }
+    const out = [...groups.values()];
+    if (cut && out.length) out[out.length - 1].cut = true;
+    return out;
+  };
   const drafting = {
     /** Drafting lines and hatches put in plan views for an owner `tag`, replacing what the same tag put before: ONE undo step. → Promise<{ n, removed }>. */
     async put(tag, items, { label = 'drawing' } = {}) {

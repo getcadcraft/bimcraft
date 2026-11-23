@@ -1,0 +1,23 @@
+{
+  "id": "dome-spec-eu",
+  "name": "Dome spec: Europe",
+  "version": "0.11.1",
+  "apps": [
+    "bimcraft",
+    "cadcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "dome",
+      "range": "*"
+    }
+  ],
+  "description": "The Europe spec for the Dome generator: cover, strength class, minimum steel and bar spacing from EN 1992-1-1 (2004 edition, recommended values), and what the EN standards say on shells, sprayed concrete, loads, foam and frost. Every value names its standard, clause and how it was read. Not a substitute for the standards, a national annex or an engineer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

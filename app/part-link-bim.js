@@ -9,7 +9,10 @@
  *   elementPackage(ent, id, opts)         → { pkg, mesh, hash }   ent = { ifc, model, name }, id = the element's expressID; the element in its own frame
  *                                           (mm, Z up, origin at its placement) with the neighbours within `radius` mm as read-only context
  *   elementLocalMesh(ent, id)             → the same mesh now (what an accept compares against)
- *   replaceBodyOp(guid, mesh, rec, ids)   → an op for IfcEditor.modelChange: the element's body becomes `mesh` (a tessellation), its link set CadCraft_PartLink is written
+ *   replaceBodyOp(guid, mesh, rec, ids, form?) → an op for IfcEditor.modelChange: the element's body becomes `mesh` (a tessellation), or `form` when given
+ *                                           (bodyForm: one IfcExtrudedAreaSolid, or a Boolean result of extrusions), its link set CadCraft_PartLink is written
+ *   bodyForm(update)                      → { as: 'csg' | 'prism' | 'mesh', solid?, prism? }   (0.11 SU.1814, su-finish-11) how an accepted update is written:
+ *                                           the part's history as solids when it came with one, else the mesh as one extrusion when it IS a straight prism, else a mesh
  *   class PartLinks                       the book of this file's links + where updates wait (a partlink store)
  */
 import * as PL from './partlink/index.js';
@@ -18,6 +21,7 @@ import { boundsMapOf, keysOf } from './ifc-vis.js';
 import { lengthUnitMm, val } from './ifc-util.js';
 import { op } from './model-ops.js';
 import { scaleT } from './model-write.js';
+import { meshToPrism } from './ifc-solids.js';   // 0.11 SU.1814: an element or a shape that IS a straight prism travels and comes back as one
 
 /** Classes the building tools draw from an outline and rebuild after every change: a replaced body would be written over (model-walls.js, model-slabs.js, model-openings.js). */
 const TOOL_CLASSES = /^(IFCWALL|IFCWALLSTANDARDCASE|IFCSLAB|IFCROOF|IFCCOVERING|IFCDOOR|IFCWINDOW|IFCOPENINGELEMENT|IFCSPACE|IFCBUILDINGSTOREY|IFCSITE|IFCBUILDING|IFCCURTAINWALL|IFCSTAIR|IFCSTAIRFLIGHT|IFCRAMP|IFCRAMPFLIGHT)$/;
@@ -54,7 +58,7 @@ export function elementLocalMesh(ent, id) {
 }
 
 /** The package for one element, with the neighbours (read-only context). opts: { radius mm, budget triangles, file, now } */
-export function elementPackage(ent, id, { radius = 3000, budget, file = '', now, link } = {}) {
+export function elementPackage(ent, id, { radius = 3000, budget, file = '', now, link, rev = 0 } = {}) {
   const { api } = ent.ifc, mid = ent.model.modelID, model = ent.model;
   const cls = model.classOf.get(id) || '';
   if (!linkable(cls)) throw new PL.PartLinkError('partlink.err.notlinkable', { cls });
@@ -87,7 +91,8 @@ export function elementPackage(ent, id, { radius = 3000, budget, file = '', now,
   const pkg = PL.makePackage({
     link: link || PL.newLinkId(),
     source: { app: 'BimCraft', file, globalId: guid, ifcClass: cls, name: val(line.Name) || cls, storey: storey?.name || '', placement: F.placement },
-    mesh, context: ctx.meshes, omitted: ctx.omitted + (cand.length - near.length), now,
+    mesh, context: ctx.meshes, omitted: ctx.omitted + (cand.length - near.length), now, rev,
+    prism: meshToPrism(mesh.positions, mesh.indices),   // 0.11: PartCraft builds a cut or an added feature on it as solids
   });
   return { pkg, mesh, hash: pkg.geometry.hash, context: ctx };
 }
@@ -99,17 +104,43 @@ export function findByGuid(ent, guid) {
   return null;
 }
 
+/** How an accepted update is written (0.11 SU.1814, su-finish-11). The part's history as solids when it came with one (a base and the
+ *  features added or cut); else the shape as one extrusion when the mesh IS a straight prism; else the mesh. */
+export function bodyForm(update) {
+  const s = update.solid ? PL.cleanSolid(update.solid) : null;
+  if (s && s.steps.length > 1) return { as: 'csg', solid: s };
+  if (s) return { as: 'prism', prism: s.steps[0] };
+  const p = meshToPrism(update.mesh.positions, update.mesh.indices);
+  return p ? { as: 'prism', prism: PL.cleanPrism(p) } : { as: 'mesh' };
+}
+
+/** One prism (element frame, mm) as an IfcExtrudedAreaSolid through a ModelWriter. */
+export function prismItem(w, p) {
+  const prof = p.circle
+    ? w.make('IFCCIRCLEPROFILEDEF', 'AREA', null, w.H(w.make('IFCAXIS2PLACEMENT2D', w.H(w.point2mm(p.circle.c[0], p.circle.c[1])), null)), w.u(p.circle.r))
+    : w.profileVoids(p.outer, p.holes || []);
+  return w.extrudeAt(prof, w.axisFrame(p.origin, p.n, p.x), p.depth);
+}
+/** A csg solid as one item: the base, then each step added (UNION) or cut (DIFFERENCE) in order. → { item, type } */
+export function solidItem(w, form) {
+  if (form.as === 'prism') return { item: prismItem(w, form.prism), type: 'SweptSolid' };
+  let cur = prismItem(w, form.solid.steps[0]);
+  for (const st of form.solid.steps.slice(1)) cur = w.make('IFCBOOLEANRESULT', st.op === 'cut' ? 'DIFFERENCE' : 'UNION', w.H(cur), w.H(prismItem(w, st)));
+  return { item: cur, type: 'CSG' };
+}
+
 /**
- * The body of the element named by GlobalId becomes `mesh` (element frame, mm, Z up): an IfcTriangulatedFaceSet in the Body context, the
- * placement, type, material and properties kept; the link's set CadCraft_PartLink written. One undo step. `find()` → the element's id now.
+ * The body of the element named by GlobalId becomes `mesh` (element frame, mm, Z up): an IfcTriangulatedFaceSet in the Body context, or, with
+ * `form` (bodyForm, not 'mesh'), IFC's own solids; the placement, type, material and properties kept; the link's set CadCraft_PartLink written.
+ * One undo step. `find()` → the element's id now.
  */
-export function replaceBodyOp(guid, mesh, rec, find) {
+export function replaceBodyOp(guid, mesh, rec, find, form = null) {
   const positions = Array.from(mesh.positions), indices = Array.from(mesh.indices);
   return op((w) => {
     const id = find(w, guid);
     if (!id) throw Object.assign(new Error('partlink.err.gone'), { code: 'partlink.err.gone' });
-    const b = w.bodyItems({ type: 'mesh', positions, indices });
-    w.setShape(id, [w.rep('body', 'Body', b.type, b.items)]);
+    if (form && form.as !== 'mesh') { const s = solidItem(w, form); w.setShape(id, [w.rep('body', 'Body', s.type, [s.item])]); }
+    else { const b = w.bodyItems({ type: 'mesh', positions, indices }); w.setShape(id, [w.rep('body', 'Body', b.type, b.items)]); }
     w.upsertPset(id, PL.PSET, PL.psetRows(rec).map(([n, v]) => [n, typeof v === 'number' ? 'IFCINTEGER' : 'IFCLABEL', v]));
     return { id, ids: [id] };
   });
@@ -124,7 +155,7 @@ export class PartLinks {
   async send(ent, id, opts = {}) {
     const guid = val(ent.ifc.api.GetLine(ent.model.modelID, id, false)?.GlobalId);
     const had = this.book.byElement(guid)[0];
-    const { pkg, hash, context } = elementPackage(ent, id, { ...opts, link: had?.link });
+    const { pkg, hash, context } = elementPackage(ent, id, { ...opts, link: had?.link, rev: had?.rev || 0 });   // 0.11: the receiver counts on from the last revision taken
     await this.store.put('package', pkg.link, pkg);
     this.book.sent({ link: pkg.link, globalId: guid, name: pkg.source.name, ifcClass: pkg.source.ifcClass, model: this.key, hash });
     await this.save();

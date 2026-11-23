@@ -4,6 +4,8 @@
  *   This file    the blocks of the open DWG/DXF (libitem.js itemsFromDwg)
  *   Files…       a DWG, DXF, IFC, glTF/GLB, OBJ, RFA or CSV picked here, read by the adapters in this tab
  *   LibraryCraft the same-origin public API (/api/v1/library/*); team items too once signed in (Bearer token)
+ *   My objects   PO.1: the person's own private objects (/api/v1/library/my-items, Bearer): kept from a file read here (an .rfa family, IFC,
+ *                DWG, glTF, OBJ), then placed like any Library item, in every app, on every computer they sign in on. Only they see them.
  *   Other feeds  base URLs the user adds that speak the same API (kept in localStorage; CORS is their side's job)
  * Search, category filter, cards (preview, name, maker/model, license badge, version, "Withdrawn"), and a detail view
  * whose buttons hand an entry { item, meta } to the host to place or to swap in.
@@ -33,9 +35,11 @@ const API = '/api/v1/library';
 export const stretchAxes = (v) => (Array.isArray(v) ? ['x', 'y', 'z'].filter((a) => v.includes(a)) : []);
 const TOKEN_KEY = 'bimcraft.library.token';
 const FEEDS_KEY = 'bimcraft.library.feeds';
+/** SU.812: the sources a packaged edition keeps (read on this computer, no request to any site). */
+export const LOCAL_SOURCES = ['symbols', 'plants', 'this', 'files'];
 // Creative Commons license names are the same in every language; the other two are words, looked up when shown.
 const LICENSE_NAMES = { 'CC0-1.0': 'CC0', 'CC-BY-4.0': 'CC BY', 'CC-BY-SA-4.0': 'CC BY-SA' };   // i18n-ignore: license names
-const LICENSE_KEYS = { 'MAKER-TERMS': 'lib.license.maker', 'TEAM-ONLY': 'lib.license.team' };
+const LICENSE_KEYS = { 'MAKER-TERMS': 'lib.license.maker', 'TEAM-ONLY': 'lib.license.team', PRIVATE: 'lib.license.private' };
 export const licenseLabel = (id) => LICENSE_NAMES[id] || (LICENSE_KEYS[id] ? t(LICENSE_KEYS[id]) : id ? String(id) : t('lib.license.none'));
 
 function readJson(key, dflt) { try { const v = JSON.parse(localStorage.getItem(key) || 'null'); return v ?? dflt; } catch (e) { return dflt; } }
@@ -79,7 +83,7 @@ export class LibraryPanel {
     try { sessionStorage.setItem(TOKEN_KEY, JSON.stringify(this.token)); } catch (err) { /* ignore */ }
     this.host.status(t('lib.signed_in'));
     this.render();
-    if (this.source === 'librarycraft') this.load();
+    if (this.source === 'librarycraft' || this.source === 'mine') this.load();
   }
   signOut() {
     this.token = null;
@@ -144,7 +148,7 @@ export class LibraryPanel {
   }
 
   // ---- sources ----
-  setSource(s) { this.source = s; this.detail = null; this.page = 1; this.render(); this.load(); }
+  setSource(s) { if (this.host.localOnly && LOCAL_SOURCES.indexOf(s) < 0) return; this.source = s; this.detail = null; this.page = 1; this.render(); this.load(); }
   refresh() { if (this.source === 'this') this.load(); else this.render(); }
 
   async load() {
@@ -179,20 +183,20 @@ export class LibraryPanel {
       this.entries = this.fileEntries;
     } else {
       const base = this.baseOf();
-      if (!base) { this.entries = []; this.render(); return; }
+      if (!base || (this.source === 'mine' && !this.token)) { this.entries = []; this.total = 0; this.render(); return; }   // My objects needs the sign-in
       this.loading = true; this.render();
       try {
         const q = new URLSearchParams({ q: this.query, category: this.category, page: String(this.page), per: '24', openings: '1' });
         if (this.source === 'kits') q.set('kind', 'kit');   // 0.10 BK.98: project templates and Quick Kits
         else if (this.itemClass && L.ITEM_CLASSES.includes(this.itemClass)) q.set('class', this.itemClass);   // 0.10 BK.21   // doors and windows: this build places them (the API leaves them out otherwise)
-        const d = await this.getJson(base + '/items?' + q, base);
+        const d = await this.getJson(base + (this.source === 'mine' ? '/my-items?' : '/items?') + q, base);
         if (token !== this.loadToken) return;
         this.total = d.total || 0;
         this.entries = (d.items || []).map((x) => this.apiEntry(x, base));
       } catch (e) {
         if (token !== this.loadToken) return;
         this.entries = [];
-        this.error = (e && e.message) || t('lib.err.unreachable');
+        this.error = this.source === 'mine' && /\b404\b/.test((e && e.message) || '') ? t('lib.mine.closed') : (e && e.message) || t('lib.err.unreachable');
       }
       this.loading = false;
     }
@@ -203,7 +207,7 @@ export class LibraryPanel {
     const library = base === API ? 'librarycraft' : base;
     return {
       key: x.uuid, name: x.name, maker: x.maker, model: x.model, category: x.category, license: x.license, version: x.version, kind: x.kind || '',
-      preview: safeUrl(x.preview_url, base), withdrawn: x.status === 'withdrawn', team: x.visibility === 'team', uuid: x.uuid, base,
+      preview: safeUrl(x.preview_url, base), withdrawn: x.status === 'withdrawn', team: x.visibility === 'team', mine: x.visibility === 'private', uuid: x.uuid, base,
       load: async () => {
         const { item, info, version } = await this.fetchItem(x.uuid, x.version, base);
         // i18n-ignore: product name (LibraryCraft)
@@ -229,8 +233,97 @@ export class LibraryPanel {
     }));
   }
 
+  /**
+   * PO.1 / PO.4: several files (or a whole folder) picked at once. Each is read in turn and their items listed together; a file that
+   * cannot be read is named in the notes. Files with the same name in the same folder go together:
+   *   Chair.rfa + Chair.txt           the type catalog's rows become the family's types (variants)
+   *   Chair.rfa + Chair.ifc|glb|gltf|obj   the family gives the data, the other file the real shape (one item instead of two)
+   */
+  async readFiles(files) {
+    const READ = ['dwg', 'dxf', 'ifc', 'glb', 'gltf', 'obj', 'rfa', 'csv'], SHAPES = ['ifc', 'glb', 'gltf', 'obj'];
+    const ext = (f) => (f.name.split('.').pop() || '').toLowerCase();
+    const stem = (f) => ((f.webkitRelativePath || '').replace(/[^/]*$/, '') + f.name.replace(/\.[^.]+$/, '')).toLowerCase();
+    const catalogs = new Map(), shapes = new Map(), families = new Set();
+    for (const f of files) { if (ext(f) === 'txt') catalogs.set(stem(f), f); else if (ext(f) === 'rfa') families.add(stem(f)); }
+    for (const f of files) if (SHAPES.includes(ext(f)) && families.has(stem(f)) && !shapes.has(stem(f))) shapes.set(stem(f), f);
+    const paired = new Set(shapes.values());
+    const todo = files.filter((f) => READ.includes(ext(f)) && !paired.has(f));
+    if (!todo.length) { this.host.status(t('lib.files.none'), true); return; }
+    if (todo.length === 1 && !catalogs.has(stem(todo[0])) && !shapes.has(stem(todo[0]))) return this.readFile(todo[0]);
+    const all = [], notes = [];
+    let failed = 0, done = 0;
+    for (const f of todo.slice(0, 200)) {
+      this.host.status(t('lib.files.reading', { i: ++done, n: Math.min(todo.length, 200), file: f.name }));
+      try {
+        let types = null;
+        const cat = ext(f) === 'rfa' ? catalogs.get(stem(f)) : null;
+        if (cat && cat.size < 4 * 1024 * 1024) types = L.parseTypeCatalog(await cat.text());
+        await this.readFile(f, { quiet: true, types });
+        let entries = this.fileEntries, fnotes = this.fileNotes;
+        const sh = ext(f) === 'rfa' ? shapes.get(stem(f)) : null;
+        if (sh && entries.length === 1) {
+          try {
+            const data = entries[0];
+            await this.readFile(sh, { quiet: true });
+            const got = this.fileEntries.filter((x) => x.item && x.item.body);
+            if (got.length) {
+              // several objects in the shape file: the one that fills the most space is taken, and the note says so
+              const size = (x) => { const b = L.bodyBox(x.item.body); return b ? b.w * b.d * b.h : 0; };
+              const pick = got.slice().sort((p, q) => size(q) - size(p))[0];
+              const item = L.cleanItem(L.itemWithShape(data.item, pick.item));
+              fnotes = fnotes.filter((n) => !/^Geometry not read/.test(n)).concat([t('lib.files.shape', { file: sh.name }) + (got.length > 1 ? ' ' + t('lib.files.shape.picked', { n: got.length, name: pick.name }) : '')]);
+              const metaNotes = fnotes.slice();
+              entries = [{ ...data, item, load: async () => ({ item, meta: { library: 'file', source: f.name, sourceFile: f.name + ' + ' + sh.name, sha256: await L.itemHash(item), notes: metaNotes } }) }];
+            } else { entries = [data]; fnotes = fnotes.concat([t('lib.files.shape.none', { file: sh.name })]); paired.delete(sh); }
+          } catch (e) { entries = [entries[0]]; fnotes = fnotes.concat([sh.name + ': ' + ((e && e.message) || String(e))]); }
+        }
+        all.push(...entries); notes.push(...fnotes.map((n) => f.name + ': ' + n));
+      } catch (e) { failed++; notes.push(f.name + ': ' + ((e && e.message) || String(e))); }
+    }
+    if (todo.length > 200) notes.push(t('lib.files.toomany', { n: 200 }));
+    all.forEach((x, i) => { x.key = 'file:' + i + ':' + x.name; });
+    this.fileEntries = all; this.fileNotes = notes;
+    this.source = 'files'; this.detail = null;
+    await this.load();
+    this.host.status(t('lib.read_files', { files: Math.min(todo.length, 200) - failed, n: all.length }), failed > 0 && !all.length);
+  }
+
+  /** Keep items read from files in My objects (POST /my-items, one at a time: the server checks and draws each). */
+  async keepMine(entries, button) {
+    if (!entries.length) return;
+    if (!this.token) { this.host.status(t('lib.mine.signin'), true); this.setSource('mine'); return; }
+    if (button) button.disabled = true;
+    let done = 0, lastError = '';
+    for (const x of entries) {
+      try {
+        const { item, meta } = await x.load();
+        this.host.status(t('lib.mine.keeping', { i: done + 1, n: entries.length, name: x.name }));
+        const d = await this.getJson(API + '/my-items', API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item, source_name: meta.sourceFile || '' }) });
+        x.kept = d.uuid || true;
+        done++;
+      } catch (e) {
+        lastError = /\b404\b/.test((e && e.message) || '') ? t('lib.mine.closed') : (e && e.message) || String(e);
+        if (!this.token || /\b(404|429)\b/.test((e && e.message) || '')) break;   // signed out, not open, or too many: stop the batch
+      }
+    }
+    this.render();
+    if (done === entries.length) this.host.status(t('lib.mine.kept_n', { n: done }));
+    else this.host.status(t('lib.mine.kept_some', { n: done, of: entries.length, why: lastError }), true);
+  }
+
+  async removeMine(entry) {
+    if (!this.token || !entry.uuid) return;
+    if (!window.confirm(t('lib.mine.remove.confirm', { name: entry.name }))) return;
+    try {
+      await this.getJson(API + '/my-items?uuid=' + encodeURIComponent(entry.uuid), API, { method: 'DELETE' });
+      this.host.status(t('lib.mine.removed', { name: entry.name }));
+      this.detail = null;
+      await this.load();
+    } catch (e) { this.host.status((e && e.message) || String(e), true); }
+  }
+
   /** Files…: run the adapters here, in the browser. */
-  async readFile(file) {
+  async readFile(file, opts = {}) {
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const bytes = new Uint8Array(await file.arrayBuffer());
     const head = new TextDecoder('latin1').decode(bytes.subarray(0, 16));
@@ -265,16 +358,20 @@ export class LibraryPanel {
       if (!(await askUnits('OBJ'))) throw notAsked();
       r = L.itemFromMesh(bytes, 'obj', { units: units || null, upAxis: up || null, name: file.name.replace(/\.[^.]+$/, '') });
     } else if (ext === 'rfa' || (bytes[0] === 0xd0 && bytes[1] === 0xcf)) {
-      r = L.itemFromRfa(await this.host.readRevit(bytes, file.name));
+      const info = await this.host.readRevit(bytes, file.name);
+      r = L.itemFromRfa(info, opts.types && opts.types.length ? { types: opts.types } : {});
+      // PO.4: the picture saved in the family file, shown beside our own plan drawing (it stays in this tab: it is not part of the item)
+      if (info.preview && info.preview.png && info.preview.png.length < 4 * 1024 * 1024) { try { r.picture = URL.createObjectURL(new Blob([info.preview.png], { type: 'image/png' })); } catch (e) { /* no picture */ } }
     } else if (ext === 'csv') {
       r = L.itemsFromCsv(new TextDecoder().decode(bytes));
     } else throw new Error(t('lib.err.unsupported', { file: file.name }));
     this.fileNotes = unitsSaid ? [unitsSaid, ...r.notes] : r.notes;
     this.fileEntries = r.items.map((raw, i) => {
       const item = L.cleanItem(raw);
-      return { key: 'file:' + i + ':' + item.name, name: L.localized(item, locale()).name, maker: item.maker, model: item.model, category: item.category, license: null, version: null, local: true, item,
+      return { key: 'file:' + i + ':' + item.name, name: L.localized(item, locale()).name, maker: item.maker, model: item.model, category: item.category, license: null, version: null, local: true, item, picture: r.picture || null,
         load: async () => ({ item, meta: { library: 'file', source: file.name, sourceFile: file.name, sha256: await L.itemHash(item), notes: r.notes.filter((n) => n.startsWith(raw.name) || !/: /.test(n)) } }) };
     });
+    if (opts.quiet) return;   // readFiles gathers several and lists them once
     this.source = 'files';
     this.detail = null;
     await this.load();
@@ -307,15 +404,19 @@ export class LibraryPanel {
     const mode = this.host.mode();
     const src = (key, label, title) => el('button', { type: 'button', className: 'bc-lib-src', 'aria-pressed': this.source === key ? 'true' : 'false', title, onClick: () => this.setSource(key) }, label);
     const feeds = readJson(FEEDS_KEY, []);
+    const local = !!this.host.localOnly;
+    if (local && LOCAL_SOURCES.indexOf(this.source) < 0) this.source = 'symbols';
     const kids = [
       el('div', { className: 'bc-lib-srcs', role: 'group', 'aria-label': t('lib.sources') },
         src('symbols', t('lib.src.symbols'), t('lib.src.symbols.title')),
         src('plants', t('lib.src.plants'), t('lib.src.plants.title')),
-        src('librarycraft', 'Library', t('lib.src.librarycraft.title')),   // i18n-ignore: product name
-        src('kits', t('lib.src.kits'), t('lib.src.kits.title')),
+        // SU.812: a packaged edition (Studio, browser zip) keeps the sources that need nothing from a site: no Library, kits or feeds
+        local ? null : src('librarycraft', 'Library', t('lib.src.librarycraft.title')),   // i18n-ignore: product name
+        local ? null : src('kits', t('lib.src.kits'), t('lib.src.kits.title')),
+        local ? null : src('mine', t('lib.src.mine'), t('lib.src.mine.title')),
         src('this', t('lib.src.this'), t('lib.src.this.title')),
         src('files', t('lib.src.files'), t('lib.src.files.title')),
-        src('feed', t('lib.src.feed'), t('lib.src.feed.title'))),
+        local ? null : src('feed', t('lib.src.feed'), t('lib.src.feed.title'))),
     ];
     const swapV = this.swapVariantsBlock();
     // 2026-11-02 (owner: "the place button should be higher … small viewports"): one item stands on its own — its name and Place first,
@@ -332,7 +433,8 @@ export class LibraryPanel {
     }
     this._shownDetail = null;
     if (swapV) kids.unshift(swapV);
-    if (this.source === 'librarycraft' || this.source === 'kits') kids.push(this.signInRow());
+    if (this.source === 'librarycraft' || this.source === 'kits' || this.source === 'mine') kids.push(this.signInRow());
+    if (this.source === 'mine') kids.push(el('p', { className: 'bc-muted', 'data-lib-mine-intro': '' }, t(this.token ? 'lib.mine.intro' : 'lib.mine.signin')));
     if (this.source === 'kits' && this.host.quickKit) kids.push(el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lib-kit-make': '', onClick: () => this.host.quickKit() }, t('lib.kit.make'))));
     if (this.source === 'kitmembers') kids.push(el('p', { className: 'bc-muted' }, el('button', { type: 'button', className: 'bc-linkbtn', onClick: () => this.setSource('kits') }, el('i', { className: 'bi bi-arrow-left', 'aria-hidden': 'true' }), ' ' + t('lib.kit.back'))));
     if (this.source === 'feed') kids.push(this.feedRow(feeds));
@@ -348,7 +450,7 @@ export class LibraryPanel {
       const shown = this.filtered();
       if (!this.loading && !this.error && !shown.length) kids.push(el('p', { className: 'bc-muted' }, this.emptyText()));
       kids.push(el('ul', { className: 'bc-lib-cards' }, shown.slice(0, 300).map((e) => this.card(e))));
-      if ((this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits') && this.total > this.page * 24) {
+      if ((this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits' || this.source === 'mine') && this.total > this.page * 24) {
         kids.push(el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => { this.page++; this.load(); } }, t('lib.next_page'))));
       }
       if ((this.source === 'files' || this.source === 'this') && this.fileNotes.length) {
@@ -402,13 +504,14 @@ export class LibraryPanel {
 
   emptyText() {
     if (this.source === 'files') return t('lib.empty.files');
+    if (this.source === 'mine') return !this.token ? '' : this.query || this.category ? t('lib.empty.nomatch') : t('lib.empty.mine');
     if (this.source === 'feed') return this.feed ? t('lib.empty.feed') : t('lib.empty.nofeed');
     if (this.source === 'this') return this.host.mode() === 'dwg' ? t('lib.empty.noblocks') : '';
     return this.query || this.category ? t('lib.empty.nomatch') : t('lib.empty.library');
   }
 
   filtered() {
-    if (this.source === 'librarycraft' || this.source === 'feed') return this.entries;
+    if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'mine') return this.entries;
     const words = this.query.toLowerCase().split(/\s+/).filter(Boolean);
     return this.entries.filter((e) => (!this.category || e.category === this.category)
       && words.every((w) => [e.name, e.sub, e.maker, e.model].join(' ').toLowerCase().includes(w)));
@@ -420,12 +523,12 @@ export class LibraryPanel {
     search.addEventListener('input', () => {
       this.query = search.value.trim();
       clearTimeout(timer);
-      timer = setTimeout(() => { this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits') this.load(); else this.renderListOnly(); }, 300);
+      timer = setTimeout(() => { this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits' || this.source === 'mine') this.load(); else this.renderListOnly(); }, 300);
     });
     const cat = el('select', { className: 'select-cc bc-lib-cat', 'aria-label': t('lib.category') },
       el('option', { value: '' }, t('lib.category.any')),
       Object.entries(L.CATEGORIES).map(([k, v]) => el('option', { value: k, selected: this.category === k }, t('lib.category.option', { group: k.split('/')[0].replace(/^./, (c) => c.toUpperCase()), label: v }))));
-    cat.addEventListener('change', () => { this.category = cat.value; this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits') this.load(); else this.render(); });
+    cat.addEventListener('change', () => { this.category = cat.value; this.page = 1; if (this.source === 'librarycraft' || this.source === 'feed' || this.source === 'kits' || this.source === 'mine') this.load(); else this.render(); });
     // 0.10 BK.21: Symbols, Types, Assets: one picker for the three kinds of Library item (the Library's class filter, libitem.js ITEM_CLASSES)
     const cls = this.source === 'librarycraft' ? el('select', { className: 'select-cc bc-lib-class', 'aria-label': t('lib.class'), 'data-lib-class': '' },
       el('option', { value: '' }, t('lib.class.any')), L.ITEM_CLASSES.map((c) => el('option', { value: c, selected: this.itemClass === c }, t('lib.class.' + c)))) : null;
@@ -481,18 +584,30 @@ export class LibraryPanel {
   }
 
   filesRow() {
-    const input = el('input', { type: 'file', className: 'visually-hidden', accept: '.dwg,.dxf,.ifc,.glb,.gltf,.obj,.rfa,.csv', 'data-lib-file': '' });
+    const input = el('input', { type: 'file', className: 'visually-hidden', accept: '.dwg,.dxf,.ifc,.glb,.gltf,.obj,.rfa,.csv,.txt', 'data-lib-file': '' });
+    // PO.4: a whole folder (and the folders inside it): families with their type catalogs and same-name shape files
+    const dir = el('input', { type: 'file', className: 'visually-hidden', 'data-lib-folder': '' });
+    dir.webkitdirectory = true; dir.multiple = true;
+    dir.addEventListener('change', () => {
+      const files = Array.from(dir.files || []);
+      dir.value = '';
+      if (files.length) this.readFiles(files).catch((e) => { console.error(e); this.host.status(e.message || String(e), true); });
+    });
+    input.multiple = true;   // PO.1: a folder's worth of families in one go
     input.addEventListener('change', () => {
-      const f = input.files[0];
+      const files = Array.from(input.files || []);
       input.value = '';
-      if (f) this.readFile(f).catch((e) => { console.error(e); this.host.status(e.message || String(e), true); });
+      if (files.length) this.readFiles(files).catch((e) => { console.error(e); this.host.status(e.message || String(e), true); });
     });
     const unitSel = el('select', { className: 'select-cc', 'data-lib-units': '', 'aria-label': t('lib.files.units') },
       el('option', { value: '' }, t('lib.files.units.file')), ...[['mm', 'lib.files.units.mm'], ['cm', 'lib.files.units.cm'], ['m', 'lib.files.units.m'], ['in', 'lib.files.units.in'], ['ft', 'lib.files.units.ft']].map(([k, key]) => el('option', { value: k }, t(key))));
     const upSel = el('select', { className: 'select-cc', 'data-lib-up': '', 'aria-label': t('lib.files.up') }, el('option', { value: '' }, t('lib.files.up.y')), el('option', { value: 'z' }, t('lib.files.up.z')));
     return el('div', { className: 'bc-lib-files' },
-      el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => input.click() }, el('i', { className: 'bi bi-file-earmark-plus', 'aria-hidden': 'true' }), ' ' + t('lib.files.choose')), input),
+      el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => input.click() }, el('i', { className: 'bi bi-file-earmark-plus', 'aria-hidden': 'true' }), ' ' + t('lib.files.choose')), input, ' ',
+        'webkitdirectory' in dir ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lib-folder-btn': '', title: t('lib.files.folder.title'), onClick: () => dir.click() }, el('i', { className: 'bi bi-folder-plus', 'aria-hidden': 'true' }), ' ' + t('lib.files.folder')) : null, dir),
       el('p', { className: 'bc-muted' }, t('lib.files.intro')),
+      !this.host.localOnly && this.fileEntries.some((x) => !x.kept) ? el('p', {}, el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lib-keep-all': '', title: t('lib.mine.keep.title'),
+        onClick: (ev) => this.keepMine(this.fileEntries.filter((x) => !x.kept), ev.currentTarget) }, el('i', { className: 'bi bi-lock', 'aria-hidden': 'true' }), ' ' + t('lib.mine.keep_all', { n: this.fileEntries.filter((x) => !x.kept).length }))) : null,
       el('div', { className: 'bc-lib-filter' }, unitSel, upSel));
   }
 
@@ -515,6 +630,7 @@ export class LibraryPanel {
           e.local ? el('span', { className: 'bc-pill is-info' }, t('lib.card.fromfile')) : el('span', { className: 'bc-pill' }, licenseLabel(e.license)),
           e.version ? el('span', { className: 'bc-pill is-info' }, t('lib.card.version', { version: e.version })) : null,
           e.team ? el('span', { className: 'bc-pill is-info' }, t('lib.card.team')) : null,
+          e.mine ? el('span', { className: 'bc-pill is-info', 'data-lib-private': '' }, t('lib.card.mine')) : null,
           e.withdrawn ? el('span', { className: 'bc-pill is-bad' }, t('lib.card.withdrawn')) : null)));
     // a card is draggable onto the plan or the 3D view: it is placed there, through the same process as the Place button
     if (!e.withdrawn && !NOT_PLACED.includes(e.kind)) this.dragSource(btn, e.name || t('clip.unnamed'), async () => {
@@ -664,6 +780,7 @@ export class LibraryPanel {
       [t('lib.row.stretch'), m.stretch ? (m.stretch.length ? m.stretch.map((a) => t('lib.stretch.' + a)).join(', ') : t('lib.stretch.none')) : ''],
       // 0.10 BK.18 / BK.21 / BK.98: LOD, classification codes, a Type's build-up and a kit's version
       [t('lib.row.lod'), (it.lod ?? it.type?.lod) ? 'LOD ' + (it.lod ?? it.type.lod) : ''],
+      [t('lib.row.placing'), (() => { try { const i = window.bimcraftLod?.libraryInfo?.(shown); return i ? [i.line, i.advice].filter(Boolean).join(' · ') : ''; } catch (e) { return ''; } })()],   // 0.11 BK.95 (bim-inbox-11): the same "Placing as" line the site prints (lib/lod/library.js placeLine)
       [t('lib.row.classification'), (it.classification || []).map((c) => c.system + ' ' + c.code).join('; ')],
       [t('lib.row.buildup'), it.type ? t('lib.buildup', { element: it.type.element, mm: it.type.thickness, n: it.type.layers }) : ''],
       [t('lib.row.kitversion'), it.kit ? t('lib.kit.versionline', { version: it.kit.version }) : '']];
@@ -686,7 +803,11 @@ export class LibraryPanel {
       mode === 'ifc' && !withdrawn && !NOT_PLACED.includes(kind) ? this.placeSplit(put, m) : null,
       mode === 'ifc' && swapT && !withdrawn ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', onClick: () => this.host.swap({ item: put, meta: m }) },
         el('i', { className: 'bi bi-arrow-left-right', 'aria-hidden': 'true' }), ' ' + t('lib.swap', { name: swapT.name })) : null,
-      mode !== 'ifc' && !NOT_PLACED.includes(kind) ? el('span', { className: 'bc-muted' }, t('lib.needs_ifc')) : null);
+      mode !== 'ifc' && !NOT_PLACED.includes(kind) ? el('span', { className: 'bc-muted' }, t('lib.needs_ifc')) : null,
+      // PO.1: an item read from a file here can be kept in My objects (private, the account's own); one of My objects can be taken out
+      !this.host.localOnly && m0.library === 'file' && e.local ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lib-keep': '', disabled: e.kept ? true : null, title: t('lib.mine.keep.title'),
+        onClick: (ev) => this.keepMine([e], ev.currentTarget) }, el('i', { className: 'bi bi-lock', 'aria-hidden': 'true' }), ' ' + t(e.kept ? 'lib.mine.kept' : 'lib.mine.keep')) : null,
+      e.mine ? el('button', { type: 'button', className: 'btn-line btn-sm-cc', 'data-lib-unkeep': '', onClick: () => this.removeMine(e) }, el('i', { className: 'bi bi-x', 'aria-hidden': 'true' }), ' ' + t('lib.mine.remove')) : null);
     return el('div', { className: 'bc-lib-detail' }, back,
       el('p', { className: 'bc-prop-name', 'data-lib-name': '' }, loc.name),
       loc.translated && loc.name !== it.name ? el('p', { className: 'bc-muted', 'data-lib-original': '' }, t('lib.detail.original', { name: it.name })) : null,
@@ -694,6 +815,7 @@ export class LibraryPanel {
       withdrawn ? el('p', { className: 'bc-input-err', role: 'alert' }, m.version?.withdrawn_reason ? t('lib.withdrawn.reason', { reason: m.version.withdrawn_reason }) : t('lib.withdrawn.default')) : null,
       actions,
       bigprev,
+      e.picture ? el('figure', { className: 'bc-lib-picture', 'data-lib-picture': '' }, el('img', { src: e.picture, alt: t('lib.picture.alt', { name: loc.name }), loading: 'lazy', style: 'max-width:100%;height:auto' }), el('figcaption', { className: 'bc-muted' }, t('lib.picture.caption'))) : null,
       loc.description ? el('p', { className: 'bc-lib-desc', 'data-lib-desc': '' }, loc.description) : null,
       el('dl', { className: 'bc-dl' }, rows.filter(([, v]) => v).flatMap(([k, v]) => [el('dt', {}, k), el('dd', {}, String(v))])),
       el('div', { className: 'bc-lib-license' },

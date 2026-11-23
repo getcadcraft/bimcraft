@@ -189,6 +189,7 @@ export function mountCurtain(modelUi, wpUi) {
   function syncRows() {   // document, not the app's root: a layout may move a tool's row out of it (the docked layout's Tool options bar)
     const root = document, O = R.opts, set = (sel, v) => { const i = root.querySelector(sel); if (i && document.activeElement !== i) { if (i.type === 'checkbox') i.checked = !!v; else i.value = v; } };
     for (const pre of ['cw', 'bf']) {
+      // i18n-ignore: CSS, selector, class name or search keywords: no words a person reads (words-11)
       set(`[data-${pre}-su]`, O.su > 0 ? L(O.su) : ''); set(`[data-${pre}-sv]`, O.sv > 0 ? L(O.sv) : ''); set(`[data-${pre}-mull]`, O.mullions); set(`[data-${pre}-profile]`, O.profile);
     }
     set('[data-cw-top]', O.top); set('[data-cw-height]', L(O.height)); set('[data-cw-base]', L(O.base));

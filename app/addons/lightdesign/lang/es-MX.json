@@ -205,6 +205,7 @@
   "draw.done.bim": "Se colocaron {n} luminarias en el modelo y {lux} trazos de valores de lux en la vista en planta.",
   "lum.pole": "Luminaria genérica de poste",
   "lum.bollard": "Bolardo genérico",
+  "map.isolines": "Líneas de igual lux (isolíneas)",
   "f.outdoor": "Exterior: iluminación de sitio (sin techo ni muros; luz directa sobre el suelo)",
   "f.cct": "Temperatura de color",
   "f.groundrho": "Reflectancia del suelo",

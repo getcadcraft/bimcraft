@@ -1,0 +1,23 @@
+{
+  "id": "pool-spec-us",
+  "name": "Pool spec: United States",
+  "version": "0.11.0",
+  "apps": [
+    "bimcraft",
+    "cadcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "pool",
+      "range": "*"
+    }
+  ],
+  "description": "The United States spec for the Pool generator: concrete shell and pool water values from ACI 318, ACI 350, the shotcrete association's pool statements, the International Swimming Pool and Spa Code and the Model Aquatic Health Code. Every value names its standard, clause and whether it was read in the standard itself. Not a substitute for the standards or an engineer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

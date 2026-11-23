@@ -3,7 +3,7 @@ title: Check a room's reverberation and listen to it
 summary: Reverberation time by octave band for each room (Sabine and Eyring) from its size and finishes, a target of your own, and a voice, a clap or music played through a computed impulse response of the room.
 section: tasks
 order: 61
-keywords: acoustics, reverberation, reverb time, rt60, sabine, eyring, absorption, echo, sound, listen, impulse response, speech, classroom, office, carpet, ceiling tile, noise
+keywords: acoustics, ray tracing, traced, room shape, l-shaped room, c80, d50, edt, reverberation, reverb time, rt60, sabine, eyring, absorption, echo, sound, listen, impulse response, speech, classroom, office, carpet, ceiling tile, noise
 ---
 
 The {{ui:Room acoustics}} section of the left panel works out how long sound lingers in each room. It reads each room's floor area, height, walls, doors and windows from the open IFC model. Nothing in the model is changed.
@@ -27,6 +27,16 @@ Type the number of **people in this room** to add their absorption. Furniture th
 ## Source and listener
 
 Under {{ui:Source and listener}}, press {{ui:Place the source}} or {{ui:Place the listener}} and click the room's plan. The sound you play is then heard from there: the direct sound arrives after the distance, and the reverberant part is at the level for that distance. Clear both to go back to the distance box.
+
+## Trace the room in its real shape
+
+Under {{ui:Traced in the room's real shape}}, press {{ui:Trace this room}}. BimCraft builds a closed model of the room from its outline on the plan, the finish of each wall it stands along, and its doors and windows where they are, then traces rays from the source to the listener you placed (or two points across the room). An L-shaped or many-sided room keeps its shape here, where the table above treats every room as one even space.
+
+The table gives T30, EDT, C80 and D50 for each octave band, with two rows to compare: Sabine and Eyring on exactly the same surfaces, and the room's own figure with people and furniture. When the floor and ceiling absorb much more than the walls, the traced time is longer than Sabine and Eyring, because sound keeps travelling between the hard walls; Fitzroy and Arau-Puchades below show the same.
+
+{{ui:Leave out corners closer than (mm)}} simplifies the model: a corner closer than that to the line of its neighbours, such as a shallow reveal or a pilaster, is left out, and a note says how much floor that changed. Use 0 to keep every corner. A source or listener placed on or past a wall is moved just inside the room, and a note says so.
+
+Tracing is a design aid; results are predictions, not measurements. It is not valid below the frequency the room-modes line gives, it does not model sound bending round corners, and it assumes 10 % scattering on every surface. People and furniture are not in the traced model.
 
 ## Uneven absorption and room modes
 

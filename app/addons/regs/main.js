@@ -28,13 +28,14 @@ import { stairLimitsFrom, strictest, setReleaseCheck } from './lib/regs.js';
 import { validatePackVersion } from '../../packver.js';   // BK.153/154: the shared pack version + changelog rule
 import * as BK from '../../study/breakit.js';   // 0.8 EG.31: escape routes through the pack's egress rule (lib/study, copied by tools/study/sync.mjs bimcraft)
 import { routeFindings } from './lib/route.js';
-import { stairRows, roomRows, doorRows, elecRows, foundRows, framingRows, joistRows, rafterRows, ceilingJoistRows, energyRows, regsSchedule, limitText } from './lib/check.js';
+import { stairRows, guardRows, roomRows, doorRows, elecRows, foundRows, framingRows, joistRows, rafterRows, ceilingJoistRows, energyRows, regsSchedule, limitText } from './lib/check.js';
 import { setupRegs, mountRegsUi, packLabel, pct } from './lib/ui.js';
 import { parseMarkdown } from '../../doc-template.js';
 import { docPdf } from '../../doc-pdf.js';
 import { wallTypes, typeName } from '../../model-walls.js';
 import { readDerived } from '../../model-slabs.js';
 import { LAMBDA } from '../../energy-bim.js';   // keyword → conductivity, for the energy rows
+import { readRailings } from '../../res-railing.js';   // 0.11 T24.7: the guards drawn on a level
 import { readDevices } from '../../res-elec.js';   // tier 3: outlets, lights and alarms the electrical tools placed
 import { readFoundations, foundationParams, loadsOn } from '../../res-foundation.js';   // tier 3: footings and slabs
 import { readFraming, LUMBER_PSET } from '../../res-framing.js';   // tier 3: wall studs and headers
@@ -51,18 +52,23 @@ export async function activate(api) {
   setReleaseCheck(validatePackVersion);   // a pack's release record is checked by the one shared validator
   setLimitsApplier(useStairLimits);   // the engine (lib/active.js) has no app imports; BimCraft applies the limits through its stair tool
   const t = api.t;
-  setAppliesFilter(['stair', 'room', 'door', 'window', 'building', 'storey', 'foundation', 'wall', 'header', 'floor', 'roof'], { sections: true });   // the packs for drawing practice, zoning, roads and connections belong to the other apps
+  setAppliesFilter(['stair', 'railing', 'room', 'door', 'window', 'building', 'storey', 'foundation', 'wall', 'header', 'floor', 'roof'], { sections: true });   // the packs for drawing practice, zoning, roads and connections belong to the other apps
   await setupRegs(api);
   api.onDeactivate(() => useStairLimits(null));
 
   // The model's electrical devices, read once per model change (the checks run often; the model changes less)
   let devCache = null;
-  let foundCache = null, frameCache = null, typeCache = null;
-  api.model.onChange(() => { devCache = null; foundCache = null; frameCache = null; typeCache = null; });
+  let foundCache = null, frameCache = null, typeCache = null, railCache = null;
+  api.model.onChange(() => { railCache = null; devCache = null; foundCache = null; frameCache = null; typeCache = null; });
   const devices = () => {
     if (devCache) return devCache;
     try { devCache = api.model.current() ? api.model.read((w) => readDevices(w)) || [] : []; } catch (e) { devCache = []; }
     return devCache;
+  };
+  const railings = () => {
+    if (railCache) return railCache;
+    try { railCache = api.model.current() ? api.model.read((w) => readRailings(w)) || [] : []; } catch (e) { railCache = []; }
+    return railCache;
   };
   const foundations = () => {
     if (foundCache) return foundCache;
@@ -91,7 +97,7 @@ export async function activate(api) {
   let lastCtx = null;   // the last model the app had checked (the code summary sheet reads it)
   const allRows = (prof, { snap, loops, stairs, levelName, stairWord }) => [
     ...stairRows(stairs, prof, { whereOf: (st) => stairWord + ' ' + levelName(st.storey) }), ...roomRows(snap, loops, prof),
-    ...doorRows(snap, loops, prof, { where: t('regs.where.egress') }), ...elecRows(snap, loops, devices(), prof),
+    ...doorRows(snap, loops, prof, { where: t('regs.where.egress') }), ...guardRows(railings(), prof, { levelName, word: t('regs.where.guard') }), ...elecRows(snap, loops, devices(), prof),
     ...foundRows(foundations(), prof, { levelName }), ...framingRows(framings().filter((f) => f.kind === 'wall'), snap, loops, prof, { levelName }),
     ...joistRows(framings().filter((f) => f.kind === 'floor'), prof, { levelName, tji: tjiForRules() }),
     ...rafterRows(framings().filter((f) => f.kind === 'roof'), prof, { levelName }), ...ceilingJoistRows(framings().filter((f) => f.kind === 'roof'), prof, { levelName }),

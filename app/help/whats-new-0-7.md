@@ -2,7 +2,7 @@
 title: What's new in 0.7 (earlier)
 summary: BimCraft adds walls through several levels and Copy this level, walls from PDFs and scans, your own wall assemblies, richer families, MEP equipment with ports, clash sets, openings and pipe spools, asset documents, COBie and sensor readings, sky, sun, daylight on a grid and heating and cooling loads, scan registration, a live view and path tracing on the graphics card, STEP and USD, library variants, and more for AI assistants.
 section: start
-order: 6
+order: 7
 keywords: whats new 0.7, earlier release, release notes, changelog, changes, 0.7, version, new features, walls through levels, copy this level, pdf, scan, trace, walls from plans, wall assemblies, layers, core, membrane, reference dimensions, material library, display units, view style, framing, joists, families, parameters, plan symbol, hotspots, repeat, detail level, nested families, csv sizes, per element, equipment, ports, connections, clearances, openings, spools, spool sheets, field weld, duct cut list, documents, cobie, sensors, mqtt, live feed, vertical sky component, solar gain, daylight grid, heating, cooling, loads, u-value, register scans, icp, e57, live view, path tracing, webgpu, denoise, physical sky, light mixing, render queue, your machine, step, usd, project bundle, develop a mass, variants, assistants, add-on api, plant, electrical, design checks
 ---
 

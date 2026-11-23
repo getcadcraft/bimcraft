@@ -11,6 +11,7 @@
   "bt.file.open": "Maak 'n uitleg-lêer oop",
   "bt.file.save": "Stoor die uitleg as 'n lêer",
   "bt.file.bad": "{name} is nie 'n Materiaalvloei-uitleg nie.",
+  "bt.file.ask": "Vervang die huidige uitleg met hierdie lêer?",
   "bt.file.done": "{name}: {n} items gelaai, {dropped} uitgelaat.",
   "bt.fit.run": "Kontroleer teen die mure",
   "bt.fit.nolayout": "Daar is nog geen uitleg om te kontroleer nie. Gebruik 'n sel of maak 'n uitleg-lêer oop.",

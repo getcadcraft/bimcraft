@@ -205,6 +205,7 @@
   "draw.done.bim": "U vendosën {n} armatura ndriçimi në model dhe {lux} vija me numra luksi në pamjen e planit.",
   "lum.pole": "Shtyllë e përgjithshme drite",
   "lum.bollard": "Bollard i përgjithshëm",
+  "map.isolines": "Vija me lux të barabartë (izolinja)",
   "f.outdoor": "Jashtë: ndriçimi i sheshit (pa tavan apo mure; dritë direkte mbi tokë)",
   "f.cct": "Temperatura e ngjyrës",
   "f.groundrho": "Reflektimi i tokës",

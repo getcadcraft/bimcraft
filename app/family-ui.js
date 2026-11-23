@@ -31,6 +31,7 @@ import { ModelWriter } from './model-write.js';
 import { IfcModel } from './ifc-model.js';
 import { fmtLen, parseLen } from './model-units.js';
 import { el } from './ui-util.js';
+import { dot3 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74)
 
 const CSS = `
 .bc-fam-dlg { width: min(46rem, calc(100vw - 2rem)); max-width: none; max-height: calc(100vh - 2rem); overflow: auto; }
@@ -549,7 +550,6 @@ export function mountFamilies(modelUi) {
       move(i, ray) {
         const x = g3?.list[i];
         if (!x || !g3.drag) return;
-        const dot = (u, v) => u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
         const w = [x.at[0] - ray.o[0], x.at[1] - ray.o[1], x.at[2] - ray.o[2]], b = dot(x.dir, ray.d), cc = dot(ray.d, ray.d), d = dot(x.dir, w), ee = dot(ray.d, w), den = cc - b * b;
         if (!(Math.abs(den) > 1e-9)) return;   // looking along the axis: no place to read
         const tt = (b * ee - cc * d) / den;

@@ -253,6 +253,10 @@ if (args.includes('--views09')) process.exit(await (await import(path.join(ROOT,
 if (args.includes('--pens')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/pens-test.mjs'))).pensMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 SU.1055 (session bim-08): a stair from a sketch — tools/bimcraft-test/stairsketch-test.mjs
 if (args.includes('--stairsketch')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/stairsketch-test.mjs'))).stairSketchMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.11 SU.1807 (bim-inbox-11): the pen reads into the stair sketch — tools/bimcraft-test/pen-bim-test.mjs
+if (args.includes('--pen')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/pen-bim-test.mjs'))).penBimMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
+// 0.11 BK.181 (bim-inbox-11): the office standard read by BimCraft — tools/bimcraft-test/office-bim-test.mjs
+if (args.includes('--office')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/office-bim-test.mjs'))).officeBimMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
 // 0.8 D8.3 (session bim-08): Move / Copy / Align / Distribute — tools/bimcraft-test/modify-test.mjs
 // 0.8 BIM-FAM-MORE step 8 (oltl2-d_PART_3): a loadable family library — tools/bimcraft-test/family-library-test.mjs
 if (args.includes('--famlib')) process.exit(await (await import(path.join(ROOT, 'tools/bimcraft-test/family-library-test.mjs'))).famLibMode({ APP, ROOT, WebIFC, IfcModel, quiet, require, args }));
@@ -1235,11 +1239,11 @@ async function dwg3dMode() {
     ok(fs.existsSync(copy) && fs.readFileSync(copy).equals(fs.readFileSync(src)), `m3d/${f} is byte-identical to modelcraft/dev/${f} (re-copy when it changes)`);
   }
 
-  console.log('== dwg/: the cc-dwg reader (byte-identical copies of lib/dwg; node tools/dwg-test/writer-sync.mjs bimcraft)');
-  const { READER_FILES } = await import(path.join(ROOT, 'tools/dwg-test/writer-sync.mjs'));
+  console.log('== dwg/: the cc-dwg reader and, since SU.1994 (plan-cad.js), the writer (byte-identical copies of lib/dwg; node tools/dwg-test/writer-sync.mjs bimcraft)');
+  const { READ_WRITE_FILES: READER_FILES } = await import(path.join(ROOT, 'tools/dwg-test/writer-sync.mjs'));
   const differ = READER_FILES.filter((f) => !fs.existsSync(path.join(APP, 'dwg', f)) || !fs.readFileSync(path.join(APP, 'dwg', f)).equals(fs.readFileSync(path.join(ROOT, 'lib/dwg', f))));
   const extra = fs.existsSync(path.join(APP, 'dwg')) ? fs.readdirSync(path.join(APP, 'dwg')).filter((f) => f.endsWith('.js') && !READER_FILES.includes(f)) : [];
-  ok(!differ.length && !extra.length, `dwg/ holds byte-identical copies of the ${READER_FILES.length} lib/dwg files the reader needs` + (differ.length || extra.length ? ' — differ: ' + differ.join(', ') + (extra.length ? '; not needed: ' + extra.join(', ') : '') : ''));
+  ok(!differ.length && !extra.length, `dwg/ holds byte-identical copies of the ${READER_FILES.length} lib/dwg files the reader and writer need` + (differ.length || extra.length ? ' — differ: ' + differ.join(', ') + (extra.length ? '; not needed: ' + extra.join(', ') : '') : ''));
   ok(!fs.existsSync(path.join(APP, 'dwg-raw3d.js')), 'dwg-raw3d.js (the LibreDWG extras reader) is gone');
   ok(fs.readFileSync(path.join(APP, 'dxf-model.js')).equals(fs.readFileSync(path.join(APP, '../../cadcraft/dev/dxf-model.js'))), 'dxf-model.js is byte-identical in bimcraft/dev and cadcraft/dev');
   {   // DXF and DWG of the same drawing (ODA truth) give the same 2D drawing

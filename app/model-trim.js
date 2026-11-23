@@ -23,12 +23,9 @@
 import { op, afterWallMoveFor, settleFor } from './model-ops.js';
 import { readWalls, updateWall } from './model-walls.js';
 import { readOpenings, deleteOpenings } from './model-openings.js';
+import { cross2 as cross, dist2 as len, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const MIN = 1;   // mm: a wall under 1 mm cannot exist (model-walls.js). 0.10 BK.73: was 50 mm (practice); a wall left under 50 mm is advice now
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-const len = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 const err = (key) => ({ error: key });
 
 export function axisMeet(a, b, c, d) {

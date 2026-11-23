@@ -1,0 +1,9 @@
+- Find the climate zone of a California ZIP code (16 zones, 2,694 ZIP codes).
+- Read the U-factor of a wood framed wall from the code's own table: stud size, spacing, insulation between the studs and continuous insulation.
+- Check each exterior wall type against the package's maximum U-factor for the zone and against the mandatory minimum.
+- Check ceiling insulation, the radiant barrier and raised floor insulation against the package.
+- Check the windows' area-weighted U-factor and SHGC, the total window area and the west-facing window area as a share of the conditioned floor area. West-facing is worked out from each wall's direction and the model's true north.
+- See what else the package asks for in that zone that the add-on does not check, so silence is never taken for a pass.
+- Save the check as a CSV file. What you state is kept in the drawing.
+- Save the envelope as a project file (.ribd25) for CBECC, the Energy Commission's own compliance program, so the energy consultant starts from your model: the climate zone, the floor area, each outside wall by direction with its windows and doors, the ceiling, attic, floor and their constructions. The panel lists what the file assumed and what the consultant must add.
+- In BimCraft, give each wall type's table U-factor to the model (Pset_WallCommon, in W/m²K, one undo step), so Heating and cooling loads use the insulated wall's U-factor and not the layers' with the stud layer counted as solid wood. {#ec-u}

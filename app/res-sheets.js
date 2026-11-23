@@ -174,7 +174,7 @@ export function viewItems(view, P, k = 0) {
     if (b) out.push({ t: 'unclip' });
   }
   for (const l of view.lines || []) out.push({ t: 'line', pts: [P([l[0], l[1]]), P([l[2], l[3]])], w: 0.18, g: 0 });
-  for (const c of view.cuts || []) out.push(...cutFaceItems(c,P,k>0?1/k:c.scale));
+  for (const c of view.cuts || []) for (const it of cutFaceItems(c,P,k>0?1/k:c.scale)) out.push(it);   // #1995: a loop, not push(...a): a view of a big model has more items than a call takes arguments ("Maximum call stack size exceeded")
   // grid lines seen end on (0.6 DF.16): from under the ground line to above the top, the bubble on top
   const b = view.bounds;
   if (b) for (const g of view.grids || []) {
@@ -186,7 +186,7 @@ export function viewItems(view, P, k = 0) {
   const groundY=view.groundY??b?.y0;
   if (b && !view.ground && groundY>=b.y0 && groundY<=b.y1) out.push({ t: 'line', pts: [P([b.x0 - 450, groundY]), P([b.x1 + 450, groundY])], w: 0.6, g: 0 });
   // 0.6 round 2 (bim-comforts_PART_2): the view's notes — level marks, dimensions, door / window / item tags (comforts-views.js)
-  if (view.notes?.length && k > 0) out.push(...noteItems(view.notes, P, k));
+  if (view.notes?.length && k > 0) for (const it of noteItems(view.notes, P, k)) out.push(it);
   // 0.10 BK.4 (the small-house run): at coarse detail the cut is the plain envelope by design, so a wall whose LAYERS could not be
   // drawn (joined walls, a cut at a wall's end) is not a fault of the drawing: the line is printed only when layers were asked for.
   const said = (view.warnings || []).filter((w) => (view.detail && view.detail !== 'coarse') || !LAYER_REASONS.includes(w.reason));
@@ -255,7 +255,7 @@ function sheet(number, title, cells, { paper, project, date, titleBlock = null, 
   const views = [];
   cells.forEach((c, i) => {
     const x = m + i * cw, y = m + strip;
-    items.push(...c.draw(x + 6, y + 14, cw - 12, room[1] - 22));
+    for (const it of c.draw(x + 6, y + 14, cw - 12, room[1] - 22)) items.push(it);
     views.push({ title: c.title, scale: c.scale, bb: c.bb || null, place: c.place || null });
     if (c.title) {
       items.push({ t: 'text', s: c.title, x: x + 6, y: y + 7, size: annoPt('title'), align: 'left', bold: true });   // 0.10 BK.10
@@ -371,7 +371,7 @@ export function composeSheet(spec, input, { paper = 'tabloid', units = 'ftin', p
       draw = (x0, y0) => { const P = at(k, x0 - bb.x0 * k, y0 - bb.y0 * k); return planLike(v.kind) ? planItems(src.scene, P, k) : viewItems(src.view, P, k); };
     }
     const x0 = v.x - w / 2, y0 = v.y - h / 2;
-    s.items.push(...draw(x0, y0));
+    for (const it of draw(x0, y0)) s.items.push(it);   // #1995: a loop, not push(...a): a view of a big model has more items than a call takes arguments ("Maximum call stack size exceeded")
     if(src.document){
       const prefix=v.ref.split(':')[0]+':',omitted=input.schedules.filter(p=>p.ref.startsWith(prefix)&&!spec.views.some(v=>v.kind==='schedule'&&v.ref===p.ref));
       if(omitted.length)s.items.push({t:'text',s:tr('asched.omitted',{n:omitted.length}),x:x0,y:y0-12,size:8,align:'left'});

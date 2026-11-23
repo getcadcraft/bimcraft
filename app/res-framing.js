@@ -32,6 +32,7 @@ import { faceZ } from './res-skeleton.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 import { activeTji, activeTjiKey, pickTji, tjiStatement } from './tji-table.js';   // 0.8 GH.3-E: the joist maker's table the person loaded
+import { cross2 as cross, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const IN = 25.4, FT = 304.8;
 export const FRAME_PSET = 'CadCraft_Framing', LUMBER_PSET = 'CadCraft_Lumber', TJI_PSET = 'CadCraft_FramingTJI';
@@ -68,9 +69,6 @@ export function headerFor(width, bearing = true) {
 }
 /** Board feet of a piece: nominal thickness × depth (in) × length (ft) / 12. */
 export function boardFeet(size, length) { const L = LUMBER[size]; return L ? L.nom[0] * L.nom[1] * (length / FT) / 12 : 0; }
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 
 // ------------------------------------------------------------------------------------------------------------ walls
 /** The stud layer's band across a wall (y in the wall's axes: +y = its left), or null for a wall with no studs. */

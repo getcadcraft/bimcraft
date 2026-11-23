@@ -205,6 +205,7 @@
   "draw.done.bim": "Naglagay ng {n} light fixture sa model at {lux} na stroke ng lux number sa plan view.",
   "lum.pole": "Pangkalahatang luminaire na poste",
   "lum.bollard": "Pangkalahatang bollard",
+  "map.isolines": "Mga linya ng pantay na lux (isolines)",
   "f.outdoor": "Sa labas: ilaw ng site (walang kisame o pader; direktang liwanag sa lupa)",
   "f.cct": "Temperatura ng kulay",
   "f.groundrho": "Repleksiyon ng lupa",

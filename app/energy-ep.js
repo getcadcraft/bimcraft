@@ -109,7 +109,11 @@ export function idfFromModel(W, api, mid, { g, e, uMap, inputs = {}, site = null
   text += obj('Version', [EP_VERSION.split('.').slice(0, 2).join('.')]);
   // run for design days only (sizing), or sizing and a weather-file run period
   text += obj('SimulationControl', ['Yes', 'No', 'No', 'Yes', mode === 'year' ? 'Yes' : 'No', 'No', '1']);
-  text += obj('Building', [nm(name), '0', 'Suburbs', '0.04', '0.4', 'FullExterior', '25', '6']);
+  // FX (2026-11-20): the vertices are in the model's own axes, so the Building's North Axis says how far the model's +y is turned clockwise
+  // from true north (0 only when the model's north is up the page). It was always written 0: a model whose true north is not +y had its
+  // sun on the wrong sides.
+  const tn = site?.north || [0, 1], northAxis = ((Math.atan2(-tn[0], tn[1]) * 180 / Math.PI) + 360) % 360;
+  text += obj('Building', [nm(name), f(northAxis, 2), 'Suburbs', '0.04', '0.4', 'FullExterior', '25', '6']);
   text += obj('Timestep', ['4']);
   text += obj('Site:Location', ['Site', f(lat), f(lon), tz, f(site?.elevation ?? 0, 1)]);
   text += obj('Site:GroundTemperature:BuildingSurface', Array(12).fill(f(I.tg, 1)));

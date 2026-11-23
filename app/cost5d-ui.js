@@ -15,6 +15,7 @@ import { matchTasks, dayText, parseDay } from './ifc-4d.js';
 import { readElements } from './carbon-calc.js';
 import { cleanCurrency, DEFAULT_CURRENCY, calcCost5d, readCostSettings, setCostSettings, valueAt, costCsv, priceCsv, priceJson, readPriceCsv, readPriceJson, fromTakeoff, PROFILES } from './cost5d.js';
 
+// i18n-ignore-start: English defaults; the same keys live in lang/en.json (words-11)
 export const STRINGS = {
   'cost5d.title': '5D costs', 'cost5d.intro': 'Prices each element from your price table and puts the cost on the 4D tasks. The prices are yours: nothing is priced until you load them.',
   'cost5d.prices': 'Price table', 'cost5d.none': 'No prices yet. Paste a CSV (id, match, classes, unit, density, mat, lab, waste, source, note) or JSON, or TakeoffCraft rates.',
@@ -27,6 +28,7 @@ export const STRINGS = {
   'cost5d.currency': 'Currency of these prices (three letters, optional)', 'cost5d.cur.set': 'Every price and cost here is in {cur}.', 'cost5d.cur.default': 'This price table has no currency: costs are shown as {cur}, the shell default. Type one above to say what they are.', 'cost5d.err.currency': 'A currency is three letters, for example USD or EUR.',
   'cost5d.csv.result': 'Export costs (CSV)', 'cost5d.err.noprices': 'Load prices first.', 'cost5d.err.notasks': 'Load tasks in the 4D schedule first.',
 };
+// i18n-ignore-end
 const tr = (k, v) => { const s = t(k, v); return s === k ? String(STRINGS[k] ?? k).replace(/\{(\w+)\}/g, (_, n) => v?.[n] ?? '') : s; };
 const money = (x) => (Number.isFinite(x) ? x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—');
 

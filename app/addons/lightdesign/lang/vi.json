@@ -205,6 +205,7 @@
   "draw.done.bim": "Đã đặt {n} thiết bị chiếu sáng vào mô hình và {lux} nét số lux trong khung nhìn mặt bằng.",
   "lum.pole": "Đèn cột chung",
   "lum.bollard": "Cột đèn sân chung",
+  "map.isolines": "Đường đẳng độ rọi (isolines)",
   "f.outdoor": "Ngoài trời: chiếu sáng công trường (không có trần hoặc tường; ánh sáng chiếu trực tiếp xuống mặt đất)",
   "f.cct": "Nhiệt độ màu",
   "f.groundrho": "Hệ số phản xạ mặt đất",

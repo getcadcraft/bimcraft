@@ -1,0 +1,4 @@
+- Switch the add-on on in Settings, Add-ons, then open the Pool generator tab.
+- Type the length, the width and the two depths. Look at the plan, the section and the quantities under Result.
+- Add a spec side add-on (Pool spec: Europe or Pool spec: United States), pick it under Spec, and read what it set and what breaks it.
+- Place the pool in the model (BimCraft) or draw the plan and section (CadCraft), or save the IFC file.

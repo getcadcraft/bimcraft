@@ -33,6 +33,7 @@ import { readWalls, wallOutlines } from './model-walls.js';
 import { planLoops, loopAt, labelPoint } from './model-rooms.js';
 import { faceFromOutline, tagLines, tagSize } from './spaces-geom.js';
 import { t as tr } from './i18n.js';
+import { fmtArea, getDisplayUnits } from './model-units.js';   // FX.352: the tag's text follows the project's display unit, like the plan
 
 export const BOUND_PSET = 'CadCraft_BoundaryLine', AREA_PSET = 'CadCraft_Area', TAG_PSET = 'CadCraft_Tag', ROOM_PSET = 'CadCraft_Room';
 export const SCHEMES = ['gross', 'rentable'];
@@ -195,8 +196,8 @@ export function readTags(w) {
   }
   return out;
 }
-/** The area as the file's tag text says it: square metres to two places (the page shows the display unit instead). */
-const m2 = (mm2) => (mm2 / 1e6).toFixed(2) + ' m²';
+/** The area as the file's tag text says it: in the project's display unit, as the plan draws it (m² metric, ft² in feet-and-inches; FX.352). */
+const m2 = (mm2) => fmtArea(mm2, getDisplayUnits());
 function writeTag(w, tag, target) {
   const at = [target.at[0] + tag.offset[0], target.at[1] + tag.offset[1]];
   const lines = tagLines(target, { area: target.area > 0 ? m2(target.area) : '' }), text = lines.join('\n');

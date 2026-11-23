@@ -14,6 +14,7 @@
  *       { format: 'cadcraft-pv-oneline', version: 1, name, units, nodes: [{ id, kind, symbol, label, col, row, rating }], edges: [{ id, from, to, circuit: 'dc'|'ac', current, wire, ocpd, label }], notes }
  *       `symbol` is one of pv-array, fuse, combiner, disconnect, inverter, breaker, panel, meter, utility; col/row are a left-to-right grid (col 0 = the array).
  */
+import { esc } from './util.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 export const CODE_DEFAULTS = Object.freeze({
   iscFactor: 1.25, contFactor: 1.25, acFactor: 1.25, derate: 1, fuseFromStrings: 3,
   ocpd: Object.freeze([10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 125, 150, 175, 200, 225, 250, 300, 400]),
@@ -80,7 +81,6 @@ export function buildOneline(plan) {
   return { name: plan.name || 'PV system', nodes, edges, notes, totals, code: { iscFactor: C.iscFactor, contFactor: C.contFactor, acFactor: C.acFactor, derate: C.derate, label: C.label } };
 }
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 /** A plain SVG, left to right. Colours are inherited (currentColor) so it takes the page's theme. */
 export function onelineSvg(d) {
   const W = 150, H = 62, GX = 46, GY = 30, cols = Math.max(...d.nodes.map((n) => n.col)) + 1, rows = Math.max(...d.nodes.map((n) => n.row)) + 1;

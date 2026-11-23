@@ -11,6 +11,7 @@
   "bt.file.open": "Atidaryti išdėstymo failą",
   "bt.file.save": "Įrašyti išdėstymą kaip failą",
   "bt.file.bad": "{name} nėra Medžiagų srauto išdėstymas.",
+  "bt.file.ask": "Ar pakeisti dabartinį išdėstymą šiuo failu?",
   "bt.file.done": "{name}: įkelta elementų: {n}, neįtraukta: {dropped}.",
   "bt.fit.run": "Tikrinti pagal sienas",
   "bt.fit.nolayout": "Išdėstymo dar nėra, ko tikrinti. Pasirinkite langelį arba atidarykite išdėstymo failą.",

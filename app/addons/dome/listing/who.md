@@ -1,0 +1,5 @@
+- An owner-builder or designer shaping a dome house, shop or store before handing it to an engineer, so the engineer adjusts a real design to the site and the local code instead of starting from nothing.
+- A dome builder who needs the form surface, foam, sprayed concrete and steel for a quote.
+- An architect placing a dome in a building or site model and handing an IFC file to the team.
+- An engineer who wants the geometry, the take-off and the membrane forces laid out before starting the real analysis.
+- A student learning how a shell of revolution carries its load.

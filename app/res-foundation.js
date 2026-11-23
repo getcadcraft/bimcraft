@@ -29,6 +29,8 @@ import { planLoops, loopAt, labelPoint } from './model-rooms.js';
 import { ids, val } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 import { readTerrain, groundAt } from './res-terrain.js';   // RC.10: footings step to the grade
+import { cross2 as cross, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const FOUND_PSET = 'CadCraft_Foundation';
 const IN = 25.4;
@@ -68,8 +70,6 @@ export function foundationParams(kind, stored = {}, { stories = 1, heavy = false
 }
 
 // ---------------------------------------------------------------------------------------------------------- geometry
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
 export function insetPoly(P, d) {
   const n = P.length, E = P.map((a, i) => { const b = P[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L]; return { a, u, n: [-u[1], u[0]] }; });
   return E.map((e, i) => {
@@ -81,7 +81,6 @@ export function insetPoly(P, d) {
     return [p0[0] + f.u[0] * t, p0[1] + f.u[1] * t];
   });
 }
-function area(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
 function perim(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += Math.hypot(b[0] - a[0], b[1] - a[1]); } return s; }
 
 /** Every part a kind needs is there (sizes too big for the outline drop parts). */

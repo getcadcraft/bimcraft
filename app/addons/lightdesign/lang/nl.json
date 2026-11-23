@@ -205,6 +205,7 @@
   "draw.done.bim": "{n} lichtarmaturen in het model geplaatst en {lux} strepen met luxgetallen in het plan geplaatst.",
   "lum.pole": "Generieke paalarmatuur",
   "lum.bollard": "Generieke afzetpaal",
+  "map.isolines": "Lijnen van gelijke lux (isolijnen)",
   "f.outdoor": "Buiten: terreinverlichting (geen plafond of wanden; direct licht op de grond)",
   "f.cct": "Kleurtemperatuur",
   "f.groundrho": "Reflectie van de grond",

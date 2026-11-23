@@ -2,7 +2,7 @@
 title: Co nowego w wersji 0.7 (wcześniejsza)
 summary: BimCraft dodaje ściany przez kilka kondygnacji i Kopiuj ten poziom, ściany z PDF i skanów, własne przegrody ścian, bogatsze rodziny, wyposażenie MEP z portami, zestawy kolizji, otwory i spoole rur, dokumenty zasobów, COBie i odczyty czujników, niebo, słońce, światło dzienne na siatce i obciążenia grzewcze i chłodnicze, rejestrację skanów, widok na żywo i śledzenie promieni na karcie graficznej, STEP i USD, warianty bibliotek oraz więcej dla asystentów AI.
 keywords: co nowego 0.7, wcześniejsze wydanie, informacje o wydaniu, dziennik zmian, zmiany, 0.7, wersja, nowe funkcje, ściany przez kondygnacje, kopiuj tę kondygnację, pdf, skan, obrys, ściany z rzutów, przegrody ścian, warstwy, rdzeń, membrana, wymiary odniesienia, biblioteka materiałów, jednostki wyświetlania, styl widoku, konstrukcja, belki stropowe, rodziny, parametry, symbol planu, punkty aktywne, powtórzenie, poziom szczegółowości, zagnieżdżone rodziny, rozmiary CSV, na element, wyposażenie, porty, połączenia, odstępy, otwory, spoole, arkusze spooli, spoina montażowa, lista cięcia przewodów, dokumenty, cobie, czujniki, mqtt, transmisja na żywo, pionowa składowa nieba, zysk słoneczny, siatka światła dziennego, ogrzewanie, chłodzenie, obciążenia, współczynnik u, rejestracja skanów, icp, e57, widok na żywo, śledzenie promieni, webgpu, odszumianie, niebo fizyczne, mieszanie świateł, kolejka renderowania, twój komputer, step, usd, pakiet projektu, zbuduj masę, warianty, asystenci, api dodatków, instalacja, elektryka, sprawdzenia projektowe
-from: ef226539
+from: a638080d
 ---
 
 To jest to, co zmieniło się w BimCraft 0.7 w porównaniu z 0.6. Lista jest pogrupowana według obszarów, najważniejsze na początku.

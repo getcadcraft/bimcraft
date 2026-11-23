@@ -1,0 +1,3 @@
+The California pack is made by script from the Energy Commission's published files: the 2025 Building Energy Efficiency Standards (CEC-400-2025-010-F), the 2025 Reference Appendices (CEC-400-2025-010-AP) and the Commission's list of building climate zones by ZIP code. The pack records each file's SHA-256 and the page each table is printed on. It holds numbers, units, section and table numbers. It holds no text of the code.
+
+Table 150.1-A was read twice, by two separate methods, and the two readings agree. The pack has not been reviewed by a California energy consultant, and its review line says so. You supply the ZIP code, what is in the walls, ceiling and floor, and the windows' rated values.

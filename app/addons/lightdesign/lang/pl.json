@@ -205,6 +205,7 @@
   "draw.done.bim": "Umieszczono {n} opraw oświetleniowych w modelu i {lux} kresek z wartościami luksów w widoku rzutu.",
   "lum.pole": "Ogólna oprawa słupowa",
   "lum.bollard": "Ogólny pachołek oświetleniowy",
+  "map.isolines": "Linie jednakowego natężenia oświetlenia w luksach (izolinie)",
   "f.outdoor": "Na zewnątrz: oświetlenie terenu (bez sufitu i ścian; światło bezpośrednio na podłożu)",
   "f.cct": "Temperatura barwowa",
   "f.groundrho": "Współczynnik odbicia podłoża",

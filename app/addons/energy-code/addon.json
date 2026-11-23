@@ -1,0 +1,22 @@
+{
+  "id": "energy-code",
+  "name": "Energy code check",
+  "version": "0.11.1",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.4",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "panel",
+    "files",
+    "storage",
+    "problems"
+  ],
+  "description": "Checks a house against an energy code's prescriptive package and mandatory minimums, from a code pack. First pack: California's 2025 Energy Code (Title 24, Part 6) for new single-family houses: climate zone by ZIP code, wall U-factors from the code's tables, insulation, windows. Also saves the envelope as a CBECC project file for the energy consultant. A guide, not a compliance document.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "off"
+}

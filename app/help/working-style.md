@@ -18,7 +18,7 @@ Set BimCraft up for the way you work, then duplicate views, print them the way y
    - {{ui:Shared annotations and pen tables}}: duplicated views share their annotations; printing goes through a pen table.
 3. Below the choice are the four things it sets. Change any one on its own; the style then reads {{ui:Custom}}.
 
-The working style is kept in this browser, like the workspace layout. A template carries it to new models.
+The working style is kept in this browser, like the interface style. A template carries it to new models.
 
 ## Duplicate a view
 

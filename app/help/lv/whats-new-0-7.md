@@ -2,7 +2,7 @@
 title: Jaunumi 0.7 (agrāk)
 summary: BimCraft pievieno sienas vairākiem stāviem un Kopēt šo līmeni, sienas no PDF un skenējumiem, jūsu pašu sienu konstrukcijas, bagātākas saimes, MEP aprīkojumu ar portiem, sadursmju kopas, atveres un cauruļu spolas, dokumentus pa aktīviem, COBie un sensoru rādījumus, debesis, sauli, dienasgaismu režģī un apkures un dzesēšanas slodzes, skenu reģistrāciju, tiešraides skatu un ceļa izsekošanu grafikas kartē, STEP un USD, bibliotēkas variantus un vēl vairāk MI asistentiem.
 keywords: jaunumi 0.7, agrāks laidiens, izlaiduma piezīmes, izmaiņu žurnāls, izmaiņas, 0.7, versija, jaunas funkcijas, sienas caur stāviem, kopēt šo līmeni, pdf, skenējums, pārzīmēt, sienas no plāniem, sienu konstrukcijas, slāņi, serde, membrāna, atsauces izmēri, materiālu bibliotēka, rādīšanas vienības, skata stils, karkass, sijas, saimes, parametri, plāna simbols, karstie punkti, atkārtot, detalizācijas līmenis, ligzdotas saimes, CSV izmēri, pa elementam, aprīkojums, ports, savienojumi, attālumi, atveres, spolas, spolu lapas, montāžas metinājums, gaisa vadu griešanas saraksts, dokumenti, cobie, sensori, mqtt, tiešraides plūsma, vertikālais debesu komponents, saules siltuma ieguve, dienasgaismas režģis, apkure, dzesēšana, slodzes, u-vērtība, reģistrēt skenējumus, icp, e57, tiešraides skats, ceļa izsekošana, webgpu, trokšņu samazināšana, fiziskās debesis, gaismu sajaukšana, renderēšanas rinda, jūsu dators, step, usd, projekta paka, izstrādāt masu, variants, asistenti, papildinājumu API, augs, elektrība, projektēšanas pārbaudes
-from: ef226539
+from: a638080d
 ---
 
 Šis ir tas, kas mainījās BimCraft 0.7 salīdzinājumā ar 0.6. Saraksts ir sagrupēts pēc jomām, vispirms svarīgākais.

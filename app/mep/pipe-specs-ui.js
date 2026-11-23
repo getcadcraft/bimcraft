@@ -98,6 +98,7 @@ export function mountPipeSpecs(modelUi) {
           f('note', t('mep.spec.f.note'), txt('note', s.note, 40), true)),
         el('fieldset', { className: 'bc-pspec-sys' }, el('legend', {}, t('mep.spec.f.services')),
           ...Object.keys(PIPE_SYSTEMS).map((k) => { const c = el('input', { type: 'checkbox', value: k, 'data-pspec-sys': '' }); c.checked = S.sys[k] === s.id; return el('label', {}, c, ' ', systemLabel('pipe', k)); })),
+        // i18n-ignore: CSS, selector, class name or search keywords: no words a person reads (words-11)
         s.source?.url ? el('p', { className: 'bc-sub bc-pspec-src', 'data-pspec-src': '' }, t('mep.spec.source', { date: s.source.fetched || '' }), ' ', el('a', { href: s.source.url, target: '_blank', rel: 'noopener noreferrer' }, s.source.url), s.source.url2 ? [' · ', el('a', { href: s.source.url2, target: '_blank', rel: 'noopener noreferrer' }, s.source.url2)] : null, s.source.edition ? [el('br'), s.source.edition] : null) : null,
         el('p', { className: 'bc-sub' }, t('mep.spec.mm'), inUse ? ' ' + t('mep.spec.inuse', { n: inUse.runs }) : ''),
         el('div', { className: 'bc-pspec-scroll' }, el('table', { className: 'bc-table bc-pspec-table', 'data-pspec-table': '' },

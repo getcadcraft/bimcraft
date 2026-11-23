@@ -11,6 +11,7 @@
   "bt.file.open": "Bir düzen dosyası aç",
   "bt.file.save": "Düzeni dosya olarak kaydet",
   "bt.file.bad": "{name} bir Material flow düzeni değil.",
+  "bt.file.ask": "Geçerli düzen bu dosyayla değiştirilsin mi?",
   "bt.file.done": "{name}: {n} öğe yüklendi, {dropped} dışarıda bırakıldı.",
   "bt.fit.run": "Duvarlara göre denetle",
   "bt.fit.nolayout": "Henüz denetlenecek bir düzen yok. Bir hücre kullanın veya bir düzen dosyası açın.",

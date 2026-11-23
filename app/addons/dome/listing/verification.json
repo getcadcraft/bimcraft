@@ -1,0 +1,104 @@
+{
+ "cases": [
+  {
+   "id": "dome-shape",
+   "name": "Surface and volume against closed forms",
+   "result": "A 10 m half sphere has a form surface of 2\u03c0R\u00b2, a 12 m cap 3 m high \u03c0(a\u00b2 + h\u00b2), half an oblate and half a prolate ellipsoid their handbook areas, each within 1 part in 100,000 (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-stem",
+   "name": "A stem wall under the curve",
+   "result": "A 2 m stem wall under a 10 m half sphere adds exactly its ring area times its height of concrete and foam, a cylinder to the form surface and the volume inside, and makes the whole floor usable at 2 m of headroom (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-layers",
+   "name": "Shell, foam, stem wall, ring beam and slab by hand",
+   "result": "A 100 mm half-sphere shell is (2/3)\u03c0(R\u00b3 \u2212 r\u00b3) within 1 part in 100,000; a cap's shell is the outer cap less the inner cap; the stem wall, ring beam and slab match ring area times height exactly (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-openings",
+   "name": "Openings cut what they should",
+   "result": "A 1 m door in a stem wall removes exactly its sector of the ring times its height and leaves the dome above alone; a window leaves wall below its sill and above its head; overlapping openings, also across 0\u00b0, and one that reaches the crown are left out and named (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-quantities",
+   "name": "Quantities add up",
+   "result": "Sprayed concrete to order is shell plus stem wall plus the allowance; the steel estimate is 2 times the ratio times the concrete times 7850; the membrane is ordered whole, openings are cut after; the element volumes in the IFC file are the quantities in the report (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-inside",
+   "name": "The room inside",
+   "result": "Clear diameter, height, floor area, volume and the floor with 2 m of headroom match \u03c0(r\u00b2 \u2212 2\u00b2) and the half-sphere formulas (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-forces",
+   "name": "Membrane forces against the textbook",
+   "result": "A half sphere under its own weight follows N_\u03c6 = \u2212qR/(1+cos \u03c6) and N_\u03b8 = qR(1/(1+cos \u03c6) \u2212 cos \u03c6) at nine heights to five decimals, with hoop tension beginning 51.83\u00b0 from the crown; snow adds \u2212pR/2; a low dome's ring tension is push times radius; an ellipsoid's springline carries exactly the load above it (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-spec",
+   "name": "Where each figure comes from",
+   "result": "With no spec every governed figure is a starting figure; a spec minimum above it raises it, below it leaves it; your own figure stands and is reported when it breaks the spec, with the standard and clause (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-ifc",
+   "name": "The IFC file read back",
+   "result": "Our own reader opens the file as IFC4 with every line carrying the attributes its class has, unique GlobalIds, one revolved solid per piece and no facets; BimCraft's lab build opens it and shows the dome with its openings (bin/test-dome.mjs, looked at 2026-11-20)"
+  },
+  {
+   "id": "dome-bim",
+   "name": "In a real BimCraft model",
+   "result": "Placed in the showcase house model as 6 elements and their revolved solids in their own classes, taken back out by one Undo, placed again, replaced on placing again, removed exactly; no console error (tools/dome/browser.mjs)"
+  },
+  {
+   "id": "dome-cad",
+   "name": "In a real CadCraft drawing",
+   "result": "Plan and section drawn as arcs, circles, polylines, text and dimensions on DOME- layers, one undo, removed cleanly; no console error (tools/dome/browser.mjs)"
+  },
+  {
+   "id": "dome-lateral",
+   "name": "Wind and earthquake against closed forms",
+   "result": "Wind on a half sphere matches Timoshenko's closed form for the force along the curve, round the dome and in shear at every height; the sideways force is (2/3)\u03c0R\u00b2p; an earthquake's sideways force is the share of the weight typed and its overturning that force times R/2; a force near twice the weight lifts one side and is remarked (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-bending",
+   "name": "The shell solver against results that do not depend on it",
+   "result": "A long cylinder clamped at one end under pressure gives the textbook edge moment p/2\u03b2\u00b2 and edge shear p/\u03b2; a pressurised sphere gives pR/2 with no bending; in the dome the solver carries the same weight as the membrane sum, agrees with membrane theory half way up, has no base moment when the base is free to turn, and gives a low dome's ring beam tension within 5 percent of push times radius (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-buckling",
+   "name": "Buckling by hand",
+   "result": "The classical pressure equals 2Et\u00b2/(\u221a(3(1\u2212\u03bd\u00b2))R\u00b2) for a half sphere; no margin is shown until a reduction is typed, and with 0.1 the margin is a tenth (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-openforces",
+   "name": "Forces the openings interrupt",
+   "result": "A door in a stem wall interrupts the downward force over its width and nothing round the dome; a door in the lower curve of a half sphere cuts hoop tension and gets a steel area when a stress is typed (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-factors",
+   "name": "Load factors",
+   "result": "With no spec the forces are unfactored and say so; with factors 1.4, 1.2, 1.6 and 0.9 the dead case is 1.4 times and the snow case 1.2 times own weight plus 1.6 times snow, the least own weight resists uplift, and a factor of your own on the unsafe side of the spec's is reported (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-frames",
+   "name": "Opening frames by hand",
+   "result": "A frame round a door in a stem wall is exactly the two sides plus the band over the head, added to the wall's concrete; frames of neighbouring openings never overlap (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-bars",
+   "name": "Bar count by hand",
+   "result": "Each way the bar length is the shell's mid-surface divided by the spacing, the weight is length times bar area times 7850, and the steel ratio is bar area over spacing times thickness; bars wider apart than the United States spec's 18 in are reported (bin/test-dome.mjs)"
+  },
+  {
+   "id": "dome-units",
+   "name": "Feet, inches and pounds",
+   "result": "Every input converts there and back exactly (3,048 mm is 10 ft, 4,000 psi is 27.579 MPa, 30 psf is 1.4364 kPa); the report prints cubic yards, kips and pounds with nothing left in metric; the dome itself is identical in both systems (bin/test-dome.mjs, tools/dome/browser.mjs)"
+  },
+  {
+   "id": "dome-super",
+   "name": "Inside SuperCad Studio",
+   "result": "With BimCraft and CadCraft mounted in SuperCad Studio's lab build the Dome generator is listed, carried by BimCraft, and switches on with no page error (tools/super-test/hosts.mjs)"
+  }
+ ]
+}

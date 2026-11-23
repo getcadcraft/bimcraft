@@ -2,6 +2,6 @@
   "@locale": "lo",
   "@name": "ລາວ",
   "@note": "Draft translation, not yet reviewed by a native speaker",
-  "data.sources": "ຂໍ້ມູນ ແລະ ແຫຼ່ງຂໍ້ມູນ",
-  "data.bras": "BRAS, ມາດຕະຖານອ້າງອີງສຳລັບການຈຳລອງສຽງສະທ້ອນໃນຫ້ອງ (TU Berlin ແລະ RWTH Aachen), ຄຳອະທິບາຍພື້ນຜິວ, CC BY-SA 4.0"
+  "data.sources": "ຂໍ້ມູນ ແລະ ແຫຼ່ງທີ່ມາ",
+  "data.bras": "BRAS, the Benchmark for Room Acoustical Simulation (TU Berlin ແລະ RWTH Aachen), ຄຳອະທິບາຍພື້ນຜິວ, CC BY-SA 4.0"
 }

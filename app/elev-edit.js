@@ -28,11 +28,11 @@ import { op, changeWall, changeOpening, changeLevel, newLevel, drawWalls, placeO
 import { ids } from './ifc-util.js';
 import { elevationDirs } from './res-views.js';
 import { sectionDir } from './res-sheets.js';
+import { dot2 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const NOTES_PSET = 'CadCraft_ViewNotes';
 export const DIMS_PSET = 'CadCraft_ViewDims';
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 const project = (w) => ids(w.api, w.mid, 'IFCPROJECT')[0];
 const KEY_RE = /^elevation:(north|east|south|west)$|^section:[0-9A-Za-z_$]{22}$/;
 export const isEditView = (k) => KEY_RE.test(String(k || ''));

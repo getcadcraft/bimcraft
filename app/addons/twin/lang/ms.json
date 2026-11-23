@@ -11,6 +11,7 @@
   "bt.file.open": "Buka fail layout",
   "bt.file.save": "Simpan layout sebagai fail",
   "bt.file.bad": "{name} bukan layout Aliran bahan.",
+  "bt.file.ask": "Gantikan layout semasa dengan fail ini?",
   "bt.file.done": "{name}: {n} item dimuatkan, {dropped} ditinggalkan.",
   "bt.fit.run": "Semak terhadap dinding",
   "bt.fit.nolayout": "Tiada layout untuk disemak lagi. Gunakan sel atau buka fail layout.",

@@ -2,7 +2,7 @@
 title: Çfarë ka të re në 0.7 (më herët)
 summary: BimCraft shton mure nëpër disa nivele dhe Kopjo këtë nivel, mure nga PDF-të dhe skanimet, montime muresh të tuajat, familje më të pasura, pajisje MEP me porta, grupe përplasjesh, hapje dhe spool-e tubash, dokumente për asete, COBie dhe lexime sensorësh, qiell, diell, dritë dienore në rrjetë dhe ngarkesa ngrohjeje e ftohjeje, regjistrim skanimesh, pamje të drejtpërdrejtë dhe gjurmim shtegu në kartën grafike, STEP dhe USD, variante bibliotekash, dhe më shumë për asistentët AI.
 keywords: çfarë ka të re 0.7, version më i hershëm, shënime versioni, ndryshime, 0.7, version, veçori të reja, mure nëpër nivele, kopjo këtë nivel, pdf, skanim, gjurmim, mure nga planet, montime muresh, shtresat, bërthama, membranë, përmasa referimi, bibliotekë materialesh, njësi shfaqjeje, stil pamjeje, skeletim, trarë, familje, parametra, simbol plani, pika të nxehta, përsëritje, nivel detaji, familje të fole, csv, madhësi, për element, pajisje, porta, lidhje, përplasje, hapje, spool, spool-e, fletë spool-esh, pikë saldimi, listë prerjesh kanali, dokumente, cobie, sensorë, mqtt, rrjedhë e drejtpërdrejtë, komponenti vertikal i qiellit, diell, rrjetë dritë dite, ngrohje, ftohje, ngarkesa, u-vlerë, regjistro skanimet, icp, e57, pamje e drejtpërdrejtë, gjurmim shtegu, webgpu, zbutje, qiell fizik, përzierje drite, radhë renderimi, kompjuteri juaj, step, usd, paketë projekti, zhvillo këtë masë, variante, asistentë, api shtojcash, bimë, elektrik, kontrollet e projektimit
-from: ef226539
+from: a638080d
 ---
 
 Ky është ç'ka ndryshoi në BimCraft 0.7, krahasuar me 0.6. Lista është grupuar sipas zonës, me më të rëndësishmet e para.

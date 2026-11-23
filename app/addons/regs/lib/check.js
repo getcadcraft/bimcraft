@@ -6,6 +6,7 @@
  *                                                                 own labelled defaults and is not in the packs yet
  *   roomRows(snap, loops, profile)                       → rows   each named room (room.* rules): lowest wall on its level, window
  *                                                                 area and openable area as a share of its floor area
+ *   guardRows(railings, profile, { levelName, word }) → rows   drawn guards (guard.height.min; 0.11 T24.7)
  *   regsSchedule(rows, profile, { fmtLen, t })           → { title, note, head, rows, nums, total }   the schedule the Schedules list shows
  *   summary(rows)                                        → { meets, fails, none }
  *
@@ -51,6 +52,15 @@ export function stairRows(stairs, profile, { whereOf = () => '' } = {}) {
     if (st.railings !== 'none') put('stair.rail.height', st.railHeight);
   }
   return out;
+}
+
+/** 0.11 T24.7: the guards drawn on a level (railings of kind guard: a deck, a balcony, the edge of a floor opening) against the pack's
+ *  guard.height.min. A handrail is not a guard and is not judged here (a stair's handrail is stair.rail.height). `rails` = res-railing.js
+ *  readRailings: { guid, storey, kind, height (mm above the walking surface) }. */
+export function guardRows(rails, profile, { levelName = () => '', word = 'Guard' } = {}) {
+  const r = profile && profile.rule('guard.height.min');
+  if (!r) return [];
+  return (rails || []).filter((g) => g.kind === 'guard').map((g) => row('railing', [word, levelName(g.storey)].filter(Boolean).join(' '), r, Number.isFinite(g.height) && g.height > 0 ? g.height : null, g.guid || ''));
 }
 
 const NOT_HABITABLE = /bath|toilet|\bwc\b|closet|laundry|hall|corridor|passage|stor|garage|utility|pantry|mech|entry|foyer|vestibul|stair|shed|attic/i;

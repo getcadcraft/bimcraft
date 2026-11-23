@@ -1,0 +1,23 @@
+{
+  "id": "dome",
+  "name": "Dome generator",
+  "version": "0.11.1",
+  "apps": [
+    "bimcraft",
+    "cadcraft"
+  ],
+  "api": "1.4",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "panel",
+    "files",
+    "storage",
+    "problems"
+  ],
+  "description": "A thin concrete shell dome from its diameter and height: spherical or elliptical shell, stem wall, ring beam, framed openings, foam and form, with quantities, a bar count, forces under weight, snow, wind and earthquake, bending, a buckling figure and an IFC file. Metric or feet and inches. Norm values come from spec side add-ons. A licensed engineer must design and check the dome.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "off"
+}

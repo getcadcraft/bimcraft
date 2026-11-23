@@ -1,0 +1,23 @@
+{
+  "id": "dome-spec-us",
+  "name": "Dome spec: United States",
+  "version": "0.11.1",
+  "apps": [
+    "bimcraft",
+    "cadcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "dome",
+      "range": "*"
+    }
+  ],
+  "description": "The United States spec for the Dome generator: thin shell cover, strength, steel ratio and bar spacing from ACI 318.2 (2014 edition read), cover against earth from ACI 318-19, and the building code on sprayed concrete, loads, foam and frost. Every value names its code, section and how it was read. Not a substitute for the codes or an engineer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "pool-spec-eu",
+  "name": "Pool spec: Europe",
+  "version": "0.11.0",
+  "apps": [
+    "bimcraft",
+    "cadcraft"
+  ],
+  "api": "1.0",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [],
+  "needs": [
+    {
+      "id": "pool",
+      "range": "*"
+    }
+  ],
+  "description": "The Europe spec for the Pool generator: concrete shell and pool water values from EN 1992-1-1, EN 1992-3, EN 206, EN 16582, EN 16713, EN 15288 and national rules where there is no European one. Every value names its standard, clause and whether it was read in the standard itself. Not a substitute for the standards or an engineer.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "default": "off"
+}

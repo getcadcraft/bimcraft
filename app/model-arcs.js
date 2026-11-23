@@ -26,15 +26,13 @@
  * edges are arcs (IfcArcIndex: start, a point on the arc, end).
  */
 import { round } from './model-write.js';
+import { dist2 as dist, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const TAU = 2 * Math.PI;
 /** Chords on a flattened arc span at most this angle (4°: under 3 mm off a 5 m radius). */
 export const ARC_STEP = 4 * Math.PI / 180;
 /** The most a wall may turn: three quarters of a circle (bulge tan(67.5°)). */
 export const BULGE_MAX = Math.tan(270 / 4 * Math.PI / 180);
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 const wrap = (x) => { let y = (x + Math.PI) % TAU; if (y <= 0) y += TAU; return y - Math.PI; };   // into (−π, π]
 
 /** The circle of the arc from a to b with this bulge (null when it is straight or a and b are one point). */

@@ -48,6 +48,7 @@ import { ids, val, inv4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
 import { syncFoundations } from './res-foundation.js';   // footings step to the grade a pad changes
 import { parseXml, kids, kid, textOf } from './xml.js';   // 0.6 DF.24: LandXML in (the copy CivilCraft's terrain sync brings)
+import { pointInRing as inPoly, signedArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const IN = 25.4, FT = 304.8;
 export const TERRAIN_PSET = 'CadCraft_Terrain', PAD_PSET = 'CadCraft_Pad', HARD_PSET = 'CadCraft_Hardscape';
@@ -164,7 +165,6 @@ export function readLandXmlSurfaces(text) {
 
 // ------------------------------------------------------------------------------------------------------------ grading
 function segDist(p, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2)); return Math.hypot(p[0] - a[0] - dx * t, p[1] - a[1] - dy * t); }
-function inPoly(x, y, P) { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, yi] = P[i], [xj, yj] = P[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; }
 const distTo = (p, P) => (inPoly(p[0], p[1], P) ? 0 : Math.min(...P.map((a, i) => segDist(p, a, P[(i + 1) % P.length]))));
 function offsetOut(P, d) {
   const n = P.length, E = P.map((a, i) => { const b = P[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, u = [(b[0] - a[0]) / L, (b[1] - a[1]) / L]; return { a, u, n: [-u[1], u[0]] }; });
@@ -217,7 +217,6 @@ export function gradeSurface(existing, pads, { step = 500 } = {}) {
   const r = buildSurface({ points: out, breaklines: lines.map((pts) => ({ pts })), boundary: bnd || null });
   return r.surface || existing;
 }
-function area(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a.x * b.y - a.y * b.x; } return s / 2; }
 export function cutFill(existing, finished, { cell = 250 } = {}) {
   const b = existing.stats().bounds;
   let cut = 0, fill = 0;

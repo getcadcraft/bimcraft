@@ -32,6 +32,7 @@
 import { op } from './model-ops.js';
 import { ids, val } from './ifc-util.js';
 import { round } from './model-write.js';
+import { ringArea as area2 } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const DRAFT_PSET = 'CadCraft_Drafting';
 const OBJECT_TYPE = 'Drafting';
@@ -51,7 +52,6 @@ const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
 const VIEW_RE = /^(plan|rcp):[0-9A-Za-z_$]{22}$|^callout:callout-\d+$/;
 export const isViewKey = (v) => VIEW_RE.test(String(v || ''));
 const scaleOf = (x) => { const v = Number(x); return Number.isFinite(v) && v > 0 ? Math.min(50, Math.max(0.1, v)) : 1; };
-const area2 = (p) => { let a = 0; for (let i = 0; i < p.length; i++) { const q = p[i], r = p[(i + 1) % p.length]; a += q[0] * r[1] - r[0] * q[1]; } return a / 2; };
 const clean = (pts) => {
   const out = [];
   for (const q of pts || []) { if (!Array.isArray(q) || !Number.isFinite(+q[0]) || !Number.isFinite(+q[1])) continue; const p = [+q[0], +q[1]]; const l = out[out.length - 1]; if (!l || Math.hypot(p[0] - l[0], p[1] - l[1]) > 0.5) out.push(p); }
@@ -243,7 +243,8 @@ export function hatchSegments(outer, holes = [], pattern = 'diagonal', scale = 1
     const r = f.angle * Math.PI / 180, d = [Math.cos(r), Math.sin(r)], n = [-d[1], d[0]], gap = f.gap * k;
     const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
     const ns = corners.map((c) => c[0] * n[0] + c[1] * n[1]), ds = corners.map((c) => c[0] * d[0] + c[1] * d[1]);
-    const nmin = Math.min(...ns), nmax = Math.max(...ns), dmin = Math.min(...ds) - 1, dmax = Math.max(...ds) + 1;
+    const lo = (a) => a.reduce((m, v) => Math.min(m, v), Infinity), hi = (a) => a.reduce((m, v) => Math.max(m, v), -Infinity);   // #1995: Math.min(...a) without the spread
+    const nmin = lo(ns), nmax = hi(ns), dmin = lo(ds) - 1, dmax = hi(ds) + 1;
     const offs = [0, ...(f.group || []).map((o) => o * k)];
     for (let c = Math.floor((nmin - offs[offs.length - 1]) / gap) * gap; c <= nmax; c += gap) for (const o of offs) {
       const m = c + o;
@@ -298,7 +299,7 @@ export function putDrafting(tag, items) {
       const view = spec.view || 'plan:' + spec.level;
       const r = addDraftingIn(w, { ...spec, view });
       w.upsertPset(r.id, TAG_PSET, [['Tag', 'IFCLABEL', T]]);
-      ids.push(...r.ids); for (const [g, id] of r.made) made.set(g, id);
+      for (const x of r.ids) ids.push(x); for (const [g, id] of r.made) made.set(g, id);
     }
     return { id: ids[0] ?? null, ids, made, removed: old.length };
   });

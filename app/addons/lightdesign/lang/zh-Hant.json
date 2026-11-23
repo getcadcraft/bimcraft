@@ -205,6 +205,7 @@
   "draw.done.bim": "已在模型中放置{n}個燈具，並在平面視圖中繪製{lux}筆照度數值。",
   "lum.pole": "通用燈桿燈具",
   "lum.bollard": "通用矮柱燈",
+  "map.isolines": "等照度線（等值線）",
   "f.outdoor": "室外：場地照明（無天花板或牆壁；光線直接照射地面）",
   "f.cct": "色溫",
   "f.groundrho": "地面反射率",

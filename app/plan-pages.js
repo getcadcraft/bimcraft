@@ -22,10 +22,10 @@
  */
 import { wallsFromLines } from './model-trace.js';
 import { toGrey, threshold, despeckle, findSkew, rotateImage, trace } from './raster/index.js';
+import { dist2 as len, dot2 as dot, sub2 as sub } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const TAU = Math.PI * 2;
 const norm = (a) => ((a % TAU) + TAU) % TAU;
-const len = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 
 /** The circle through three points, or null. */
 function circle3(p, q, r) {
@@ -178,8 +178,6 @@ export function joinCollinearMm(segs, { tol = 35, gap = 350, angDeg = 1.2 } = {}
   return L;
 }
 
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 
 export function wallsFromPlan(parts, { t = 200, maxT = 600, minSeg = 400, minGap = 500, maxGap = 2600, doorMax = 1300, hatch = true, join = parts.source === 'scan' } = {}) {
   const report = { lines: parts.segs.length, hatchLines: 0, short: 0, walls: 0, merged: 0, sills: 0, doors: 0, windows: 0, unpaired: 0 };

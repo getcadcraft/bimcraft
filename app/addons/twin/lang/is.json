@@ -11,6 +11,7 @@
   "bt.file.open": "Opna uppröðunarskrá",
   "bt.file.save": "Vista uppröðunina sem skrá",
   "bt.file.bad": "{name} er ekki uppröðun úr Efnisflæði.",
+  "bt.file.ask": "Skipta út núverandi útliti fyrir þessa skrá?",
   "bt.file.done": "{name}: {n} hlutir hlaðnir, {dropped} sleppt.",
   "bt.fit.run": "Athuga gegn veggjum",
   "bt.fit.nolayout": "Engin uppröðun er til að athuga ennþá. Veldu reit eða opnaðu uppröðunarskrá.",

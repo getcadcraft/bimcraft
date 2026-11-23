@@ -11,6 +11,7 @@
   "bt.file.open": "Ouvrir un fichier d'implantation",
   "bt.file.save": "Enregistrer l'implantation dans un fichier",
   "bt.file.bad": "{name} n'est pas une implantation Material flow.",
+  "bt.file.ask": "Remplacer la présentation actuelle par ce fichier ?",
   "bt.file.done": "{name} : {n} éléments chargés, {dropped} laissés de côté.",
   "bt.fit.run": "Vérifier par rapport aux murs",
   "bt.fit.nolayout": "Il n'y a pas encore d'implantation à vérifier. Utilisez une cellule ou ouvrez un fichier d'implantation.",

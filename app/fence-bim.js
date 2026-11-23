@@ -9,7 +9,11 @@
  *        the gates (leaf prisms); property set CadCraft_Fence (the record, counts, lengths). One undo step.
  *   readFences(w) → [{ id, guid, rec, stats }]
  *
- * Styles: 'panel' and 'rails'. Pickets (lib/fence counts them) are not drawn here and are refused.
+ *   placeFenceParts({ level, points, closed, style, height, gates, item, name }) → op: the same fence as ONE ELEMENT PER PART (SU.1814b, civil-site-11's line): post = IfcMember POST,
+ *        panel = IfcRailing (USERDEFINED "Fence panel"), rail = IfcMember, picket = IfcMember, gate = IfcDoor GATE; a panel of a pickets fence is a schedule row only (`virtual`,
+ *        lib/fence parts()). Each carries CadCraft_Fence { Fence, Part, PartId }. `item` = a Library item of kind fence-type (typeFromItem, metres). One undo step.
+ *
+ * Styles: placeFence takes 'panel' and 'rails' and refuses pickets (it draws one solid). placeFenceParts also takes 'pickets'.
  * What it is not: CivilCraft writes each post, panel and gate as its own element in a system (ifc-civil.js). Here a fence is one element, so a schedule
  * reads CadCraft_Fence (posts, panels, rails, gates, length) and a post cannot be picked alone. Ground is the level (no terrain in BimCraft's plan).
  */
@@ -77,6 +81,61 @@ function writeFence(w, id, rec, layout) {
     ['Posts', 'IFCINTEGER', layout.posts.length], ['Panels', 'IFCINTEGER', rec.style === 'panel' ? layout.panels.length : 0], ['Rails', 'IFCINTEGER', layout.rails.length], ['Gates', 'IFCINTEGER', layout.gates.length],
     ['Length', 'IFCLENGTHMEASURE', round(w.u(s.length))], ['PanelArea', 'IFCAREAMEASURE', round(s.panelArea / 1e6, 4)], ['Problems', 'IFCINTEGER', layout.problems.length],
   ]);
+}
+
+/** lib/fence parts() of a record (metres) in plan millimetres, the writer's unit; a Library item (`item`) patches the record first. */
+export function partsMm(rec, item = null) {
+  const patch = item ? FN.typeFromItem(item, MM) : null;
+  if (item && !patch) fail('fence.err.item');
+  const r = { ...rec, ...(patch || {}) };
+  const clean = FN.clean({ ...r, units: MM }, MM);
+  if (!clean) fail('fence.err.empty');
+  const rr = { ...clean, units: MM }, L = FN.build(rr, { zAt: () => 0, units: MM }), list = FN.parts(L, rr), k = 1000;
+  const p = (q) => (q ? { ...q, x: q.x * k, y: q.y * k, z: q.z * k } : q);
+  const parts = list.map((q) => ({ ...q, x: q.x * k, y: q.y * k, z: q.z * k, ground: q.ground * k, base: q.base * k, top: q.top * k, size: q.size * k, a: p(q.a), b: p(q.b), height: q.height * k, len: q.len * k, width: q.width * k, w: q.w * k }));
+  return { rec: rr, parts, layout: layoutMm(L) };
+}
+
+function partItems(w, q, rec) {
+  const sq = (s) => [[-s / 2, -s / 2], [s / 2, -s / 2], [s / 2, s / 2], [-s / 2, s / 2]], thk = Math.max(20, rec.panelThk * 1000);
+  if (q.part === 'post') return [w.extrudeAt(w.profile(sq(q.size)), w.axisFrame([q.x, q.y, q.base], [0, 0, 1], [1, 0, 0]), q.top - q.base)];
+  if (q.part === 'panel') { const s = slab(w, q.a, q.b, q.a.z, q.b.z, q.height, thk); return s ? [s] : []; }
+  if (q.part === 'rail') return railingItems(w, { posts: [], balusters: [], rails: [[[q.a.x, q.a.y, q.a.z], [q.b.x, q.b.y, q.b.z]]], height: 0, rail: q.size, post: 0, baluster: 0 });
+  if (q.part === 'picket') { const L = Math.hypot(q.dx, q.dy) || 1; return [w.extrudeAt(w.profile([[-q.w / 2, -thk / 2], [q.w / 2, -thk / 2], [q.w / 2, thk / 2], [-q.w / 2, thk / 2]]), w.axisFrame([q.x, q.y, q.z], [0, 0, 1], [q.dx / L, q.dy / L, 0]), q.height)]; }
+  if (q.part === 'gate') { const s = slab(w, q.a, q.b, q.a.z, q.b.z, q.height, Math.max(40, thk)); return s ? [s] : []; }
+  return [];
+}
+
+export function placeFenceParts(spec) {
+  return op((w) => {
+    const pts = (spec.points || []).map((p) => [p[0], p[1]]);
+    if (pts.length < (spec.closed ? 3 : 2)) fail('fence.err.short');
+    if (spec.style && !FN.STYLES.includes(spec.style)) fail('fence.err.style');
+    const base = fenceRecord(pts, { style: spec.style || 'panel', height: spec.height, closed: !!spec.closed, gates: spec.gates || [], name: spec.name || tr('fence.name') });
+    const { rec, parts } = partsMm(base, spec.item || null);
+    if (!parts.some((q) => q.part === 'post')) fail('fence.err.empty');
+    const storey = w.byGuid(spec.level);
+    if (!storey) fail('model.err.nolevel');
+    const st = w.api.GetLine(w.mid, storey, false), made = new Map(), idsMade = [];
+    const sty = w.surfaceStyle(tr('fence.style'), [0.42, 0.45, 0.47], 0);
+    for (const q of parts) {
+      if (q.virtual) continue;   // a panel of a pickets fence: its pickets are the elements
+      const items = partItems(w, q, rec);
+      if (!items.length) continue;
+      const guid = val(w.guid()), place = w.H(w.placeAt(st.ObjectPlacement.value, 0, 0, 0, 0)), nm = w.L(rec.name + ' ' + q.part), ot = w.L('Fence ' + q.part);   // i18n-ignore: IFC file data
+      let id;
+      if (q.part === 'gate') id = w.make('IFCDOOR', guid, w.ownerHistory(), nm, null, ot, place, null, null, w.u(q.height), w.u(q.width), ...(w.v4 ? ['GATE', 'NOTDEFINED', null] : []));
+      else if (q.part === 'panel') id = w.make('IFCRAILING', guid, w.ownerHistory(), nm, null, ot, place, null, null, ...(w.v4 ? ['USERDEFINED'] : ['NOTDEFINED']));
+      else id = w.make('IFCMEMBER', guid, w.ownerHistory(), nm, null, ot, place, null, null, ...(w.v4 ? [q.part === 'post' ? 'POST' : 'USERDEFINED'] : []));
+      w.noteGuid(guid, id); w.contain(id, storey);
+      for (const it of items) w.styleItem(it, sty);
+      w.setShape(id, [w.rep('body', 'Body', 'SweptSolid', items)]);
+      w.upsertPset(id, FENCE_PSET, [['Fence', 'IFCLABEL', rec.name], ['Part', 'IFCLABEL', q.part], ['PartId', 'IFCLABEL', String(q.id)], ['Type', 'IFCLABEL', rec.type || '']]);
+      made.set(guid, id); idsMade.push(id);
+    }
+    if (!idsMade.length) fail('fence.err.empty');
+    return { id: idsMade[0], ids: idsMade, made, parts: parts.filter((q) => !q.virtual).length };
+  });
 }
 
 export function placeFence(spec) {

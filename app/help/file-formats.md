@@ -48,7 +48,7 @@ Not read yet: BimCraft says so when you open one. Export IFC for the model and D
 | Images | Drawn from the picture files when found (PNG, JPEG, GIF, BMP, WebP; not TIFF) |
 | Equipment tags | Foodservice item tags (`KCL-ITEM` attributes), for the equipment schedule |
 
-Anything else is counted under **Not drawn yet**, never guessed. DWG formats from AutoCAD 2000 to 2018 are the ones checked (R13 and R14 files are accepted too, but none were in the test set; older DWGs do not open); the {{ui:Drawing}} panel shows the format code (such as AC1032). DXF files of every version open, R12 included. Both are read by BimCraft's own readers, in this tab. Nothing is saved back to DWG or DXF.
+Anything else is counted under **Not drawn yet**, never guessed. DWG formats from AutoCAD 2000 to 2018 are the ones checked (R13 and R14 files are accepted too, but none were in the test set; older DWGs do not open); the {{ui:Drawing}} panel shows the format code (such as AC1032). DXF files of every version open, R12 included. Both are read by BimCraft's own readers, in this tab. A drawing you opened is never saved back; BimCraft's own plans, elevations and sections can be saved as new DWG or DXF files: see [Save a plan, elevation or section as DWG or DXF](topic:save-dwg-dxf).
 
 ## In a folder
 

@@ -1,65 +1,65 @@
 ---
-title: Dejá que un asistente de IA trabaje con tu modelo
-summary: Activá los asistentes en Configuración para que un asistente de tu computadora pueda encontrar elementos, leer sus propiedades, aislarlos en la vista y dibujar muros, puertas, ventanas, pisos, niveles y grillas, a través de CadCraft Studio. Apagado hasta que lo actives.
-keywords: ia, asistente, mcp, script, automatización, studio, buscar elementos, aislar, propiedades, permisos, desconectar, actividad, dibujar muros, agregar puertas, agregar ventanas, niveles, grillas, pisos, deshacer, guardar, línea de comandos, cli, sin ventana, usar con asistentes de IA
-from: c5ee595b
+title: Emoĩ asistente IA omba'apo hag̃ua nde modelo-pe
+summary: Emoĩ Configuración-pe asistente ha script-kuéra omba'apo hag̃ua BimCraft-pe, CadCraft Studio rupive: ohecha elementos, ohechauka propiedades, ohecha hendápe vista-pe, ha ojapo muro, puerta, ventana, piso, nivel ha grilla. Ndoĩmoʼãi, peẽ emoĩ peve.
+keywords: ia, asistente, mcp, script, automatización, studio, buscar elementos, aislar, propiedades, permisos, desconectar, actividad, dibujar muros, agregar puertas, agregar ventanas, niveles, grillas, pisos, deshacer, guardar, línea de comandos, cli, sin ventana, usar con asistentes IA
+from: 66d72742
 ---
 
-## Lo que vas a aprender
+## Mba'e ndekuaáta
 
-Cómo dejar que un asistente de IA (cualquier asistente que hable MCP) mire el modelo IFC que tenés abierto y dibuje en él, qué puede y qué no puede hacer, y cómo detenerlo.
+Mba'éichapa emoĩ asistente IA (mba'eve asistente oñe'ẽva MCP) ohecha modelo IFC ojepyso ha omoĩ hendápe, mba'épa oiko'ẽva ha mba'épa ndaikatúi, ha mba'éichapa ojehejasa.
 
-## Lo que un asistente puede hacer en BimCraft
+## Mba'épa asistente ikatu ojapo BimCraft-pe
 
-| Pide | Qué pasa | Necesita |
+| Ohaʼarõ | Mba'épa ojapo | Ohera'ãva |
 |---|---|---|
-| Buscar elementos | Recibe una lista de elementos por clase, piso, nombre o valor de propiedad, como hace **Buscar** | Lectura |
-| Leer propiedades | Recibe los atributos de un elemento, tipo, conjuntos de propiedades y cantidades, como muestra **Propiedades** | Lectura |
-| Describir el modelo, listar muros | Recibe los niveles, muros, puertas, ventanas, ambientes, pisos, grillas y columnas, y los extremos, tipo y altura de cada muro | Lectura |
-| Aislar, ver transparente, ocultar o mostrar | La vista 3D cambia como si hubieras usado el menú {{ui:Show}} | Cambiar la vista y dibujar |
-| Dibujar muros, puertas, ventanas, pisos, niveles o líneas de grilla | El modelo cambia como si hubieras usado las herramientas de {{ui:Draw}}: los muros se unen, los ambientes, pisos y techos siguen | Cambiar la vista y dibujar |
-| Cambiar un nombre o un valor de propiedad | El Name, Description, Object type o Tag de un elemento, o un valor de propiedad. Un valor que comparte con otros elementos se copia para él primero; un valor de su tipo cambia solo cuando el asistente lo indica, porque cada elemento de ese tipo lo sigue | Cambiar la vista y dibujar |
-| Mover, borrar, cambiar muros, puertas y ventanas | Los elementos se mueven o se borran junto con lo que los aloja; los muros dibujados con las herramientas de {{ui:Draw}} cambian por sus extremos o tipo, las puertas y ventanas por su lugar, tamaño o tipo, y los ambientes y uniones siguen | Cambiar la vista y dibujar |
-| Preparar, ordenar y leer una planilla | "Una planilla de puertas por piso, con resistencia al fuego y herrajes": el asistente nombra la planilla, sus columnas (una propiedad o etiqueta se convierte en columna) y su agrupación; BimCraft la llena a partir del modelo y la arma, tomando de la norma de la oficina lo que el asistente no indicó. La configuración se suma a tu lista de Planillas. Cada línea que recibe nombra sus elementos, así que puede seleccionarlos | Lectura para leer; Cambiar la vista y dibujar para guardar una configuración |
-| Exportar una planilla | CSV, Excel o texto separado por tabulaciones para pegar en Google Sheets (no se envía nada a Google) | Exportar |
-| Leer y fijar acabados de ambientes | Los tipos de acabado, el piso, muro y cielorraso de cada ambiente, zonas; las superficies, cantidades de baldosas y volúmenes de sustrato salen luego de las planillas de acabados | Lectura; Cambiar la vista y dibujar para fijar |
-| Seleccionar elementos, deshacer sus propios pasos | Los elementos se eligen en la vista; su último paso se deshace | Cambiar la vista y dibujar |
-| Guardar | Un archivo IFC nuevo con cada cambio, como lo hace {{ui:Save as IFC}} (el original nunca se modifica) | Guardar |
-| Exportar USD | Los modelos abiertos como OpenUSD (.usda, .usdc o .usdz), como lo escribe {{ui:USD}} en la barra de herramientas | Exportar |
-| Renderizar una imagen, ejecutar la cola de render | Una imagen de la vista 3D, como la hace el diálogo {{ui:Render}} con tu configuración de Render salvo que pida otras, o imágenes de alta calidad agregadas a la cola del diálogo y renderizadas una tras otra (la cola necesita WebGPU). Nada del modelo cambia ([Renderizar una imagen](topic:render)) | Exportar |
+| Buscar elementos | Oguerekógui lísta elementos-kuéra clase, nivel, téra térã propiedad valor rupive, **Buscar** ojapo háicha | Leer |
+| Leer propiedades | Oguerekógui elemento peteĩ atributo, tipo, conjunto de propiedades ha cantidades, **Propiedades** ojehechauka háicha | Leer |
+| Describir modelo, listar muros | Oguerekógui nivel-kuéra, muro, puerta, ventana, ambiente, piso, grilla ha columna-kuéra, ha muro peteĩ-peteĩ punta-kuéra, tipo ha altura | Leer |
+| Aislar, ver a través, ocultar o mostrar | 3D vista ojeporu {{ui:Mostrar}} menú ojapo háicha | Cambiar vista y dibujar |
+| Dibujar muros, puertas, ventanas, pisos, niveles o líneas de grilla | Modelo ojeporu {{ui:Dibujar}} herramienta ojapo háicha: muro-kuéra ojoaju, ambiente, piso ha techo ojeku'ejey | Cambiar vista y dibujar |
+| Cambiar téra o valor de propiedad | Peteĩ elemento-pe Nombre, Descripción, Tipo de objeto térã Etiqueta, térã peteĩ valor de propiedad. Valor oñemoĩva ambue elemento-pe ojeikuaa vaekue ojapo mboyve; tipo-pe valor ojumbe asistente oje'éramo chupe, ksa elemento tipo oñemuĩ | Cambiar vista y dibujar |
+| Mover, eliminar, cambiar muro, puerta ha ventana | Elemento-kuéra ojeity térã ojeeliminavo ha'e oñangareko vaekue; muro-kuéra {{ui:Dibujar}} herramienta rupive ojapo oñemudava punta térã tipo rupive; puerta ha ventana lugar, tamaño térã tipo rupive; ambiente ha unión ojeku'ejey | Cambiar vista y dibujar |
+| Oñemoĩ, oñemoĩ ha leer planilla | "Puerta planilla piso rupive, fuego resistencia ha herrajes rupive": asistente oñe'ẽ planilla téra, columna-kuéra (propiedad térã etiqueta oiko columna) ha agrupación; BimCraft omopleno modelo rupive ha omoĩ, mba'e asistente nomombe'úi ojagarra oficina estándar-gui. Oñemoĩ planilla-kuéra Planillas lista-pe. Peteĩ-peteĩ línea oguerekóva oñe'ẽ hembiapo-kuéra téra, ojepyso chupe | Leer para leer; Cambiar vista y dibujar para guardar oñemoĩva |
+| Exportar planilla | CSV, Excel térã tab-separado texto Google Sheets-pe ojeikoka (mba'eve ndoúi Google-pe) | Exportar |
+| Leer ha oñemoĩ ambiente terminaciones | Terminación tipo-kuéra, peteĩ-peteĩ ambiente piso, muro ha techo terminación, zona-kuéra; superficie, baldosa cantidad ha sustrato volumen terminación planilla-gui oúva | Leer; Cambiar vista y dibujar para oñemoĩ |
+| Seleccionar elementos, deshacer hembiapo propio | Elemento-kuéra ojepyŕa vista-pe; hembiapo pahápe ojejavy | Cambiar vista y dibujar |
+| Guardar | IFC archivo pyahu cambio-kuéra opaite-gui, {{ui:Guardar como IFC}} ojapo háicha (ko'ẽ archivo nomoambuéi) | Guardar |
+| Exportar USD | Modelo-kuéra ojeikuaa vaekue OpenUSD-pe (.usda, .usdc térã .usdz), {{ui:USD}} herramienta ojapo háicha | Exportar |
+| Render peteĩ imagen, omba'apo render cola | 3D vista-gui imagen, {{ui:Render}} diálogo ojapo háicha nde Render configuración rupive, ndojerurõi ambue; térã imagen calidad alta diálogo cola-pe ojoaju ha ojapytyvõ peteĩ-peteĩ upéi (cola ojeporu WebGPU). Modelo-pe mba'eve ndojeporavéi ([Render peteĩ imagen](topic:render)) | Exportar |
 
-Cada cambio que hace un asistente es un paso en **Cambios**, con el nombre "Assistant: …" (por ejemplo "Assistant: add 4 walls"), así que {{key:Mod+Z}} deshace toda su acción, y podés ver de quién fue cada paso. En la ventana no puede abrir archivos: vos abrís el modelo; él trabaja con el que está abierto.
+Asistente ojapo cambio peteĩ-peteĩ ojapo **Cambios** pe peteĩ hapykuéra, téra "Asistente: …" (ehemplo "Asistente: emoĩ 4 muro"), upévare {{key:Mod+Z}} ojejavy hembiapo opaite, ha ikatu ehecha máva ojapo hapykuéra. Ventana-pe ndaikatúi ojepyso archivo-kuéra: nde ojepyso modelo; ojeporu ojepysóva.
 
-## Activarlo
+## Emoĩ
 
-Los asistentes llegan a BimCraft a través de CadCraft Studio en tu computadora; el navegador común no tiene forma de entrar.
+Asistente-kuéra oike BimCraft-pe CadCraft Studio rupive nde compútadora-pe; navegador simple-pe ndaikatúi oike.
 
-1. Abrí {{ui:Settings}} y elegí la pestaña **BimCraft**.
-2. En **Assistants**, marcá **Let AI assistants and scripts use BimCraft**.
-3. **Read** ya está marcado para vos. Marcá también **Change the view and draw** si el asistente puede aislar y ocultar elementos y dibujar, y **Save** si puede guardar el modelo como archivo nuevo.
-4. Conectá el asistente en Studio (Studio muestra la dirección y la configuración para pegar en él).
+1. Ejepyso {{ui:Configuración}} ha eiporu **BimCraft** pestaña.
+2. **Asistente** rembe'ýpe, eiporu **Emoĩ asistente IA ha script-kuéra omba'apo BimCraft-pe**.
+3. **Leer** ojeiporu nde rehe. Eiporu **Cambiar vista y dibujar** avei, asistente aislar ha ocultar elemento-kuéra ha dibujar rehe ikatu jave, ha **Guardar** modelo archivo pyahu-pe guardar ikatu jave.
+4. Emoĩ asistente Studio-pe (Studio omombe'u dirección ha configuración omoĩvaʼekue).
 
-## Mientras un asistente está conectado
+## Asistente oñemoĩ jave
 
-Una nota arriba del panel derecho indica qué asistente está conectado y qué puede hacer. Hacé clic en {{ui:Disconnect}} para terminar su sesión de inmediato; tiene que volver a conectarse para seguir.
+Panel derecho-pe mba'e ohechauka mba'e asistente oñemoĩ ha mba'épa ikatu ojapo. Ejepyso {{ui:Desconectar}} asistente sesión ipahápe; oñemoĩ jey ojeikoka ohayhúvo.
 
-**Activity**, debajo de **Assistants** en Configuración, lista cada llamada que hizo el asistente, la más nueva primero, con si funcionó o no.
+**Actividad**, **Asistentes** rembe'ýpe Configuración-pe, ohechauka opaite asistente oñeprocesa-kuéra, pyahúgui ojehechakuaa, ha oiko porã térã nó.
 
 :::tip
-Pedí con palabras simples, por ejemplo "aislá los muros exteriores del Level 1", "¿qué puertas no tienen resistencia al fuego?" o "dibujá un ambiente de 6 por 4 metros en el Level 1 con una puerta en el muro sur". El asistente encuentra los elementos y los muestra en tu vista, o los dibuja.
+Eñe'ẽ ojepe'a-pe, ehemplo "aislar muro externo-kuéra Nivel 1-pe", "mba'ére puerta-kuéra ndaijeiporãi fuego resistencia?" térã "emoĩ 6 por 4 metro ambiente Nivel 1-pe puerta sur muro-pe". Asistente ohecha elemento-kuéra ha ohechauka nde vista-pe, térã ohecha chupe.
 :::
 
-## Sin ventana: scripts y línea de comandos
+## Ventana ndaipóri: script ha línea de comandos
 
-Las mismas herramientas de dibujo funcionan con archivos IFC en carpetas que indiques, sin ventana abierta: el servidor MCP y la línea de comandos de CadCraft pueden crear un edificio nuevo o abrir un archivo IFC, describirlo, agregar muros, puertas, ventanas, pisos, niveles y grillas, deshacer y guardarlo como un archivo `.ifc` nuevo. Vos decidís qué carpetas puede usar y si puede cambiar o guardar algo.
+Mismo dibujo herramienta-kuéra ojeporu IFC archivo-kuéra carpeta-kuéra-pe nde ñemoĩva, ventana ojepyso ndaipóri: CadCraft MCP servidor ha línea de comandos ikatu oñepyrũ modelo pyahu térã ojepyso IFC archivo, ohecha, omoĩ muro, puerta, ventana, piso, nivel ha grilla, ojejavy ha guardar ko'ẽ `.ifc` archivo pyahu-pe. Ambue mokõi herramienta ojeporu script-pe: `ifc_batch` ojapo 200 edición hapykuéra peteĩ-pe (opaite térã mba'eve: peteĩ deshacer ojejavy lote opaite, ha paso ojeikutu ojejavy ambue ha omombe'u mba'épa); `ifc_describe` oguerekógui nivel-kuéra ha muro peteĩ-peteĩ puerta ha ventana rehe; `ifc_render_png` ojapo peteĩ imagen chequeo modelo-pe ventana ndaipóri (material, textura ni sombra ndaipóri); `usd_export` ojapo `.usda`, `.usdc` térã `.usdz`. Línea de comandos-pe, `cadcraft bim script.json --from model.ifc -o out.ifc` ojapo peteĩ script hapykuéra, ha `--usd`, `--png` ha `--plan` ojapo USD archivo, imagen térã plano peteĩ jeheja-gui. Nde ejeaprobá mba'e carpeta ikatu oiporu ha ikatu ojerrevisa térã guardar.
 
-## Apagarlo
+## Emboriahu
 
-Desmarcá **Let AI assistants and scripts use BimCraft**. Cada asistente se desconecta de inmediato, y la configuración se guarda para la próxima vez.
+Desmarca **Emoĩ asistente IA ha script-kuéra omba'apo BimCraft-pe**. Asistente opaite ojeikutu peteĩ jeheja, ha ajuste oñongatu upe jey rehe.
 
-## Ver también
+## Ambue ehecha
 
-- [Recetas para asistentes de IA](common:assistants-recipes): ejemplos con el paso a paso, cada uno con las herramientas que llama.
-- [Buscar elementos por clase, nombre o propiedad](topic:find)
-- [Ocultar, aislar y ver transparente elementos](topic:hide-and-isolate)
-- [Configuración de BimCraft](topic:settings)
+- [Asistente-kuéra receta](common:assistants-recipes): ehemplo-kuéra, peteĩ-peteĩ herramienta oñeikoka.
+- [Buscar elementos clase, téra térã propiedad rupive](topic:find)
+- [Ocultar, aislar ha ver a través elemento-kuéra](topic:hide-and-isolate)
+- [BimCraft configuración](topic:settings)

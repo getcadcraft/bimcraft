@@ -205,6 +205,7 @@
   "draw.done.bim": "Diletakkan {n} lampu dalam model dan {lux} baris nombor lux dalam paparan pelan.",
   "lum.pole": "Luminair tiang generik",
   "lum.bollard": "Bolard generik",
+  "map.isolines": "Garis lux sama (isolin)",
   "f.outdoor": "Di luar: pencahayaan tapak (tiada siling atau dinding; cahaya terus ke atas tanah)",
   "f.cct": "Suhu warna",
   "f.groundrho": "Pantulan tanah",

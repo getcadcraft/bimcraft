@@ -31,11 +31,11 @@ import { cutFaceItems } from './wall-section-graphics.js';
 import { PAPERS, scaleFor } from './res-sheets.js';   // read only: the papers and scales every sheet uses
 import { t as tr } from './i18n.js';
 import { annoPt, annoK } from './anno-scale-bim.js';   // 0.10 BK.10: notes on elevations and sections sized by the same rule as the plan's
+import { dot2 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const ROOM_SIDES = ['north', 'east', 'south', 'west'];
 /** An interior elevation is named for the wall it shows: the north one looks north. */
 export const LOOK = { north: [0, 1], east: [1, 0], south: [0, -1], west: [-1, 0] };
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
 
 function middle(poly) {
   // the middle of the room's box (the cut runs through it): robust for L-shaped rooms too
@@ -121,7 +121,7 @@ export function openingFacts(openings, walls, geom) {
 export function viewItems(view, P) {
   const out = [];
   for (const l of view.lines || []) out.push({ t: 'line', pts: [P([l[0], l[1]]), P([l[2], l[3]])], w: 0.18, g: 0 });
-  for (const c of view.cuts || []) out.push(...cutFaceItems(c,P));
+  for (const c of view.cuts || []) for (const it of cutFaceItems(c,P)) out.push(it);   // #1995: a loop, not push(...a): a view of a big model has more items than a call takes arguments ("Maximum call stack size exceeded")
   return out;
 }
 /** Sheet items for notes: dimensions (a line with ticks and its text, `off` mm of paper out from what it measures), level marks
@@ -188,7 +188,7 @@ export function interiorSheet(room, views, { paper = 'tabloid', units = 'ftin', 
     const x = m + col * cw, y = m + strip + (1 - row) * ch;   // first row on top
     const b = v.view.bounds, ox = x + 22 + (cw - 40 - (b.x1 - b.x0) * k) / 2 - b.x0 * k, oy = y + 16 + (ch - 30 - (b.y1 - b.y0) * k) / 2 - b.y0 * k;
     const P = (q) => [ox + q[0] * k, oy + q[1] * k];
-    items.push(...viewItems(v.view, P), ...noteItems(v.notes, P, k));
+    for (const it of viewItems(v.view, P)) items.push(it); for (const it of noteItems(v.notes, P, k)) items.push(it);
     const name = tr('comforts.ie.side.' + v.side);
     items.push({ t: 'text', s: name, x: x + 6, y: y + 7, size: 9, align: 'left', bold: true }, { t: 'text', s: sc.label, x: x + 6, y: y + 3, size: 7, align: 'left', g: 0.25 });
     items.push({ t: 'line', pts: [[x + 6, y + 6], [x + Math.min(cw - 12, 90), y + 6]], w: 0.35, g: 0 });

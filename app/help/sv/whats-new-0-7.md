@@ -2,7 +2,7 @@
 title: Nytt i 0.7 (tidigare)
 summary: BimCraft lägger till väggar över flera nivåer och Kopiera den här nivån, väggar från PDF:er och skanningar, egna väggsammansättningar, rikare familjer, utrustning för rör, kanaler och VVS med anslutningar, kollisionsuppsättningar, öppningar och rörspolar, dokument per tillgång, COBie och sensoravläsningar, himmel, sol, dagsljus på ett rutnät och värme- och kyllaster, skanningsregistrering, en live-vy och strålföljning på grafikkortet, STEP och USD, biblioteksvarianter och mer för AI-assistenter.
 keywords: nytt i 0.7, tidigare version, versionsnoter, ändringslogg, ändringar, 0.7, version, nya funktioner, väggar över nivåer, kopiera den här nivån, pdf, skanning, spåra, väggar från planer, väggsammansättningar, skikt, kärna, membran, referensmått, materialbibliotek, visningsenheter, vystil, stomme, bjälkar, familjer, parametrar, planssymbol, hotspots, upprepa, detaljnivå, kapslade familjer, csv-storlekar, per element, utrustning, anslutningar, kopplingar, fria avstånd, öppningar, rörspolar, rörspolblad, fältsvets, kanalkapplista, dokument, cobie, sensorer, mqtt, live-flöde, vertikal himmelskomponent, solvärme, dagsljusrutnät, värme, kyla, laster, u-värde, registrera skanningar, icp, e57, live-vy, strålföljning, webgpu, brusreducering, fysisk himmel, ljusblandning, renderingskö, din maskin, step, usd, projektpaket, bearbeta en massa, varianter, assistenter, tilläggs-API, anläggning, el, designkontroller
-from: ef226539
+from: a638080d
 ---
 
 Det här är vad som ändrades i BimCraft 0.7, jämfört med 0.6. Listan är grupperad efter område, med det viktigaste först.

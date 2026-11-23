@@ -205,6 +205,7 @@
   "draw.done.bim": "Colocadas {n} luminárias no modelo e {lux} traços com valores de lux na vista de planta.",
   "lum.pole": "Luminária de poste genérica",
   "lum.bollard": "Baliza genérica",
+  "map.isolines": "Linhas de igual lux (isolinhas)",
   "f.outdoor": "Exterior: iluminação de local (sem teto nem paredes; luz direta no solo)",
   "f.cct": "Temperatura de cor",
   "f.groundrho": "Refletância do solo",

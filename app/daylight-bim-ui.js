@@ -116,5 +116,6 @@ export function mountDaylight(host) {
     host.pane.replaceChildren(...out);
   }
   window.addEventListener('bimcraft-units', () => { try { render(); } catch (e) { /* GH.3-A: the tab has nothing to show yet */ } });   // results follow the display unit
+  window.addEventListener('cc-bimcraft-energy-inputs', () => { try { render(); } catch (e) { /* 0.11 WX.5: inputs handed in before the tab was drawn */ } });
   return { render, state: S, sky: SKY, changed() { if (S.gathered) S.stale = true; render(); } };
 }

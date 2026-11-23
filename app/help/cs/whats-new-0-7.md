@@ -2,7 +2,7 @@
 title: Co je nového ve verzi 0.7 (dřívější)
 summary: BimCraft přidává stěny přes několik podlaží a Kopírovat toto podlaží, stěny z PDF a skenů, vlastní skladby stěn, bohatší rodiny, zařízení MEP s přípojkami, sady kolizí, otvory a svary potrubí, dokumenty k aktivům, COBie a čtení senzorů, oblohu, slunce, denní světlo na mřížce a zátěže pro vytápění a chlazení, registraci skenů, živý pohled a sledování paprsků na grafické kartě, STEP a USD, varianty položek knihovny a další pro asistenty AI.
 keywords: co je nového 0.7, dřívější verze, poznámky k vydání, seznam změn, změny, 0.7, verze, nové funkce, stěny přes podlaží, kopírovat toto podlaží, pdf, sken, obkreslení, stěny z výkresů, skladby stěn, vrstvy, jádro, membrána, referenční kóty, knihovna materiálů, zobrazované jednotky, styl zobrazení, konstrukce, trámy, rodiny, parametry, značka půdorysu, body, opakování, úroveň podrobnosti, vnořené rodiny, velikosti v CSV, na prvek, zařízení, porty, připojení, vůle, otvory, svary, výkaz řezů, dokumenty, cobie, senzory, mqtt, živý kanál, vertikální součinitel oblohy, solární zisk, mřížka denního světla, vytápění, chlazení, zátěže, součinitel prostupu tepla, registrace skenů, icp, e57, živý pohled, sledování paprsků, webgpu, odšumění, fyzická obloha, míchání světel, fronta vykreslování, váš počítač, step, usd, balík projektu, rozpracování hmoty, varianty, asistenti, api doplňků, rostlina, elektro, kontroly návrhu
-from: ef226539
+from: a638080d
 ---
 
 Toto je to, co se změnilo v BimCraft 0.7 oproti 0.6. Seznam je seskupen podle oblastí, nejdůležitější je první.

@@ -17,8 +17,13 @@
  *
  * Opening: the one pass over the file runs in a Worker (cc-ifc open-async.js; Node and pages without workers scan on
  * this thread), then `AdoptModel`. An engine without AdoptModel (web-ifc, for the oracle tests) uses OpenModel.
+ * Geometry (0.11 PERF.8): in a second Worker (cc-ifc mesh-stream.js) when the page has one; the pieces come back placed in the world and are
+ * copied into the same batches in the same order, so the model is the same as the page's own pass gives (that pass is the fallback: no
+ * Worker, Node, `window.ccIfcGeoWorker = false`, or a worker that fails). `onPieces(pieces, keyBase)` sees each arriving group (the viewer's
+ * progressive display, viewer3d.js preview).
  */
 import { openIfcAsync } from './ifc/open-async.js';
+import { meshesInWorker, warmMeshWorker } from './ifc/mesh-stream.js';   // 0.11 PERF.8: the geometry pass in a Worker
 import { t } from "./i18n.js";
 import { lengthUnitMm } from './ifc-util.js';   // GH.3-A: lengths in Properties follow the display unit
 
@@ -53,10 +58,11 @@ export class IfcModel {
   }
 
   /** `coordination`: the coordination matrix to keep (a reload after an edit: the model stays where it was in the scene). */
-  async load(bytes, onProgress = () => {}, { keyBase = 0, coordination = null, transfer = false } = {}) {
+  async load(bytes, onProgress = () => {}, { keyBase = 0, coordination = null, transfer = false, onPieces = null, worker = true } = {}) {
     this.close();
     const { api, WebIFC } = this;
     const settings = coordination ? { COORDINATE_TO_ORIGIN: true, COORDINATION_MATRIX: [...coordination] } : { COORDINATE_TO_ORIGIN: true };
+    if (worker && typeof api.SetCoordinationMatrix === 'function') warmMeshWorker();   // 0.11 PERF.8: the geometry worker starts while the file is scanned
     let modelID = -1;
     if (typeof api.AdoptModel === 'function') {
       try { modelID = api.AdoptModel(await openIfcAsync(bytes, { transfer }), settings); } catch (e) { modelID = -1; }
@@ -74,8 +80,7 @@ export class IfcModel {
     const classOf = new Map();
     let triangles = 0;
 
-    const onMesh = (mesh, index, total) => {
-      const id = mesh.expressID;
+    const classFor = (id) => {
       let cls = classOf.get(id);
       if (!cls) {
         cls = this.className(id);
@@ -83,7 +88,20 @@ export class IfcModel {
         seen.add(id);
         typeCounts.set(cls, (typeCounts.get(cls) || 0) + 1);
       }
-      const space = cls === 'IfcSpace';
+      return cls;
+    };
+    const batchFor = (storey, space, c) => {
+      const key = storey + (space ? '|s|' : '|e|') + c.map((v) => v.toFixed(3)).join(',');
+      let b = batches.get(key);
+      if (!b) {
+        b = { storey, space, color: c, pos: new Grow(Float32Array), nrm: new Grow(Float32Array), idx: new Grow(Uint32Array), ids: new Grow(Uint32Array), vcount: 0, runs: { ids: [], t0: [], tn: [], v0: [], vn: [] } };   // 0.10 PERF.8: typed, not number arrays (8+ bytes a number, boxed)
+        batches.set(key, b);
+      }
+      return b;
+    };
+    const onMesh = (mesh, index, total) => {
+      const id = mesh.expressID;
+      const space = classFor(id) === 'IfcSpace';
       const storey = storeyOf.get(id) ?? OTHER;
       const placed = mesh.geometries;
       for (let i = 0; i < placed.size(); i++) {
@@ -92,26 +110,45 @@ export class IfcModel {
         const verts = api.GetVertexArray(geom.GetVertexData(), geom.GetVertexDataSize());
         const idx = api.GetIndexArray(geom.GetIndexData(), geom.GetIndexDataSize());
         const c = pg.color;
-        const key = storey + (space ? '|s|' : '|e|') + [c.x, c.y, c.z, c.w].map((v) => v.toFixed(3)).join(',');
-        let b = batches.get(key);
-        if (!b) {
-          b = { storey, space, color: [c.x, c.y, c.z, c.w], pos: new Grow(Float32Array), nrm: new Grow(Float32Array), idx: new Grow(Uint32Array), ids: new Grow(Uint32Array), vcount: 0, runs: { ids: [], t0: [], tn: [], v0: [], vn: [] } };   // 0.10 PERF.8: typed, not number arrays (8+ bytes a number, boxed)
-          batches.set(key, b);
-        }
-        appendGeometry(b, verts, idx, pg.flatTransformation, keyBase + id);
+        appendGeometry(batchFor(storey, space, [c.x, c.y, c.z, c.w]), verts, idx, pg.flatTransformation, keyBase + id);
         triangles += idx.length / 3;
         geom.delete();
       }
       if (index % 200 === 0) onProgress(index + 1, total);
     };
-    // 0.10 PERF.8: in slices that give the page back (no one long task; the progress line paints), and each element's meshes are dropped from the
-    // engine once copied into the batches. An engine without the Async calls (web-ifc, the oracle tests) streams in one go, as before.
-    if (typeof api.StreamAllMeshesAsync === 'function') await api.StreamAllMeshesAsync(modelID, onMesh);
-    else api.StreamAllMeshes(modelID, onMesh);
-    // web-ifc's StreamAllMeshes leaves IfcSpace out: stream the spaces too (hidden in the viewer until Spaces is on; the
-    // spaces schedule, 0.4 B10, measures them). Found 2026-10-12: before this the Spaces button had nothing to show.
-    if (typeof api.StreamAllMeshesWithTypesAsync === 'function') await api.StreamAllMeshesWithTypesAsync(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
-    else api.StreamAllMeshesWithTypes(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
+    // 0.11 PERF.8: the pass in a Worker; the pieces are placed there (appendGeometry's arithmetic) and copied into the batches here
+    let inWorker = false;
+    if (worker && typeof api.AdoptModel === 'function' && typeof api.SetCoordinationMatrix === 'function' && typeof api.file === 'function') {
+      let lastIndex = -1;
+      try {
+        const r = await meshesInWorker(api.file(modelID), {
+          settings, booleans: !!api.booleans, passes: [null, ['IFCSPACE']],
+          onPieces: (pieces) => {
+            if (this.modelID !== modelID) throw new Error('closed');   // another open started: stop this one
+            for (const p of pieces) {
+              const space = classFor(p.id) === 'IfcSpace';
+              appendPlaced(batchFor(storeyOf.get(p.id) ?? OTHER, space, p.color), p.pos, p.nrm, p.idx, keyBase + p.id);
+              triangles += p.idx.length / 3;
+              if (p.pass === 0 && p.index !== lastIndex) { lastIndex = p.index; if (p.index % 200 === 0) onProgress(p.index + 1, p.total); }
+            }
+            onPieces?.(pieces, keyBase);
+          },
+        });
+        if (r && !r.cancelled) { api.SetCoordinationMatrix(modelID, r.C); inWorker = true; }
+      } catch (e) { if (this.modelID !== modelID) throw e; }
+      if (!inWorker) { batches.clear(); typeCounts.clear(); seen.clear(); classOf.clear(); triangles = 0; }   // a pass that failed half way: the page does all of it
+    }
+    this.geometryIn = inWorker ? 'worker' : 'page';
+    if (!inWorker) {
+      // 0.10 PERF.8: in slices that give the page back (no one long task; the progress line paints), and each element's meshes are dropped from the
+      // engine once copied into the batches. An engine without the Async calls (web-ifc, the oracle tests) streams in one go, as before.
+      if (typeof api.StreamAllMeshesAsync === 'function') await api.StreamAllMeshesAsync(modelID, onMesh);
+      else api.StreamAllMeshes(modelID, onMesh);
+      // web-ifc's StreamAllMeshes leaves IfcSpace out: stream the spaces too (hidden in the viewer until Spaces is on; the
+      // spaces schedule, 0.4 B10, measures them). Found 2026-10-12: before this the Spaces button had nothing to show.
+      if (typeof api.StreamAllMeshesWithTypesAsync === 'function') await api.StreamAllMeshesWithTypesAsync(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
+      else api.StreamAllMeshesWithTypes(modelID, [WebIFC.IFCSPACE], (mesh) => onMesh(mesh, 1, 1));
+    }
 
     const out = [...batches.values()].map(finishBatch);
     return {
@@ -273,6 +310,21 @@ function appendGeometry(b, verts, idx, m, id) {
   b.idx.n += idx.length;
   b.ids.fill(id, idx.length / 3);
   b.vcount += verts.length / 6;
+}
+
+/** A piece already placed in the world (mesh-stream.js: the same arithmetic as appendGeometry, done in the worker): copied in, same runs. */
+function appendPlaced(b, pos, nrm, idx, id) {
+  const base = b.vcount, nv = pos.length / 3;
+  const r = b.runs, last = r.ids.length - 1;
+  if (last >= 0 && r.ids[last] === id) { r.tn[last] += idx.length / 3; r.vn[last] += nv; }
+  else { r.ids.push(id); r.t0.push(b.idx.n / 3); r.tn.push(idx.length / 3); r.v0.push(base); r.vn.push(nv); }
+  b.pos.need(pos.length); b.pos.a.set(pos, b.pos.n); b.pos.n += pos.length;
+  b.nrm.need(nrm.length); b.nrm.a.set(nrm, b.nrm.n); b.nrm.n += nrm.length;
+  b.idx.need(idx.length);
+  for (let i = 0, a = b.idx.a, n = b.idx.n; i < idx.length; i++) a[n + i] = base + idx[i];
+  b.idx.n += idx.length;
+  b.ids.fill(id, idx.length / 3);
+  b.vcount += nv;
 }
 
 function finishBatch(b) {

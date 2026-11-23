@@ -71,6 +71,7 @@ import { specOfMaterial, specStamp, systemSpec, specMaterial } from './mep/pipe-
 import { syncMepData } from './mep/pipe-specs-model.js';
 import { INLINE, INLINE_KINDS, OEM_KIND, inlineLength } from './mep/inline.js';
 import { familyById, inlineFrame, placeInline } from './mep/oem-families.js';
+import { add3 as add, cross3 as cross, dist3 as dist, dot3 as dot, len3 as len, scale3 as mul, sub3 as sub, unit3 as norm } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const RUN_PSET = 'CadCraft_MepRun';
 const SYS_PSET = 'CadCraft_MepSystem';
@@ -115,14 +116,6 @@ export const DUCT_SHAPES = ['round', 'rect', 'oval'];
 const refuse = (key) => { throw Object.assign(new Error(key), { key }); };
 
 // ---- vectors ----
-const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const len = (a) => Math.hypot(a[0], a[1], a[2]);
-const norm = (a) => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
-const dist = (a, b) => len(sub(a, b));
 /** A horizontal direction across a leg (its "width" side), carried over from a neighbour on a vertical leg. */
 const across = (d, prev) => (Math.abs(d[2]) < 0.9 ? norm([-d[1], d[0], 0]) : prev || [1, 0, 0]);
 
@@ -326,6 +319,20 @@ function aggKids(w, id) {
 function readJson(s, fallback) { try { const v = JSON.parse(String(s || '')); return v ?? fallback; } catch (e) { return fallback; } }
 /** [start, end] fixings: { eq, port } (short text) or null each. */
 const okEnds = (e) => (Array.isArray(e) && e.length === 2 ? e.map((x) => (x && typeof x.eq === 'string' && typeof x.port === 'string' && x.eq.length <= 64 && x.port.length <= 60 ? { eq: x.eq, port: x.port } : null)) : [null, null]);
+/** 0.11 SU.1561: the instruments a pipe run carries (the P&ID's balloons, stored in the model): [{ s (mm along the run), tag, kind (ISA letters), loc field|panel|aux }]; untrusted JSON, checked. */
+const INST_LOCS = ['field', 'panel', 'aux'];
+export function okInstruments(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [], seen = new Set();
+  for (const x of list.slice(0, 200)) {
+    if (!x || typeof x !== 'object') continue;
+    const tag = String(x.tag ?? '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 24), kind = String(x.kind ?? '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 8);
+    const s = Number(x.s);
+    if (!tag || !kind || seen.has(tag) || !Number.isFinite(s) || s < 0 || s > 1e8) continue;
+    seen.add(tag); out.push({ s: Math.round(s * 1000) / 1000, tag, kind, loc: INST_LOCS.includes(x.loc) ? x.loc : 'field' });
+  }
+  return out.sort((a, b) => a.s - b.s);
+}
 const okPoints = (p) => Array.isArray(p) && p.length >= 2 && p.length <= 500 && p.every((q) => Array.isArray(q) && q.length >= 2 && q.slice(0, 3).every((x) => Number.isFinite(x) && Math.abs(x) < 1e8));
 export function readRuns(w) {
   const out = [];
@@ -347,6 +354,7 @@ export function readRuns(w) {
       role: ps.DrainRole === 'main' ? 'main' : 'branch',
       valves: Array.isArray(valves) ? valves.filter((v) => v && Number.isFinite(v.s) && (VALVE_KINDS[v.kind] || (v.kind === OEM_KIND && typeof v.fam === 'string'))).map((v) => (v.kind === OEM_KIND ? { s: v.s, kind: v.kind, fam: v.fam.slice(0, 40) } : { s: v.s, kind: v.kind })) : [],
       ends: okEnds(readJson(ps.Ends, null)),
+      instruments: kind === 'pipe' ? okInstruments(readJson(ps.Instruments, [])) : [], instrumentsSet: ps.Instruments !== undefined,   // 0.11 SU.1561
       insulation: Math.max(0, mmOf(w, ps.Insulation)),   // 0.7 LC.9: insulation thickness (mm), for the soft clearance and openings
       spoolMax: Math.max(0, Number(ps.SpoolMaxMm) || 0), line: String(ps.Line || ''),
       fieldWelds: (() => { const f = readJson(ps.FieldWelds, []); return Array.isArray(f) ? f.filter((s) => Number.isFinite(s) && s >= 0 && s < 1e8).slice(0, 500) : []; })(),
@@ -368,7 +376,12 @@ function writeDef(w, id, r) {
     ['Valves', 'IFCTEXT', JSON.stringify((r.valves || []).map((v) => (v.fam ? { s: round(v.s, 3), kind: v.kind, fam: v.fam } : { s: round(v.s, 3), kind: v.kind })))],
     ['Ends', 'IFCTEXT', JSON.stringify(okEnds(r.ends || [null, null]))], Lm('Insulation', Math.max(0, Number(r.insulation) || 0)),
     ['SpoolMaxMm', 'IFCREAL', round(Math.max(0, Number(r.spoolMax) || 0), 3)], ['FieldWelds', 'IFCTEXT', JSON.stringify((r.fieldWelds || []).map((s) => round(s, 3)))], ['Line', 'IFCLABEL', String(r.line || '').slice(0, 20)],
-    ['DrainRole', 'IFCLABEL', r.role === 'main' ? 'main' : 'branch']]);
+    ['DrainRole', 'IFCLABEL', r.role === 'main' ? 'main' : 'branch'], ['Instruments', 'IFCTEXT', instText(r)]]);
+}
+/** A run that never had instruments gets no Instruments property (files stay as they were); one that had them keeps '[]' when they are all gone. */
+function instText(r) {
+  const list = r.kind === 'pipe' ? okInstruments(r.instruments || []) : [];
+  return list.length ? JSON.stringify(list) : r.instrumentsSet ? '[]' : null;
 }
 /** Plane angles in the file's own unit (radians unless the project says degrees). */
 function angleUnit(w) {
@@ -1038,6 +1051,20 @@ export function setRunSizes(changes) {
     }
     for (const st of storeys) regenMep(w, st);
     return { id: null, ids: [] };
+  });
+}
+/** 0.11 SU.1561: the instruments on pipe runs in ONE undo step — `changes` [{ guid, instruments [{ s, tag, kind, loc }] }] (each run's whole list; an unknown guid or a duct is skipped).
+ *  Data on the run (CadCraft_MepRun.Instruments), no solid: the run's geometry does not change, so nothing is regenerated. → { n } runs written. */
+export function setRunInstruments(changes) {
+  return op((w) => {
+    const runs = new Map(readRuns(w).map((r) => [r.guid, r]));
+    let n = 0;
+    for (const c of changes || []) {
+      const r = runs.get(c && c.guid);
+      if (!r || r.kind !== 'pipe') continue;
+      writeDef(w, r.id, { ...r, instruments: okInstruments(c.instruments), instrumentsSet: true }); n++;
+    }
+    return { id: null, ids: [], n };
   });
 }
 /** A property set `CadCraft_MepCalc` on an element (a diffuser's airflow, a fixture's units, a luminaire's photometric file): `rows` [[name, ifcType, value]]. One undo step. */

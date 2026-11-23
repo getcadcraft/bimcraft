@@ -12,10 +12,11 @@ import { stairFamily, stairFamilyPlace } from './stair-family.js';
 import { importFamily, placeFamily } from './family-ops.js';
 import { newFamilyKey } from './family-model.js';
 import { fmtLen } from './model-units.js';
+import { penStrokes, strokeCorners } from './pen-bim.js';   // 0.11 SU.1807 / BK.181 (bim-inbox-11): a pen stroke is the walking line (only where PEN_SHARED prints #cc-pen)
 
 export function mountStairSketch(modelUi) {
   const R = { pts: [], landing: [], mode: 'line', hover: null, asFamily: false };
-  let A = null;
+  let A = null, penAt = 0;
   const t = (...a) => A.t(...a);
   const hint = () => { const h = A.root.querySelector('[data-model-hint]'); if (h) h.textContent = t(R.mode === 'landing' ? 'model.hint.stairsketch.landing' : R.pts.length ? 'model.hint.stairsketch2' : 'model.hint.stairsketch'); };
   const reset = () => { R.pts = []; R.landing = []; R.mode = 'line'; R.hover = null; };
@@ -50,6 +51,7 @@ export function mountStairSketch(modelUi) {
     typed: () => false,
     move(p, e) { R.hover = A.snapAt(p, e).p; },
     click(p, e) {
+      if (Date.now() - penAt < 400) return;   // the click that follows a pen stroke is the stroke's own end, not a corner
       const q = A.snapAt(p, e).p;
       if (R.mode === 'landing') R.landing.push(q); else { if (R.pts.length < 4) R.pts.push(q); else { A.host.status(t('model.err.stairsketch.lines'), true); return; } }
       hint();
@@ -76,6 +78,15 @@ export function mountStairSketch(modelUi) {
     },
   });
   A.root.querySelector('[data-stairsketch-family]')?.addEventListener('change', (e) => { R.asFamily = !!e.target.checked; });
-  window.bimcraftStairSketch = { state: R, finish, preview };
+  // 0.11 SU.1807: with a pen (PEN_SHARED on) a stroke drawn on the plan is the walking line: its corners (a line, an L or a U) replace the clicked points.
+  const fromStroke = (stroke) => {
+    if (A.S.tool !== 'stairsketch' || R.mode !== 'line' || !stroke.samples || stroke.samples.length < 3) return;
+    const path = stroke.samples.map((s) => modelUi.planPoint(s.x, s.y)).filter(Boolean);
+    const pts = strokeCorners(path, { maxPoints: 4 });
+    if (pts.length < 2) return;
+    penAt = Date.now(); R.pts = pts; R.hover = null; hint(); A.drawOverlay();
+  };
+  const pen = penStrokes(window, fromStroke);
+  window.bimcraftStairSketch = { state: R, finish, preview, pen, fromStroke };
   return A;
 }

@@ -38,6 +38,7 @@ import { ids, val, deleteLine } from './ifc-util.js';
 import { ModelWriter } from './model-write.js';
 import { docLocation, isDay } from './assets-bim.js';
 import { packageEntries } from './permit-package.js';   // 0.10 BK.49: one packager for the permit and the handover package
+import { csvCell as cell } from './util.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const HANDOVER_KINDS = ['completion', 'occupancy', 'warranty', 'manual', 'asbuilt', 'other'];
 export const EXPECTED = ['completion', 'occupancy'];
@@ -215,7 +216,6 @@ export function handoverRows(docs, { by = NA, on = '', facility = NA } = {}) {
     Reference: d.reference || d.location,
   }));
 }
-const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 export function handoverCsv(docs, head = ['Kind', 'Title', 'Date', 'Issued by', 'Reference', 'Where', 'File in this package', 'SHA-256']) {   // i18n-ignore: the default header (the UI passes its own)
   const rows = [head, ...(docs || []).map((d) => [KIND_TEXT[d.kind] || d.kind, d.title, d.date, d.issuer, d.reference, d.location, d.file ? (d.loaded ? 'yes' : 'no') : '', d.file?.sha256 || ''])];   // i18n-ignore: yes / no (data)
   return rows.map((r) => r.map(cell).join(',')).join('\r\n') + '\r\n';

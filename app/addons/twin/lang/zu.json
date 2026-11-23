@@ -11,6 +11,7 @@
   "bt.file.open": "Vula ifayela lokwakheka",
   "bt.file.save": "Londoloza ukwakheka njengefayela",
   "bt.file.bad": "{name} akuyona ukwakheka kwe-Material flow.",
+  "bt.file.ask": "Ngabe ufuna ukushintsha isakhiwo samanje ngalo ifayela?",
   "bt.file.done": "{name}: Izinto ezilayishiwe: {n}, ezishiywe ngaphandle: {dropped}.",
   "bt.fit.run": "Hlola ngokumelene nezindonga",
   "bt.fit.nolayout": "Akukho kwakheka okuhlolwayo okwamanje. Sebenzisa iselo noma vula ifayela lokwakheka.",

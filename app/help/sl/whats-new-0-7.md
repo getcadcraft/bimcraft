@@ -2,7 +2,7 @@
 title: Novosti v različici 0.7 (prejšnja)
 summary: BimCraft doda zidove čez več nivojev in Kopiraj ta nivo, zidove iz PDF in optičnih posnetkov, lastne sestave zidov, bogatejše družine, MEP opremo s priključki, nabore kolizij, odprtine in cevne odseke, dokumente sredstev, COBie in odčitke senzorjev, nebo, sonce, dnevno svetlobo po mreži ter toplotne in hladilne obremenitve, registracijo optičnih posnetkov, pogled v živo in sledenje žarkom na grafični kartici, STEP in USD, variante knjižnice ter več za pomočnike z umetno inteligenco.
 keywords: novosti 0.7, prejšnja različica, opombe ob izdaji, dnevnik sprememb, spremembe, 0.7, različica, nove zmožnosti, zidovi čez nivoje, kopiraj ta nivo, pdf, optični posnetek, sled, zidovi iz načrtov, sestave zidov, sloji, jedro, membrana, referenčne kote, knjižnica materialov, prikazne enote, slog pogleda, ogrodje, nosilci, družine, parametri, simbol v tlorisu, vroče točke, ponavljanje, stopnja podrobnosti, gnezdene družine, velikosti v csv, na element, oprema, priključki, povezave, odmiki, odprtine, cevni odseki, odseki cevi, varjenje na mestu, seznam krojenja kanalov, dokumenti, cobie, senzorji, mqtt, živi vir, vertikalni faktor neba, sončni dobitek, mreža dnevne svetlobe, ogrevanje, hlajenje, obremenitve, u-vrednost, registracija optičnih posnetkov, icp, e57, pogled v živo, sledenje žarkom, webgpu, odšumljanje, fizično nebo, mešanje svetlobe, vrsta upodabljanja, vaš računalnik, step, usd, paket projekta, razvoj mase, variante, pomočniki, vmesnik dodatkov, obrat, električna, preverjanja dimenzioniranja
-from: ef226539
+from: a638080d
 ---
 
 To je, kaj se je spremenilo v BimCraft 0.7 v primerjavi z 0.6. Seznam je razvrščen po področjih, najpomembnejše je prvo.

@@ -45,6 +45,9 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
   const T = (k, v) => A.t(k, v);
   const docked = () => !!engine?.has('ribbon');   // Doc's command layer (ribbon, walls, keys) is on
   const mode = () => ctx?.block('viewtabs')?.mode || null;
+  // 0.11 FX.434: a layout with open view tabs keeps the document's views (token, levels, the first {3D} tab) whether or not it has
+  // palettes: Drafting has open tabs and a ribbon but no palettes, and opened with "No view is open" (documentToken never set)
+  const tracks = (c = ctx) => !!c && (c.has('palettes') || c.block('viewtabs')?.mode === 'open');
 
   // ---- the document and the views ----
   let documentToken = null, browserView = null, propertyMode = 'view', lastView = null, viewPropsSig = '';
@@ -146,8 +149,14 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
       const other = c.mode === 'dwg' || !!root.querySelector('.bc-stage > [data-rvt]:not([hidden]), .bc-stage > [data-folder]:not([hidden])');
       const tool = A.S.tool || 'select';
       return { document: c.editor, name: other ? c.name || '' : c.name || T('ws.noifc'), dirty: s.dirty, busy: s.busy, selection: s.selection || [], other,
-        tool, toolLabel: tool !== 'select' ? labelOf(src(tool)) || T('tbx.ig.tool') : '' };
+        tool, toolLabel: tool !== 'select' ? labelOf(src(tool)) || T('tbx.ig.tool') : '',
+        // 0.11 UI.25: into ccState. kinds = IFC classes without "Ifc", lower case (wall, door, slab …); mode = plan | 3d | dwg (or other: a Revit file, a folder)
+        kinds: c.kindsOf ? c.kindsOf(s.selection || []) : undefined, mode: c.mode === 'dwg' ? 'dwg' : other ? 'other' : !c.editor ? '' : drawOn() && A.S.layout !== '3d' ? 'plan' : '3d' };
     },
+    // 0.11 UI.25: ccState.select / reveal / highlight (a Problems line, a schedule row, a test): the viewer's own pick, reveal also frames it
+    select: (ids) => !!current().pick?.(window.ccState?.refs(ids) || [], false),
+    reveal: (ids) => !!current().pick?.(window.ccState?.refs(ids) || [], true),
+    highlight: (ids) => !!current().pick?.(window.ccState?.refs(ids) || [], false),
     endTool() { if (A.S.tool && A.S.tool !== 'select') A.setTool('select'); },
     ribbon, contextTab: () => (docked() && isWall() ? 'modify-walls' : null),
     toolbox: () => {
@@ -234,7 +243,7 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
         // the right panel's Properties tab is the Properties palette now: show another of its tabs
         if (root.querySelector('.bc-right [data-rtab="props"]')?.getAttribute('aria-selected') === 'true') root.querySelector('.bc-right [data-rtab]:not([data-rtab="props"]):not([hidden])')?.click();
         opened();
-      }
+      } else if (tracks(c)) opened();
       if (c.has('toolbox') && current().editor) needDraw();
     },
     leaving(c) {
@@ -246,9 +255,10 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
     resized() { current().viewer?.resize(); A.pv()?.resize(); },
     refresh(c) {
       root.classList.toggle('tbx-noifc', c.has('toolbox') && !current().editor);
+      if (!tracks(c)) return;
+      if (documentToken !== current().editor && !adapter.state().other) { opened(); return; }
       if (!c.has('palettes')) return;
       const s = snapshot();
-      if (documentToken !== current().editor && !adapter.state().other) { opened(); return; }
       decorateBrowser();
       elementProps.hidden = s.wall.placing || propertyMode !== 'element' || !s.selection.length;
       viewProps.hidden = s.wall.placing || !elementProps.hidden;
@@ -267,7 +277,7 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
   function opened() {
     const c = current();
     documentToken = c.editor; cameras.clear(); browserView = null; lastView = null;
-    if (c.editor && ctx?.has('palettes')) { A.prepareWorkspace(); A.setTool('select'); views.render(); lastView = '3d:default'; browserView = threeView(); }
+    if (c.editor && tracks()) { A.prepareWorkspace(); A.setTool('select'); views.render(); lastView = '3d:default'; browserView = threeView(); }
     propertyMode = 'view'; soon();
   }
   function renderViewProperties() {
@@ -350,7 +360,7 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
   const api = {
     get active() { return docked(); },
     attach(e) { engine = e; },
-    refresh: soon, stageChanged: soon, opened: () => { if (engine?.has('palettes')) opened(); else soon(); }, state: snapshot,
+    refresh: soon, stageChanged: soon, opened: () => { if (tracks()) opened(); else soon(); }, state: snapshot,
     propertiesChanged: soon,
     picked() { if (!snapshot().busy) { propertyMode = current().selection.length ? 'element' : 'view'; if (propertyMode === 'view') browserView = engine?.view(); viewPropsSig = ''; } soon(); },
     inspect: () => { const s = snapshot(); return { active: docked(), layout: engine?.layout || null, document: s.document ? s.name : null, busy: s.busy, dirty: s.dirty, selection: s.selection, view: s.view, settings: s.settings, propertyMode }; },
@@ -367,5 +377,6 @@ export function createBimcraftWorkspace({ root, modelUi, views, commands, props,
     startWall: () => walls.start(), editType: () => walls.editType(), editStructure: () => walls.editStructure(),
     cancelWall: (finish) => { A.workspaceCancel(finish); soon(); },
   };
+  window.ccState?.adapt?.(adapter);   // 0.11 UI.25: kinds, mode, view and the Problems counts publish into ccState
   return { adapter, api };
 }

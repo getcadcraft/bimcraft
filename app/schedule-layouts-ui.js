@@ -24,7 +24,7 @@ import { readMethodSetting } from './quantity-method.js';
 import { toCsv, toTsv, figureIds } from './tables/table.js';
 import { writeXlsx } from './tables/xlsx.js';
 import { readSetups, saveSetupsOp, setupId, withProps, layOut, officeStandard, sheetOf, elementsOf } from './schedule-layouts.js';
-import { finishSet, FINISH_KEYS, withTables, withSetups, underStandard, projectName } from './schedule-data.js';
+import { finishSet, FINISH_KEYS, WALLFACE_KEYS, withTables, withSetups, underStandard, projectName } from './schedule-data.js';
 import { openFinishesDialog } from './finishes-ui.js';
 import { openSpecDialog } from './spec-ui.js';
 import { specSections, specMarkdown } from './spec-model.js';
@@ -220,7 +220,7 @@ export function mountScheduleLayouts(modelUi, { status = () => {} } = {}) {
   function syncOptions() {
     const sel = A.root.querySelector('[data-msched-kind]');
     if (!sel || !P.all) return;
-    for (const k of FINISH_KEYS) if (P.all[k] && !sel.querySelector('option[value="' + k + '"]')) sel.append(el('option', { value: k, 'data-finishes': '' }, P.all[k].title));
+    for (const k of [...FINISH_KEYS, ...WALLFACE_KEYS]) if (P.all[k] && !sel.querySelector('option[value="' + k + '"]')) sel.append(el('option', { value: k, 'data-finishes': '' }, P.all[k].title));
     const want = Object.keys(P.all).filter((k) => k.startsWith('setup:'));
     for (const o of [...sel.querySelectorAll('option[data-sched-setup]')]) if (!want.includes(o.value)) o.remove();
     for (const k of want) { let o = sel.querySelector('option[value="' + CSS.escape(k) + '"]'); if (!o) { o = el('option', { value: k, 'data-sched-setup': '' }); sel.append(o); } o.textContent = P.all[k].setup.name; }

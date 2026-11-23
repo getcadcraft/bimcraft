@@ -3,7 +3,7 @@ title: Stairs and railings
 summary: Draw straight, L, U and winder stairs that size their risers and treads from the floor-to-floor height, with handrails and balusters and the stairwell cut in the floor above; draw guardrails along decks and around openings.
 section: tasks
 order: 23
-keywords: spiral, round stair, stair, stairs, staircase, flight, riser, tread, landing, winder, L stair, U stair, switchback, handrail, guardrail, guard, railing, baluster, spindle, newel, post, stairwell, headroom, deck, balcony
+keywords: steel stair, stringer, grating, chequer plate, fence, pickets, fence type, spiral, round stair, stair, stairs, staircase, flight, riser, tread, landing, winder, L stair, U stair, switchback, handrail, guardrail, guard, railing, baluster, spindle, newel, post, stairwell, headroom, deck, balcony
 ---
 
 ## What you'll do
@@ -55,11 +55,24 @@ Railings get posts at their ends and corners and balusters with gaps under 4". P
 
 ## Draw a fence
 
-Choose **Fence** in the same Railing tool, set its height (1800 mm to start with), click along the line of the fence and press {{key:Enter}}.
+Choose **Fence** in the same Railing tool, set its height (1800 mm to start with) and its style (**Panels**, **Rails** or **Pickets**), click along the line of the fence and press {{key:Enter}}.
 
-- The fence gets a post at each end and each corner, and a post at most every 2.4 m between them. A panel fence has a panel between posts; a rail fence has two rails. These sizes are usual choices, not a code requirement: local rules limit a fence's height.
-- It is one element in the model (an IfcRailing named Fence) with a property set {{ui:CadCraft_Fence}}: style, height, posts, panels, rails, gates, length and panel area. One undo step.
-- Not drawn here: gates (the generator in CivilCraft lays them out), pickets, terrain (the fence stands on the level), and picking a single post.
+- The fence gets a post at each end and each corner, and a post at most every 2.4 m between them. A panel fence has a panel between posts; a rail fence has two rails; a picket fence has pickets between two rails. These sizes are usual choices, not a code requirement: local rules limit a fence's height.
+- Each part is its own element: posts, rails and pickets are IFC members, each panel an IFC railing. Every part carries the property set {{ui:CadCraft_Fence}} (the fence's name, the part and the type). The whole fence is one undo step.
+- **Fence type from the Library (Types, Barriers)** takes a fence type's style, height, post spacing and rails. Fence types are Library Types in the category Barriers with the sub-type fence. Choose one the Library lists, or **From a Library item file…** to read a fence type you saved from the Library. While a type is chosen its height is used, not the height field. Guard, handrail, balustrade and road guardrail types in Barriers are not used by the Railing tool yet.
+- Not drawn here: gates (the generator in CivilCraft lays them out) and terrain (the fence stands on the level).
+
+## Draw a steel stair
+
+1. Open {{ui:Build}}, choose {{ui:Stair}}, then choose **Steel (generator)** as the kind.
+2. Choose the **Rule set** that limits the rise and going, the **Tread** (folded plate, chequer plate or grating), the width and where the rails go.
+3. Click the middle of the bottom of the stair, then click the way it goes up.
+
+The steel stair generator (the same one DetailCraft uses) works out the risers and going from the floor-to-floor height and the rule set, and adds a landing where the rule set limits a flight's rise. The stair is one IFC stair whose body holds every part: stringers, treads, landing frames, posts, rails and balusters. Its property set {{ui:CadCraft_SteelStair}} keeps the stair's settings, the rule set, the steel weight and the rule values that were not read in the regulation's own text.
+
+:::warning
+The rule sets limit the shape of the stair only; nothing is checked for strength. Some values in them were taken from guides or remembered, not read in the regulation, and the property set lists them. Shop drawings, end cuts and holes are made in DetailCraft.
+:::
 
 ## What's saved
 

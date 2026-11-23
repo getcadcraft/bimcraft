@@ -11,6 +11,7 @@
   "bt.file.open": "Elrendezésfájl megnyitása",
   "bt.file.save": "Elrendezés mentése fájlba",
   "bt.file.bad": "A(z) {name} nem Anyagáramlás-elrendezés.",
+  "bt.file.ask": "Lecseréli az aktuális elrendezést erre a fájlra?",
   "bt.file.done": "{name}: {n} elem betöltve, {dropped} kihagyva.",
   "bt.fit.run": "Ellenőrzés a falakkal szemben",
   "bt.fit.nolayout": "Még nincs ellenőrizhető elrendezés. Használjon cellát, vagy nyisson meg elrendezésfájlt.",

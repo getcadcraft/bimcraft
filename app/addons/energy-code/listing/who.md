@@ -1,0 +1,3 @@
+- Designers and drafters of houses in California who want an early read on the envelope before the energy consultant runs the numbers.
+- Builders choosing between more wall insulation, less glass or the performance path.
+- Anyone who needs the climate zone of a California ZIP code.

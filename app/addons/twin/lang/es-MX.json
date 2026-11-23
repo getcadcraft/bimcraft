@@ -11,6 +11,7 @@
   "bt.file.open": "Abrir un archivo de distribución",
   "bt.file.save": "Guardar la distribución como archivo",
   "bt.file.bad": "{name} no es una distribución de Flujo de material.",
+  "bt.file.ask": "¿Reemplazar la presentación actual con este archivo?",
   "bt.file.done": "{name}: se cargaron {n} elementos, {dropped} quedaron fuera.",
   "bt.fit.run": "Comprobar contra los muros",
   "bt.fit.nolayout": "Todavía no hay una distribución que comprobar. Use una celda o abra un archivo de distribución.",

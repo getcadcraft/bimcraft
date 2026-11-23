@@ -11,6 +11,7 @@
   "bt.file.open": "Otwórz plik układu",
   "bt.file.save": "Zapisz układ jako plik",
   "bt.file.bad": "{name} nie jest układem przepływu materiałów (Material flow).",
+  "bt.file.ask": "Zastąpić bieżący układ tym plikiem?",
   "bt.file.done": "{name}: wczytano pozycje {n}, pominięto {dropped}.",
   "bt.fit.run": "Sprawdź względem ścian",
   "bt.fit.nolayout": "Nie ma jeszcze układu do sprawdzenia. Użyj komórki albo otwórz plik układu.",

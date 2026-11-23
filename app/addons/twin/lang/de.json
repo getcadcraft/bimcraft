@@ -11,6 +11,7 @@
   "bt.file.open": "Layoutdatei öffnen",
   "bt.file.save": "Layout als Datei speichern",
   "bt.file.bad": "{name} ist kein Materialfluss-Layout.",
+  "bt.file.ask": "Das aktuelle Layout durch diese Datei ersetzen?",
   "bt.file.done": "{name}: {n} Elemente geladen, {dropped} nicht übernommen.",
   "bt.fit.run": "Gegen die Wände prüfen",
   "bt.fit.nolayout": "Es gibt noch kein Layout zum Prüfen. Verwenden Sie eine Zelle oder öffnen Sie eine Layoutdatei.",

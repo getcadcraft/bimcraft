@@ -1,0 +1,20 @@
+{
+  "id": "roomair",
+  "name": "Room air",
+  "version": "0.11.0",
+  "apps": [
+    "bimcraft"
+  ],
+  "api": "1.4",
+  "license": "Apache-2.0",
+  "entry": "./main.js",
+  "permissions": [
+    "panel",
+    "storage"
+  ],
+  "description": "Air speed, temperature and humidity in a room, from its diffusers, grilles and fan coils, on CadCraft's own airflow solver: the occupied-zone numbers, the air in and out, and a plan or section coloured by speed, temperature or humidity. Not yet compared with measured room air: a design aid, not a certificate.",
+  "author": "CadCraft",
+  "lang": "./lang/",
+  "help": "./help/help.js",
+  "default": "off"
+}

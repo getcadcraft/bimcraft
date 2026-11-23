@@ -205,6 +205,7 @@
   "draw.done.bim": "{n} luminaires placés dans le modèle et {lux} tracés de valeurs de lux dans la vue en plan.",
   "lum.pole": "Luminaire générique sur mât",
   "lum.bollard": "Borne lumineuse générique",
+  "map.isolines": "Courbes d'égal éclairement (isolux)",
   "f.outdoor": "Extérieur : éclairage de site (ni plafond ni murs ; lumière directe au sol)",
   "f.cct": "Température de couleur",
   "f.groundrho": "Réflectance du sol",

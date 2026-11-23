@@ -84,7 +84,12 @@ export function mountSiteConstraints(modelUi) {
     const ks = q('[data-sc-kind]');
     if (ks && !ks.options.length) for (const k of SERVITUDE_KINDS) ks.append(el('option', { value: k }, kindName(k)));
     const wi = q('[data-sc-width]');
-    if (wi && !wi.value) wi.value = L(3000);
+    if (wi && !wi.dataset.bound) {   // GH.3: the width is remembered in mm so the box is re-worded when the display unit changes
+      wi.dataset.bound = '1';
+      wi.addEventListener('change', () => { const mm = parseLen(wi.value, A.units()); if (mm > 0) wi.dataset.mm = String(mm); });
+      globalThis.addEventListener?.('bimcraft-units', () => { if (wi.value) wi.value = L(Number(wi.dataset.mm) || 3000); });
+    }
+    if (wi && !wi.value) { wi.value = L(3000); wi.dataset.mm = '3000'; }
     const sb = q('[data-sc-setbacks]');
     if (sb && !sb.dataset.bound) { sb.dataset.bound = '1'; sb.addEventListener('click', () => openSetbacks()); }
   }

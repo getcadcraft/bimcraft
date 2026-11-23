@@ -11,6 +11,7 @@
   "bt.file.open": "Hap një skedar vendosjeje",
   "bt.file.save": "Ruaj vendosjen si skedar",
   "bt.file.bad": "{name} nuk është një vendosje e Rrjedhës së materialit.",
+  "bt.file.ask": "Të zëvendësohet paraqitja aktuale me këtë skedar?",
   "bt.file.done": "{name}: {n} elemente u ngarkuan, {dropped} u lanë jashtë.",
   "bt.fit.run": "Kontrollo me muret",
   "bt.fit.nolayout": "Nuk ka ende vendosje për t'u kontrolluar. Përdor një qelizë ose hap një skedar vendosjeje.",

@@ -223,7 +223,7 @@ export function mountLod({ root, modelUi, editor = () => null, model = () => nul
   }
   function open() { ensurePanel(); details.open = true; details.scrollIntoView?.({ block: 'nearest' }); render(); }
 
-  A = modelUi.extend({ refresh() { cache = null; } });
+  A = modelUi.extend({ refresh() { cache = null; }, warm() { cache = null; infoList(); } });   // perf-finish-11 (PERF.37): the list the Properties block reads, built in idle time after an open, not on the first click (0.44 s at 115 MB)
   ensurePanel();
   const libraryInfo = (item) => {
     const cls = itemClass(item).ifcClass, row = matchRow({ cls, codes: itemCodes(item) }, S.table);

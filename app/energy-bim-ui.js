@@ -14,7 +14,7 @@ import { getDisplayUnits, localizeQuantities, fmtM2, areaMark } from './model-un
 const Q = (s) => localizeQuantities(s, getDisplayUnits());
 import { t } from './i18n.js';
 import { INPUTS, gatherEnergy, uValues, loads, uOp, degreeDaysCsv } from './energy-bim.js';
-import { SKY } from './daylight-bim-sky-ui.js';
+import { SKY, autoSun } from './daylight-bim-sky-ui.js';
 
 const KEY = 'bimcraft.energy';
 const LIM = { ti: [5, 35], te: [-50, 25], tg: [-10, 25], ach: [0, 20], dd: [0, 15000], teSummer: [10, 55], tiCool: [15, 35], perPerson: [0, 500], wPerson: [0, 300], wLights: [0, 50], wEquip: [0, 200] };
@@ -27,13 +27,26 @@ function load() {
   for (const k of Object.keys(LIM)) { const x = Number(o?.inputs?.[k]); I[k] = Number.isFinite(x) && x >= LIM[k][0] && x <= LIM[k][1] ? x : INPUTS[k]; }
   const lam = {};
   for (const [k, v] of Object.entries(o?.lambdas || {})) if (Number(v) > 0 && Number(v) < 500 && k.length < 120) lam[k] = Number(v);
-  return { I, lam };
+  return { I, lam, from: typeof o?.from === 'string' ? o.from.slice(0, 300) : '' };
 }
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ inputs: ENERGY.inputs, lambdas: ENERGY.lambdas })); } catch { /* private window */ } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify({ inputs: ENERGY.inputs, lambdas: ENERGY.lambdas, from: ENERGY.inputsFrom || '' })); } catch { /* private window */ } };
 const W0 = (x) => Math.round(x).toLocaleString('en-US').replace(/,/g, ' ');   // whole watts, thin grouping (i18n-ignore: a number format)
 
+/**
+ * Inputs handed in by something that knows the place (0.11 WX.5: the Weather files add-on): any of te, teSummer, dd, tg, each kept only when it is
+ * inside the same limits the boxes have. `from` = the words the section shows under the boxes (the station and where its figures come from);
+ * typing in a box afterwards keeps the typed value and the line stays, since the other figures are still the station's. → the keys taken.
+ */
+export function setEnergyInputs(values, from = '') {
+  if (!ENERGY.inputs) { const l = load(); ENERGY.inputs = l.I; ENERGY.lambdas = l.lam; ENERGY.inputsFrom = l.from; }
+  const took = [];
+  for (const k of Object.keys(LIM)) { const x = Number(values?.[k]); if (values?.[k] !== undefined && values[k] !== null && Number.isFinite(x) && x >= LIM[k][0] && x <= LIM[k][1]) { ENERGY.inputs[k] = Math.round(x * 10) / 10; took.push(k); } }
+  if (took.length) { ENERGY.inputsFrom = String(from || '').slice(0, 300); save(); if (ENERGY.e && ENERGY.u) ENERGY.rooms = loads(ENERGY.e, ENERGY.u, ENERGY.inputs, { solar: SKY.sun }); globalThis.dispatchEvent?.(new Event('cc-bimcraft-energy-inputs')); }
+  return took;
+}
+
 export function energySection(host, ctx) {
-  if (!ENERGY.inputs) { const l = load(); ENERGY.inputs = l.I; ENERGY.lambdas = l.lam; }
+  if (!ENERGY.inputs) { const l = load(); ENERGY.inputs = l.I; ENERGY.lambdas = l.lam; ENERGY.inputsFrom = l.from; }
   const I = ENERGY.inputs, g = ctx.gathered(), e = host.editor();
   if (!g || !e) return null;
   if (ENERGY.from !== g) { ENERGY.from = g; ENERGY.e = null; ENERGY.rooms = null; ENERGY.room = null; }   // a new Calculate: the old loads go
@@ -50,6 +63,7 @@ export function energySection(host, ctx) {
         rooms.push(...one.rooms); for (const id of one.ids) ids2.add(id);
       }
       ENERGY.e = { rooms, ids: ids2 };
+      if (!SKY.sun) { host.status(t('energy.sun.working')); await new Promise((r) => setTimeout(r, 0)); try { autoSun(host, ctx); } catch { /* no sun: the line under the cooling inputs says so */ } }   // T24.6
       recompute();
       host.status(t('energy.done', { n: rooms.length }));
     } catch (err) { host.status(t('day.failed', { why: String(err.message || err) }), true); }
@@ -72,10 +86,11 @@ export function energySection(host, ctx) {
         catch (err) { host.status(err.key ? t(err.key) : String(err.message || err), true); }
         ctx.render();
       } }))),
+    ENERGY.inputsFrom ? el('p', { 'data-energy-from': '' }, t('energy.from', { from: ENERGY.inputsFrom })) : el('p', { className: 'bc-muted', 'data-energy-nofrom': '' }, t('energy.from.none')),
     el('p', { className: 'bc-muted' }, t('energy.dd.note')),
     el('h4', { className: 'bc-h fa-h3' }, t('energy.h.cool')),
     el('div', { className: 'as-form' }, box('teSummer', '0.5'), box('tiCool', '0.5'), box('perPerson', '1'), box('wPerson', '5'), box('wLights', '1'), box('wEquip', '1')),
-    el('p', { className: 'bc-muted', 'data-energy-sun': '' }, SKY.sun ? t('energy.sun.from', { date: SKY.sun.date || '' }) : t('energy.sun.none')),
+    el('p', { className: 'bc-muted', 'data-energy-sun': '' }, SKY.sun ? (SKY.sun.auto ? t('energy.sun.auto', { date: SKY.sun.date || '', g: SKY.sun.g }) : t('energy.sun.from', { date: SKY.sun.date || '' })) : ENERGY.rooms ? t('energy.sun.none') : t('energy.sun.later')),
     el('div', { className: 'fa-head' }, el('button', { type: 'button', className: 'btn-plot btn-sm-cc', 'data-energy-run': '', onclick: run }, t('energy.btn.run'))));
   if (ENERGY.rooms) {
     out.append(el('div', { className: 'fa-wrap' }, el('table', { className: 'bc-qto-table fa-table', 'data-energy-table': '' },

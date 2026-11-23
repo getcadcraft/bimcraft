@@ -15,6 +15,7 @@
  */
 
 /** World triangles and bounds of each element (keys), through its model's placement (matrixOf(batch) → column-major 4 × 4 | null). */
+import { cross3 as cross, dot3 as dot } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 export function elementsOf(batches, keys, matrixOf = () => null) {
   const want = keys instanceof Set ? keys : new Set(keys);
   const map = new Map();
@@ -96,8 +97,6 @@ function crossing(a, b) {
 }
 
 const sub = (T, o, U, u) => [T[o] - U[u], T[o + 1] - U[u + 1], T[o + 2] - U[u + 2]];
-const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 
 /**
  * Möller's triangle–triangle test (no division where it matters; a tiny epsilon). Coplanar pairs (faces lying in one plane,

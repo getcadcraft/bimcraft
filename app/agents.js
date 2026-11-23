@@ -82,6 +82,7 @@ import { elecTools } from './elec-agents.js';   // 0.9 GH.10 (bim-hosts-09): dev
 import { mepTools } from './mep-agents.js';   // 0.8 EG.1–EG.4 (mep_PART_2's line 1)
 import { massingOptions, buildOption } from './program-mass.js';   // 0.8 EG.58 (bim_PART_2)
 import { readOptionSets, addMassOption, setCurrentOption, renameOption, removeMassOption, developOption } from './mass-options.js';   // 0.10 BK.44: massing options kept in the model
+import { withUnverified, trustTools } from './trust-agents.js';   // 0.11 BK.143 (assistant-10's mount line, landed by bim-core-11)
 import { askTools } from './ask-tools.js';   // 0.8 AC.8 ★ (bim_PART_2): walls_find, rooms_find, elements_above_find
 
 const LIMIT = 1000;
@@ -486,7 +487,7 @@ export function installAgents(modelUi, app) {
   const settle = async (ms = 60000) => { const t0 = Date.now(); while ((A.S.busy || A.S.reloading || A.S.queue?.length) && Date.now() - t0 < ms) await new Promise((r) => setTimeout(r, 50)); };
   C.configure({ rollback: undoRollback(async () => { await settle(); await app.undo(); await settle(); }) });   // previews of edit tools: the step the tool made is undone (AI-CONNECT-SPEC § 2.3)
   /** One undo step through the Draw module (the plan and the 3D view follow), labelled as the assistant's. */
-  const apply = async (label, op) => {
+  const apply0 = async (label, op) => {
     const why = app.busy?.() || (A.S.chain?.points?.length ? 'drawing walls' : null);
     if (why) throw new Error('The person is ' + why + ': try again when they finish.');
     await settle();
@@ -497,6 +498,7 @@ export function installAgents(modelUi, app) {
     await settle();
     return res;
   };
+  const apply = withUnverified(apply0);   // 0.11 BK.143 (bim-core-11): what an assistant makes is unverified until a person checks it (trust-agents.js)
   const keyOf = (guid) => { const e = ed(); const id = e ? writer(e).byGuid(guid) : null; return id ? (app.model()?.keyBase || 0) + id : null; };
   const guidOf = (key) => { const e = ed(); if (!e) return null; try { return val(e.api.GetLine(e.mid, key - (app.model()?.keyBase || 0), false)?.GlobalId) || null; } catch (x) { return null; } };
   const info = () => {
@@ -581,6 +583,7 @@ export function installAgents(modelUi, app) {
   // 0.8 AC.8 ★ (bim_PART_2; ask-tools.js): "show me every 2-hour wall", "rooms under 70 sq ft", "what's above this ceiling". `app.ask` brings the model, the
   // property indexes, per-element boxes and the 3D highlight; without it (the contract checker, the headless core) the definitions are listed and answer "not open".
   for (const d of askTools(app.ask || { index: () => null, name: () => '' })) C.tool(d);
+  for (const d of trustTools({ ed })) C.tool(d);   // BK.143: unverified_list (read only; only a person marks anything checked)
   // 0.7 AS.6 (assistants-gaps): the Render dialog's pictures and queue, through the page's own Render hooks (window only)
   if (app.render) for (const d of renderTools(C, app.render, { toolResult })) C.tool(d);
   // 0.8 P.5: the shell's Problems tools (problems_list / _show / _fix / _accept / _unaccept / _report; spec § 8), once the module is there

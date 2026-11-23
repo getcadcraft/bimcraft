@@ -17,8 +17,10 @@
  *   loopSide(points) → 'right' | 'left': where the outside is for walls drawn along this closed loop (anticlockwise
  *   loop: outside on the right)
  */
+import { dist2 as dist } from './geom-vec.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+import { ringArea as loopArea } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
+export { loopArea };
 const D2R = Math.PI / 180;
-const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 
 export function snapPoint(p, ctx = {}, { tol = 150, from = null, ortho = false, step = 15, round = 0, align = false } = {}) {
   const walls = ctx.walls || [], extra = ctx.points || [], lines = (ctx.lines || []).map((l) => ({ a: l.a, b: l.b, t: 0, grid: true }));
@@ -112,7 +114,6 @@ export function snapPoint(p, ctx = {}, { tol = 150, from = null, ortho = false, 
 export const closesChain = (points, p, tol = 1) => points.length >= 3 && dist(points[0], p) <= tol;
 
 /** Signed area of a closed loop of points (anticlockwise > 0). */
-export function loopArea(points) { let s = 0; for (let i = 0; i < points.length; i++) { const a = points[i], b = points[(i + 1) % points.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
 export const loopSide = (points) => (loopArea(points) > 0 ? 'right' : 'left');
 
 /** Centre lines for a path drawn on a wall face. Outside is explicitly left/right of travel. */

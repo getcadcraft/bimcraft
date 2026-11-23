@@ -11,6 +11,7 @@
   "bt.file.open": "Odpri datoteko postavitve",
   "bt.file.save": "Shrani postavitev kot datoteko",
   "bt.file.bad": "{name} ni postavitev iz Material flow.",
+  "bt.file.ask": "Ali želite trenutno postavitev zamenjati s to datoteko?",
   "bt.file.done": "{name}: naloženih elementov: {n}, izpuščenih: {dropped}.",
   "bt.fit.run": "Preveri glede na zidove",
   "bt.fit.nolayout": "Postavitev za preverjanje še ni na voljo. Uporabite celico ali odprite datoteko postavitve.",

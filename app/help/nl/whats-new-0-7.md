@@ -2,7 +2,7 @@
 title: Wat is er nieuw in 0.7 (eerder)
 summary: BimCraft voegt wanden over meerdere niveaus toe en Dit niveau kopiëren, wanden uit PDF's en scans, eigen wandopbouwen, rijkere families, MEP-apparatuur met aansluitpunten, botsingssets, openingen en leidingspools, documenten per asset, COBie en sensormetingen, hemel, zon, daglicht op een raster en verwarmings- en koelbelastingen, scanregistratie, een live weergave en padtracing op de grafische kaart, STEP en USD, bibliotheekvarianten, en meer voor AI-assistenten.
 keywords: wat is er nieuw 0.7, eerdere uitgave, uitgavenotities, wijzigingslog, wijzigingen, 0.7, versie, nieuwe functies, wanden over niveaus, dit niveau kopiëren, pdf, scan, overtrekken, wanden uit plattegronden, wandopbouwen, lagen, kern, membraan, referentiematen, materiaalbibliotheek, weergave-eenheden, weergavestijl, constructie, balken, families, parameters, plansymbool, hotspots, herhalen, detailniveau, geneste families, csv-maten, per element, apparatuur, aansluitpunten, verbindingen, vrije ruimte, sparingen, spools, spoolbladen, montagelas, kanaalzaaglijst, documenten, cobie, sensoren, mqtt, live-feed, verticale hemelcomponent, zonnewinst, daglichtraster, verwarming, koeling, belastingen, u-waarde, scans registreren, icp, e57, live weergave, padtracing, webgpu, ruis, fysieke hemel, lichtmenging, renderwachtrij, uw computer, step, usd, projectbundel, massa uitwerken, varianten, assistenten, add-on-api, plant, elektrisch, ontwerpcontroles
-from: ef226539
+from: a638080d
 ---
 
 Dit is wat er in BimCraft 0.7 is veranderd, vergeleken met 0.6. De lijst is gegroepeerd per onderdeel, met het belangrijkste eerst.

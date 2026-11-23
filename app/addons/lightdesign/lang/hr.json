@@ -205,6 +205,7 @@
   "draw.done.bim": "Postavljene svjetiljke u model: {n}; oznake lux vrijednosti u tlocrtu: {lux}.",
   "lum.pole": "Opća svjetiljka na stupu",
   "lum.bollard": "Opći stupić (bollard)",
+  "map.isolines": "Linije jednakog luksa (izolinije)",
   "f.outdoor": "Vanjski prostor: rasvjeta lokacije (bez stropa i zidova; izravno svjetlo na tlu)",
   "f.cct": "Temperatura boje",
   "f.groundrho": "Refleksija tla",

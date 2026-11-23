@@ -5,14 +5,15 @@
  *                                  along); click a line to pick it (label, delete); "Place a grid…" [data-grid-place] opens
  *                                  a dialog (numbered and lettered lines: how many, spacing, first label, how far past, turn),
  *                                  then a click puts its first crossing (1 / A); Bubbles [data-grid-bubbles] for the grid;
- *                                  Dimensions [data-grid-dims] (0.9 D9.2): the spacings and overall size on every plan
+ *                                  Dimensions [data-grid-dims] (0.9 D9.2): the spacings and overall size on every plan;
+ *                                  a picked line: "From line X" [data-grid-space] (0.10.1) types its spacing
  *   Column  [data-mtool="column"]  click: a column there (snaps to grid crossings, walls); "At every grid crossing"
  *                                  [data-col-grid]; shape, width, depth, top (the level above / a fixed height)
  * Every level's plan draws the building's grid (scene.grids, model-planview.js) and the Draw tools snap to its lines and
  * crossings (snapCtx). A picked column shows its shape, size and top in Properties; Delete removes it.
  * IFC: model-grids.js, model-columns.js. Test hook: window.bimcraftGrids = { state, api }.
  */
-import { gridLayout, gridSnap, gridDims, readGrids, toPlan, placeGrid, changeGridAxis, removeGridAxes, changeGrid, BUBBLES } from './model-grids.js';
+import { gridLayout, gridSnap, gridDims, gridSpacing, gridSpacingMove, readGrids, toPlan, placeGrid, changeGridAxis, removeGridAxes, changeGrid, BUBBLES } from './model-grids.js';
 import { COLUMN_DEFAULTS, readColumns, placeColumns, changeColumn, removeColumns } from './model-columns.js';
 import { ModelWriter } from './model-write.js';
 import { fmtLen, parseLen } from './model-units.js';
@@ -82,6 +83,14 @@ export function mountGrids(modelUi) {
         const L0 = Math.hypot(ax.b[0] - ax.a[0], ax.b[1] - ax.a[1]) || 1, n = [-(ax.b[1] - ax.a[1]) / L0 * mm, (ax.b[0] - ax.a[0]) / L0 * mm];
         A.commit(changeGridAxis(R.pick, { a: [ax.a[0] + n[0], ax.a[1] + n[1]], b: [ax.b[0] + n[0], ax.b[1] + n[1]], storey: A.level().guid }), { label: t('model.grid'), verb: t('model.verb.moved') });
       });
+      // 0.10.1 (support #1509): the picked line's distance from its neighbour, as a number to type; the line moves square to itself
+      const sp = root.querySelector('[data-grid-space]');
+      sp?.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sp.blur(); } });
+      sp?.addEventListener('change', () => {
+        const axes = own()?.axes || [], mm = parseLen(sp.value.trim(), A.units()), to = R.pick ? gridSpacingMove(axes, R.pick, mm) : null;
+        if (!to) { A.host.status(t('model.err.length'), true); bindRows(); return; }
+        A.commit(changeGridAxis(R.pick, { ...to, storey: A.level().guid }), { label: t('model.grid'), verb: t('model.verb.moved') });
+      });
     }
     const bub = root.querySelector('[data-grid-bubbles]');
     if (bub && !bub.options.length) bub.replaceChildren(...BUBBLES.map((b) => el('option', { value: b }, t('model.grid.bub.' + b))));
@@ -89,6 +98,12 @@ export function mountGrids(modelUi) {
     const gd = root.querySelector('[data-grid-dims]'); if (gd) { gd.checked = !!own()?.dims; gd.disabled = !own(); }
     const pickRow = root.querySelector('[data-grid-picked]');
     if (pickRow) { pickRow.hidden = !R.pick; const tg = root.querySelector('[data-grid-tag]'); if (tg && document.activeElement !== tg) tg.value = R.pick || ''; }
+    const spRow = root.querySelector('[data-grid-space-row]');
+    if (spRow) {
+      const g = R.pick ? gridSpacing(own()?.axes || [], R.pick) : null, sp = spRow.querySelector('[data-grid-space]');
+      spRow.hidden = !g;
+      if (g) { spRow.querySelector('[data-grid-space-label]').textContent = t('model.grid.space', { tag: g.from }); if (document.activeElement !== sp) sp.value = L(g.gap); }
+    }
     // columns
     const shape = root.querySelector('[data-col-shape]');
     if (shape && !shape.dataset.bound) {

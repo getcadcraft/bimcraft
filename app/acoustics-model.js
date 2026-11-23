@@ -16,6 +16,7 @@ import { readOpenings } from './model-openings.js';
 import { readDerived } from './model-slabs.js';
 import { reverb, MATERIALS, PERSON_ABSORPTION, furnishingFor } from './acoustics.js';
 import { ids } from './ifc-util.js';
+import { roomModel } from './simplify.js';
 
 /** The model's material names (project-materials.js) → this file's absorption keys; a material not listed here (siding, framing, insulation …) is not a finish. */
 export const MODEL_FINISH = { gypsum: 'gypsum', plaster: 'plaster', render: 'plaster', brick: 'brick', cmu: 'concrete', block: 'concrete', concrete: 'concrete' };
@@ -79,6 +80,7 @@ export function acousticsRooms(ed, settings = {}) {
     for (const k of ['floor', 'wall', 'ceiling']) if (mine2[k]) { set[k] = mine2[k]; src[k] = 'picked'; }
     const floor = r.area_m2, per = perimeter(r.poly) / 1000;
     let glass = 0, door = 0;
+    const openings = [];   // 0.11 XE.3 S2: where each opening is, for the traced model (plan mm, sill mm above the level)
     for (const o of ops) {
       const wall = byGuid.get(o.wallGuid);
       if (!wall || wall.storey !== lv.id) continue;
@@ -86,16 +88,17 @@ export function acousticsRooms(ed, settings = {}) {
       if (ringDist(r.poly, x, y) > wall.t / 2 + 60) continue;
       const a = (o.width / 1000) * (o.height / 1000);
       if (o.kind === 'window') glass += a; else door += a;
+      openings.push({ at: [x, y], width: o.width, height: o.height, sill: Number.isFinite(o.sill) ? o.sill : 0, key: o.kind === 'window' ? 'glass' : 'door' });
     }
     // each edge of the room is the wall that stands along it; its inside layer is the finish (a wall we cannot read counts as the default)
-    const wallArea = new Map();
+    const wallArea = new Map(), edges = r.poly.map(() => set.wall);
     if (fromModel && !mine2.wall) {
       for (let i = 0; i < r.poly.length; i++) {
         const p0 = r.poly[i], p1 = r.poly[(i + 1) % r.poly.length], mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2, len = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]) / 1000;
         let best = null, bd = Infinity;
         for (const wl of mine) { const d = segDist(mx, my, wl.a, wl.b); if (d < bd && d <= wl.t / 2 + 80) { bd = d; best = wl; } }
         const key = (best && wallFinish(best)) || set.wall;
-        wallArea.set(key, (wallArea.get(key) || 0) + len * H);
+        wallArea.set(key, (wallArea.get(key) || 0) + len * H); edges[i] = key;
       }
       if ([...wallArea.keys()].some((k) => k !== finish.wall) || wallArea.size > 1) src.wall = 'model';
     } else wallArea.set(set.wall, per * H);
@@ -121,7 +124,19 @@ export function acousticsRooms(ed, settings = {}) {
     out.push({ id: r.id, name: r.name, level: r.level, levelName: r.levelName, area_m2: Math.round(floor * 100) / 100, height_m: Math.round(H * 100) / 100, volume_m3: Math.round(floor * H * 10) / 10,
       finishSource: src, people, at: (r.centroid || [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2]).map(Math.round), poly: r.poly, set, spec, surfaces,
       res: unknown ? { ok: false, reason: 'nomaterial', key: unknown.key } : reverb(spec, settings.env || {}),
-      box: { lx: (Math.max(...xs) - Math.min(...xs)) / 1000, ly: (Math.max(...ys) - Math.min(...ys)) / 1000, h: H } });
+      box: { lx: (Math.max(...xs) - Math.min(...xs)) / 1000, ly: (Math.max(...ys) - Math.min(...ys)) / 1000, h: H }, edges, openings });
   }
   return out;
+}
+
+/**
+ * 0.11 XE.3 S2 (sound-11): the room's real shape as an acoustic model for geo.js traceRoom — the plan outline, the finish of each wall it stands
+ * along, the doors and windows where they are. Metres, with the room's low corner of the plan at the origin (the placer's toBox uses the same).
+ *   acousticsGeometry(room, { tol, scatter }) → simplify.js roomModel(...) (+ origin [x0, y0] in plan mm)
+ */
+export function acousticsGeometry(room, opts = {}) {
+  const x0 = Math.min(...room.poly.map((p) => p[0])), y0 = Math.min(...room.poly.map((p) => p[1])), m = (p) => [(p[0] - x0) / 1000, (p[1] - y0) / 1000];
+  const g = roomModel({ poly: room.poly.map(m), height: room.height_m, floor: room.set.floor, ceiling: room.set.ceiling, wall: room.set.wall, edges: room.edges,
+    openings: (room.openings || []).map((o) => ({ at: m(o.at), width: o.width / 1000, height: o.height / 1000, sill: o.sill / 1000, key: o.key })) }, opts);
+  return { ...g, origin: [x0, y0] };
 }

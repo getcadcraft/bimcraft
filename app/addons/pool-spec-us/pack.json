@@ -1,0 +1,468 @@
+{
+ "format": "cadcraft-pool-spec",
+ "version": 1,
+ "id": "pool-spec-us",
+ "name": "United States (ACI concrete shell and pool codes)",
+ "region": "US",
+ "researched": "2026-11-19",
+ "standards": [
+  {
+   "key": "aci318-19",
+   "title": "Building Code Requirements for Structural Concrete (ACI 318-19) and Commentary",
+   "edition": "2019",
+   "publisher": "American Concrete Institute",
+   "url": "https://concrete.org/Portals/0/Files/PDF/Previews/318-19_preview.pdf"
+  },
+  {
+   "key": "aci318-08",
+   "title": "Building Code Requirements for Structural Concrete (ACI 318-08) and Commentary",
+   "edition": "2008",
+   "publisher": "American Concrete Institute",
+   "url": "https://shotcrete.org/wp-content/uploads/2020/01/ASAPositionPaper_PoolRec_1.pdf"
+  },
+  {
+   "key": "aci350-20",
+   "title": "Code Requirements for Environmental Engineering Concrete Structures (ACI 350-20) and Commentary",
+   "edition": "2020",
+   "publisher": "American Concrete Institute",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/350-20_preview.pdf"
+  },
+  {
+   "key": "aci350-06",
+   "title": "Code Requirements for Environmental Engineering Concrete Structures (ACI 350-06) and Commentary",
+   "edition": "2006",
+   "publisher": "American Concrete Institute",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/350-06_preview.pdf"
+  },
+  {
+   "key": "aci350.1-22",
+   "title": "ACI SPEC-350.1-22: Tightness Testing of Environmental Engineering Concrete Structures - Specification",
+   "edition": "2022",
+   "publisher": "American Concrete Institute",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/350.1-22_preview.pdf"
+  },
+  {
+   "key": "aci224r-01",
+   "title": "ACI PRC 224-01: Control of Cracking in Concrete Structures",
+   "edition": "2001",
+   "publisher": "American Concrete Institute",
+   "url": "https://shotcrete.org/wp-content/uploads/2025/06/Pool-position-statement-steel-reinforcement-for-shotcreted-pools-1.pdf"
+  },
+  {
+   "key": "aci506.8-24",
+   "title": "ACI PRC-506.8-24: Shotcrete Use in Pool Construction - Guide",
+   "edition": "2024",
+   "publisher": "American Concrete Institute",
+   "url": "https://concrete.org/Portals/0/Files/PDF/Previews/506.8-24_preview.pdf"
+  },
+  {
+   "key": "asa-pool-ps1",
+   "title": "ASA Pool and Recreational Shotcrete Committee Position Statement #1: Compressive (Strength) Values of Pool Shotcrete",
+   "edition": "2012 (cites ACI 318-08)",
+   "publisher": "American Shotcrete Association",
+   "url": "https://shotcrete.org/wp-content/uploads/2020/01/ASAPositionPaper_PoolRec_1.pdf"
+  },
+  {
+   "key": "asa-pool-ps4",
+   "title": "ASA Pool and Recreational Shotcrete Committee Position Statement #4: Watertight Shotcrete for Swimming Pools",
+   "edition": "Shotcrete magazine, Spring 2021",
+   "publisher": "American Shotcrete Association",
+   "url": "https://shotcrete.org/wp-content/uploads/2022/06/Position_Statement_4_Pool_and_Rec.pdf"
+  },
+  {
+   "key": "asa-pool-ps8",
+   "title": "ASA Pool and Recreational Shotcrete Committee Position Statement #8: Steel Reinforcement for Shotcreted Pools",
+   "edition": "Shotcrete magazine, 2nd Quarter 2025",
+   "publisher": "American Shotcrete Association",
+   "url": "https://shotcrete.org/wp-content/uploads/2025/06/Pool-position-statement-steel-reinforcement-for-shotcreted-pools-1.pdf"
+  },
+  {
+   "key": "ispsc-2021",
+   "title": "International Swimming Pool and Spa Code (ISPSC)",
+   "edition": "2021 (read as adopted: Utah Swimming Pool and Spa Code 2021, cross-checked against the Virginia 2021 copy)",
+   "publisher": "International Code Council",
+   "url": "https://codes.iccsafe.org/content/ISPSC2021P1"
+  },
+  {
+   "key": "mahc-2024",
+   "title": "Model Aquatic Health Code, Code Language",
+   "edition": "5th Edition, December 2024",
+   "publisher": "Centers for Disease Control and Prevention",
+   "url": "https://www.cdc.gov/model-aquatic-health-code/media/pdfs/2024/11/5th-Ed-MAHC-Code-508.pdf"
+  },
+  {
+   "key": "vgb-act",
+   "title": "Virginia Graeme Baker Pool and Spa Safety Act, 15 U.S.C. 8001-8008",
+   "edition": "U.S. Code 2022 edition",
+   "publisher": "United States Congress (govinfo.gov)",
+   "url": "https://www.govinfo.gov/content/pkg/USCODE-2022-title15/html/USCODE-2022-title15-chap106-sec8003.htm"
+  },
+  {
+   "key": "16cfr1450",
+   "title": "16 CFR Part 1450: Virginia Graeme Baker Pool and Spa Safety Act Regulations",
+   "edition": "CFR revised as of 2024-01-01",
+   "publisher": "U.S. Consumer Product Safety Commission",
+   "url": "https://www.govinfo.gov/content/pkg/CFR-2024-title16-vol2/xml/CFR-2024-title16-vol2-part1450.xml"
+  },
+  {
+   "key": "apsp7",
+   "title": "ANSI/PHTA/ICC-7 (formerly ANSI/APSP/ICC-7): Suction Entrapment Avoidance in Swimming Pools, Wading Pools, Spas, Hot Tubs, and Catch Basins",
+   "edition": "2020 (edition referenced by ISPSC 2021)",
+   "publisher": "Pool & Hot Tub Alliance",
+   "url": "https://webstore.ansi.org/standards/phta/ansiapspicc2020"
+  },
+  {
+   "key": "apsp16",
+   "title": "ANSI/APSP/ICC-16: Suction Outlet Fitting Assemblies (SOFA) for Use in Pools, Spas and Hot Tubs",
+   "edition": "2017",
+   "publisher": "Pool & Hot Tub Alliance",
+   "url": "https://www.govinfo.gov/content/pkg/CFR-2024-title16-vol2/xml/CFR-2024-title16-vol2-part1450.xml"
+  },
+  {
+   "key": "ansi-a326.3",
+   "title": "ANSI A326.3: Test Method for Measuring Dynamic Coefficient of Friction of Hard Surface Flooring Materials",
+   "edition": "2021",
+   "publisher": "Tile Council of North America (ANSI ASC A108)",
+   "url": "https://www.creativematerialscorp.com/wp-content/uploads/2024/03/ANSI-A326.3-2021_Technical-Bulletin_2024.pdf"
+  }
+ ],
+ "values": {
+  "shell.exposure.pool": {
+   "value": "W2 (ACI 318-19 wording); P1 (ACI 318-08, the class ASA assigns to pool concrete)",
+   "unit": "class",
+   "standard": "aci318-08",
+   "clause": "ACI 318-08 Chapter 4, Table 4.3.1 (Category P1), as cited by ASA Position Statement #1",
+   "read": "secondary",
+   "url": "https://shotcrete.org/wp-content/uploads/2020/01/ASAPositionPaper_PoolRec_1.pdf",
+   "quote": "ACI 318-08 specifies concrete “in contact with water where low permeability is required” is a Category P1 exposure.",
+   "note": "No page read names an ACI 318-19 class for pools specifically. NRMCA guide (Obla and Lobo, https://www.nrmca.org/wp-content/uploads/NRMCA_GuideToSelectingExposureClasses.pdf) on ACI 318-19: 'If the concrete member will be in contact with water where low permeability is required, select W2.' Mapping P1 to W2 is by identical wording, not by a statement that pools are W2. ASA Position Statement #8 notes ACI 318 section 1.4.9 excludes tanks and reservoirs and calls ACI 350 the more appropriate code for pools; ACI 350 uses no W classes in what was read.",
+   "value_us": "W2 / P1",
+   "unit_us": "class"
+  },
+  "shell.exposure.outdoor": {
+   "value": "F1 (limited exposure to water) / F2 (frequent exposure to water) / F3 (frequent water and deicing chemicals)",
+   "unit": "class",
+   "standard": "aci318-19",
+   "clause": "Table 19.3.2.1 (as reproduced in NRMCA guide Table 1); class selection per Table 19.3.1.1 / R19.3.1",
+   "read": "secondary",
+   "url": "https://www.nrmca.org/wp-content/uploads/NRMCA_GuideToSelectingExposureClasses.pdf",
+   "quote": "F1 0.55 3500 Table 19.3.3.1 N/A | F2 0.45 4500 Table 19.3.3.1 N/A | F3 0.40† 5000† Table 19.3.3.1 Table 26.4.2.2(b)",
+   "note": "Table row read from the NRMCA guide ('Requirements for concrete exposed to freezing and thawing (based on Table 19.3.2.1)'): F0 N/A, 2500 psi; F1 w/cm 0.55, 3500 psi; F2 0.45, 4500 psi; F3 0.40, 5000 psi; all F1-F3 need air entrainment per Table 19.3.3.1. Guide text: 'If there is doubt about whether to assign F1 or F2 to a member, the more conservative choice, F2, should be selected.' No page read assigns a pool shell to a specific F class; a water-retaining shell that freezes while wet fits the F2 description. ISPSC 307.2.3 and MAHC 4.2.1.3 only require protection from freezing damage.",
+   "value_us": "F1 / F2 / F3",
+   "unit_us": "class"
+  },
+  "shell.concrete.class.min": {
+   "value": 27.579,
+   "unit": "MPa",
+   "standard": "asa-pool-ps1",
+   "clause": "ASA Pool and Recreational Shotcrete Committee Position Statement #1",
+   "read": "primary",
+   "url": "https://shotcrete.org/wp-content/uploads/2020/01/ASAPositionPaper_PoolRec_1.pdf",
+   "quote": "Association’s (ASA) Pool and Recreational Shotcrete Committee and ASA Board of Direction have reaffirmed a 4000 psi (27.6 MPa) minimum for in-place compressive strength pool concrete.",
+   "note": "4000 psi x 0.006894757 = 27.579 MPa. 28-day strength. Three figures, all read: (1) Shotcrete/pool-specific, ASA PS#1: 4000 psi (primary, publisher's own statement; an industry position, not a code). (2) ACI 350-20 section 1.1.1 and ACI 350-06 section 1.1 (ACI free previews, primary): 'The specified concrete compressive strength shall not be less than 4000 psi.' ACI 350-20 adds 'the term “concrete” shall also include shotcrete'. ASA PS#4 and ASA FAQ quoting ACI 350-06 Table 4.2.2: 5000 psi with w/cm 0.40 where exposed to chlorides (brackish water, salts, seawater), relevant to salt-chlorinated pools. (3) ACI 318-19 Table 19.3.2.1 via NRMCA guide (secondary): W2 4000 psi; W0/W1 2500 psi; F2 4500 psi; F3 and C2 5000 psi.",
+   "value_us": 4000,
+   "unit_us": "psi"
+  },
+  "shell.wc.max": {
+   "value": 0.45,
+   "unit": "ratio",
+   "standard": "aci350-06",
+   "clause": "Table 4.2.2, Requirements for Special Exposure Conditions (as cited by ASA Position Statement #4)",
+   "read": "secondary",
+   "url": "https://shotcrete.org/wp-content/uploads/2022/06/Position_Statement_4_Pool_and_Rec.pdf",
+   "quote": "The table indicates concrete intended to have low permeability when exposed to water should have a maximum w/cm of 0.45 with a minimum 4000 psi compressive strength.",
+   "note": "ACI 350-06 figure. Same source: 'when the concrete is exposed to chlorides (brackish water, salts, and seawater), ACI 350 requires a maximum w/cm of 0.40 and compressive values of 5000 psi (34 MPa)'. The ACI 350-20 table was not readable (paywalled); the 350-20 preview commentary mentions 'maximum w/cm of 0.53' only for a referenced standard, not as the code limit. ACI 318 figures: ASA PS#1 citing ACI 318-08 Table 4.3.1 P1: 'no greater than 0.50'; NRMCA guide Table 7 on ACI 318-19 Table 19.3.2.1: W2 0.50, F2 0.45, F3 0.40.",
+   "value_us": 0.45,
+   "unit_us": "ratio"
+  },
+  "shell.cover.min.water": {
+   "value": 50.8,
+   "unit": "mm",
+   "standard": "aci350-20",
+   "clause": "ACI 350 section 12.7 (as cited by ASA Position Statement #8)",
+   "read": "secondary",
+   "url": "https://shotcrete.org/wp-content/uploads/2025/06/Pool-position-statement-steel-reinforcement-for-shotcreted-pools-1.pdf",
+   "quote": "For concrete floors and walls exposed to earth, liquid, or weather, for primary reinforcing bars, ACI 350 section 12.7 requires a minimum of 2 in. of cover for this exposure condition regardless of bar size.",
+   "note": "2 in x 25.4 = 50.8 mm. Primary reinforcing bars; the source names ACI 350-20 in its codes list. Same source: 'A maximum of 3 in. should be considered for cover' (crack width grows with cover). ACI 318-19 Table 20.5.1.3.1, read on a training page (open-exam-prep.com, secondary): exposed to weather or in contact with ground, No. 6 through No. 18 bars 2 in.; No. 5 bar and smaller 1-1/2 in.",
+   "value_us": 2,
+   "unit_us": "in"
+  },
+  "shell.cover.min.earth": {
+   "value": 76.2,
+   "unit": "mm",
+   "standard": "aci318-19",
+   "clause": "Table 20.5.1.3.1",
+   "read": "primary",
+   "url": "https://www.concrete.org/tools/frequentlyaskedquestions.aspx?faqid=903",
+   "quote": "Table 20.5.1.3.1 of ACI 318-19 requires that concrete cast against and permanently in contact with ground has 3-in. (76 mm) specified cover over reinforcement.",
+   "note": "3 in x 25.4 = 76.2 mm. Read on the publisher's (ACI) own technical FAQ, which states the code requirement; the code table itself was not opened. ACI 350 gives the same figure, ASA Position Statement #8 (secondary): 'ACI 350 requires 3 in. of concrete cover for concrete installed against and permanently in contact with the ground.' Applies to the earth face of a shell shot or cast directly against excavated soil; a formed and later backfilled face falls under the 2 in. row.",
+   "value_us": 3,
+   "unit_us": "in"
+  },
+  "shell.crack.width.max": {
+   "value": 0.1016,
+   "unit": "mm",
+   "standard": "aci224r-01",
+   "clause": "ACI PRC 224-01 (as cited by ASA Position Statement #8); no clause number given on the page read",
+   "read": "secondary",
+   "url": "https://shotcrete.org/wp-content/uploads/2025/06/Pool-position-statement-steel-reinforcement-for-shotcreted-pools-1.pdf",
+   "quote": "ACI PRC 224-01 Control of Cracking in Concrete Structures, indicates crack widths of up to 0.004 in. (0.1 mm) are reasonable for watertightness of waterretaining structures.",
+   "note": "0.004 in x 25.4 = 0.1016 mm. This is a guide value from an ACI report, not a code limit. No ACI 350 crack-width limit was read anywhere; the brief's statement that ACI 350 controls cracking through stress and spacing limits rather than a width could NOT be confirmed from any page read (code text paywalled). What was read: ACI 350 controls cracking through maximum bar spacing (12 in.) and shrinkage and temperature steel ratios by restraint (see shell.rebar.*). Same source: 'Structures designed to ACI 318 will allow cracks much greater than the 0.004 in. required for watertightness.'",
+   "value_us": 0.004,
+   "unit_us": "in"
+  },
+  "shell.wall.thickness.min": {
+   "value": null,
+   "unit": "mm",
+   "standard": "aci350-20",
+   "clause": "",
+   "read": "none",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/350-20_preview.pdf",
+   "quote": "",
+   "note": "Not readable. The ACI previews show only the headings ('15.7—Minimum wall thickness' in ACI 350-20, '14.6—Minimum wall thickness' in ACI 350-06), not the text. A forum post surfaced in a search snippet claims ACI 350-06 requires 12 in. for walls 10 ft or higher in contact with liquid; the page refused automated reading, so it is not recorded. ISPSC 2021 states no shell thickness (307.2.2 and 802.2 defer to the IBC / IRC). ASA Position Statement #4 says shell thicknesses must come from a qualified professional engineer. ASA PS#8: a single layer of reinforcing 'may be appropriate for concrete sections less than or equal to 8 in. (200 mm) in thickness'."
+  },
+  "shell.floor.thickness.min": {
+   "value": null,
+   "unit": "mm",
+   "standard": "aci350-20",
+   "clause": "",
+   "read": "none",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/350-20_preview.pdf",
+   "quote": "",
+   "note": "Not readable. ACI 350-20 preview shows only the heading '21.3—Slab thickness' (slabs-on-soil chapter). ISPSC 2021 and MAHC 2024 state no minimum floor thickness. A search snippet of ACI 350.2R-04 (third-party document host, not opened) mentioned a 6 in. minimum for nonprestressed membrane slabs; not recorded as read."
+  },
+  "shell.rebar.ratio.min": {
+   "value": 0.0025,
+   "unit": "ratio",
+   "standard": "aci350-20",
+   "clause": "Table 12.13.2.1 (as cited by ASA Position Statement #8)",
+   "read": "secondary",
+   "url": "https://shotcrete.org/wp-content/uploads/2025/06/Pool-position-statement-steel-reinforcement-for-shotcreted-pools-1.pdf",
+   "quote": "Table 12.13.2.1 of ACI 350 includes minimum shrinkage and temperature reinforcement ratios ranging from 0.0025 to 0.01, depending on the amount of restraint imposed on the concrete section.",
+   "note": "Shrinkage and temperature steel, area of steel / gross concrete area. ACI 350 range read: 0.0025 (low end) to 0.01 (highly restrained); the individual table rows were NOT readable, so no per-joint-spacing or per-restraint values are given. ASA recommendation, same source: 'Unless design calculations require more, a ratio of 0.005 is a good rule of thumb for liquid-containing structures without movement joints.' ACI 318 figure, same source: 'Section 24.4.3.2 of ACI 318 requires a minimum ratio of shrinkage and temperature reinforcement area to gross concrete area in a cross section of 0.0018' (source lists ACI 318-25; it adds this ratio 'is too low for watertight concrete pools'). 'ACI 350 requires Grade 60 steel for shrinkage and temperature reinforcement.' ACI web session (S. Close, 2012, concrete.org/Portals/0/Files/PDF/Webinars/Close.pdf) describes the restraint basis: normal restraint about 0.42%, reduced from 0.28%, maximum double normal.",
+   "value_us": 0.0025,
+   "unit_us": "ratio"
+  },
+  "shell.rebar.spacing.max": {
+   "value": 304.8,
+   "unit": "mm",
+   "standard": "aci350-20",
+   "clause": "ACI 350 (clause not stated on the page read; minimum spacing cited as section 12.6.1)",
+   "read": "secondary",
+   "url": "https://shotcrete.org/wp-content/uploads/2025/06/Pool-position-statement-steel-reinforcement-for-shotcreted-pools-1.pdf",
+   "quote": "ACI 350 allows a maximum spacing of 12 in. (300 mm). Section 12.6.1 of ACI 350 allows a minimum spacing of the bar diameter but not less than 1 in. (25 mm).",
+   "note": "12 in x 25.4 = 304.8 mm (source rounds to 300 mm). Centre to centre. Same source, shotcrete practice: 'The LDP should strive to maintain a 6 in. centering of reinforcing bars so that intersecting planes are not less than 3 in. (75 mm)'; non-contact lap splices per ACI 350 not more than the lesser of one-fifth the lap length and 6 in. (150 mm) apart; ACI 506.2 clearance between laps at least 3 bar diameters, 3 times the largest aggregate, or 2 in. (50 mm). The ACI 318-19 maximum spacing for shrinkage and temperature steel was not read.",
+   "value_us": 12,
+   "unit_us": "in"
+  },
+  "shell.watertight.test": {
+   "value": "Hydrostatic tightness test for open containment structures to ACI SPEC-350.1-22 Section 2, run after the structure is complete and the concrete has reached its specified compressive strength. Acceptance numbers (allowable loss per day, soak time) could not be read.",
+   "unit": "text",
+   "standard": "aci350.1-22",
+   "clause": "1.1.1, 1.1.1.1(a); Section 2",
+   "read": "primary",
+   "url": "https://www.concrete.org/Portals/0/Files/PDF/Previews/350.1-22_preview.pdf",
+   "quote": "Unless otherwise specified, test containment structures after the structure is complete and concrete has attained its specified compressive strength.",
+   "note": "Read in ACI's free preview (scope pages only). The quantitative criteria (350.1-10 headings: 'Hydrostatic tightness test—Part 1: Qualitative criteria', 'Part 2: Quantitative criteria') are behind the paywall: no leakage percentage or duration is recorded here; do not hard-code one. Scope: 'applicable to reservoirs, basins, tanks, and open liquid transmission structures'; pools are not named. ACI 350-20 preview: 'Criteria for liquid-tightness and gas-tightness testing may be found in ACI 350.1.' Pool codes read give no shell test: ISPSC 307.2.1 requires 'a watertight structure'; MAHC 4.2.1.6 'POOLS shall be designed in such a way to maintain their ability to retain the designed amount of water.' ISPSC 311.9 tests piping only: 25 psi (172.4 kPa) held not less than 15 minutes.",
+   "value_us": "Hydrostatic tightness test per ACI SPEC-350.1-22 Section 2; acceptance numbers not read",
+   "unit_us": "text"
+  },
+  "water.turnover.private.max": {
+   "value": 12,
+   "unit": "h",
+   "standard": "ispsc-2021",
+   "clause": "810.1",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/8/permanent-inground-residential-swimming-pools",
+   "quote": "The circulation system equipment shall be sized to provide a turnover of the pool water not less than once every 12 hours.",
+   "note": "Permanent inground residential pools (ISPSC Chapter 8). Sized on the filter manufacturer's maximum flow rate with clean media. ANSI/APSP/ICC-5 itself was not read.",
+   "value_us": 12,
+   "unit_us": "h"
+  },
+  "water.turnover.public.max": {
+   "value": 6,
+   "unit": "h",
+   "standard": "ispsc-2021",
+   "clause": "407.2, Table 407.2",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/4/public-swimming-pools",
+   "quote": "Class A, B, and C pools | Hours equal 11/2 times the average depth of pool in feet not to exceed 6 hours | Wading pools | 1",
+   "note": "ISPSC: turnover hours = 1.5 x average depth in feet, capped at 6 h (so a 3 ft average depth gives 4.5 h); wading pools 1 h. CDC MAHC 2024 Table 4.7.1.10 (primary, read): Activity pools 2 h, Diving pools 8 h, Interactive water play 0.5 h, Lazy river 2 h, Plunge pools 1 h, Runout slide 1 h, Wading pools 1 h, Wave pools 2 h, 'All Other Pools 6 hours or less'; spas at 93-104 F 0.5 h. MAHC 4.7.1.10.3.1 takes the lesser of the table time and the time the components require.",
+   "value_us": 6,
+   "unit_us": "h"
+  },
+  "water.filter.rate.max": {
+   "value": 36.669,
+   "unit": "m/h",
+   "standard": "mahc-2024",
+   "clause": "4.7.2.2.3.1",
+   "read": "primary",
+   "url": "https://www.cdc.gov/model-aquatic-health-code/media/pdfs/2024/11/5th-Ed-MAHC-Code-508.pdf",
+   "quote": "High-rate granular media filters shall be designed to operate at no more than 15 GPM per square foot (37 m/h) when a minimum bed depth of 24 inches (61 cm) of media depth",
+   "note": "15 x 2.4446 = 36.669 m/h (MAHC prints 37 m/h). High-rate granular media (sand) filters with at least 24 in. bed depth; public venues. Other MAHC rates read: bed depth under 24 in. 12 gpm/ft² (29 m/h), 4.7.2.2.3.1.1; vacuum precoat 2 gpm/ft² (4.9 m/h) or 2.5 gpm/ft² (6.1 m/h) with continuous body feed, 4.7.2.3.1.1; pressure precoat 2 gpm/ft² (4.9 m/h), 4.7.2.3.1.2; surface-type cartridge 0.30 gpm/ft², 4.7.2.4.1. ISPSC 2021 gives no rate: 312.2 'Filters shall have a flow rating equal to or greater than the design flow rate of the system.' PDF read from the Internet Archive capture of the cdc.gov URL (cdc.gov refused automated download).",
+   "value_us": 15,
+   "unit_us": "gpm/ft²",
+   "applies": "public"
+  },
+  "water.velocity.suction.max": {
+   "value": 1.8288,
+   "unit": "m/s",
+   "standard": "ispsc-2021",
+   "clause": "311.3.1",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "For public pools and spas, suction piping water velocity shall not exceed 6 fps (1.8 mps) and return piping water velocity shall not exceed 8 fps (2.4 mps).",
+   "note": "6 x 0.3048 = 1.8288 m/s. Public pools. Residential, ISPSC 311.3.2: 'the water velocity in suction piping and return piping shall not exceed 8 fps (2.4 mps)' = 2.4384 m/s. Based on the design flow rate. MAHC 4.7.1.7.2.2 agrees for public pools: suction 'does not exceed 6 feet per second (1.8 m/s) unless alternative values have proper engineering justification'. ANSI/APSP/ICC-7 velocity limits were not read; suction fitting flow per MAHC 4.7.1.6.5.1 'shall meet ANSI/APSP-16 2017'.",
+   "value_us": 6,
+   "unit_us": "ft/s",
+   "applies": "public"
+  },
+  "water.velocity.suction.private.max": {
+   "value": 2.4384,
+   "unit": "m/s",
+   "standard": "ispsc-2021",
+   "clause": "311.3.1",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "For public pools and spas, suction piping water velocity shall not exceed 6 fps (1.8 mps) and return piping water velocity shall not exceed 8 fps (2.4 mps).",
+   "note": "From the same record as water.velocity.suction.max (its note and quote hold this figure). 6 x 0.3048 = 1.8288 m/s. Public pools. Residential, ISPSC 311.3.2: 'the water velocity in suction piping and return piping shall not exceed 8 fps (2.4 mps)' = 2.4384 m/s. Based on the design flow rate. MAHC 4.7.1.7.2.2 agrees for public pools: suction 'does not exceed 6 feet per second (1.8 m/s) unless alternative values have proper engineering justification'. ANSI/APSP/ICC-7 velocity limits were not read; suction fitting flow per MAHC 4.7.1.6.5.1 'shall meet ANSI/APSP-16 2017'.",
+   "value_us": 8,
+   "unit_us": "ft/s"
+  },
+  "water.velocity.return.max": {
+   "value": 2.4384,
+   "unit": "m/s",
+   "standard": "ispsc-2021",
+   "clause": "311.3, 311.3.1, 311.3.2",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "For public pools and spas, suction piping water velocity shall not exceed 6 fps (1.8 mps) and return piping water velocity shall not exceed 8 fps (2.4 mps).",
+   "note": "8 x 0.3048 = 2.4384 m/s. Same 8 ft/s for residential return piping (311.3.2). 311.3 also: 'The water velocity in copper and copper alloy piping shall not exceed 8 fps (2.4 mps).' MAHC 4.7.1.7.2.1: 'velocities do not exceed 8 feet (2.4 m) per second on the discharge side of the recirculation pump'.",
+   "value_us": 8,
+   "unit_us": "ft/s"
+  },
+  "water.skimmer.area.max": {
+   "value": 74.322,
+   "unit": "m2",
+   "standard": "ispsc-2021",
+   "clause": "315.3, Table 315.3",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "Public pool | 500 | Residential pool | 800 | Spas (all types) | 150 | For SI: 1 square foot = 0.0929 m2.",
+   "note": "Value is the residential figure: one skimmer per 800 ft² or fraction (800 x 0.09290304 = 74.322 m²). Public pools: 500 ft² = 46.452 m². Spas 150 ft² = 13.935 m². Applies 'Where automatic surface skimmers are used as the sole overflow system'. MAHC 4.7.1.5.1.2 agrees for public pools: 'at least one surface SKIMMER shall be provided for each 500 square feet (46 m2) of surface area or fraction thereof'; MAHC 4.7.1.5.1.5: 'POOLS using SKIMMERS shall not exceed 30 feet (9.1 m) in width.' ISPSC 315.5: 'Equalizers on skimmers shall be prohibited.'",
+   "value_us": 800,
+   "unit_us": "ft²",
+   "applies": "private"
+  },
+  "water.skimmer.area.public.max": {
+   "value": 46.452,
+   "unit": "m2",
+   "standard": "ispsc-2021",
+   "clause": "315.3, Table 315.3",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "Public pool | 500 | Residential pool | 800 | Spas (all types) | 150 | For SI: 1 square foot = 0.0929 m2.",
+   "note": "From the same record as water.skimmer.area.max (its note and quote hold this figure). Value is the residential figure: one skimmer per 800 ft² or fraction (800 x 0.09290304 = 74.322 m²). Public pools: 500 ft² = 46.452 m². Spas 150 ft² = 13.935 m². Applies 'Where automatic surface skimmers are used as the sole overflow system'. MAHC 4.7.1.5.1.2 agrees for public pools: 'at least one surface SKIMMER shall be provided for each 500 square feet (46 m2) of surface area or fraction thereof'; MAHC 4.7.1.5.1.5: 'POOLS using SKIMMERS shall not exceed 30 feet (9.1 m) in width.' ISPSC 315.5: 'Equalizers on skimmers shall be prohibited.'",
+   "value_us": 500,
+   "unit_us": "ft²"
+  },
+  "water.inlet.rule": {
+   "value": "One return inlet per 27.87 m² of pool surface area or fraction thereof",
+   "unit": "text",
+   "standard": "ispsc-2021",
+   "clause": "314.4",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "One return inlet shall be provided for every 300 square feet (27.9 m2) of pool surface area, or fraction thereof.",
+   "note": "300 x 0.09290304 = 27.871 m². Public pools add ISPSC 407.4.3 / 407.4.4 (read): floor inlets required over 50 ft (15.2 m) wide; floor inlet spacing not over 20 ft (6.1 m); wall inlet spacing not over 20 ft (6.1 m) along the perimeter waterline. MAHC 4.7.1.3.3.3 (read): wall inlets not more than 20 ft (6.1 m) apart, within 5 ft (1.5 m) of each corner, at least 5 ft (1.5 m) from a skimmer, and at each stairway, ramp and recessed area.",
+   "value_us": "One return inlet for every 300 ft² of pool surface area, or fraction thereof",
+   "unit_us": "text"
+  },
+  "water.drain.rule": {
+   "value": "Suction entrapment avoidance per ANSI/PHTA/ICC-7. Blockable suction outlet fittings: at least two, each certified to ANSI/APSP/ICC-16 2017, branch pipes not separately valved; or unblockable outlet(s); or no submerged suction outlet. Two outlets on one plane at least 3 ft (0.9144 m) apart centre to centre (secondary).",
+   "unit": "text",
+   "standard": "ispsc-2021",
+   "clause": "310.1 (ISPSC); MAHC 4.7.1.6.2; 15 U.S.C. 8003(c)(1)(A)(ii); 16 CFR 1450.3",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "Suction entrapment avoidance for pools and spas shall be provided in accordance with APSP 7(ANSI/PHTA/ICC 7).",
+   "note": "Primary texts read: MAHC 4.7.1.6.2 'SOFAs labeled as blockable shall be installed with a minimum of two fittings'; MAHC 4.7.1.6.2.2 spacing 'within the minimum and maximum separation distances specified by SOFA specific installation instructions'; 15 U.S.C. 8003 'each public pool and spa in the United States with a single main drain other than an unblockable drain shall be equipped' with a backup system (SVRS, vent, gravity drainage, pump shut-off, drain disablement); 16 CFR 1450.3 drain covers 'shall conform to ... ANSI/APSP/ICC-16 2017'. The 3 ft figure is SECONDARY only (ANSI/APSP/ICC-7 text not read): Pool & Spa News, 'make sure the drains are at least three feet apart from center to center' (poolspanews.com/?p=25855); Connecticut State Building Code Interpretation I-24-07 on IRC AG106, 'a minimum of two such drains ... separated by a minimum of three feet'. 3 ft x 0.3048 = 0.9144 m. ISPSC 314.3: outlets and skimmers each sized for 100 percent of the circulation rate.",
+   "value_us": "Minimum two blockable suction outlets, 3 ft minimum separation centre to centre; or unblockable; or none",
+   "unit_us": "text"
+  },
+  "safety.barrier.height.min": {
+   "value": 1219.2,
+   "unit": "mm",
+   "standard": "ispsc-2021",
+   "clause": "305.2.1",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "The top of the barrier shall be not less than 48 inches (1219 mm) above grade where measured on the side of the barrier that faces away from the pool or spa.",
+   "note": "48 x 25.4 = 1219.2 mm. Same clause: bottom clearance not over 2 in. (51 mm) above non-solid grade, 4 in. (102 mm) above a solid surface. Public aquatic facilities under MAHC 4.8.6.2.4 are stricter: 'AQUATIC FACILITY ENCLOSURES shall be no less than 6 feet (1.83 m) in height'; other barriers not part of an enclosure not less than 42 inches (1.1 m), 4.8.6.2.4.3.",
+   "value_us": 48,
+   "unit_us": "in"
+  },
+  "safety.deck.width.min": {
+   "value": 1219.2,
+   "unit": "mm",
+   "standard": "mahc-2024",
+   "clause": "4.8.1.5.1.1",
+   "read": "primary",
+   "url": "https://www.cdc.gov/model-aquatic-health-code/media/pdfs/2024/11/5th-Ed-MAHC-Code-508.pdf",
+   "quote": "PERIMETER DECKS shall be 4 feet (1.2 m) minimum in unobstructed width around the POOL perimeter as prescribed in this section.",
+   "note": "4 x 0.3048 = 1.2192 m. Public aquatic venues only. No minimum deck width for residential pools was found in ISPSC 2021 Chapters 3 or 8. ISPSC public pools (read): 406.2 'A deck or unobstructed access shall be provided for not less than 90 percent of the pool perimeter'; 406.3 4 ft (1219 mm) clearance around diving and other deck equipment; 406.4 decks between pools and spas not less than 6 ft (1829 mm) wide. Converted exactly: 1.2192 m = 1219.2 mm.",
+   "value_us": 4,
+   "unit_us": "ft",
+   "applies": "public"
+  },
+  "safety.deck.slope": {
+   "value": "1.04 % minimum (textured hand-finished concrete) to 4.17 % maximum; 2.08 % minimum for exposed aggregate",
+   "unit": "%",
+   "standard": "ispsc-2021",
+   "clause": "306.5, Table 306.5",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/3/general-compliance",
+   "quote": "The slope for decks, other than wood decks, shall be not greater than 1/2 inch per foot (1 mm per 24 mm) except for ramps.",
+   "note": "1/8 in/ft = 0.125/12 = 1.0417 %; 1/4 in/ft = 2.0833 %; 3/8 in/ft = 3.125 %; 1/2 in/ft = 4.1667 %. ISPSC Table 306.5 minimum drainage slopes (in/ft), read: carpet 1/2; exposed aggregate 1/4; textured hand-finished concrete 1/8; travertine/brick-set pavers 3/8 public, 1/8 residential; wood 1/8; wood/plastic composite 1/8. Wood decks maximum 1/4 in/ft. Standing water not deeper than 1/8 in. (3.2 mm) 20 minutes after wetting stops. MAHC Table 4.8.1.3 minimums (read): smooth finishes such as tile, hand-finished and lightly broomed concrete 1/8 in/ft; moderately textured 1/4 in/ft; heavily textured such as brick 3/8 in/ft; decks slope away from the venue; accessible routes not to exceed ADA limits.",
+   "value_us": "1/8 in per ft minimum (textured, hand-finished concrete) to 1/2 in per ft maximum",
+   "unit_us": "in/ft"
+  },
+  "tile.slip.surround": {
+   "value": "Slip resistant, no number in ISPSC. MAHC: wet DCOF at least equal to ANSI A326 for the installation (DCOF AcuTest). ANSI A326.3-2021 product-use classes: interior pool deck = Interior, Wet Plus (IW+); exterior pool deck = Exterior, Wet (EW); 0.42 wet is the floor for level interior wet areas.",
+   "unit": "text",
+   "standard": "mahc-2024",
+   "clause": "3.2 definition 'Slip Resistant'; 4.8.1.4.2",
+   "read": "primary",
+   "url": "https://www.cdc.gov/model-aquatic-health-code/media/pdfs/2024/11/5th-Ed-MAHC-Code-508.pdf",
+   "quote": "“Slip Resistant” means surfaces shall have a minimum dynamic coefficient of friction at least equal to the requirements of ANSI A326 for that installation as measured by the DCOF AcuTest.",
+   "note": "MAHC 4.8.1.4.2: 'All DECKS shall have SLIP-RESISTANT, textured finishes, which are not conducive to slipping under contact of bare feet in wet or dry conditions.' ISPSC 306.2: 'Decks, ramps, coping, and similar step surfaces shall be slip resistant and cleanable'; ISPSC 406.5 (public): 'Walking surfaces of decks within 4 feet (1219 mm) of a pool or spa shall be slip resistant.' Neither code prints a DCOF number. ANSI A326.3 itself was not read; SECONDARY readings disagree on the pool-deck number: Daltile (daltile.com/why-daltile/industry-trusted-and-tested/dcof): 'ANSI A137.1 requires ... a DCOF of 0.42 or greater ... level interior space intended to be walked upon when wet' and its own recommendation for pool decking (IW+) of >= 0.60 wet; Creative Materials bulletin on A326.3-2021: IW+ (interior pool decks) 'Manufacturer Declared or > 0.50 wet DCOF', EW (exterior pool decks) 'Manufacturer Declared or > 0.55 wet DCOF'. Treat 0.42 as a minimum floor only, not as the pool-deck figure.",
+   "value_us": "Slip resistant; wet DCOF per ANSI A326.3 for the installation (0.42 wet interior baseline; pool decks classed IW+ / EW)",
+   "unit_us": "text"
+  },
+  "tile.slip.steps": {
+   "value": "Stair treads slip resistant (same MAHC DCOF definition); tread edges outlined with slip-resistant contrasting tile or marking 25.4 mm to 50.8 mm wide",
+   "unit": "text",
+   "standard": "ispsc-2021",
+   "clause": "411.1.6; 411.2 (edge marking); MAHC 4.5.4.1",
+   "read": "primary",
+   "url": "https://up.codes/viewer/utah/ispsc-2021/chapter/4/public-swimming-pools",
+   "quote": "The leading horizontal and vertical edges of stair treads shall be outlined with slip-resistant contrasting tile or other permanent marking of not less than 1 inch (25.4 mm) and not greater than 2 inches (50.8 mm).",
+   "note": "Public pools (ISPSC Chapter 4). ISPSC 411.1.6: 'Treads shall have slip-resistant surfaces.' The exact subsection number of the edge-marking sentence under 411.2 was not captured. MAHC 4.5.4.1: 'Where provided, stairs shall be constructed with SLIP-RESISTANT materials.' ISPSC 306.2 covers deck steps and coping. No numeric DCOF for steps in either code; MAHC's definition points to ANSI A326. One manufacturer page read (Daltile) recommends >= 0.65 wet for ramps, inclines and stair treads: a manufacturer recommendation, not a code value.",
+   "value_us": "Treads slip resistant; leading edges outlined with slip-resistant contrasting tile or marking not less than 1 in. and not greater than 2 in.",
+   "unit_us": "text"
+  },
+  "tile.slip.floor": {
+   "value": "Pool floor slip resistant where water is less than 0.9144 m deep (MAHC); surfaces providing footing in public pools slip resistant (ISPSC)",
+   "unit": "text",
+   "standard": "mahc-2024",
+   "clause": "4.2.1.8",
+   "read": "primary",
+   "url": "https://www.cdc.gov/model-aquatic-health-code/media/pdfs/2024/11/5th-Ed-MAHC-Code-508.pdf",
+   "quote": "POOL floors in areas less than 3 feet (0.9 m) deep shall have a SLIP-RESISTANT finish.",
+   "note": "3 x 0.3048 = 0.9144 m. ISPSC 307.2.4: 'The surfaces within public pools and spas intended to provide footing for users shall be slip resistant and shall not cause injury during normal use.' ISPSC (public pools): 'Beach and sloping entry walking surfaces at water depths up to 36 inches (914 mm) shall be slip resistant.' MAHC 4.5.9.1 zero-depth entries slip resistant, maximum floor slope 1:12. No DCOF number for submerged surfaces was read; MAHC's 'Slip Resistant' definition (ANSI A326 for that installation) applies. ISPSC 307.2.5: plaster per APSP/NPC/ICC-12; Table 307.2.2 lists tile to ANSI A108/A118/A136.1.",
+   "value_us": "Pool floors in areas less than 3 ft deep shall have a slip-resistant finish",
+   "unit_us": "text"
+  }
+ },
+ "notes": "No US code read is written for pool shells. ISPSC 2021 (307.2.2, 802.2) sends structure to the IBC/IRC; its Table 307.2.2 lists no concrete standard. ASA says ACI 318 section 1.4.9 excludes tanks and reservoirs and that ACI 350 is the fitting code until ACI 322 (pool code, in development) exists. So: ACI 350 for the shell (4000 psi, w/cm 0.45, 2 in. cover, 3 in. against earth, 12 in. bar spacing, 0.0025-0.01 steel, ASA rule of thumb 0.005), ACI 318 as the weaker floor (0.0018 steel is not for watertightness). Salt pools: ACI 350-06 chloride row 5000 psi, w/cm 0.40. ACI 350/318/350.1 body text is paywalled: most shell values are secondary (ASA quoting clauses); thickness and tightness acceptance numbers could not be read at all. ISPSC covers residential and public; MAHC is public only and is a model code, adopted locally; state and local amendments govern. ISPSC was read on up.codes as adopted by Utah (checked against Virginia); codes.iccsafe.org showed a captcha. MAHC 5th ed. (2024) read from an Internet Archive capture of the cdc.gov PDF. Catalogue URLs for ACI are the publisher's preview PDFs; the ANSI webstore (APSP-7) and codes.iccsafe.org URLs were not opened; ACI 318-08, ACI 224 and APSP-16 entries point to the page where the citation was read. A326.3 pool-deck DCOF: secondary sources disagree (0.50, 0.55, 0.60, manufacturer declared); do not hard-code beyond the 0.42 floor. Not read: ANSI/APSP/ICC-5, -1, -7, ANSI/PHTA/ICC-15, ACI 506R/506.2 text."
+}

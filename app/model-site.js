@@ -29,6 +29,7 @@ import { polyProblem } from './model-floors.js';
 import { scaleT, round } from './model-write.js';
 import { ids, val, inv4, mul4, apply4 } from './ifc-util.js';
 import { t as tr } from './i18n.js';
+import { ringArea as area } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 export const SITE_PSET = 'CadCraft_Site';
 /** Called at the end of setSiteOutline as fn(w, siteId): what follows the outline (BK.104: the building line from setbacks, model-site-constraints.js). */
@@ -38,7 +39,6 @@ const I4 = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const worldMm = (w, lp) => (lp ? scaleT(w.api.GetWorldTransformMatrix(w.mid, lp), w.unitMm) : I4);
 const ptsText = (p) => p.map((q) => round(q[0], 3) + ',' + round(q[1], 3)).join(';');
 const ptsOf = (s) => String(s || '').split(';').map((x) => x.split(',').map(Number)).filter((q) => q.length === 2 && q.every(Number.isFinite));
-const area = (p) => { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; };
 
 function aggParent(w, child) {
   for (const rid of ids(w.api, w.mid, 'IFCRELAGGREGATES')) {

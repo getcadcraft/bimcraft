@@ -2,7 +2,7 @@
 title: Mis on uut versioonis 0.7 (varasem)
 summary: BimCraft lisab seinad läbi mitme tasandi ja Kopeeri see tasand, seinad PDF-idest ja skannidest, sinu enda seinakoosted, rikkalikumad perekonnad, MEP-seadmed portidega, põrkekomplektid, avad ja torustiku spoolid, varadokumendid, COBie ning anduri näidud, taevas, päike, päevavalgus ruudustikul ja küte- ning jahutuskoormused, skaneeringute registreerimise, reaalajavaate ja kiirte jälgimise graafikakaardil, STEP ja USD, teegi variandid ning rohkem AI-assistentidele.
 keywords: versioon 0.7, varasem väljaanne, väljaande märkmed, muudatuste logi, muudatused, 0.7, versioon, uued funktsioonid, seinad tasandite kaupa, kopeeri see tasand, pdf, skann, jälgi, seinad plaanidest, seinakoosted, kihid, südamik, membraan, viitemõõdud, materjaliteek, ühikute kuvamine, vaate stiil, karkass, talad, perekonnad, parameetrid, plaanisümbol, kuumad punktid, korduv, detailsusaste, pesastatud perekonnad, csv suurused, elemendi kohta, seadmed, pordid, ühendused, vahekaugused, avad, spoolid, spooli lehed, montaažikeevis, õhukanali lõikenimekiri, dokumendid, cobie, andurid, mqtt, reaalajas voog, vertikaalne taevakomponent, päikesekiirgus, päevavalguse ruudustik, küte, jahutus, koormused, u-väärtus, registreeri skannid, icp, e57, reaalajavaade, kiirte jälgimine, webgpu, müra eemaldamine, füüsiline taevas, valguste segamine, renderdusjärjekord, sinu masin, step, usd, projektipakk, mahu arendamine, variandid, assistendid, lisandmooduli API, taim, elekter, disainikontrollid
-from: ef226539
+from: a638080d
 ---
 
 See on see, mis muutus BimCraftis 0.7 võrreldes versiooniga 0.6. Loend on rühmitatud valdkonna järgi, kõige olulisem ees.

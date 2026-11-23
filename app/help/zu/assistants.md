@@ -1,65 +1,65 @@
 ---
 title: Vumela umsizi we-AI asebenze nemodeli yakho
-summary: Vula abasizi ku-Izilungiselelo ukuze umsizi kwikhompyutha yakho athole izinto, afunde izakhiwo zazo, azihlukanise embonweni nedwetshe izindonga, iminyango, amawindi, amaphansi, amazinga namagridi, ngoCadCraft Studio. Kuvaliwe kuze uvule.
-keywords: ai, umsizi, mcp, isikripthi, ukuzenzakalela, studio, thola izinto, hlukanisa, izakhiwo, izimvume, nqamula, umsebenzi, dweba izindonga, engeza iminyango, engeza amawindi, amazinga, amagridi, amaphansi, hlehlisa, londoloza, umugqa womyalo, cli, ngaphandle kwewindi, sebenzisa nabasizi be-ai
-from: c5ee595b
+summary: Vula abasizi ku-Izilungiselelo ukuze umsizi ekhompyutheni yakho athole izakhi, afunde izici zazo, azihlukanise embonweni, adwebe izindonga, iminyango, amawindi, amaphansi, amazinga namagridi, ngoCadCraft Studio. Kuvaliwe kuze kuvulwe.
+keywords: ai, umsizi, mcp, isikripthi, ukuzenzakalela, studio, thola izakhi, hlukanisa, izici, izimvume, nqamula, umsebenzi, dweba izindonga, engeza iminyango, engeza amawindi, amazinga, amagridi, amaphansi, hlehlisa, londoloza, umugqa womyalo, cli, ngaphandle kwewindi, sebenzisa nabasizi be-ai
+from: 66d72742
 ---
 
 ## Okuzofunda
 
-Indlela yokuvumela umsizi we-AI (noma yimuphi umsizi okhuluma i-MCP) abheke imodeli ye-IFC evulekile futhi adwetshe kuyo, okuvunyelwe nokungavunyelwe, nendlela yokumyeka.
+Indlela yokuvumela umsizi we-AI (noma yimuphi umsizi okhuluma i-MCP) ukuthi abheke imodeli ye-IFC evulekile futhi adwebe kuyo, okwazi ukukwenza nokungakwazi, nendlela yokumisa.
 
-## Okungenziwa umsizi nge-BimCraft
+## Okwenziwa umsizi ku-BimCraft
 
-| Icela | Kwenzekani | Kudingeka |
+| Icela ukuthi | Kwenzekani | Kudinga |
 |---|---|---|
-| Thola izinto | Uthola uhlu lwezinto ngeklasi, isitezi, igama, noma inani lempahla, njengoba **Thola** kwenza | Funda |
-| Funda izakhiwo | Uthola izindawo zento eyodwa, uhlobo, amasethi wezakhiwo nezinani, njengoba **Izakhiwo** ikubonisa | Funda |
-| Chaza imodeli, uhlu izindonga | Uthola amazinga, izindonga, iminyango, amawindi, amagumbi, amaphansi, amagridi namakholomu, nokuphela kwendonga ngayinye, uhlobo nokuphakama kwayo | Funda |
-| Hlukanisa, bonisa ngokuqondakala, fihla noma bonisa | Ukubukwa kwe-3D kuyashintsha njengoba wayesebenzisile imenyu {{ui:Show}} | Shintsha ukubuka nokudweba |
-| Dweba izindonga, iminyango, amawindi, amaphansi, amazinga noma imigqa yegridi | Imodeli iyashintsha njengoba wayesebenzise amathuluzi {{ui:Draw}}: izindonga ziyahlangana, amagumbi namaphansi nezindonga zilandela | Shintsha ukubuka nokudweba |
-| Shintsha igama noma inani lempahla | Igama, Incazelo, Uhlobo lwento noma Ithegi lento eyodwa, noma inani lempahla eyodwa. Inani elabelana ngalo nezinye izinto liyakopishelwa kuqala; inani lohlobo lwayo lishintsha kuphela uma umsizi esho, ngoba yonke into yalolo hlobo iyalandela | Shintsha ukubuka nokudweba |
-| Hambisa, susa, shintsha izindonga, iminyango namawindi | Izinto ziyahanjiswa noma zisulwe nalokho ezikubambile; izindonga ezidwetshwe ngamathuluzi {{ui:Draw}} ziyashintsha ngezikhawu zazo noma uhlobo, iminyango namawindi ngendawo, usayizi noma uhlobo lwawo, namagumbi nokuhlangana kuyalandela | Shintsha ukubuka nokudweba |
-| Setha, lungisa nofunde uhlu | "Uhlu lomnyango ngomumo nelungu lomlilo, nomshini": umsizi ubiza uhlu, amakholomu alo (insimu noma ithegi iba ikholomu) kanye nokuhlanganiswa kwalo; i-BimCraft iligcwalisa emodelini iphinde iyakhonza, ngokuthatha lokho umsizi ongakushongo kumgomo wehhovisi. Uhlu luyajoyina uhlu lwakho lwe-{{ui:Schedules}}. Umugqa ngamunye oyithola ubiza izinto zawo, ukuze ukhethe | Funda ukuze ufunde; Shintsha ukubuka nokudweba ukuze ulondoloze isethingi |
-| Hambisa uhlu | CSV, Excel, noma umbhalo ohlukaniswe ngamathebu ukuze unamathisele ku-Google Sheets (akukho okuthunyelwa ku-Google) | Hambisa |
-| Funda futhi usethe ukuqedwa kwamagumbi | Izinhlobo zokuqedwa, ukuqedwa kwephansi, udonga nesiling yegumbi ngalinye, izindawo; izindawo, inani lamathayili nevolumu yesisekelo kulandela uhlu lokuqedwa | Funda; Shintsha ukubuka nokudweba ukuze usethe |
-| Khetha izinto, hlehlisa izinyathelo zayo | Izinto zikhethwa embonweni; isinyathelo sayo sokugcina siyahlehliswa | Shintsha ukubuka nokudweba |
-| Londoloza | Ifayela le-IFC elisha nazo zonke izinguquko, njengoba {{ui:Save as IFC}} ikwenza (ifayela lokuqala aliyikushintshwa) | Londoloza |
-| Hambisa i-USD | Imodeli evulekile njenge-OpenUSD (.usda, .usdc noma .usdz), njengoba {{ui:USD}} kwibha yamathuluzi ikubhala | Hambisa |
-| Nika isithombe, gijima umugqa wokurenda | Isithombe se-3D view, njengoba ingxoxo ye-{{ui:Render}} ikwenza ngezilungiselelo zakho zokurenda ngaphandle uma icela ezinye, noma izithombe ezinekhwalithi ephezulu zengezwe emugqeni wengxoxo bese zirenderwa zilandelana (umugqa udinga i-WebGPU). Akukho okushintshayo emodelini ([Renda isithombe](topic:render)) | Hambisa |
+| Thola izakhi | Uthola uhlu lwezakhi ngohlobo, izinga, igama noma inani lesici, njengoba **Thola** kwenza | Funda |
+| Funda izici | Uthola izici zesakhi esisodwa, uhlobo, amasethi wezici nezinani, njengoba **Izici** zikubonisa | Funda |
+| Chaza imodeli, ohlu lwezindonga | Uthola amazinga, izindonga, iminyango, amawindi, amagumbi, amaphansi, amagridi namakholomu, nezimpelo, uhlobo nobude bongadonga ngamunye | Funda |
+| Hlukanisa, bonakalise ngaphansi, fihla noma bonisa | Umbono we-3D uyashintsha njengoba ubuke usebenzise imenyu ye-{{ui:Bonisa}} | Shintsha umbono nokudweba |
+| Dweba izindonga, iminyango, amawindi, amaphansi, amazinga noma imigqa yegridi | Imodeli iyashintsha njengoba ubuke usebenzise amathuluzi e-{{ui:Dweba}}: izindonga ziyahlangana, amagumbi, amaphansi nemifula alandela | Shintsha umbono nokudweba |
+| Shintsha igama noma inani lesici | Igama, Incazelo, Uhlobo lwento noma Ithegi lesakhi esisodwa, noma inani lesici. Inani elabelana ngalo nezinye izakhi likopishelwa kuqala; inani lohlobo lishintsha kuphela uma umsizi esho, ngoba yonke into yalolohlobo iyalandela | Shintsha umbono nokudweba |
+| Hambisa, susa, shintsha izindonga, iminyango namawindi | Izakhi ziyahanjiswa noma ziyasuswa kanye nalokho okuzibambele; izindonga ezidwetshwe ngamathuluzi e-{{ui:Dweba}} zishintsha ngezimpelo noma uhlobo lwazo, iminyango namawindi ngendawo, usayizi noma uhlobo lwazo, amagumbi nokuxhuma kuyalandela | Shintsha umbono nokudweba |
+| Misa, hlela futhi ufunde ishejuli | "Ishejuli yeminyango ngephansi, nezinga lokumelana nomlilo, nezinsimbi zomnyango": umsizi uqamba ishejuli, amakholomu ayo (isici noma ithegi sibe yikholomu) nokuhlelwa kwayo; i-BimCraft iyigcwalisa emodelini iphinde iyihlele, ithathe lokho umsizi angakushongo kumgomo wehhovisi. Ukumisa kujoyina uhlu lwakho lwama-Ishejuli. Umugqa ngamunye obuyayo ubiza izakhi zawo, ukuze azikhethe | Funda ukuze ufunde; Shintsha umbono nokudweba ukuze ulondoloze ukumisa |
+| Khipha ishejuli | nge-CSV, i-Excel, noma umbhalo ohlukaniswe ngamathebhu ukuze unamathisele ku-Google Sheets (akukho okuthunyelwa ku-Google) | Khipha |
+| Funda futhi usethe ukuqedwa kwamagumbi | Izinhlobo zokuqeda, ukuqedwa kwephansi, kodonga nakosilingi lwegumbi ngalinye, izingxenye; izindawo, inani lamatayili nevolumu yesisekelo kuvela ezishejuleni zokuqeda | Funda; Shintsha umbono nokudweba ukuze usethe |
+| Khetha izakhi, uhlehlise izinyathelo zawo | Izakhi zikhethwa embonweni; isinyathelo sawo sokugcina siyahlehliswa | Shintsha umbono nokudweba |
+| Londoloza | Ifayela elisha le-IFC nazo zonke izinguquko, njengoba {{ui:Gcina njenge-IFC}} ikwenza (ifayela lokuqala alishintshwa) | Londoloza |
+| Khipha i-USD | Imodeli evulekile njenge-OpenUSD (nge-.usda, .usdc noma .usdz), njengoba {{ui:USD}} ethuluzini le-toolbar iyibhala | Khipha |
+| Renda isithombe, uqhube uhlu lokurenda | Isithombe sombono we-3D, njengoba ingxoxo ye-{{ui:Renda}} isenza ngezilungiselelo zakho zokurenda uma ingacela ezinye, noma izithombe ezinekhwalithi ephezulu zengezwa kuhlu lwengxoxo futhi zirenderwe ngokulandelana (uhlu ludinga i-WebGPU). Akukho okushintsha emodelini ([Renda isithombe](topic:render)) | Khipha |
 
-Yonke inguquko umsizi ayenza iyisinyathelo kwi-**Changes**, ibizwa ngokuthi "Assistant: …" (isibonelo "Assistant: add 4 walls"), ngakho {{key:Mod+Z}} ihlehlisa lonke isenzo sawo, futhi ungabona ukuthi isinyathelo sasiwesiphi. Ewindini akakwazi ukuvula amafayela: wena uvula imodeli; usebenza nalena evulekile.
+Isinyathelo ngasinye umsizi asenza yisinyathelo esisodwa ku-**Izinguquko**, esibizwa ngokuthi "Umsizi: …" (isibonelo "Umsizi: engeza izindonga ezi-4"), ngakho {{key:Mod+Z}} ithatha isenzo sawo sonke, futhi ubona ukuthi isinyathelo sembangi. Kuleli windi akakwazi ukuvula amafayela: wena uvula imodeli; usebenza nalena evulekile.
 
 ## Vula
 
-Abasizi bafika ku-BimCraft ngoCadCraft Studio kwikhompyutha yakho; isiphequluli esivamile asinayo indlela ngena.
+Abasizi bafika ku-BimCraft ngoCadCraft Studio ekhompyutheni yakho; isiphequluli esijwayelekile asinayo indlela yokungena.
 
-1. Vula {{ui:Settings}} bese ukhetha ithebhu ye-**BimCraft**.
-2. Ngaphansi kwesihloko **Abasizi**, khetha **Vumela abasizi be-AI nezikripthi basebenzise i-BimCraft**.
-3. **Funda** ikhethiwe wena ngokuzenzakalelayo. Khetha **Shintsha ukubuka nokudweba** uma umsizi evunyelwe ukuhlukanisa nokufihla izinto nokudweba, nethi **Londoloza** uma evunyelwe ukulondoloza imodeli njengefayela elisha.
-4. Xhumanisa umsizi ku-Studio (i-Studio ikhombisa ikheli nezilungiselelo okufanele uzinamathisele kuwo).
+1. Vula {{ui:Izilungiselelo}} bese ukhetha ithebhu ye-**BimCraft**.
+2. Ngaphansi kwe-**Abasizi**, thika **Vumela abasizi be-AI nezikripthi basebenzise BimCraft**.
+3. **Funda** ithikiwe ngawe. Thika **Shintsha umbono nokudweba** futhi uma umsizi ezokwazi ukuhlukanisa nokufihla izakhi nokudweba, no-**Londoloza** uma engalondoloza imodeli njengefayela elisha.
+4. Xhuma umsizi ku-Studio (i-Studio ikhombisa ikheli nezilungiselelo okufanele uzinamathisele kuwo).
 
-## Lapho umsizi exhunyiwe
+## Uma umsizi exhunyiwe
 
-Isaziso esiphezulu kwiphaneli yesokudla sitshela ukuthi ngubani umsizi oxhunyiwe nokuthi ungenzani. Chofoza {{ui:Disconnect}} ukuze uvale isikhathi sakhe masinyane; kufanele axhume futhi ukuze aqhubeke.
+Isaziso esiphezulu kwiphaneli eliseningizimu sitshela ukuthi ngumsizi muni oxhunyiwe nokuthi angenzani. Chofoza {{ui:Nqamula}} ukuze uphelise isikhathi sakhe masinyane; kufanele axhume futhi ukuze aqhubeke.
 
-**Okwenziwe**, ngaphansi kwe-**Abasizi** ku-Settings, kuhlu lwakho lonke ukubizwa umsizi akwenzile, okokuqala okusha kakhulu, nokuthi kuphumelele yini.
+**Umsebenzi**, ngaphansi kwe-**Abasizi** ku-Izilungiselelo, uhlu lwayo yonke imibizo umsizi ayenzile, okusha kuqala, nokuthi yasebenza yini.
 
 :::tip
-Buza ngamagama ajwayelekile, isibonelo "hlukanisa izindonga zangaphandle ku-Izinga 1", "yiziphi iminyango engenalo izinga lomlilo?" noma "dweba igumbi lamamitha ayi-6 ngama-4 ku-Izinga 1 nomnyango odongeni olusenyakatho". Umsizi uthola izinto abonise embonweni wakho, noma uzidwetshe.
+Buza ngamagama alula, isibonelo "hlukanisa izindonga zangaphandle ezingeni 1", "yiziphi iminyango engenayo izinga lokumelana nomlilo?" noma "dweba igumbi elilingana no-6 ngo-4 mitha ezingeni 1 nomnyango odongeni lwaseningizimu". Umsizi uthola izakhi abonise kumbono wakho, noma adwebe.
 :::
 
 ## Ngaphandle kwewindi: izikripthi nomugqa womyalo
 
-Amathuluzi afanayo okudweba asebenza kumafayela e-IFC emafolda oyacacisayo, ngaphandle kwewindi evulekile: i-MCP server ye-CadCraft nomugqa womyalo angaqala isakhiwo esisha noma avule ifayela le-IFC, alichaze, angeze izindonga, iminyango, amawindi, amaphansi, amazinga namagridi, ahlehlise bese alilondoloza njengefayela elisha le-`.ifc`. Wena unquma ukuthi yimaphi amafolda angawasebenzisa nokuthi angashintsha noma alondoloze yini.
+Amathuluzi okudweba afanayo asebenza kumafayela e-IFC emafolda oyiqamba, ngaphandle kwewindi evulekile: iseva ye-MCP ye-CadCraft nomugqa womyalo zingaqala isakhiwo esisha noma zivule ifayela le-IFC, zichaze, zengeze izindonga, iminyango, amawindi, amaphansi, amazinga namagridi, zihlehlise bese ziyilondoloza njengefayela elisha le-`.ifc`. Amanye amathuluzi amane asiza izikripthi: `ifc_batch` iqhuba izinyathelo zokuhlela ezingama-200 njengesinyathelo esisodwa (zonke noma akukho: ukuhlehlisa okukodwa kuthatha lonke iqoqo, futhi isinyathelo esinqatshiwe sihlehlisa okunye bese sikhomba isinyathelo); `ifc_describe` ohlu lwamazinga nazo zonke izindonga namaminyango namawindi azo; `ifc_render_png` ibhala isithombe esilula sokuhlola semodeli (akukho zinto, ukuthungwa noma izithunzi) ngaphandle kwewindi; `usd_export` ibhala `.usda`, `.usdc` noma `.usdz`. Emugqeni womyalo, `cadcraft bim script.json --from model.ifc -o out.ifc` iqhuba isikripthi sezinyathelo, futhi `--usd`, `--png` no-`--plan` zibhala ifayela le-USD, isithombe noma ipulani kusuka kulokhu kuqhutshwa okufanayo. Wena unquma ukuthi yimaphi amafolda angawasebenzisa nokuthi ingashintsha noma ilondoloze yini.
 
 ## Vala
 
-Susa ukukhethwa kwe-**Vumela abasizi be-AI nezikripthi basebenzise i-BimCraft**. Wonke umsizi uyanqanyulwa ngokushesha, futhi izilungiselelo ziyagcinwa ukuze zisetshenziswe ngesikhathi esilandelayo.
+Susa ukukhetha **Vumela abasizi be-AI nezikripthi basebenzise BimCraft**. Wonke umsizi uyanqanyulwa masinyane, futhi lesi silungiselelo siyagcinwa kokulandelayo.
 
-## Bheka futhi
+## Bona nakho
 
-- [Izindlela zabasizi be-AI](common:assistants-recipes): izibonelo ezisebenzayo, ngayinye nemisebenzi ebiziwe.
-- [Thola izinto ngeklasi, igama noma impahla](topic:find)
-- [Fihla, hlukanisa nenze izinto zibonakale ngokuqondakala](topic:hide-and-isolate)
+- [Izindlela zokusebenza zabasizi be-AI](common:assistants-recipes): izibonelo ezisebenzayo, ngayinye nemisebenzi ibiza.
+- [Thola izakhi ngohlobo, igama noma isici](topic:find)
+- [Fihla, hlukanisa futhi bonakalise izakhi](topic:hide-and-isolate)
 - [Izilungiselelo ze-BimCraft](topic:settings)

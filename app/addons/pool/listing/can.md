@@ -1,0 +1,18 @@
+- Make a pool from length, width and the water depth at each end, with a floor that falls in one slope, and get its water volume. Pool generator tab, Shape. {#pool-volume}
+- Add entry steps in a corner or across the shallow end; the risers are made equal down to the sloping floor. Shape, Entry steps. {#pool-steps}
+- Choose skimmers or an overflow channel all round with its grating and a balance tank. Shape, Overflow. {#pool-shell}
+- Get the circulation: flow from the turnover time, filter area and size, pump power from your head figure or from the head loss in the routed pipes, pipe sizes from a velocity limit, and the number of skimmers and inlets. Result, Water circulation. {#pool-hydraulics}
+- Get a machine room sized round the filters, pumps and panel, on any side of the pool, with suction and return pipes routed round the pool to it. Machine room. {#pool-routes}
+- Get quantities: concrete, formwork, the steel (an estimate, or a bar schedule), excavation, tiles and pavers to order, coping, pipes by size. Result, Quantities, and Save quantities (CSV). {#pool-quantities}
+- Pick a spec from a side add-on and see which figures it set, which are your own, which are only starting figures, and what breaks the spec. Spec. {#pool-spec}
+- Place the pool in a BimCraft model as elements with properties and quantities, in one undo step. Place in the model. {#pool-bim}
+- Draw the plan and the long section in CadCraft on POOL- layers. Draw plan and section. {#pool-cad}
+- Save the pool as an IFC4 file from either app. Save as an IFC file. {#pool-ifc}
+- Make a fountain basin with jets, a sump and a pump. Shape, What to make. {#pool-fountain}
+- Make an L-shaped, round, oval or freeform pool from your own corners; the shell, tiles, coping, paving, pipes and quantities follow the outline. Shape. {#pool-shapes}
+- Put the entry steps on any side and add benches along any side. Shape, Steps on side, Benches. {#pool-benches}
+- Leave a gate in the barrier on the side you pick. Finish, Gate width. {#pool-gate}
+- Get the pipes as one connected network with bends, junctions and ports on every pipe, terminal, pump and filter in the IFC file. Save as an IFC file. {#pool-ports}
+- Get a bar layout and a bar schedule for the walls and the floor. Shell, Reinforcement. {#pool-bars}
+- Type in feet and inches and read gallons, feet and pounds. Shape, Units. {#pool-units}
+- Save a calculation page for the project's report binder in SuperCad Studio. Calculation page (.md). {#pool-binder}

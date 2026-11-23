@@ -11,6 +11,7 @@
   "bt.file.open": "Otvori datoteku rasporeda",
   "bt.file.save": "Spremi raspored kao datoteku",
   "bt.file.bad": "{name} nije raspored iz Material flow.",
+  "bt.file.ask": "Zamijeniti trenutni layout ovom datotekom?",
   "bt.file.done": "{name}: učitano stavki: {n}, izostavljeno: {dropped}.",
   "bt.fit.run": "Provjeri u odnosu na zidove",
   "bt.fit.nolayout": "Nema rasporeda za provjeru. Upotrijebite gotovu ćeliju ili otvorite datoteku rasporeda.",

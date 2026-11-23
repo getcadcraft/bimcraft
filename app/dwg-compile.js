@@ -24,6 +24,7 @@
  * `drawing.xrefs` lists every xref the host uses and whether it was loaded.
  */
 
+import { cross3 as cross, unit3 as unit } from './geom-vec.js';   // shared helpers (0.11 PERF.74)
 export const VERSIONS = {
   AC1009: 'R12', AC1012: 'R13', AC1014: 'R14', AC1015: '2000', AC1018: '2004',
   AC1021: '2007', AC1024: '2010', AC1027: '2013', AC1032: '2018',
@@ -97,6 +98,128 @@ export function compileDrawing(db, { versionTag = '', xrefs = new Map() } = {}) 
     const subCtx = (ctx, m, layer, color, lay, lw, x) => (x
       ? { m, layer, color, layerColor: lay.color, lw, depth: ctx.depth + 1, blocks: x.blocks, byHandle: x.byHandle, imageDefs: x.imageDefs, xp: x.prefix, xlayers: x.layers, attrs: null }
       : { m, layer, color, layerColor: lay.color, lw, depth: ctx.depth + 1, blocks: ctx.blocks, byHandle: ctx.byHandle, imageDefs: ctx.imageDefs, xp: ctx.xp, xlayers: ctx.xlayers, attrs: null });
+    // PERF.78 (perf-finish-11 bimcraft): the entity switch as a table, one handler per entity type (was a 130-line switch,
+    // cyclomatic complexity 140). Each handler gets the entity and what emit() worked out for it (positional, no object per entity; a null-prototype table so no
+    // inherited name can match an entity type); a handler's `return` is the old
+    // case's `break`. Types sharing a case share the handler (filled in below). Same order of checks, same output.
+    const SAME_AS = { POLYLINE_3D: 'POLYLINE_2D', TRACE: 'SOLID', MINSERT: 'INSERT', XLINE: 'POINT', RAY: 'POINT' };
+    const DRAW = Object.assign(Object.create(null), {
+    LINE: (e, ctx, m, layer, color, lay, lw, out, line) => { line([e.start.x, e.start.y, e.end.x, e.end.y]); },
+    LWPOLYLINE: (e, ctx, m, layer, color, lay, lw, out, line) => { line(bulgePolyline(e.vertices || [], !!e.closed)); },
+    POLYLINE_2D: (e, ctx, m, layer, color, lay, lw, out, line) => { line(bulgePolyline((e.vertices || []).filter((v) => !(v.flags & 16)), !!e.closed)); },
+    POLYLINE_3D: null,   // = POLYLINE_2D
+    CIRCLE: (e, ctx, m, layer, color, lay, lw, out, line) => { line(arcPoints(e.center.x, e.center.y, e.radius, 0, TAU, true)); },
+    ARC: (e, ctx, m, layer, color, lay, lw, out, line) => { line(arcPoints(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle, true)); },
+    ELLIPSE: (e, ctx, m, layer, color, lay, lw, out, line) => { line(ellipsePoints(e.center, e.majorAxis, e.ratio, e.startParam, e.endParam)); },
+    SPLINE: (e, ctx, m, layer, color, lay, lw, out, line) => { line(splinePoints(e)); },
+    LEADER: (e, ctx, m, layer, color, lay, lw, out, line) => { line((e.vertices || []).flatMap((v) => [v.x, v.y])); },
+    MLINE: (e, ctx, m, layer, color, lay, lw, out, line) => { line((e.vertices || []).flatMap((v) => [v.point.x, v.point.y]).concat(e.closed && e.vertices?.length ? [e.vertices[0].point.x, e.vertices[0].point.y] : [])); },
+    SOLID: (e, ctx, m, layer, color, lay, lw, out, line) => {
+      const p = e.points || [];
+      const ring = tx(m, [p[0], p[1], p[3] || p[2], p[2]].filter(Boolean).flatMap((q) => [q.x, q.y]));   // DXF order 1,2,3,4 → outline 1,2,4,3
+      out().fills.push({ rings: [ring], pattern: false }); grow(bounds, ring); stats.prims++;
+    },
+    TRACE: null,   // = SOLID
+    '3DFACE': (e, ctx, m, layer, color, lay, lw, out, line) => {
+      const p = e.points;
+      line([p[0], p[1], p[2], p[3] || p[2], p[0]].flatMap((q) => [q.x, q.y]));
+    },
+    POLYLINE_PFACE: (e, ctx, m, layer, color, lay, lw, out, line) => {   // seen from above (0.4 B8): each face's visible edges; a negative index hides the edge it starts
+      const V = e.vertices || [];
+      const done = new Set();
+      for (const f of e.faces || []) {
+        const idx = f.filter((i) => i);
+        for (let k = 0; k < idx.length; k++) {
+          const i = idx[k], j = idx[(k + 1) % idx.length];
+          if (i < 0) continue;
+          const a = V[Math.abs(i) - 1], b = V[Math.abs(j) - 1];
+          if (!a || !b) continue;
+          const key = Math.min(Math.abs(i), Math.abs(j)) + '|' + Math.max(Math.abs(i), Math.abs(j));
+          if (done.has(key)) continue;   // an edge two faces share is drawn once
+          done.add(key);
+          line([a.x, a.y, b.x, b.y]);
+        }
+      }
+    },
+    POLYLINE_MESH: (e, ctx, m, layer, color, lay, lw, out, line) => {   // seen from above: the M × N grid of lines (open or closed each way)
+      const V = e.vertices || [], M = e.m || 0, N = e.n || 0;
+      if (M * N > V.length || M < 1 || N < 1) { skip('POLYLINE_MESH (damaged)'); return; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.damaged is ready)
+      const at = (i, j) => V[i * N + j];
+      const cm = !!(e.flags & 1), cn = !!(e.flags & 32);
+      for (let i = 0; i < M; i++) { const r = []; for (let j = 0; j < N; j++) r.push(at(i, j).x, at(i, j).y); if (cn && N > 2) r.push(at(i, 0).x, at(i, 0).y); line(r); }
+      for (let j = 0; j < N; j++) { const r = []; for (let i = 0; i < M; i++) r.push(at(i, j).x, at(i, j).y); if (cm && M > 2) r.push(at(0, j).x, at(0, j).y); line(r); }
+    },
+    HATCH: (e, ctx, m, layer, color, lay, lw, out, line) => {
+      const rings = hatchRings(e).map((r) => tx(m, r)).filter((r) => r.length >= 6);
+      if (rings.length) { out().fills.push({ rings, pattern: !e.solid }); for (const r of rings) grow(bounds, r); stats.prims++; }
+    },
+    TEXT: (e, ctx, m, layer, color, lay, lw, out, line) => { text(e, m, out, bounds); },
+    ATTRIB: (e, ctx, m, layer, color, lay, lw, out, line) => {
+      if (e.flags & 1) return;   // invisible attribute
+      if (e.attType > 1 && e.mtext) mtext(e.mtext, m, out, bounds); else text(e, m, out, bounds);
+    },
+    MTEXT: (e, ctx, m, layer, color, lay, lw, out, line) => { mtext(e, m, out, bounds); },
+    INSERT: (e, ctx, m, layer, color, lay, lw, out, line) => {
+      const blk = ctx.blocks.get(e.block);
+      if (!blk) { skip('INSERT (missing block)'); return; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.missing_block is ready)
+      if (ctx.depth > 20) { skip('INSERT (nested too deep)'); return; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.nested is ready)
+      const x = blk.flags & 4 ? xinfo.get(e.block.toLowerCase()) : null;
+      if (blk.flags & 4 && !x) return;   // linked drawing not loaded: listed in drawing.xrefs
+      const base = x ? x.base : (blk.base || { x: 0, y: 0 });
+      const content = x ? x.model : (blk.entities || []);
+      const sx = e.scale?.x || 1, sy = e.scale?.y || 1;
+      const cols = Math.max(1, e.cols || 1), rows = Math.max(1, e.rows || 1);
+      // A tilted extrusion (3D blocks such as insulators on a power line): the insertion point is in the block's own
+      // coordinate system, z included, so it is placed by the full arbitrary-axis rule seen from above. Ignoring the
+      // tilt put Plans.dwg's insulators kilometres from the drawing (2026-10-24).
+      const tilt = planOcs(e.extrusion, e.insert.z || 0);
+      const im = tilt ? mul(ctx.m, tilt) : m;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const local = mul(
+            mul(translate(e.insert.x, e.insert.y), rotate(e.rotation || 0)),
+            mul(scale(sx, sy), translate(-base.x + c * (e.colSpacing || 0) / sx, -base.y + r * (e.rowSpacing || 0) / sy)),
+          );
+          const sub = subCtx(ctx, mul(im, local), layer, color, lay, lw, x ? { ...x, prefix: e.block + '|' } : null);
+          for (const be of content) { if (be.type !== 'ATTDEF') { if (x) stats.xrefEntities++; emit(be, sub); } }
+        }
+      }
+      for (const a of e.attribs || []) emit(a, ctx);   // attributes are placed in the parent's space
+    },
+    MINSERT: null,   // = INSERT
+    ACAD_TABLE: (e, ctx, m, layer, color, lay, lw, out, line) => {
+      // Drawn from its anonymous block (*T…), placed like a block reference at the table's insertion point.
+      const blk = e.block && ctx.blocks.get(e.block);
+      if (!blk) { skip(e.type); return; }
+      const ip = e.insert || { x: 0, y: 0 };
+      const local = mul(mul(translate(ip.x || 0, ip.y || 0), rotate(e.rotation || 0)), scale(e.scale?.x || 1, e.scale?.y || 1));
+      const sub = subCtx(ctx, mul(m, local), layer, color, lay, lw, null);
+      for (const be of blk.entities || []) emit(be, sub);
+    },
+    MULTILEADER: (e, ctx, m, layer, color, lay, lw, out, line) => { mleader(e, m, ctx, { layer, color, lay, lw, out, line }); },
+    IMAGE: (e, ctx, m, layer, color, lay, lw, out, line) => {
+      const def = ctx.imageDefs.get(e.def);
+      const w = e.size?.x, h = e.size?.y, u = e.u, v = e.v, p = e.insert;
+      if (!def || !w || !h || !u || !v || !p) { skip('IMAGE (no picture file named)'); return; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.no_picture is ready)
+      // pixel (x right, y down) → world: the position is the image's lower-left corner
+      const pm = mul(m, [u.x, u.y, -v.x, -v.y, p.x + h * v.x, p.y + h * v.y]);
+      const ref = String(def.fileName || '');
+      pics.push({ m: pm, w, h, ref, layer });
+      grow(bounds, tx(pm, [0, 0, w, 0, w, h, 0, h]));
+      const img = images.get(ref) || { ref, name: baseName(ref), uses: 0 };
+      img.uses++; images.set(ref, img);
+      stats.prims++;
+    },
+    VIEWPORT: (e, ctx, m, layer, color, lay, lw, out, line) => { if (ctx.depth === 0) viewports.push(e); },
+    ATTDEF: (e, ctx, m, layer, color, lay, lw, out, line) => {   // only a multileader's block shows its attribute definitions, with the leader's values
+      const v = ctx.attrs && ctx.attrs.get(e.handle);
+      if (v != null) text({ ...e, value: v }, m, out, bounds);
+    },
+    POINT: () => {},   // not drawn on a sheet
+    XLINE: null,   // = POINT
+    RAY: null,   // = POINT
+    });
+    for (const [k, f] of Object.entries(DRAW)) if (f === null) DRAW[k] = DRAW[SAME_AS[k]];
     const emit = (e, ctx) => {
       if (stats.prims > MAX_PRIMS) { stats.truncated = true; return; }
       if (e.invisible) return;
@@ -115,137 +238,15 @@ export function compileDrawing(db, { versionTag = '', xrefs = new Map() } = {}) 
       const out = () => batch(layer, color, lw);
       const line = (pts) => { if (pts.length >= 4) { const t = tx(m, pts); out().lines.push(t); grow(bounds, t); stats.prims++; } };
 
-      switch (e.type) {
-        case 'LINE': line([e.start.x, e.start.y, e.end.x, e.end.y]); break;
-        case 'LWPOLYLINE': line(bulgePolyline(e.vertices || [], !!e.closed)); break;
-        case 'POLYLINE_2D': case 'POLYLINE_3D':
-          line(bulgePolyline((e.vertices || []).filter((v) => !(v.flags & 16)), !!e.closed)); break;
-        case 'CIRCLE': line(arcPoints(e.center.x, e.center.y, e.radius, 0, TAU, true)); break;
-        case 'ARC': line(arcPoints(e.center.x, e.center.y, e.radius, e.startAngle, e.endAngle, true)); break;
-        case 'ELLIPSE': line(ellipsePoints(e.center, e.majorAxis, e.ratio, e.startParam, e.endParam)); break;
-        case 'SPLINE': line(splinePoints(e)); break;
-        case 'LEADER': line((e.vertices || []).flatMap((v) => [v.x, v.y])); break;
-        case 'MLINE': line((e.vertices || []).flatMap((v) => [v.point.x, v.point.y]).concat(e.closed && e.vertices?.length ? [e.vertices[0].point.x, e.vertices[0].point.y] : [])); break;
-        case 'SOLID': case 'TRACE': {
-          const p = e.points || [];
-          const ring = tx(m, [p[0], p[1], p[3] || p[2], p[2]].filter(Boolean).flatMap((q) => [q.x, q.y]));   // DXF order 1,2,3,4 → outline 1,2,4,3
-          out().fills.push({ rings: [ring], pattern: false }); grow(bounds, ring); stats.prims++;
-          break;
-        }
-        case '3DFACE': {
-          const p = e.points;
-          line([p[0], p[1], p[2], p[3] || p[2], p[0]].flatMap((q) => [q.x, q.y]));
-          break;
-        }
-        case 'POLYLINE_PFACE': {   // seen from above (0.4 B8): each face's visible edges; a negative index hides the edge it starts
-          const V = e.vertices || [];
-          const done = new Set();
-          for (const f of e.faces || []) {
-            const idx = f.filter((i) => i);
-            for (let k = 0; k < idx.length; k++) {
-              const i = idx[k], j = idx[(k + 1) % idx.length];
-              if (i < 0) continue;
-              const a = V[Math.abs(i) - 1], b = V[Math.abs(j) - 1];
-              if (!a || !b) continue;
-              const key = Math.min(Math.abs(i), Math.abs(j)) + '|' + Math.max(Math.abs(i), Math.abs(j));
-              if (done.has(key)) continue;   // an edge two faces share is drawn once
-              done.add(key);
-              line([a.x, a.y, b.x, b.y]);
-            }
-          }
-          break;
-        }
-        case 'POLYLINE_MESH': {   // seen from above: the M × N grid of lines (open or closed each way)
-          const V = e.vertices || [], M = e.m || 0, N = e.n || 0;
-          if (M * N > V.length || M < 1 || N < 1) { skip('POLYLINE_MESH (damaged)'); break; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.damaged is ready)
-          const at = (i, j) => V[i * N + j];
-          const cm = !!(e.flags & 1), cn = !!(e.flags & 32);
-          for (let i = 0; i < M; i++) { const r = []; for (let j = 0; j < N; j++) r.push(at(i, j).x, at(i, j).y); if (cn && N > 2) r.push(at(i, 0).x, at(i, 0).y); line(r); }
-          for (let j = 0; j < N; j++) { const r = []; for (let i = 0; i < M; i++) r.push(at(i, j).x, at(i, j).y); if (cm && M > 2) r.push(at(0, j).x, at(0, j).y); line(r); }
-          break;
-        }
-        case 'HATCH': {
-          const rings = hatchRings(e).map((r) => tx(m, r)).filter((r) => r.length >= 6);
-          if (rings.length) { out().fills.push({ rings, pattern: !e.solid }); for (const r of rings) grow(bounds, r); stats.prims++; }
-          break;
-        }
-        case 'TEXT': text(e, m, out, bounds); break;
-        case 'ATTRIB':
-          if (e.flags & 1) break;   // invisible attribute
-          if (e.attType > 1 && e.mtext) mtext(e.mtext, m, out, bounds); else text(e, m, out, bounds);
-          break;
-        case 'MTEXT': mtext(e, m, out, bounds); break;
-        case 'INSERT': case 'MINSERT': {
-          const blk = ctx.blocks.get(e.block);
-          if (!blk) { skip('INSERT (missing block)'); break; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.missing_block is ready)
-          if (ctx.depth > 20) { skip('INSERT (nested too deep)'); break; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.nested is ready)
-          const x = blk.flags & 4 ? xinfo.get(e.block.toLowerCase()) : null;
-          if (blk.flags & 4 && !x) break;   // linked drawing not loaded: listed in drawing.xrefs
-          const base = x ? x.base : (blk.base || { x: 0, y: 0 });
-          const content = x ? x.model : (blk.entities || []);
-          const sx = e.scale?.x || 1, sy = e.scale?.y || 1;
-          const cols = Math.max(1, e.cols || 1), rows = Math.max(1, e.rows || 1);
-          // A tilted extrusion (3D blocks such as insulators on a power line): the insertion point is in the block's own
-          // coordinate system, z included, so it is placed by the full arbitrary-axis rule seen from above. Ignoring the
-          // tilt put Plans.dwg's insulators kilometres from the drawing (2026-10-24).
-          const tilt = planOcs(e.extrusion, e.insert.z || 0);
-          const im = tilt ? mul(ctx.m, tilt) : m;
-          for (let r = 0; r < rows; r++) {
-            for (let c = 0; c < cols; c++) {
-              const local = mul(
-                mul(translate(e.insert.x, e.insert.y), rotate(e.rotation || 0)),
-                mul(scale(sx, sy), translate(-base.x + c * (e.colSpacing || 0) / sx, -base.y + r * (e.rowSpacing || 0) / sy)),
-              );
-              const sub = subCtx(ctx, mul(im, local), layer, color, lay, lw, x ? { ...x, prefix: e.block + '|' } : null);
-              for (const be of content) { if (be.type !== 'ATTDEF') { if (x) stats.xrefEntities++; emit(be, sub); } }
-            }
-          }
-          for (const a of e.attribs || []) emit(a, ctx);   // attributes are placed in the parent's space
-          break;
-        }
-        case 'ACAD_TABLE': {
-          // Drawn from its anonymous block (*T…), placed like a block reference at the table's insertion point.
-          const blk = e.block && ctx.blocks.get(e.block);
-          if (!blk) { skip(e.type); break; }
-          const ip = e.insert || { x: 0, y: 0 };
-          const local = mul(mul(translate(ip.x || 0, ip.y || 0), rotate(e.rotation || 0)), scale(e.scale?.x || 1, e.scale?.y || 1));
-          const sub = subCtx(ctx, mul(m, local), layer, color, lay, lw, null);
-          for (const be of blk.entities || []) emit(be, sub);
-          break;
-        }
-        case 'MULTILEADER': mleader(e, m, ctx, { layer, color, lay, lw, out, line }); break;
-        case 'IMAGE': {
-          const def = ctx.imageDefs.get(e.def);
-          const w = e.size?.x, h = e.size?.y, u = e.u, v = e.v, p = e.insert;
-          if (!def || !w || !h || !u || !v || !p) { skip('IMAGE (no picture file named)'); break; }   // i18n-ignore: tools/fixtures/check-kitchen-dwg.mjs prints these and loads no language file (reported; key dwg.skip.no_picture is ready)
-          // pixel (x right, y down) → world: the position is the image's lower-left corner
-          const pm = mul(m, [u.x, u.y, -v.x, -v.y, p.x + h * v.x, p.y + h * v.y]);
-          const ref = String(def.fileName || '');
-          pics.push({ m: pm, w, h, ref, layer });
-          grow(bounds, tx(pm, [0, 0, w, 0, w, h, 0, h]));
-          const img = images.get(ref) || { ref, name: baseName(ref), uses: 0 };
-          img.uses++; images.set(ref, img);
-          stats.prims++;
-          break;
-        }
-        case 'VIEWPORT':
-          if (ctx.depth === 0) viewports.push(e);
-          break;
-        case 'ATTDEF': {   // only a multileader's block shows its attribute definitions, with the leader's values
-          const v = ctx.attrs && ctx.attrs.get(e.handle);
-          if (v != null) text({ ...e, value: v }, m, out, bounds);
-          break;
-        }
-        case 'POINT': case 'XLINE': case 'RAY': break;   // not drawn on a sheet
-        default:
-          if (isDim(e.type)) {   // drawn from its anonymous block (*D…), already in this space's coordinates
-            const blk = e.block && ctx.blocks.get(e.block);
-            if (!blk) { skip('DIMENSION'); break; }
-            const ip = e.insert || { x: 0, y: 0 };
-            const sub = subCtx(ctx, mul(m, translate(ip.x || 0, ip.y || 0)), layer, color, lay, lw, null);
-            for (const be of blk.entities || []) emit(be, sub);
-          } else skip(typeName(e));
-      }
+      const draw = DRAW[e.type];
+      if (draw) { draw(e, ctx, m, layer, color, lay, lw, out, line); return; }
+      if (isDim(e.type)) {   // drawn from its anonymous block (*D…), already in this space's coordinates
+        const blk = e.block && ctx.blocks.get(e.block);
+        if (!blk) { skip('DIMENSION'); return; }
+        const ip = e.insert || { x: 0, y: 0 };
+        const sub = subCtx(ctx, mul(m, translate(ip.x || 0, ip.y || 0)), layer, color, lay, lw, null);
+        for (const be of blk.entities || []) emit(be, sub);
+      } else skip(typeName(e));
     };
 
     /** Multileader: leader lines (+ closed arrowhead and landing), then its text or block. */
@@ -372,8 +373,6 @@ function planOcs(ext, z) {
   if (l < 1e-12) return null;
   const N = [(ext.x || 0) / l, (ext.y || 0) / l, (ext.z || 0) / l];
   if (Math.abs(N[0]) < 1e-9 && Math.abs(N[1]) < 1e-9) return null;
-  const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  const unit = (v) => { const k = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / k, v[1] / k, v[2] / k]; };
   const Ax = unit(Math.abs(N[0]) < 1 / 64 && Math.abs(N[1]) < 1 / 64 ? cross([0, 1, 0], N) : cross([0, 0, 1], N));
   const Ay = unit(cross(N, Ax));
   return [Ax[0], Ax[1], Ay[0], Ay[1], N[0] * z, N[1] * z];

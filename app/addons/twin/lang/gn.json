@@ -9,6 +9,7 @@
   "bt.file.open": "Abrir un archivo de distribución",
   "bt.file.save": "Guardar la distribución como archivo",
   "bt.file.bad": "{name} noñeme'ẽvaʼerã Material flow distribución.",
+  "bt.file.ask": "¿Reemplazar el diseño actual con este archivo?",
   "bt.file.done": "{name}: {n} ítems cargados, {dropped} dejados afuera.",
   "bt.fit.run": "Revisar contra los muros",
   "bt.fit.nolayout": "Todavía no hay distribución para revisar. Usá una celda o abrí un archivo de distribución.",

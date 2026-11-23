@@ -11,6 +11,7 @@
   "bt.file.open": "Öppna en layoutfil",
   "bt.file.save": "Spara layouten som fil",
   "bt.file.bad": "{name} är inte en Materialflöde-layout.",
+  "bt.file.ask": "Ersätt den aktuella layouten med den här filen?",
   "bt.file.done": "{name}: {n} objekt lästes in, {dropped} utelämnades.",
   "bt.fit.run": "Kontrollera mot väggarna",
   "bt.fit.nolayout": "Det finns ingen layout att kontrollera än. Använd en cell eller öppna en layoutfil.",

@@ -1,0 +1,4 @@
+- Fill the Pool generator's empty boxes from the spec's values where it has one the generator can use.
+- See each rule with its standard, clause and how it was read, in the Pool generator's Spec section.
+- Get a row in the result, and in Problems, for every figure that breaks a value in the spec.
+- Read the rules the generator does not use as numbers (exposure classes, crack width rule, leak test, slip classes, drain rules) beside the ones it does.

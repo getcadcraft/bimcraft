@@ -1,0 +1,3 @@
+- Building services engineers checking where supply air goes before the diffusers are fixed.
+- Architects who want to see whether a room with a fan coil will be draughty or stratified.
+- Students learning how buoyancy and supply jets shape a room's air.

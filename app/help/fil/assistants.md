@@ -1,65 +1,65 @@
 ---
-title: Hayaan ang AI assistant na magtrabaho kasama ang model mo
-summary: I-on ang mga assistant sa Settings para makahanap ang assistant sa computer mo ng mga elemento, mabasa ang kanilang property, maihiwalay ang mga ito sa view, at gumuhit ng mga pader, pinto, bintana, sahig, level at grid, sa pamamagitan ng CadCraft Studio. Naka-off hanggang buksan mo ito.
-keywords: ai, assistant, mcp, script, automation, studio, maghanap ng elemento, ihiwalay, properties, permissions, disconnect, activity, gumuhit ng pader, magdagdag ng pinto, magdagdag ng bintana, level, grid, sahig, undo, save, command line, cli, headless, gamitin sa mga AI assistant
-from: c5ee595b
+title: Hayaang magtrabaho ang AI assistant sa model mo
+summary: I-on ang assistants sa Mga setting para mahanap ng assistant sa computer mo ang mga element, mabasa ang kanilang property, ihiwalay ang mga ito sa view at mag-draw ng pader, pinto, bintana, sahig, level at grid, sa pamamagitan ng CadCraft Studio. Naka-off hanggang i-on mo ito.
+keywords: ai, assistant, mcp, script, automation, studio, hanapin ang element, ihiwalay, properties, permissions, i-disconnect, activity, mag-draw ng pader, magdagdag ng pinto, magdagdag ng bintana, level, grid, sahig, i-undo, i-save, command line, cli, headless, gamitin sa AI assistants
+from: 66d72742
 ---
 
 ## Ano ang matututunan mo
 
-Paano payagan ang isang AI assistant (anumang assistant na nagsasalita ng MCP) na tingnan ang IFC model na bukas sa iyo at gumuhit dito, ano ang kaya at hindi nitong gawin, at paano ito ihihinto.
+Paano payagan ang AI assistant (kahit anong assistant na nagsasalita ng MCP) na tingnan ang IFC model na bukas sa iyo at mag-draw dito, ano ang kaya at hindi kaya nitong gawin, at paano ito patigilin.
 
 ## Ano ang magagawa ng assistant sa BimCraft
 
-| Humihingi ng | Ano ang mangyayari | Kailangan |
+| Humihiling ng | Ano ang mangyayari | Kailangan |
 |---|---|---|
-| Maghanap ng mga elemento | Nakakakuha ito ng listahan ng mga elemento ayon sa class, storey, pangalan o value ng property, gaya ng ginagawa ng **Find** | Basahin |
-| Basahin ang mga property | Nakakakuha ito ng mga attribute, type, property set at quantity ng isang elemento, gaya ng ipinapakita ng **Properties** | Basahin |
-| Ilarawan ang model, ilista ang mga pader | Nakakakuha ito ng mga level, pader, pinto, bintana, silid, sahig, grid at column, at ang bawat dulo, type, at taas ng pader | Basahin |
-| Ihiwalay, gawing see-through, itago o ipakita | Nagbabago ang 3D view na parang ginamit mo ang menu na {{ui:Show}} | Baguhin ang view at gumuhit |
-| Gumuhit ng pader, pinto, bintana, sahig, level o grid line | Nagbabago ang model na parang ginamit mo ang mga tool na {{ui:Draw}}: nagdurugtong ang mga pader, sumusunod ang mga silid, sahig at bubong | Baguhin ang view at gumuhit |
-| Baguhin ang pangalan o value ng property | Ang Name, Description, Object type o Tag ng isang elemento, o isang value ng property. Ang value na ibinabahagi nito sa ibang elemento ay kinokopya muna para dito; ang value ng type ay nagbabago lang kapag sinabi ito ng assistant, dahil susunod ang bawat elemento ng type na iyon | Baguhin ang view at gumuhit |
-| Ilipat, burahin, baguhin ang mga pader, pinto at bintana | Gumagalaw o nabubura ang mga elemento kasama ng mga elementong kinakapitan nila; ang mga pader na iginuhit gamit ang mga tool na {{ui:Draw}} ay nagbabago sa mga dulo o type nila, ang mga pinto at bintana sa lugar, laki, o type nila, at sumusunod ang mga silid at dugtungan | Baguhin ang view at gumuhit |
-| Mag-set up, mag-ayos, at magbasa ng schedule | "Iskedyul ng pinto ayon sa palapag, kasama ang fire rating at ironmongery": pinapangalanan ng assistant ang schedule, ang mga column nito (ang property o tag ay nagiging column), at ang pagpapangkat nito; pinupunan ito ng BimCraft mula sa model at inaayos, at ang hindi binanggit ng assistant ay kinukuha mula sa pamantayan ng opisina. Idinadagdag ang set-up sa iyong listahan ng {{ui:Schedules}}. Bawat linyang ibinabalik nito ay nagpapangalan ng mga elemento nito, kaya maaari nila itong piliin | Basahin para magbasa; Baguhin ang view at gumuhit para i-save ang set-up |
+| Hanapin ang mga element | Makakakuha ito ng listahan ng mga element ayon sa class, storey, pangalan o halaga ng property, gaya ng ginagawa ng **Hanapin** | Basahin |
+| Basahin ang mga property | Makakakuha ito ng mga attribute, type, property set at quantity ng isang element, gaya ng ipinapakita ng **Properties** | Basahin |
+| Ilarawan ang model, ilista ang mga pader | Makakakuha ito ng mga level, pader, pinto, bintana, silid, sahig, grid at column, at ang mga dulo, type at taas ng bawat pader | Basahin |
+| I-isolate, gawing see-through, itago o ipakita | Magbabago ang 3D view na parang ginamit mo ang menu na {{ui:Show}} | Baguhin ang view at mag-draw |
+| Mag-draw ng pader, pinto, bintana, sahig, level o grid line | Magbabago ang model na parang ginamit mo ang mga tool na {{ui:Draw}}: magdudugtong ang mga pader, susunod ang mga silid, sahig at bubong | Baguhin ang view at mag-draw |
+| Palitan ang pangalan o halaga ng property | Ang Name, Description, Object type o Tag ng isang element, o isang halaga ng property. Ang halagang ibinabahagi nito sa ibang element ay kokopyahin muna para dito; ang halagang para sa type nito ay babaguhin lang kapag sinabi ng assistant, dahil susunod ang bawat element ng type na iyon | Baguhin ang view at mag-draw |
+| Ilipat, burahin, baguhin ang mga pader, pinto at bintana | Gumagalaw o nabubura ang mga element kasama ng mga host nila; ang mga pader na ginawa gamit ang mga tool na {{ui:Draw}} ay nagbabago sa mga dulo o type nila, ang mga pinto at bintana sa lugar, sukat o type nila, at susunod ang mga silid at join | Baguhin ang view at mag-draw |
+| Mag-set up, mag-ayos at magbasa ng schedule | "Iskedyul ng pinto ayon sa palapag, may fire rating at ironmongery": pinapangalanan ng assistant ang schedule, ang mga column nito (ang property o tag ay nagiging column) at ang grouping nito; pupunuin ito ng BimCraft mula sa model at ilalatag, at ang hindi binanggit ng assistant ay kukunin sa office standard. Idudugtong ang set-up sa listahan mo ng Schedules. Pinapangalanan ng bawat linyang ibinabalik nito ang mga element nito, para mapili ito ng assistant | Basahin para magbasa; Baguhin ang view at mag-draw para i-save ang set-up |
 | I-export ang schedule | CSV, Excel, o tab-separated text na ipi-paste sa Google Sheets (walang ipinapadala sa Google) | I-export |
-| Basahin at itakda ang finish ng silid | Ang mga type ng finish, ang finish ng sahig, pader at kisame ng bawat silid, mga zone; ang mga lawak, bilang ng tile, at dami ng substrate ay nanggagaling pagkatapos sa mga finish schedule | Basahin; Baguhin ang view at gumuhit para itakda |
-| Pumili ng mga elemento, i-undo ang sarili nitong mga hakbang | Ang mga elemento ay pinipili sa view; binabawi ang huling hakbang nito | Baguhin ang view at gumuhit |
-| I-save | Isang bagong IFC file na may bawat pagbabago, gaya ng ginagawa ng {{ui:Save as IFC}} (hindi kailanman nababago ang orihinal) | I-save |
-| I-export ang USD | Ang mga bukas na model bilang OpenUSD (.usda, .usdc, o .usdz), gaya ng isinusulat ng {{ui:USD}} sa toolbar | I-export |
-| Mag-render ng larawan, patakbuhin ang render queue | Larawan ng 3D view, gaya ng ginagawa ng dialog na {{ui:Render}} gamit ang iyong mga setting ng Render maliban kung humingi ito ng iba, o mga high-quality na larawang idinagdag sa pila ng dialog at isa-isang nire-render (kailangan ng pila ang WebGPU). Walang nagbabago sa model ([Render a picture](topic:render)) | I-export |
+| Basahin at itakda ang mga finish ng silid | Ang mga finish type, ang floor, wall at ceiling finish ng bawat silid, mga zone; ang mga area, bilang ng tile at volume ng substrate ay manggagaling sa mga finish schedule | Basahin; Baguhin ang view at mag-draw para itakda |
+| Pumili ng mga element, i-undo ang sarili nitong hakbang | Ang mga element ay pinipili sa view; ang huling hakbang nito ay binabawi | Baguhin ang view at mag-draw |
+| I-save | Bagong IFC file na may bawat pagbabago, gaya ng ginagawa ng {{ui:Save as IFC}} (hindi kailanman nababago ang orihinal) | I-save |
+| I-export ang USD | Ang mga bukas na model bilang OpenUSD (.usda, .usdc o .usdz), gaya ng isinusulat ng {{ui:USD}} sa toolbar | I-export |
+| I-render ang larawan, patakbuhin ang render queue | Larawan ng 3D view, gaya ng ginagawa ng dialog na {{ui:Render}} gamit ang Render settings mo, maliban kung humiling ito ng iba; o mga high-quality na larawang idinagdag sa queue ng dialog at isa-isang nire-render (kailangan ng queue ang WebGPU). Walang nagbabago sa model ([I-render ang larawan](topic:render)) | I-export |
 
-Ang bawat pagbabagong ginagawa ng assistant ay isang hakbang sa **Mga pagbabago**, pinangalanang "Assistant: …" (halimbawa "Assistant: add 4 walls"), kaya babawiin ng {{key:Mod+Z}} ang buong aksyon nito, at makikita mo kung kanino ang hakbang. Sa window, hindi ito makapagbubukas ng file: ikaw ang nagbubukas ng model; ang model na bukas ang gagamitin nito.
+Ang bawat pagbabagong gawin ng assistant ay isang hakbang sa **Mga pagbabago**, na may pangalang "Assistant: …" (halimbawa "Assistant: add 4 walls"), kaya babawiin ng {{key:Mod+Z}} ang buong aksyon nito, at makikita mo kung kanino ang hakbang. Sa bintana nito, hindi ito makakabukas ng mga file: ikaw ang magbubukas ng model; gagana ito sa nakabukas.
 
 ## I-on ito
 
-Naaabot ng mga assistant ang BimCraft sa pamamagitan ng CadCraft Studio sa computer mo; walang paraan papasok ang plain browser.
+Kumokonekta ang mga assistant sa BimCraft sa pamamagitan ng CadCraft Studio sa computer mo; walang paraan ang plain browser papasok.
 
 1. Buksan ang {{ui:Settings}} at piliin ang tab na **BimCraft**.
-2. Sa ilalim ng **Assistants**, lagyan ng tsek ang **Hayaang gamitin ng AI assistant at mga script ang BimCraft**.
-3. Naka-tsek na ang **Read** para sa iyo. Lagyan din ng tsek ang **Baguhin ang view at gumuhit** kung maaaring ihiwalay at itago ng assistant ang mga elemento at gumuhit, at ang **Save** kung maaari nitong i-save ang model bilang bagong file.
-4. Ikonekta ang assistant sa Studio (ipinapakita ng Studio ang address at ang mga setting na ipapaste dito).
+2. Sa ilalim ng **Assistants**, lagyan ng tsek ang **Payagan ang AI assistants at scripts na gamitin ang BimCraft**.
+3. Naka-tsek na ang **Basahin** para sa iyo. Lagyan din ng tsek ang **Baguhin ang view at mag-draw** kung puwedeng i-isolate at itago ng assistant ang mga element at mag-draw, at ang **I-save** kung puwede nitong i-save ang model bilang bagong file.
+4. Ikonekta ang assistant sa Studio (ipinapakita ng Studio ang address at ang mga setting na ipi-paste sa assistant).
 
-## Habang may konektadong assistant
+## Habang nakakonekta ang assistant
 
-Isang note sa itaas ng kanang panel ang nagsasabi kung aling assistant ang konektado at kung ano ang kaya nitong gawin. I-click ang {{ui:Disconnect}} para agad na tapusin ang session nito; kailangan nitong kumonekta muli para magpatuloy.
+Ang note sa itaas ng right panel ay nagsasabi kung aling assistant ang nakakonekta at kung ano ang kaya nito. I-click ang {{ui:Disconnect}} para agad tapusin ang session nito; kailangan nitong kumonekta muli para magpatuloy.
 
-**Aktibidad**, sa ilalim ng **Assistants** sa Settings, ay naglilista ng bawat tawag na ginawa ng assistant, pinakabago muna, kasama kung nagtagumpay ito.
+**Activity**, sa ilalim ng **Assistants** sa Settings, ay naglilista ng bawat tawag na ginawa ng assistant, pinakabago muna, kasama kung nagtagumpay ito.
 
 :::tip
-Magtanong sa payak na mga salita, halimbawa "ihiwalay ang mga panlabas na pader sa Level 1", "aling mga pinto ang walang fire rating?", o "gumuhit ng 6 by 4 metrong silid sa Level 1 na may pinto sa pader sa timog". Hinahanap ng assistant ang mga elemento at ipinapakita ang mga ito sa view mo, o gumuguhit.
+Magtanong sa simpleng salita, halimbawa "ihiwalay ang mga panlabas na pader sa Level 1", "aling mga pinto ang walang fire rating?" o "gumuhit ng 6 by 4 metrong silid sa Level 1 na may pinto sa south wall". Hahanapin ng assistant ang mga element at ipapakita ang mga ito sa view mo, o iguguhit ang mga ito.
 :::
 
-## Walang bintana: mga script at command line
+## Walang window: scripts at command line
 
-Ang parehong mga tool sa pagguhit ay gumagana sa mga IFC file sa mga folder na itinakda mo, nang walang bukas na window: ang MCP server at command line ng CadCraft ay maaaring magsimula ng bagong gusali o magbukas ng IFC file, ilarawan ito, magdagdag ng pader, pinto, bintana, sahig, level at grid, i-undo ito, at i-save bilang bagong `.ifc` file. Ikaw ang nagpapasya kung aling mga folder ang maaari nitong gamitin at kung maaari nitong baguhin o i-save ang anuman.
+Gumagana rin ang parehong drawing tool sa mga IFC file sa mga folder na tinukoy mo, nang walang nakabukas na window: kayang magsimula ng bagong gusali o magbukas ng IFC file ang MCP server at command line ng CadCraft, ilarawan ito, magdagdag ng pader, pinto, bintana, sahig, level at grid, mag-undo, at i-save ito bilang bagong `.ifc` file. Apat pang tool ang angkop sa scripts: ang `ifc_batch` ay nagpapatakbo ng hanggang 200 hakbang sa pag-edit bilang isa (lahat o wala: binabawi ng isang undo ang buong batch, at ang hakbang na tinanggihan ay nag-uundo ng iba at pinapangalanan ang hakbang); ang `ifc_describe` ay naglilista ng mga level at bawat pader kasama ang mga pinto at bintana nito; ang `ifc_render_png` ay nagsusulat ng flat-shaded na checking picture ng model (walang materials, textures o shadows) nang walang window; ang `usd_export` ay nagsusulat ng `.usda`, `.usdc` o `.usdz`. Sa command line, pinapatakbo ng `cadcraft bim script.json --from model.ifc -o out.ifc` ang script ng mga hakbang, at ang `--usd`, `--png` at `--plan` ay nagsusulat ng USD file, larawan o plano mula sa parehong takbo. Ikaw ang nagpapasya kung aling mga folder ang puwede nitong gamitin at kung puwede nitong baguhin o i-save ang anuman.
 
 ## I-off ito
 
-Alisan ng tsek ang **Hayaang gamitin ng AI assistant at mga script ang BimCraft**. Agad na madidiskonekta ang bawat assistant, at mananatili ang setting para sa susunod.
+Alisin ang tsek sa **Payagan ang AI assistants at scripts na gamitin ang BimCraft**. Agad na madidiskonekta ang bawat assistant, at mananatili ang setting para sa susunod na pagkakataon.
 
 ## Tingnan din
 
-- [Mga recipe para sa AI assistant](common:assistants-recipes): mga halimbawang gawa, bawat isa ay may mga tool na tinatawag nito.
-- [Maghanap ng elemento ayon sa class, pangalan o property](topic:find)
-- [Itago, ihiwalay, at gawing see-through ang mga elemento](topic:hide-and-isolate)
+- [Mga recipe para sa AI assistants](common:assistants-recipes): mga halimbawang may kasamang tool na tinatawag ng bawat isa.
+- [Hanapin ang mga element ayon sa class, pangalan o property](topic:find)
+- [Itago, ihiwalay at gawing see-through ang mga element](topic:hide-and-isolate)
 - [Mga setting ng BimCraft](topic:settings)

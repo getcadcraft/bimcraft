@@ -16,7 +16,7 @@ files and written down in a comment ("Spec gap: …").
 
 ### DWG (cc-dwg, `dwg/`)
 
-Our own DWG reader, written clean-room from the Open Design Alliance's published *Open Design Specification for .dwg files*,
+Our own DWG reader and writer, written clean-room from the Open Design Alliance's published *Open Design Specification for .dwg files*,
 version 5.4.1. The files that decode or encode the format name the chapters they follow. Test oracles, run as programs only: LibreDWG's `dwgread` and
 `dwg2dxf` (GPL-3.0), libdxfrw's `dwg2dxf` (GPL-2.0), the ODA File Converter, and ezdxf (MIT) to read their DXF output. Comments
 that name one of them record what it reported when it read a file, nothing more.

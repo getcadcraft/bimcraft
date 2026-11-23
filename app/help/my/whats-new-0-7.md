@@ -2,7 +2,7 @@
 title: 0.7 ၏ အသစ်များ (ယခင်)
 summary: BimCraft သည် အဆင့်များစွာမှ နံရံများနှင့် Copy this level၊ PDF နှင့် scan များမှ နံရံများ၊ ကိုယ်ပိုင် နံရံ အစိတ်အပိုင်းများ၊ ပိုကြွယ်ဝသော family များ၊ port ပါသော MEP ပစ္စည်းများ၊ clash အစုများ၊ အပေါက်များနှင့် ပိုက်ပိုင်းများ၊ ပိုင်ဆိုင်မှု စာရွက်စာတမ်းများ၊ COBie နှင့် အာရုံခံကိရိယာ ဖတ်ရှုချက်များ၊ ကောင်းကင်၊ နေ၊ ဂရစ်ပေါ်ရှိ နေ့ရောင်နှင့် အပူနှင့် အအေး ဝန်များ၊ scan ပြန်ညှိခြင်း၊ live view နှင့် ဂရပ်ဖစ်ကတ်ပေါ်ရှိ path tracing၊ STEP နှင့် USD၊ library variant များနှင့် AI assistant များအတွက် ပိုများသည်များ ထည့်ထားသည်။
 keywords: whats new 0.7, ယခင် ဗားရှင်း, release notes, changelog, ပြောင်းလဲမှုများ, 0.7, ဗားရှင်း, အသစ် အင်္ဂါရပ်များ, အဆင့်များမှ နံရံများ, copy this level, pdf, scan, trace, plan မှ နံရံများ, နံရံ အစိတ်အပိုင်းများ, အလွှာများ, core, membrane, ကိုးကားအတိုင်းအတာများ, ပစ္စည်းစာကြည့်တိုက်, ပြသမှု ယူနစ်များ, view စတိုင်, framing, joist, family, parameter, plan သင်္ကေတ, hotspot, repeat, detail level, အသိုက် family, csv အရွယ်, element အလိုက်, ပစ္စည်း, port, ချိတ်ဆက်မှု, clearance, အပေါက်များ, spool, spool sheet, field weld, duct cut list, စာရွက်စာတမ်း, cobie, အာရုံခံကိရိယာ, mqtt, live feed, vertical sky component, solar gain, daylight grid, အပူ, အအေး, ဝန်, u-value, scan ပြန်ညှိ, icp, e57, live view, path tracing, webgpu, denoise, physical sky, light mixing, render queue, သင့်စက်, step, usd, project bundle, mass ဖွံ့ဖြိုးစေခြင်း, variant, assistant, add-on api, plant, electrical, design checks
-from: ef226539
+from: a638080d
 ---
 
 ဤသည်မှာ BimCraft 0.6 နှင့် နှိုင်းယှဉ်လျှင် 0.7 တွင် ပြောင်းလဲသွားသည်များ ဖြစ်သည်။ စာရင်းကို နယ်ပယ်အလိုက် အုပ်စုဖွဲ့ထားပြီး အရေးအကြီးဆုံးကို ရှေ့ဆုံးတွင် ထားသည်။

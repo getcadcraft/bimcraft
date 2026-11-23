@@ -11,6 +11,7 @@
   "bt.file.open": "Buksan ang layout file",
   "bt.file.save": "I-save ang layout bilang file",
   "bt.file.bad": "Hindi Material flow layout ang {name}.",
+  "bt.file.ask": "Palitan ng file na ito ang kasalukuyang layout?",
   "bt.file.done": "{name}: {n} na item ang na-load, {dropped} ang hindi isinama.",
   "bt.fit.run": "Tingnan laban sa mga pader",
   "bt.fit.nolayout": "Wala pang layout na susuriin. Gumamit ng cell o magbukas ng layout file.",

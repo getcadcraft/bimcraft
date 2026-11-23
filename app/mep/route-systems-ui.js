@@ -56,7 +56,8 @@ export function mountRouteSystems(ctx) {
         if (!Number.isFinite(ox) || !Number.isFinite(oy)) { S.msg = T('mep.rs.err.outlet'); return; }
         const stacks = String(S.f.stacks || '').split(';').map((s) => s.split(',').map((v) => parseLen(v.trim(), units))).filter((p) => p.length === 2 && p.every(Number.isFinite)).map((p, i) => ({ id: 'S' + (i + 1), p }));
         const tail = S.f.tail === '' || S.f.tail == null ? 100 : len(S.f.tail);
-        plan = planDrain(w, { storey, std: projectStandard() || 'us', outlet: { p: [ox, oy, Number.isFinite(oz) ? oz : 0], out: dir[S.f.od || '-x'], ...(Number.isFinite(oz) ? { z: oz } : {}) }, stacks, obstacles, minTail: tail });
+        const vl = len(S.f.vent), allSt = S.f.all ? [...new Set(readFixturePorts(w).filter((q) => q.domain === 'pipe' && q.system === 'san' && q.fixture).map((q) => q.storey))].map((id) => val(w.api.GetLine(w.mid, id, false).GlobalId)) : null;
+        plan = planDrain(w, { storey, storeys: allSt, vent: S.f.ventstack ? 'stack' : 'own', ventLimit: Number.isFinite(vl) ? vl : undefined, std: projectStandard() || 'us', outlet: { p: [ox, oy, Number.isFinite(oz) ? oz : 0], out: dir[S.f.od || '-x'], ...(Number.isFinite(oz) ? { z: oz } : {}) }, stacks, obstacles, minTail: tail });
       } else if (S.sys === 'water') {
         const [eq, port] = String(S.f.src).split('|');
         const ps = num(S.f.ps), pr = num(S.f.pr);
@@ -67,13 +68,15 @@ export function mountRouteSystems(ctx) {
         const indoors = [...S.picked].map((g) => ({ eq: g, capacity: num(S.cap[g]) })).filter((x) => x.capacity > 0);
         if (!S.f.out || !indoors.length) { S.msg = T('mep.rs.err.pick'); return; }
         const lim = {}; for (const [k, v] of [['maxTotal', S.f.l1], ['maxLongest', S.f.l2], ['maxOutdoorAbove', S.f.l3], ['maxOutdoorBelow', S.f.l4], ['maxIndoorIndoor', S.f.l5]]) { const n = len(v); if (Number.isFinite(n)) lim[k] = n; }
+        const eqb = len(S.f.eqb), eqk = len(S.f.eqk);
         const cx = len(S.f.cx), cy = len(S.f.cy), cz = len(S.f.cz);
-        plan = planRefrigerant(w, { storey, outdoor: S.f.out, indoors, limits: lim, obstacles, condensate: Number.isFinite(cx) && Number.isFinite(cy) ? { outlet: { p: [cx, cy, Number.isFinite(cz) ? cz : 0], out: dir[S.f.cd || '-x'] } } : null });
+        plan = planRefrigerant(w, { storey, outdoor: S.f.out, indoors, limits: lim, equivalent: Number.isFinite(eqb) || Number.isFinite(eqk) ? { bend: Number.isFinite(eqb) ? eqb : 0, kit: Number.isFinite(eqk) ? eqk : 0 } : null, obstacles, condensate: Number.isFinite(cx) && Number.isFinite(cy) ? { outlet: { p: [cx, cy, Number.isFinite(cz) ? cz : 0], out: dir[S.f.cd || '-x'] } } : null });
       }
       missed = (plan.failed || []).map((f) => (f.system ? f.system + ' ' : '') + (f.id ?? '') + ': ' + T('mep.rs.why.' + String(f.error).replace(/^limit-.*/, 'limit'), { mm: f.short ?? f.over ?? '' }));
       if (!plan.specs.length) { S.msg = T('mep.rs.none') + (missed.length ? ' ' + missed.join('; ') : ''); return; }
       await ctx.apply(placeNetwork(plan.specs), T('mep.rs.undo'));
-      S.msg = T('mep.rs.done', { runs: plan.specs.length }) + (missed.length ? ' ' + T('mep.rs.missed', { list: missed.join('; ') }) : '');
+      const vrows = (plan.ventChecks || []).map((r) => T('mep.rs.drain.ventrow', { id: r.id, mm: Math.round(r.distance) })).join('; ');
+      S.msg = T('mep.rs.done', { runs: plan.specs.length }) + (missed.length ? ' ' + T('mep.rs.missed', { list: missed.join('; ') }) : '') + (vrows ? ' ' + vrows + '.' : '');
     } catch (e) {
       S.msg = T(e.key || 'mep.rs.err.fail');
       if (!e.key) ctx.status(String(e.message || e), true);
@@ -93,6 +96,7 @@ export function mountRouteSystems(ctx) {
       kids.push(el('p', { className: 'bc-muted', 'data-rs-count': '' }, T('mep.rs.drain.count', { n })));
       kids.push(input('ox', 'data-rs-ox', T('mep.rs.drain.ox')), input('oy', 'data-rs-oy', T('mep.rs.drain.oy')), input('oz', 'data-rs-oz', T('mep.rs.drain.oz')),
         select('od', 'data-rs-od', T('mep.rs.drain.od'), ['-x', '+x', '-y', '+y'].map((k) => ({ key: k, label: k }))), input('stacks', 'data-rs-stacks', T('mep.rs.drain.stacks'), 24), input('tail', 'data-rs-tail', T('mep.rs.drain.tail')));
+      kids.push(check(T('mep.rs.drain.all'), !!S.f.all, (v) => { S.f.all = v; }, 'data-rs-all'), input('vent', 'data-rs-vent', T('mep.rs.drain.vent')), check(T('mep.rs.drain.ventstack'), !!S.f.ventstack, (v) => { S.f.ventstack = v; }, 'data-rs-ventstack'));
       kids.push(el('p', { className: 'bc-muted' }, T('mep.rs.drain.note')));
     } else if (S.sys === 'water') {
       const cwOut = withPort((p) => p.kind === 'pipe' && p.system === 'cw' && p.direction !== 'in'), hwOut = withPort((p) => p.kind === 'pipe' && p.system === 'hw' && p.direction !== 'in'), anyIn = withPort((p) => p.kind === 'pipe' && p.direction !== 'out');
@@ -119,6 +123,7 @@ export function mountRouteSystems(ctx) {
         }
         kids.push(el('p', { className: 'bc-muted' }, T('mep.rs.ref.limits')));
         kids.push(input('l1', 'data-rs-l1', T('mep.rs.ref.l1')), input('l2', 'data-rs-l2', T('mep.rs.ref.l2')), input('l3', 'data-rs-l3', T('mep.rs.ref.l3')), input('l4', 'data-rs-l4', T('mep.rs.ref.l4')), input('l5', 'data-rs-l5', T('mep.rs.ref.l5')));
+        kids.push(input('eqb', 'data-rs-eqb', T('mep.rs.ref.eqb')), input('eqk', 'data-rs-eqk', T('mep.rs.ref.eqk')));
         kids.push(el('p', { className: 'bc-muted' }, T('mep.rs.ref.cond')), input('cx', 'data-rs-cx', T('mep.rs.drain.ox')), input('cy', 'data-rs-cy', T('mep.rs.drain.oy')), input('cz', 'data-rs-cz', T('mep.rs.drain.oz')), select('cd', 'data-rs-cd', T('mep.rs.drain.od'), ['-x', '+x', '-y', '+y'].map((k) => ({ key: k, label: k }))));
         kids.push(el('p', { className: 'bc-muted' }, T('mep.rs.ref.note')));
       }

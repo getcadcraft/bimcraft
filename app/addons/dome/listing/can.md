@@ -1,0 +1,20 @@
+- Make a dome from its diameter and height as part of a sphere or half an ellipse, and get its form surface, circumference and sphere radius. Dome generator tab, Shape. {#dome-shape}
+- Stand the curve on a straight stem wall so the dome starts above the ground. Shape, Stem wall height. {#dome-stem}
+- Get the layers: form membrane, foam, a concrete shell that thickens toward the base, a ring beam and a floor slab. Concrete shell, Foam and form, Ring beam and floor. {#dome-layers}
+- Cut doors and windows round the dome by angle, width, height and sill; an opening that overlaps another or reaches the crown is left out and named. Openings. {#dome-openings}
+- Get quantities: membrane area to order, foam, sprayed concrete with your rebound allowance, ring beam and slab concrete, an estimate of the steel. Result, Quantities, and Save the report (CSV). {#dome-quantities}
+- Get the room inside: clear diameter and height, floor area, the floor area with the headroom you ask for, the volume. Result, Quantities. {#dome-inside}
+- Get the membrane forces under the dome's own weight and your snow load: force along the curve and round the dome at nine heights, where tension begins, the outward push and ring tension at the springline, the pressure under the ring beam. Result, Forces. {#dome-forces}
+- Get what wind and an earthquake add: forces along, round and in shear, the sideways force and overturning at the floor, and whether one side of the base lifts. Loads, Wind pressure and Earthquake. {#dome-lateral}
+- Get the bending: the moment at the ring beam, at the top of a stem wall and where the thickness changes, the tension in the ring beam, the largest stresses and the crown's drop, for a base that is fixed, free to turn, or free to spread. Result, Bending. {#dome-bending}
+- Get the classical buckling pressure against the load, and the margin left after your engineer's reduction. Result, Buckling. {#dome-buckling}
+- Get the forces each opening interrupts, for its frame to carry round. Result, Forces the openings interrupt. {#dome-openforces}
+- Have the load factors filled from the spec, or type your own; every table says whether it is factored. Load factors. {#dome-factors}
+- Put a frame of thicker concrete round every opening and get its concrete. Openings, Frame width and Frame extra thickness. {#dome-frames}
+- Count the bars from a bar size and a spacing, with the steel ratio they give. Concrete shell, Bar size and Bar spacing. {#dome-bars}
+- Work in millimetres and kilonewtons, or in feet, inches and pounds. Shape, Units. {#dome-units}
+- Run it inside SuperCad Studio, through BimCraft or CadCraft. {#dome-super}
+- Pick a spec from a side add-on and see which figures it set, which are your own, which are only starting figures, and what breaks the spec. Spec. {#dome-spec}
+- Place the dome in a BimCraft model as elements with properties and quantities, in one undo step. Place in the model. {#dome-bim}
+- Draw the plan and the section in CadCraft on DOME- layers. Draw plan and section. {#dome-cad}
+- Save the dome as an IFC4 file from either app. Save as an IFC file. {#dome-ifc}

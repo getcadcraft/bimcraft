@@ -28,6 +28,8 @@ import { layerInputs, layerQuantities, layerSchedule } from './layer-quantities.
 import { describeSchedule, withProps, layOut, flat, officeStandard, fmtVol } from './schedule-layouts.js';
 
 export const FINISH_KEYS = ['roomfinishes', 'wallfinishes', 'zonefinishes', 'finishtotals'];
+/** 0.11 BK.130 (bim-core-11): the wall-face finish schedules (only present when the file has wall finishes). */
+export const WALLFACE_KEYS = ['wfaces', 'wfacetotals', 'wfacerooms'];
 
 /** The four finish schedules of an open model (finishes-model.js), in the units and by the method given. */
 export function finishSet(w, snap, loopsFor, { units, t, measure = null }) {

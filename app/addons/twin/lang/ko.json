@@ -11,6 +11,7 @@
   "bt.file.open": "레이아웃 파일 열기",
   "bt.file.save": "레이아웃을 파일로 저장",
   "bt.file.bad": "{name}: Material flow 레이아웃이 아닙니다.",
+  "bt.file.ask": "현재 배치를 이 파일로 바꾸시겠습니까?",
   "bt.file.done": "{name}: 항목 {n}개를 불러왔고, {dropped}개는 제외했습니다.",
   "bt.fit.run": "벽과 대조",
   "bt.fit.nolayout": "아직 확인할 레이아웃이 없습니다. 셀을 사용하거나 레이아웃 파일을 열어 주십시오.",

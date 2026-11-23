@@ -562,8 +562,11 @@ export function mountWallShapeViews(modelUi) {
   icons(); globalThis.addEventListener?.('cc-icon-set', icons);
   const bar = A.root.querySelector('[data-mopts="wall"]')?.parentElement;
   if (bar) {
+    const sized = [];
+    globalThis.addEventListener?.('bimcraft-units', () => { for (const [i, key] of sized) i.value = L(O[key]); });   // GH.3: the opening's size boxes follow a unit change
     const num = (attr, key, label) => {
       const i = el('input', { type: 'text', className: 'bc-input bc-num', size: 6, value: L(O[key]), [attr]: '', 'aria-label': label });
+      sized.push([i, key]);
       i.addEventListener('change', () => { const mm = parseLen(i.value, A.units()); if (!Number.isFinite(mm) || mm < 0) { A.host.status(A.t('model.err.length'), true); i.value = L(O[key]); return; } O[key] = mm; });
       return el('label', { className: 'bc-mb-field' }, el('span', {}, label + ' '), i);
     };

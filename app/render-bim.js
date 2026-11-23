@@ -260,12 +260,38 @@ export function bimLamps(viewer, models) {
       const lumens = Math.round(num(o.Lumens, 1, 200000, f.watts ? f.watts * 80 : 800));
       const w = Math.max(0.05, bb.max[0] - bb.min[0]), d = Math.max(0.05, bb.max[2] - bb.min[2]);
       out.push({
-        key, name: f.name, kind, lumens, on: !(o.On === false || String(o.On).toLowerCase() === 'false'),
+        key, name: o.Ies ? String(o.Ies).slice(0, 80) : f.name, kind, lumens, on: !(o.On === false || String(o.On).toLowerCase() === 'false'),   // 0.11 SU.1816: a fixture with an Ies name is lit by that web (bimIes)
         p: [(bb.min[0] + bb.max[0]) / 2, bb.min[1] - (kind === 'area' ? 0.005 : 0.03), (bb.min[2] + bb.max[2]) / 2], dir: [0, -1, 0],
         color: hexOk(o.Color) || '#ffe7c4', angle: Math.round(num(o.Angle, 5, 170, 60)),
         size: kind === 'area' ? [Math.min(w, 20), Math.min(d, 20)] : [0.06, 0.06],
       });
       if (out.length >= 200) return out;
+    }
+  }
+  return out;
+}
+/**
+ * 0.11 SU.1816: the measured light webs the model carries — the IfcProject's CadCraft_LightIes set, Webs = JSON { name: { file, text } } (LM-63 text), written by the
+ * Interior lighting design add-on when it draws its luminaires (each fixture's CadCraft_Light Ies = the web's name). → the same map for the render's `settings.ies`,
+ * at most `cap` webs (looks.js IES_MAX_LAMPS) of at most `maxText` characters each; a web that does not read as JSON is skipped.
+ */
+export function bimIes(models, { cap = 32, maxText = 262144 } = {}) {
+  const out = {};
+  for (const m of models) {
+    let pid;
+    try { pid = ids(m.api, m.mid, 'IFCPROJECT')[0]; } catch { pid = undefined; }
+    if (pid === undefined || pid === null) continue;
+    const rels = new Map();
+    for (const rid of ids(m.api, m.mid, 'IFCRELDEFINESBYPROPERTIES')) {
+      const r = m.api.GetLine(m.mid, rid, false), d = r?.RelatingPropertyDefinition?.value;
+      if (d && (r.RelatedObjects || []).some((h) => h.value === pid)) { if (!rels.has(pid)) rels.set(pid, []); rels.get(pid).push(d); }
+    }
+    const v = psetValues(m.api, m.mid, rels, pid, 'CadCraft_LightIes');
+    let webs = null;
+    try { webs = v && v.Webs ? JSON.parse(String(v.Webs)) : null; } catch { webs = null; }
+    for (const [name, w] of Object.entries(webs && typeof webs === 'object' ? webs : {})) {
+      if (Object.keys(out).length >= cap) return out;
+      if (w && typeof w.text === 'string' && w.text.length <= maxText && /^IESNA/.test(w.text)) out[String(name).slice(0, 80)] = { file: String(w.file || '').slice(0, 120), text: w.text };
     }
   }
   return out;

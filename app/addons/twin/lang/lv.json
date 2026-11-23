@@ -11,6 +11,7 @@
   "bt.file.open": "Atvērt izkārtojuma failu",
   "bt.file.save": "Saglabāt izkārtojumu kā failu",
   "bt.file.bad": "{name} nav Materiālu plūsmas izkārtojums.",
+  "bt.file.ask": "Aizstāt pašreizējo izkārtojumu ar šo failu?",
   "bt.file.done": "{name}: ielādēti {n} vienumi, {dropped} izlaisti.",
   "bt.fit.run": "Pārbaudīt pret sienām",
   "bt.fit.nolayout": "Pārbaudei vēl nav izkārtojuma. Izmantojiet šūnu vai atveriet izkārtojuma failu.",

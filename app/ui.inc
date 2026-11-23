@@ -29,6 +29,10 @@ $__takeoffUrl = $__takeoffBuild && in_array('handoff', $__takeoffBuild['manifest
 $__part = Catalog::app('partcraft');
 $__partBuild = $__part && Catalog::openIn($__part, $__area['key']) ? AppBuilds::resolve($__part['slug'], $__area['key']) : null;
 $__partUrl = $__partBuild && in_array('partlink', $__partBuild['manifest']['accepts'] ?? [], true) ? $__area['path'] . '/' . $__part['slug'] : '';
+// 0.11 SU.1814 (su-finish-11): ModelCraft takes the same link when its build says so.
+$__modelc = Catalog::app('modelcraft');
+$__modelcBuild = $__modelc && Catalog::openIn($__modelc, $__area['key']) ? AppBuilds::resolve($__modelc['slug'], $__area['key']) : null;
+$__modelcUrl = $__modelcBuild && in_array('partlink', $__modelcBuild['manifest']['accepts'] ?? [], true) ? $__area['path'] . '/' . $__modelc['slug'] : '';
 // Project bundles (0.7 BIM-BUNDLE-OPEN): a layout's PDF goes to the markup app, its DWG to the drafting app above — same rule.
 $__markup = Catalog::app('markupcraft');
 $__markupBuild = $__markup && Catalog::openIn($__markup, $__area['key']) ? AppBuilds::resolve($__markup['slug'], $__area['key']) : null;
@@ -390,8 +394,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <button type="button" class="bc-tool" data-paint-open="paint" aria-pressed="false" title="<?= Lang::e('ui.paint.title') ?>"><i class="bi bi-paint-bucket" aria-hidden="true"></i><span><?= Lang::e('ui.paint') ?></span></button>
           <?php /* Views (0.5 RC.7): bimcraft.js "Views" → views-ui-bim.js + views-bim.js (saved cameras and walkthroughs in the IFC). */ ?>
           <button type="button" class="bc-tool" data-saved-views="views" aria-pressed="false" title="<?= Lang::e('ui.views.title') ?>"><i class="bi bi-camera-reels" aria-hidden="true"></i><span><?= Lang::e('ui.views') ?></span></button>
-          <?php if ($__partUrl): ?>
-          <button type="button" class="bc-tool" data-part-link data-part-url="<?= e($__partUrl) ?>" title="<?= Lang::e('partlink.button_title', ['app' => $__part['name']]) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span><?= Lang::e('partlink.button', ['app' => $__part['name']]) ?></span><span class="bc-badge" data-part-link-count hidden></span></button>
+          <?php if ($__partUrl || $__modelcUrl): ?>
+          <button type="button" class="bc-tool" data-part-link data-part-url="<?= e($__partUrl) ?>" data-model-url="<?= e($__modelcUrl) ?>" title="<?= Lang::e('partlink.button_title', ['app' => $__partUrl ? $__part['name'] : $__modelc['name']]) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span><?= Lang::e('partlink.button', ['app' => $__part['name']]) ?></span><span class="bc-badge" data-part-link-count hidden></span></button>
           <?php endif; ?>
           <?php if ($__detailUrl): ?>
           <button type="button" class="bc-tool" data-handoff-ifc data-handoff-url="<?= e($__detailUrl) ?>" data-handoff-app="<?= e($__detail['name']) ?>" title="<?= Lang::e('handoff.ifc.title', ['app' => $__detail['name']]) ?>"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i><span><?= Lang::e('handoff.ifc.button', ['app' => $__detail['name']]) ?></span></button>
@@ -499,6 +503,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
                   <option value="outside"><?= Lang::e('model.from.outside') ?></option>
                 </select></label>
                 <button type="button" class="bc-tool" data-model-print title="<?= Lang::e('model.print.title') ?>"><i class="bi bi-printer" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('model.print') ?></span></button>
+                <?php /* SU.1994: this plan as DWG or DXF at true size (model-ui.js, plan-cad.js) */ ?>
+                <button type="button" class="bc-tool" data-model-cad title="<?= Lang::e('cad.plan.title') ?>"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('cad.plan') ?></span></button>
                 <button type="button" class="bc-tool" data-res-sheetsopen title="<?= Lang::e('res.sh.open.title') ?>"><i class="bi bi-files" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('res.sh.title') ?></span></button>
                 <button type="button" class="bc-tool" data-res-takeoff data-handoff-url="<?= e($__takeoffUrl) ?>" title="<?= Lang::e('res.to.title') ?>"><i class="bi bi-calculator" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('res.to.button') ?></span></button>
                 <button type="button" class="bc-tool" data-model-fit title="<?= Lang::e('model.fit.title') ?>"><i class="bi bi-arrows-fullscreen" aria-hidden="true"></i><span class="visually-hidden"><?= Lang::e('model.fit') ?></span></button>
@@ -766,6 +772,7 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <label><span class="visually-hidden"><?= Lang::e('res.st.kind') ?></span><select class="bc-mb-select" data-res-stkind aria-label="<?= Lang::e('res.st.kind') ?>">
             <?php foreach (['straight', 'l', 'u', 'winder'] as $__sk): ?><option value="<?= $__sk ?>"><?= Lang::e('res.st.kind.' . $__sk) ?></option><?php endforeach; ?>
             <option value="spiral"><?= Lang::e('comforts.st.spiral') ?></option><?php /* 0.6 round 2 (bim-comforts_PART_2) */ ?>
+            <option value="steel"><?= Lang::e('steel.kind') ?></option><?php /* 0.11 SU.1814c: the steel stair generator (steelstair-bim.js) */ ?>
           </select></label>
           <label><span class="visually-hidden"><?= Lang::e('res.st.turn') ?></span><select class="bc-mb-select" data-res-stturn aria-label="<?= Lang::e('res.st.turn') ?>">
             <option value="left"><?= Lang::e('res.st.turn.left') ?></option><option value="right"><?= Lang::e('res.st.turn.right') ?></option>
@@ -774,6 +781,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <label><span class="visually-hidden"><?= Lang::e('res.st.railings') ?></span><select class="bc-mb-select" data-res-strail aria-label="<?= Lang::e('res.st.railings') ?>">
             <?php foreach (['both', 'left', 'right', 'none'] as $__sr): ?><option value="<?= $__sr ?>"><?= Lang::e('res.st.rail.' . $__sr) ?></option><?php endforeach; ?>
           </select></label>
+          <span data-res-steel hidden><label><span class="visually-hidden"><?= Lang::e('steel.rule') ?></span><select class="bc-mb-select" data-res-strule aria-label="<?= Lang::e('steel.rule') ?>"></select></label>
+          <label><span class="visually-hidden"><?= Lang::e('steel.tread') ?></span><select class="bc-mb-select" data-res-sttread aria-label="<?= Lang::e('steel.tread') ?>"><?php foreach (['folded', 'chequer', 'grating'] as $__tt): ?><option value="<?= $__tt ?>"><?= Lang::e('steel.tread.' . $__tt) ?></option><?php endforeach; ?></select></label></span>
           <span class="bc-sub" data-res-rules-tag></span><?php /* 0.8 REG.1: where the limits come from, when a regulations add-on is on */ ?>
         </div>
         <div class="bc-modelbar-row" data-mopts="railing" hidden>
@@ -781,6 +790,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
             <option value="guard"><?= Lang::e('res.rail.guard') ?></option><option value="handrail"><?= Lang::e('res.rail.handrail') ?></option><option value="fence"><?= Lang::e('res.rl.fence') ?></option>
           </select></label>
           <label><span><?= Lang::e('res.rl.height') ?></span> <input type="text" class="bc-input bc-num" data-res-rlheight size="6"></label>
+          <span data-res-fence hidden><label><span class="visually-hidden"><?= Lang::e('fence.f.style') ?></span><select class="bc-mb-select" data-res-flstyle aria-label="<?= Lang::e('fence.f.style') ?>"><?php foreach (['panel', 'rails', 'pickets'] as $__fs): ?><option value="<?= $__fs ?>"><?= Lang::e('fence.o.' . $__fs) ?></option><?php endforeach; ?></select></label>
+          <label><span class="visually-hidden"><?= Lang::e('fence.f.type') ?></span><select class="bc-mb-select" data-res-fltype aria-label="<?= Lang::e('fence.f.type') ?>"><option value=""><?= Lang::e('fence.type.none') ?></option></select></label><input type="file" accept=".json,application/json" data-res-flfile hidden></span><?php /* 0.11 SU.1814b: one element per part, a Library fence type (fence-bim.js placeFenceParts) */ ?>
         </div>
         <div class="bc-modelbar-row" data-mopts="framing" hidden>
           <label><span class="visually-hidden"><?= Lang::e('res.fr.spacing') ?></span><select class="bc-mb-select" data-res-frsp aria-label="<?= Lang::e('res.fr.spacing') ?>"></select></label>
@@ -836,6 +847,8 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
             <label><span><?= Lang::e('model.grid.tag') ?></span> <input type="text" class="bc-input bc-num" data-grid-tag size="5" maxlength="12"></label>
             <?php /* 0.9 WT.7 (walls-09): move the picked line square to itself; the walls locked to it follow */ ?>
             <label title="<?= Lang::e('walls.gridmove.title') ?>"><span><?= Lang::e('walls.gridmove') ?></span> <input type="text" class="bc-input bc-num" data-grid-move size="7"></label>
+            <?php /* 0.10.1 (support #1509): the picked line's distance from the neighbouring parallel line, typed (model-grids-ui.js) */ ?>
+            <label data-grid-space-row hidden title="<?= Lang::e('model.grid.space.title') ?>"><span data-grid-space-label></span> <input type="text" class="bc-input bc-num" data-grid-space size="8"></label>
             <button type="button" class="btn-line btn-sm-cc" data-grid-del><?= Lang::e('model.grid.del') ?></button>
           </span>
         </div>
@@ -1028,6 +1041,7 @@ $__rvtPreview = $__rvtVer !== '' ? "/assets/vendor/$__rvtLib/$__rvtVer/rvt.js" :
           <option value="letter"><?= Lang::e('res.sh.paper.letter') ?></option><option value="tabloid"><?= Lang::e('res.sh.paper.tabloid') ?></option><option value="archd"><?= Lang::e('res.sh.paper.archd') ?></option><option value="a3">A3</option><option value="a1">A1</option>
         </select></label>
         <button type="button" class="btn-plot btn-sm-cc" data-res-shpdf><i class="bi bi-download" aria-hidden="true"></i> <?= Lang::e('res.sh.pdf') ?></button>
+        <button type="button" class="btn-line btn-sm-cc" data-res-shcad title="<?= Lang::e('cad.set.title') ?>"><i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i> <?= Lang::e('cad.set') ?></button>
         <button type="button" class="btn-line btn-sm-cc" data-res-shclose><?= Lang::e('res.sh.close') ?></button>
       </div>
       <div class="bc-sheets-body">

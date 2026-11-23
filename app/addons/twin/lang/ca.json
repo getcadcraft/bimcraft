@@ -11,6 +11,7 @@
   "bt.file.open": "Obre un fitxer de disposició",
   "bt.file.save": "Desa la disposició com a fitxer",
   "bt.file.bad": "{name} no és una disposició de Flux de material.",
+  "bt.file.ask": "Voleu substituir la presentació actual per aquest fitxer?",
   "bt.file.done": "{name}: {n} elements carregats, {dropped} exclosos.",
   "bt.fit.run": "Comprova amb els murs",
   "bt.fit.nolayout": "Encara no hi ha cap disposició per comprovar. Useu una cel·la o obriu un fitxer de disposició.",

@@ -205,6 +205,7 @@
   "draw.done.bim": "Het {n} ligtoestelle in die model geplaas en {lux} strepe lux-getalle in die planaansig.",
   "lum.pole": "Generiese paallamp-armatuur",
   "lum.bollard": "Generiese sperpaal",
+  "map.isolines": "Lyne van gelyke lux (isolyne)",
   "f.outdoor": "Buite: terreinverligting (geen plafon of mure nie; direkte lig op die grond)",
   "f.cct": "Kleurtemperatuur",
   "f.groundrho": "Grondreflektansie",

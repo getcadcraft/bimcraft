@@ -596,7 +596,8 @@ function unxml(s) {
 
 /**
  * Autodesk "partatom" Atom XML (PartAtom stream and ProjectInformation's project.xml).
- * Returns {title, updated, product, version, categories[], groups[{title, params[{name, value, type}]}]}.
+ * Returns {title, updated, product, version, categories[], groups[{title, params[{name, value, type}]}], types[{name, params[…]}]}.
+ * types (PO.4): one per <A:part> under <A:family>: a family type with the parameter values that type carries (its title is the type's name).
  * Regex-based on purpose: same code in the browser and in Node, and the shape is flat.
  */
 export function parseAtom(xml) {
@@ -608,7 +609,22 @@ export function parseAtom(xml) {
     version: one(/<A:product-version>([^<]*)<\/A:product-version>/),
     categories: [],
     groups: [],
+    types: [],
   };
+  const paramsIn = (body) => {
+    const params = [];
+    for (const p of body.matchAll(/<([A-Za-z_][\w.-]*)((?:\s+[\w:-]+="[^"]*")*)\s*>([^<]*)<\/\1>/g)) {
+      if (p[1] === 'title') continue;
+      const attrs = Object.fromEntries([...p[2].matchAll(/([\w:-]+)="([^"]*)"/g)].map((a) => [a[1], unxml(a[2])]));
+      params.push({ name: attrs.displayName || p[1].replace(/_/g, ' '), value: unxml(p[3]), type: attrs.typeOfParameter || null, ...(attrs.units ? { units: attrs.units } : {}) });
+    }
+    return params;
+  };
+  for (const part of xml.split(/<A:part\b[^>]*>/).slice(1)) {
+    const body = part.split(/<\/A:part>/)[0];
+    const name = (/<title>([^<]*)<\/title>/.exec(body) || [])[1];
+    if (out.types.length < 500) out.types.push({ name: name ? unxml(name) : 'Type ' + (out.types.length + 1), params: paramsIn(body) });
+  }
   for (const m of xml.matchAll(/<category>\s*<term>([^<]*)<\/term>/g)) out.categories.push(unxml(m[1]));
 
   for (const g of xml.split(/<A:group>/).slice(1)) {

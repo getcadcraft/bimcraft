@@ -20,6 +20,7 @@ import { ModelWriter, round } from './model-write.js';
 import { readLevels } from './model-levels.js';
 import { ids, val } from './ifc-util.js';
 import { t as tr } from './i18n.js';
+import { ringArea as area2 } from './geom2d.js';   // shared helpers (0.11 PERF.74; tools/perf/util-copies.mjs)
 
 const IN = 25.4;
 export const RAIL_PSET = 'CadCraft_Railing';
@@ -70,7 +71,6 @@ export function railingItems(w, parts, P = (x, y, z) => [x, y, z]) {
 }
 
 // ---------------------------------------------------------------------------------------------------- drawn railings
-function area2(p) { let s = 0; for (let i = 0; i < p.length; i++) { const a = p[i], b = p[(i + 1) % p.length]; s += a[0] * b[1] - a[1] * b[0]; } return s / 2; }
 export function readRailings(w) {
   const out = [];
   let list = [];

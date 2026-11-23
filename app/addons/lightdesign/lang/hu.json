@@ -205,6 +205,7 @@
   "draw.done.bim": "{n} lámpatest elhelyezve a modellben, az alaprajz-nézetben pedig {lux} vonal luxszám.",
   "lum.pole": "Általános oszlopos lámpatest",
   "lum.bollard": "Általános talajlámpa (bollard)",
+  "map.isolines": "Azonos megvilágításerősségű vonalak (izolux)",
   "f.outdoor": "Kültér: terepvilágítás (nincs mennyezet vagy fal; közvetlen fény a talajra)",
   "f.cct": "Színhőmérséklet",
   "f.groundrho": "Talaj fényvisszaverése",

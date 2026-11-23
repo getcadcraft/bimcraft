@@ -2,7 +2,7 @@
 title: Waxa cusub ee 0.7 (hore)
 summary: BimCraft wuxuu ku daraa darbiyo dabaqyo badan, Koobiyee heerkan, darbiyo PDF iyo skaanka ka, habaynta darbiyadaada, qalab ballaaran, qalabka MEP oo leh ports, kala-dhigga isku-dhaca, furitaannada iyo spool-ka tuubada, dokumentiyada hantida, COBie iyo akhrinta sensorrada, samada, qorraxda, iftiinka maalinta shabakadda iyo culeyska kulaylka iyo qaboojinta, isku-dhigga skaanada, muuqaalka toosan iyo raad-tracing kaarka garaafka, STEP iyo USD, kala-duwanaansho maktabadda, iyo wax badan oo caawiyayaasha AI.
 keywords: waxa cusub 0.7, nooca hore, sheegidda sii-deynta, changelog, isbeddelada, 0.7, nooca, astaamaha cusub, darbiyo dabaqyo ka, koobiyee heerkan, pdf, skaan, raad, darbiyo qorshayaasha ka, habaynta darbiyada, lakabyada, xudun, membreen, cabbirrada tixraaca, maktabadda agabka, cutubyada muuqaalka, qaab, joists, qoyska, cabbirro, qaab qorshe, astaan, hotspots, celi, heerka faahfaahinta, qoysas dhex, cabbir csv, dhex-element, qalabka, ports, xidhiidhyo, masaafooyin, furitaanno, spools, xaashiyada spool-ka, laxaad goobta, liiska jarista, dokumentiyo, cobie, sensorro, mqtt, feed toos ah, sky, qorraxda, daylight grid, kulaylka, qaboojinta, culeyska, u-value, isku-dhig skaanad, icp, e57, muuqaal toos ah, path tracing, webgpu, denoise, sky jireed, iftiin-isku-darka, safka rendar, kumbiyuutarkaaga, step, usd, xirmo mashruuc, horumari mugga, kala-duwanaansho, caawiyayaasha, add-on api, dhirta, korontada, hubinta naqshadda
-from: ef226539
+from: a638080d
 ---
 
 Tani waa waxa isbeddelay BimCraft 0.7, marka la barbardhigo 0.6. Liiska waa la kooxeeyay aagga, kuwa ugu muhiimsan ee hore.

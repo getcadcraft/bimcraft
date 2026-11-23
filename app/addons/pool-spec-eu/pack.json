@@ -1,0 +1,367 @@
+{
+ "format": "cadcraft-pool-spec",
+ "version": 1,
+ "id": "pool-spec-eu",
+ "name": "Europe (EN concrete shell and pool norms)",
+ "region": "EU",
+ "researched": "2026-11-19",
+ "standards": [
+  {
+   "key": "en1992-1-1",
+   "title": "Eurocode 2: Design of concrete structures - Part 1-1: General rules and rules for buildings",
+   "edition": "EN 1992-1-1:2004 (read as BS EN 1992-1-1:2004 incl. corrigenda; a second-generation EN 1992-1-1:2023 exists and replaces it)",
+   "publisher": "CEN",
+   "url": "https://eurocodes.jrc.ec.europa.eu/EN-Eurocodes/eurocode-2-design-concrete-structures"
+  },
+  {
+   "key": "en1992-3",
+   "title": "Eurocode 2: Design of concrete structures - Part 3: Liquid retaining and containment structures",
+   "edition": "EN 1992-3:2006",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/ed71cb61-c65d-4a6b-abff-2e2bb815f27e/en-1992-3-2006"
+  },
+  {
+   "key": "en1992-1-1-gl-na",
+   "title": "EN 1992-1-1 GL NA:2025 - Greenlandic National Annex to Eurocode 2 Part 1-1 (based on the Danish DK NA:2024)",
+   "edition": "2025, rev. 2026-06-01",
+   "publisher": "Greenland Ministry of Housing, Infrastructure and Outlying Districts / Danish Standards",
+   "url": "https://www.ds.dk/media/yqilxkdr/en-1992-1-1-gl-na-2025-rev-2026-06-01.pdf"
+  },
+  {
+   "key": "en206",
+   "title": "Concrete - Specification, performance, production and conformity",
+   "edition": "EN 206:2013 (+A1:2016, +A2:2021 listed); Table F.1 itself was NOT read",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/0e839092-9d2c-4b1c-ada2-b4d7f585e33b/en-206-2013"
+  },
+  {
+   "key": "en16582-1",
+   "title": "Domestic swimming pools - Part 1: General requirements including safety and test methods",
+   "edition": "EN 16582-1:2015 (read as SIST EN 16582-1:2015 preview; EN 16582-1:2015+A1:2021 is the listed current edition)",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/962ee17d-4874-4056-af08-c50b6b209794/en-16582-1-2015a1-2021"
+  },
+  {
+   "key": "en16582-2",
+   "title": "Domestic swimming pools - Part 2: Specific requirements including safety and test methods for inground pools",
+   "edition": "EN 16582-2:2015 (text not read)",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/c219e0a2-fed5-4f26-b956-8604d4a17191/en-16582-2-2015"
+  },
+  {
+   "key": "en16713-1",
+   "title": "Domestic swimming pools - Water systems - Part 1: Filtration systems - Requirements and test methods",
+   "edition": "EN 16713-1:2016 (read as SIST EN 16713-1:2016 preview)",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/7a9d94ad-3d10-4a47-849f-703909e14f51/en-16713-1-2016"
+  },
+  {
+   "key": "en16713-2",
+   "title": "Domestic swimming pools - Water systems - Part 2: Circulation systems - Requirements and test methods",
+   "edition": "EN 16713-2:2016 (read as SIST EN 16713-2:2016 preview)",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/a5c3a2b9-a0c3-47f9-b077-5f63df96f0a5/en-16713-2-2016"
+  },
+  {
+   "key": "en15288-1",
+   "title": "Swimming pools for public use - Part 1: Safety requirements for design",
+   "edition": "EN 15288-1:2018+A1:2024 is current; the clause quoted here was read in the superseded EN 15288-1:2008 preview",
+   "publisher": "CEN",
+   "url": "https://standards.iteh.ai/catalog/standards/cen/e257b2dc-7ea1-4e98-8985-f3f1adb8488b/en-15288-1-2018a1-2024"
+  },
+  {
+   "key": "din19643",
+   "title": "Aufbereitung von Schwimm- und Badebeckenwasser - Teil 1: Allgemeine Anforderungen (and Teil 2)",
+   "edition": "DIN 19643-1:2023-06 (standard text not read; values via a 2023 talk by the committee chair and trade pages)",
+   "publisher": "DIN",
+   "url": "https://www.dinmedia.de/de/norm/din-19643-1/366147923"
+  },
+  {
+   "key": "dguv-207-006",
+   "title": "DGUV Information 207-006 - Bodenbelaege fuer nassbelastete Barfussbereiche (assigns the A/B/C groups of DIN 51097, now tested to DIN EN 16165 Annex A)",
+   "edition": "December 2025",
+   "publisher": "Deutsche Gesetzliche Unfallversicherung (DGUV)",
+   "url": "https://publikationen.dguv.de/widgets/pdf/download/article/1246"
+  },
+  {
+   "key": "fr-decret-81-324",
+   "title": "Decret n 81-324 du 7 avril 1981 fixant les normes d'hygiene et de securite applicables aux piscines et aux baignades amenagees (public pools, France)",
+   "edition": "1981, marked abrogated by Decret 2003-462 (codified in the Code de la sante publique; current code text not read)",
+   "publisher": "French Republic (text hosted by INERIS AIDA)",
+   "url": "https://aida.ineris.fr/node/27192"
+  },
+  {
+   "key": "nf-p90-306",
+   "title": "Protective elements for in-ground, barrier-free, private or collective use swimming pools - Safety barriers and means of access to pool",
+   "edition": "NF P90-306, October 2007 (standard text not read)",
+   "publisher": "AFNOR",
+   "url": "https://www.boutique.afnor.org/en-gb/standard/nf-p90306/protective-elements-for-inground-barrierfree-private-or-collective-use-swim/fa139714/30051"
+  }
+ ],
+ "values": {
+  "shell.exposure.pool": {
+   "value": "XD2",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "Table 4.1",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "XD2 Wet, rarely dry Swimming pools Concrete components exposed to industrial waters containing chlorides",
+   "note": "Free scanned copy of BS EN 1992-1-1:2004 (public.resource.org scan). Class 3 'Corrosion induced by chlorides'. Informative example, not a rule; national annexes may differ."
+  },
+  "shell.exposure.outdoor": {
+   "value": "XF3",
+   "unit": "",
+   "standard": "en1992-1-1-gl-na",
+   "clause": "Table 4.1 GL NA",
+   "read": "primary",
+   "url": "https://www.ds.dk/media/yqilxkdr/en-1992-1-1-gl-na-2025-rev-2026-06-01.pdf",
+   "quote": "XF3 High water saturation, without de-icing agent Horizontal concrete surfaces exposed to rain and freeze, e.g. - balcony slabs of restricted access; - external slabs; - external beams; - light shafts; - ducts, outdoor swimming pools and pits.",
+   "note": "Official national annex (Greenland, based on the Danish NA) is the only text read that names outdoor pools. EN 1992-1-1 Table 4.1 itself only gives XF1 'Vertical concrete surfaces exposed to rain and freezing' and XF3 'Horizontal concrete surfaces exposed to rain and freezing'."
+  },
+  "shell.concrete.class.min": {
+   "value": "C30/37",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "Annex E, Table E.1N",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "Indicative minimum strength class ... XC1 XC2 XC3 XC4 XD1 XD2 XD3 XS1 XS2 XS3 ... C20/25 C25/30 C30/37 C30/37 C35/45 C30/37 C35/45",
+   "note": "For XD1/XD2 (fourth value in the row; XC3/XC4 share the third). Indicative, informative annex, nationally determined. The same table gives C30/37 for XF1 and XF3. Row is quoted from a scanned table, column order as printed."
+  },
+  "shell.wc.max": {
+   "value": 0.55,
+   "unit": "ratio",
+   "standard": "en206",
+   "clause": "Table F.1 (not read directly; the paper reproduces EN 206 limits in its Table 3)",
+   "read": "secondary",
+   "url": "https://www.encosrl.it/OLDSITE/pubblicazioni-scientifiche/pdf/degrado/68b.pdf",
+   "quote": "XD2 Wet, rarely dry Swimming pools Structures exposed to industrial waters with Cl- 0.55 30/37 300",
+   "note": "Conference paper by Troli and Collepardi (Enco) restating EN 206 limits: max w/c 0.55, min strength class 30/37, min cement 300 kg/m3 for XD2. It predates EN 206:2013. Same paper: XF3 0.50, 30/37, 320 kg/m3, 4 % air. EN 206 Table F.1 is informative and replaced by national provisions in most countries."
+  },
+  "shell.cover.min.water": {
+   "value": 40,
+   "unit": "mm",
+   "standard": "en1992-1-1",
+   "clause": "4.4.1.2 (5), Table 4.4N",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "S4 10 15 25 30 35 40 45",
+   "note": "This is cmin,dur for XD2/XS2, structural class S4 (50-year life, recommended values). Columns: X0, XC1, XC2/XC3, XC4, XD1/XS1, XD2/XS2, XD3/XS3 (scan prints 'S4' as '84'). Nominal cover = cmin + deviation allowance; 4.4.1.3 (1)P: 'The recommended value is 10 mm', so 50 mm nominal."
+  },
+  "shell.cover.min.earth": {
+   "value": 40,
+   "unit": "mm",
+   "standard": "en1992-1-1",
+   "clause": "4.4.1.3 (4)",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "the nominal cover should be at least k1 mm for concrete cast against prepared ground (including blinding) and k2 mm for concrete cast directly against soil. ... The recommended values are 40 mm and 75 mm.",
+   "note": "Nominal cover. k1 = 40 mm against prepared ground or blinding, k2 = 75 mm cast directly against soil. Nationally determined. Scan typos corrected in the quote ('nonlinal', 'nlm')."
+  },
+  "shell.crack.width.max": {
+   "value": "0.2 mm at hD/h up to 5, falling linearly to 0.05 mm at hD/h of 35 and above (tightness class 1, cracks through the full section)",
+   "unit": "mm",
+   "standard": "en1992-3",
+   "clause": "7.3.1 (111), NOTE",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1992.3.2006.pdf",
+   "quote": "For hoth ~ 5, Wk1 0,2 rnm while for hoth ~ 35, Wk1 0,05 mm. For intermediate values of hoth, linear interpolation between 0,2 and 0,05 may be used.",
+   "note": "Quote is raw OCR of the scanned EN 1992-3:2006 ('hoth' = hD/h, comparison signs lost). hD = hydrostatic pressure head, h = wall thickness. The UK National Annex (archive.org/details/bs.na.en.1992.3.2006) reads '< 5' and '> 35' and says use the recommended values. Class 0 uses EN 1992-1-1 7.3.1; its Table 7.1N gives 0,3 mm for XD classes (reinforced, quasi-permanent)."
+  },
+  "shell.wall.thickness.min": {
+   "value": 150,
+   "unit": "mm",
+   "standard": "en1992-3",
+   "clause": "9.11.1 (102)",
+   "read": "primary",
+   "url": "https://web.archive.org/web/2020id_/https://law.resource.org/pub/eur/ibr/en.1992.3.2006.pdf",
+   "quote": "The thickness of walls forming the sides of reservoirs or tanks should generally not be less than t1 mm for class 0 or t2 mm for classes 1 or 2. ... The recommended value for t1 is 120 mm and for t2 is 150 mm.",
+   "note": "150 mm for tightness classes 1 or 2, 120 mm for class 0. The clause sits under the heading '9.11 Prestressed walls'. Nationally determined; UK NA keeps 120/150. 2.3.2.3 (101) warns that at these minimum thicknesses a lower w/c ratio may be required. Scan prints t1/t2 as '1/'2."
+  },
+  "shell.floor.thickness.min": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "No document read states a minimum floor/base slab thickness. EN 1992-3 9.11.1 (102) covers walls only."
+  },
+  "shell.rebar.ratio.min": {
+   "value": "As,min = 0,26 (fctm/fyk) bt d, but not less than 0,0013 bt d",
+   "unit": "",
+   "standard": "en1992-1-1",
+   "clause": "9.2.1.1 (1), expression (9.1N); 9.3.1.1 (1) applies it to slabs",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "As,min 0,26 'r btd lm yk but not less than O,0013b td (9.1 N)",
+   "note": "Not one number. Quote is raw OCR of the formula (fctm/fyk fraction broken up). Walls, 9.6.2 (1): 'The recommended value is 0,002 Ac' vertical; 9.6.3 (1): horizontal 'either 25% of the vertical reinforcement or 0,001 Ac, whichever is greater'. Crack control (7.3.2, EN 1992-3) normally governs a water-retaining shell."
+  },
+  "shell.rebar.spacing.max": {
+   "value": 400,
+   "unit": "mm",
+   "standard": "en1992-1-1",
+   "clause": "9.6.2 (3) and 9.6.3 (2) for walls; 9.3.1.1 (3) for slabs",
+   "read": "primary",
+   "url": "https://www.phd.eng.br/wp-content/uploads/2015/12/en.1992.1.1.2004.pdf",
+   "quote": "The distance between two adjacent vertical bars shall not exceed 3 times the wall thickness or 400 mm whichever is the lesser.",
+   "note": "Walls: also 'The spacing between two adjacent horizontal bars should not be greater than 400 mm'. Slabs (recommended): principal reinforcement 3h and 400 mm, secondary 3,5h and 450 mm; in areas of concentrated load or maximum moment 2h and 250 mm. Crack control usually needs closer spacing."
+  },
+  "shell.watertight.test": {
+   "value": "Measure the drop in water level over 7 days, excluding evaporation and use; pool must meet its declared class W0 to W3 = max leakage 0, 1, 2 or 3 litre per m2 per day (or mm per day)",
+   "unit": "",
+   "standard": "en16582-1",
+   "clause": "4.3 Water leakage, Table 1",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/35811/ee2c3eb607b94af2bb61926d0854877c/SIST-EN-16582-1-2015.pdf",
+   "quote": "The measurement of any water loss should be carried out over a period of 7 days. The drop in water level excludes evaporation losses, bathing activity, the temperature and humidity throughout the test period",
+   "note": "Official preview of the 2015 edition (domestic pools). Also: 'Once installed, the swimming pool pipework shall be watertight according to class W 0 of Table 1.' EN 1992-3 only cites a reference titled 'Requirements for testing of reservoirs for watertightness' and gives no procedure."
+  },
+  "water.turnover.private.max": {
+   "value": 8,
+   "unit": "h",
+   "standard": "en16713-2",
+   "clause": "4.2 Filtration system nominal flow rate",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/38651/c6bb80566ccb40d785b8e32722d0ac45/SIST-EN-16713-2-2016.pdf",
+   "quote": "The filtration system shall have a sufficient nominal flow rate to allow the total volume of water contained in the pool to be recycled in no longer than 8 h.",
+   "note": "Official preview of the standard. Formula (1): Q = V / TTO, Q in m3/h, V pool volume in m3 (include the overflow tank volume), TTO turnover time in h."
+  },
+  "water.turnover.public.max": {
+   "value": "Q = A x n / (a x k); worked example: Q = 16,66 m x 25 m x 1 h-1 / (2,7 m2 x 0,5 m-3) = 308 m3/h",
+   "unit": "m3/h",
+   "standard": "din19643",
+   "clause": "DIN 19643-1, Tabelle 3 (as cited on the slide)",
+   "read": "secondary",
+   "url": "https://wabolu.de/wp-content/uploads/2023/02/WHT2023-V-1-2-DIN-19643-Dygutsch.pdf",
+   "quote": "Q = 16,66 m · 25 m · 1 h-1 ÷ (2,7 m² · 0,5 m-3) = 308 m³/h",
+   "note": "Germany: flow follows from water area and bather load, not a fixed turnover time. Symbols A, n, a, k are my labels for the slide's numbers (non-swimmer pool, 2,7 m2 per person, k = 0,5 m-3); the standard's own definitions were not read. France, public pools over 240 m2, Decret 81-324 art. 5 (abrogated text, https://aida.ineris.fr/node/27192): 30 min paddling, 1.5 h for depth up to 1,50 m, 4 h deeper, 8 h diving pits."
+  },
+  "water.filter.rate.max": {
+   "value": 50,
+   "unit": "m/h",
+   "standard": "en16713-1",
+   "clause": "4.2 Maximum filter flow rate",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/38229/ebc6d282fba64655b7ac6e4768a8fd9b/SIST-EN-16713-1-2016.pdf",
+   "quote": "c) granular media filter: high rate > 30 (m3/h)/m2 to ≤ 50 (m3/h)/m2;",
+   "note": "Domestic pools, granular (sand) media. Same list: low rate ≤ 10, medium rate > 10 to ≤ 30, diatomaceous earth ≤ 5, synthetic cartridge ≤ 3, paper cartridge ≤ 2 (m3/h)/m2. Public pools, DIN 19643: 30 m/h (20 m/h brine) read on trade pages only (https://www.schwimmbadbau24.de/Filtertechnik: 'In öffentlichen Bädern darf die Filtergeschwindigkeit entsprechend der DIN 19643 30 m/h nicht überschritten werden.').",
+   "applies": "private"
+  },
+  "water.velocity.suction.max": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "No norm text read gives a suction PIPE velocity. Read but not norm values: a 2021 manufacturer hydraulics webinar (https://cdn.shopify.com/s/files/1/0173/8542/2948/files/SESSION_3_-_Presentation_GB.pdf) says 'Suction side: 1.0 – 1.5 meters/second'. EN 16713-2 4.4.1 limits the speed at the suction OUTLET, not the pipe: see water.drain.rule."
+  },
+  "water.velocity.return.max": {
+   "value": null,
+   "unit": "",
+   "standard": "",
+   "clause": "",
+   "read": "none",
+   "url": "",
+   "quote": "",
+   "note": "No norm text read gives a return PIPE velocity. Read but not norm values: the same 2021 manufacturer webinar says 'Pressure side: 1.5 – 2.0 meters/second' and 'Overflow return: 0.5 meters/second'."
+  },
+  "water.skimmer.area.max": {
+   "value": 25,
+   "unit": "m2",
+   "standard": "fr-decret-81-324",
+   "clause": "Article 4",
+   "read": "primary",
+   "url": "https://aida.ineris.fr/node/27192",
+   "quote": "Les écumeurs de surface ne peuvent être installés que dans les bassins dont la superficie du plan d'eau est inférieure ou égale à 200 mètres carrés ; il doit, dans ce cas, y avoir au moins un écumeur de surface pour 25 mètres carrés de plan d'eau.",
+   "note": "France, PUBLIC pools only; the decree text read is marked abrogated (2003, moved into the Code de la sante publique, which was not read). EN 16713-2 4.3.3.1 (domestic) gives NO area per skimmer: the number 'depends on' surface area, pool shape, skimmer opening size and nominal flow rate, with about 2/3 of flow through skimmers and 1/3 through bottom drains.",
+   "applies": "public"
+  },
+  "water.inlet.rule": {
+   "value": "Horizontal inlets: staggered along the long side, spacing ≤ b/3 (b = pool width), mid-depth. Vertical (floor) inlets: one per 8 m2 (water depth ≥ 1,35 m) or 6 m2 (< 1,35 m), 5 to 20 m3/h each",
+   "unit": "",
+   "standard": "din19643",
+   "clause": "",
+   "read": "secondary",
+   "url": "https://wabolu.de/wp-content/uploads/2023/02/WHT2023-V-1-2-DIN-19643-Dygutsch.pdf",
+   "quote": "Abstand der Öffnungen: ≤ b/3 (b = Beckenbreite) ... Fläche je Einströmung – 8 m² (WT ≥ 1,35 m) ... – 6 m² (WT < 1,35 m) Q = 5…20 m³/h",
+   "note": "Public pools, Germany. From a 2023 talk on the new DIN 19643 by the committee chair (slide credits T. Beutel, Lutz-Jesco); no clause given. Same slides: 100 % of flow over a channel on all sides. EN 16713-2 (domestic) preview states only that circulation shall mix the pool with no dead areas."
+  },
+  "water.drain.rule": {
+   "value": "At least two balanced suction outlets, perimeters at least 1 m apart, each able to take 100 % of the flow if the other is blocked; or a single grille that one user cannot cover more than 50 %, a domed grille, a grille area ≥ 1 m2, or a grille passing the obstruction test. Outlet speed ≤ 0,5 m/s",
+   "unit": "",
+   "standard": "en16713-2",
+   "clause": "4.4.1",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/38651/c6bb80566ccb40d785b8e32722d0ac45/SIST-EN-16713-2-2016.pdf",
+   "quote": "a minimum of two balanced and functioning suction outlets; ... minimum of 1 m ... if any one of the suction outlets becomes blocked, the flow through the remaining suction outlet/s shall accommodate 100 % of the flow rate.",
+   "note": "Domestic pools. 'at least one of the following requirements shall be met' (a, b or c). Also read: 'Water speed at fully submerged suction outlets should be ≤ 0,5 m/s.' Skimmers are exempt because vented. 4.3.4: a main drain used as pool drain 'shall be installed on the deepest area of the basin'."
+  },
+  "safety.barrier.height.min": {
+   "value": 1100,
+   "unit": "mm",
+   "standard": "nf-p90-306",
+   "clause": "",
+   "read": "secondary",
+   "url": "https://www.quechoisir.org/enquete-piscines-4-moyens-de-mettre-votre-piscine-en-conformite-n3123",
+   "quote": "une hauteur minimale d'1,10 m entre les points d'appui le plus haut et le plus bas;",
+   "note": "France, private in-ground pools, protection of children under five. Height is measured between footholds, not simply above ground. Two barrier installation notices read say the same. CONFLICT: guide-piscine.fr states 'hauteur minimale de 1,22 mètres par rapport au sol'. Standard text not read.",
+   "applies": "private"
+  },
+  "safety.deck.width.min": {
+   "value": 1000,
+   "unit": "mm (France: the barrier's distance from the pool, not a deck width)",
+   "standard": "nf-p90-306",
+   "clause": "",
+   "read": "secondary",
+   "url": "https://www.guide-piscine.fr/barriere-de-securite/norme-nf-p90-306-pour-les-barrieres-de-piscine-4363_A",
+   "quote": "votre barrière de piscine doit être installée à 1 mètre minimum du bassin afin de préserver un espace de circulation aux abords de la piscine",
+   "note": "France only, and this is the barrier setback from the pool edge, NOT a deck-width norm. No EN or German text read states a minimum surround width (KOK-Richtlinien and EN 15288-1 current text not read)."
+  },
+  "safety.deck.slope": {
+   "value": "2 to 5",
+   "unit": "%",
+   "standard": "en15288-1",
+   "clause": "5.5.2 (2008 edition)",
+   "read": "primary",
+   "url": "https://cdn.standards.iteh.ai/samples/24844/509638005e8c4b6d8bfaf9cc6896ad46/SIST-EN-15288-1-2008.pdf",
+   "quote": "To prevent ponding in the barefoot areas, floors shall have a suitable and effective draining system. The inclination in direction of the drains shall be between 2 % and 5 %.",
+   "note": "Public pools; read in the preview of the SUPERSEDED 2008 edition (clause number inferred from the next heading, 5.5.3); the 2018+A1:2024 wording was not read. Above 3 % pay attention to slip resistance. DGUV 207-006 (Dec 2025): 'Bodengefälle von mind. 2 % in Beckenumgängen und mind. 3 % in Duschbereichen'."
+  },
+  "tile.slip.surround": {
+   "value": "B",
+   "unit": "",
+   "standard": "dguv-207-006",
+   "clause": "Tabelle 2",
+   "read": "primary",
+   "url": "https://publikationen.dguv.de/widgets/pdf/download/article/1246",
+   "quote": "B ● Barfußgänge und Sanitärbereiche, soweit sie nicht A zugeordnet sind ● Duschräume und Duschbereiche ● Dampfbäder ● Bereich von Desinfektionssprühanlagen ● Beckenumgänge",
+   "note": "Germany. Group B = barefoot ramp test result over 18° to 24° (Tabelle 1), tested to DIN EN 16165 Anhang A, which replaced DIN 51097. Ramps in the surround steeper than 6 % and sloped pool edges are group C."
+  },
+  "tile.slip.steps": {
+   "value": "C",
+   "unit": "",
+   "standard": "dguv-207-006",
+   "clause": "Tabelle 2",
+   "read": "primary",
+   "url": "https://publikationen.dguv.de/widgets/pdf/download/article/1246",
+   "quote": "C ● Ins Wasser führende Leitern und Treppen",
+   "note": "Germany. Group C = over 24°. Stairs and ladders outside the pool area are group B."
+  },
+  "tile.slip.floor": {
+   "value": "A where the whole non-swimmer area is deeper than 80 cm; B where parts are shallower than 80 cm",
+   "unit": "",
+   "standard": "dguv-207-006",
+   "clause": "Tabelle 2",
+   "read": "primary",
+   "url": "https://publikationen.dguv.de/widgets/pdf/download/article/1246",
+   "quote": "A ... ● Beckenböden in Nichtschwimmerbereichen, wenn im gesamten Bereich die Wassertiefe mehr als 80 cm beträgt",
+   "note": "Germany, non-swimmer pool floors only. Group B row reads: 'Beckenböden in Nichtschwimmerbereichen, wenn in Teilbereichen die Wassertiefe weniger als 80 cm beträgt'; also B for wave pools, movable floors and paddling pools. Group A = over 12° to 18°. Swimmer-depth floors are not listed."
+  }
+ },
+ "notes": "Chain for the shell: exposure class XD2 (EN 1992-1-1 Table 4.1) sets the indicative concrete class (Annex E) and cmin,dur (Table 4.4N, class S4); add the 10 mm deviation allowance for nominal cover. All are 'recommended' values that each country's National Annex may change, so treat them as defaults. Crack width for a pool comes from EN 1992-3 tightness class 1 (0,2 to 0,05 mm by hD/h), which is stricter than the 0,3 mm durability limit, and normally governs bar size and spacing over the minimum-steel rules. EN 1992-1-1:2004 and EN 1992-3:2006 were read from free scanned copies (OCR noise in quotes); second-generation EN 1992-1-1:2023 replaces both and was not read. EN 206 Table F.1 was only read through a paper. Water: EN 16713 is for domestic pools (8 h turnover, sand filter up to 50 m/h, anti-entrapment outlets) and gives no skimmer count or pipe velocity; public pools follow national rules (DIN 19643 load-based flow in Germany, fixed cycle times in France), read here second-hand or from an abrogated French decree. Slip classes and the French barrier are national (DE, FR), not EU-wide. Values for EN 16713/16582/15288 come from official preview PDFs, which stop after the first clauses."
+}

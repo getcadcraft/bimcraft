@@ -23,6 +23,15 @@
     "resin-calibration",
     "printer-resin-chitu",
     "printer-resin-anycubic",
-    "default-policies"
+    "default-policies",
+    "pool",
+    "pool-spec-eu",
+    "pool-spec-us",
+    "weather",
+    "energy-code",
+    "dome",
+    "dome-spec-us",
+    "dome-spec-eu",
+    "roomair"
   ]
 }

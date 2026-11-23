@@ -2,7 +2,7 @@
 title: 0.7'de neler yeni (önceki)
 summary: BimCraft, birden çok katta duvarlar ve Bu seviyeyi kopyala, PDF'lerden ve taramalardan duvarlar, kendi duvar kesitleriniz, daha zengin aileler, bağlantı noktalı MEP ekipmanı, çakışma kümeleri, açıklıklar ve boru spool'ları, varlık belgeleri, COBie ve sensör okumaları, gökyüzü, güneş, ızgarada gün ışığı ve ısıtma ve soğutma yükleri, tarama hizalama, ekran kartında canlı görünüm ve ışın izleme, STEP ve USD, kütüphane varyantları ve yapay zeka asistanları için daha fazlasını ekler.
 keywords: 0.7'de neler yeni, önceki sürüm, sürüm notları, değişiklik günlüğü, değişiklikler, 0.7, sürüm, yeni özellikler, katlar boyunca duvarlar, bu seviyeyi kopyala, pdf, tarama, iz, planlardan duvarlar, duvar kesitleri, katmanlar, çekirdek, membran, referans ölçülendirmeler, malzeme kütüphanesi, görüntüleme birimleri, görünüm stili, karkas, kirişler, aileler, parametreler, plan sembolü, sıcak noktalar, tekrar, ayrıntı düzeyi, iç içe aileler, csv boyutları, öğe başına, ekipman, bağlantı noktaları, bağlantılar, boşluklar, açıklıklar, spool'lar, spool sayfaları, saha kaynağı, kanal kesim listesi, belgeler, cobie, sensörler, mqtt, canlı akış, dikey gökyüzü bileşeni, güneş kazancı, gün ışığı ızgarası, ısıtma, soğutma, yükler, u-değeri, tarama hizalama, icp, e57, canlı görünüm, ışın izleme, webgpu, gürültü giderme, fiziksel gökyüzü, ışık karıştırma, render kuyruğu, makineniz, step, usd, proje paketi, kütle geliştir, varyantlar, asistanlar, eklenti api, bitki, elektrik, tasarım denetimleri
-from: ef226539
+from: a638080d
 ---
 
 Bu, BimCraft 0.6'ya kıyasla 0.7'de değişenlerdir. Liste alana göre gruplanmıştır; en önemli olanlar önce gelir.

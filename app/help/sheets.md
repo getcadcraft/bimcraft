@@ -24,6 +24,7 @@ Pick the line to change it in **Properties**: its letter, **Flip the view** to l
 2. The sheets are listed on the left: **A-101** and on for plans, **A-201** for elevations, **A-301** for sections, **A-401** for schedules and **S-101** for wall framing. Click one to see it.
 3. Choose the **Paper**: Letter, Tabloid (11 × 17), Arch D (24 × 36), A3 or A1. The paper keeps its standard name and its size is written in the {{ui:Units}} you chose, for example *Letter · 8.5 × 11 in* or *A3 · 297 × 420 mm*.
 4. Click {{ui:Download the set as PDF}}: one page per sheet.
+5. Or click {{ui:DWG or DXF}} for every plan, elevation and section in one CAD drawing at true size: see [Save a plan, elevation or section as DWG or DXF](topic:save-dwg-dxf).
 
 ## Standard notes from a regulation pack
 

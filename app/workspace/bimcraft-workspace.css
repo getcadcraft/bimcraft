@@ -93,3 +93,6 @@ body.ws-b-viewtabs .bc-stage.is-plan-only > [data-canvas-wrap] { visibility: hid
 .ws-stage.is-plan-split.is-plan-stacked > .bc-canvas.ws-fill { top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px) + var(--bc-ws-h) * var(--bc-split-f, .5)) !important; }
 .ws-stage.is-plan-split.is-plan-stacked > .bc-splitter { top: calc(var(--ws-st, 0px) + var(--ws-vt, 0px) + var(--bc-ws-h) * var(--bc-split-f, .5)); left: var(--ws-sl, 0px); right: var(--ws-sr, 0px); }
 .ws-status-slot .bc-status.is-error { color: var(--layer-red); }
+/* 0.11 FX.434: with no view open the empty notice covers the drawing (app-workspace.css .ws-no-view), so the plan / 3D splitter
+   (z-index 6, var(--ink): white in a dark tone) must go with it, or it stays as a stray line through the notice */
+.bc-stage.ws-no-view .bc-splitter { visibility: hidden; }

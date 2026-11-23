@@ -2,7 +2,7 @@
 title: Neuheiten in 0.7 (früher)
 summary: BimCraft ergänzt Wände über mehrere Geschosse und Dieses Geschoss kopieren, Wände aus PDFs und Scans, eigene Wandaufbauten, umfangreichere Familien, MEP-Ausstattung mit Anschlüssen, Kollisionssätze, Öffnungen und Rohrstücke, Dokumente je Asset, COBie und Sensormesswerte, Himmel, Sonne, Tageslicht auf einem Raster sowie Heiz- und Kühllasten, Scan-Registrierung, eine Live-Ansicht und Path Tracing auf der Grafikkarte, STEP und USD, Bibliotheksvarianten und mehr für KI-Assistenten.
 keywords: Neuheiten 0.7, früherer Release, Versionshinweise, Änderungsprotokoll, Änderungen, 0.7, Version, neue Funktionen, Wände über Geschosse, Dieses Geschoss kopieren, pdf, scan, nachzeichnen, Wände aus Plänen, Wandaufbauten, Layer, Kern, Membran, Referenzbemaßungen, Materialbibliothek, Anzeigeeinheiten, Ansichtsstil, Holzrahmen, Balken, Familien, Parameter, Plansymbol, Hotspots, Wiederholen, Detailstufe, verschachtelte Familien, CSV-Größen, pro Element, Ausstattung, Anschlüsse, Verbindungen, Abstände, Öffnungen, Rohrstücke, Rohrstückblätter, Montageschweißnaht, Kanal-Zuschnittliste, Dokumente, COBie, Sensoren, MQTT, Live-Datenstrom, vertikaler Himmelsanteil, Sonneneintrag, Tageslichtraster, Heizen, Kühlen, Lasten, U-Wert, Scans registrieren, ICP, E57, Live-Ansicht, Path Tracing, WebGPU, Entrauschen, physikalischer Himmel, Lichtmischung, Renderwarteschlange, Ihr Rechner, STEP, USD, Projektpaket, Masse entwickeln, Varianten, Assistenten, Add-on-API, Pflanze, Elektro, Bemessungsnachweise
-from: ef226539
+from: a638080d
 ---
 
 Das ist, was sich in BimCraft 0.7 gegenüber 0.6 geändert hat. Die Liste ist nach Bereich gruppiert, mit dem Wichtigsten zuerst.
